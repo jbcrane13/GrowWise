@@ -1,0 +1,120 @@
+<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<model type="com.apple.IDECoreDataModeler.DataModel" documentVersion="1.0" lastSavedToolsVersion="22758" systemVersion="23F79" minimumToolsVersion="Automatic" sourceLanguage="Swift" usedWithCloudKit="YES" userDefinedModelVersionIdentifier="">
+    <entity name="User" representedClassName="User" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="skillLevel" optional="NO" attributeType="String" defaultValueString="beginner"/>
+        <attribute name="hardinessZone" optional="YES" attributeType="String"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="gardenType" optional="NO" attributeType="String" defaultValueString="indoor"/>
+        <attribute name="preferences" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String: Any]"/>
+        <attribute name="createdDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastActiveDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="profileImageData" optional="YES" attributeType="Binary"/>
+        <attribute name="notificationSettings" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String: Bool]"/>
+        <relationship name="gardens" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Garden" inverseName="owner" inverseEntity="Garden"/>
+        <relationship name="journalEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="JournalEntry" inverseName="user" inverseEntity="JournalEntry"/>
+    </entity>
+    
+    <entity name="Plant" representedClassName="Plant" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="scientificName" optional="YES" attributeType="String"/>
+        <attribute name="plantDescription" optional="YES" attributeType="String"/>
+        <attribute name="category" optional="NO" attributeType="String"/>
+        <attribute name="difficultyLevel" optional="NO" attributeType="String" defaultValueString="beginner"/>
+        <attribute name="maintenanceLevel" optional="NO" attributeType="String" defaultValueString="low"/>
+        <attribute name="wateringFrequencyDays" optional="NO" attributeType="Integer 16" defaultValueString="7" usesScalarValueType="YES"/>
+        <attribute name="sunRequirement" optional="NO" attributeType="String"/>
+        <attribute name="soilType" optional="YES" attributeType="String"/>
+        <attribute name="temperatureMin" optional="YES" attributeType="Double" usesScalarValueType="YES"/>
+        <attribute name="temperatureMax" optional="YES" attributeType="Double" usesScalarValueType="YES"/>
+        <attribute name="hardinessZones" optional="YES" attributeType="String"/>
+        <attribute name="growthStages" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String]"/>
+        <attribute name="harvestTimeWeeks" optional="YES" attributeType="Integer 16" usesScalarValueType="YES"/>
+        <attribute name="commonProblems" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String]"/>
+        <attribute name="careTips" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String]"/>
+        <attribute name="plantImageURL" optional="YES" attributeType="String"/>
+        <attribute name="seasonalCare" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String: String]"/>
+        <attribute name="companionPlants" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String]"/>
+        <attribute name="fertilizingFrequencyWeeks" optional="YES" attributeType="Integer 16" defaultValueString="4" usesScalarValueType="YES"/>
+        <attribute name="pruningFrequencyWeeks" optional="YES" attributeType="Integer 16" usesScalarValueType="YES"/>
+        <relationship name="userPlants" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="UserPlant" inverseName="plant" inverseEntity="UserPlant"/>
+    </entity>
+    
+    <entity name="Garden" representedClassName="Garden" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="name" optional="NO" attributeType="String"/>
+        <attribute name="gardenDescription" optional="YES" attributeType="String"/>
+        <attribute name="size" optional="YES" attributeType="String"/>
+        <attribute name="sunExposure" optional="NO" attributeType="String"/>
+        <attribute name="gardenType" optional="NO" attributeType="String"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="soilType" optional="YES" attributeType="String"/>
+        <attribute name="hardinessZone" optional="YES" attributeType="String"/>
+        <attribute name="createdDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastModifiedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="gardenImageData" optional="YES" attributeType="Binary"/>
+        <attribute name="layout" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String: Any]"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <relationship name="owner" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="gardens" inverseEntity="User"/>
+        <relationship name="userPlants" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="UserPlant" inverseName="garden" inverseEntity="UserPlant"/>
+    </entity>
+    
+    <entity name="UserPlant" representedClassName="UserPlant" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="customName" optional="YES" attributeType="String"/>
+        <attribute name="plantingDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastWateredDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastFertilizedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastPrunedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="healthStatus" optional="NO" attributeType="String" defaultValueString="healthy"/>
+        <attribute name="currentGrowthStage" optional="NO" attributeType="String" defaultValueString="seedling"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="location" optional="YES" attributeType="String"/>
+        <attribute name="plantImageData" optional="YES" attributeType="Binary"/>
+        <attribute name="isActive" optional="NO" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="harvestLog" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[Date]"/>
+        <attribute name="customWateringFrequency" optional="YES" attributeType="Integer 16" usesScalarValueType="YES"/>
+        <attribute name="customFertilizingFrequency" optional="YES" attributeType="Integer 16" usesScalarValueType="YES"/>
+        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String]"/>
+        <relationship name="plant" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="Plant" inverseName="userPlants" inverseEntity="Plant"/>
+        <relationship name="garden" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="Garden" inverseName="userPlants" inverseEntity="Garden"/>
+        <relationship name="reminders" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="Reminder" inverseName="userPlant" inverseEntity="Reminder"/>
+        <relationship name="journalEntries" optional="YES" toMany="YES" deletionRule="Cascade" destinationEntity="JournalEntry" inverseName="userPlant" inverseEntity="JournalEntry"/>
+    </entity>
+    
+    <entity name="Reminder" representedClassName="Reminder" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="type" optional="NO" attributeType="String"/>
+        <attribute name="title" optional="NO" attributeType="String"/>
+        <attribute name="reminderDescription" optional="YES" attributeType="String"/>
+        <attribute name="frequencyDays" optional="NO" attributeType="Integer 16" usesScalarValueType="YES"/>
+        <attribute name="nextDueDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastCompletedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="isCompleted" optional="NO" attributeType="Boolean" defaultValueString="NO" usesScalarValueType="YES"/>
+        <attribute name="isActive" optional="NO" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="priority" optional="NO" attributeType="String" defaultValueString="medium"/>
+        <attribute name="notes" optional="YES" attributeType="String"/>
+        <attribute name="createdDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="notificationEnabled" optional="NO" attributeType="Boolean" defaultValueString="YES" usesScalarValueType="YES"/>
+        <attribute name="customInstructions" optional="YES" attributeType="String"/>
+        <relationship name="userPlant" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="UserPlant" inverseName="reminders" inverseEntity="UserPlant"/>
+    </entity>
+    
+    <entity name="JournalEntry" representedClassName="JournalEntry" syncable="YES" codeGenerationType="class">
+        <attribute name="id" optional="NO" attributeType="UUID" usesScalarValueType="NO"/>
+        <attribute name="title" optional="YES" attributeType="String"/>
+        <attribute name="content" optional="YES" attributeType="String"/>
+        <attribute name="entryDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="createdDate" optional="NO" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="lastModifiedDate" optional="YES" attributeType="Date" usesScalarValueType="NO"/>
+        <attribute name="entryType" optional="NO" attributeType="String" defaultValueString="observation"/>
+        <attribute name="tags" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String]"/>
+        <attribute name="weather" optional="YES" attributeType="String"/>
+        <attribute name="mood" optional="YES" attributeType="String"/>
+        <attribute name="photos" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[Data]"/>
+        <attribute name="measurements" optional="YES" attributeType="Transformable" valueTransformerName="NSSecureUnarchiveFromDataTransformer" customClassName="[String: Double]"/>
+        <relationship name="user" optional="NO" maxCount="1" deletionRule="Nullify" destinationEntity="User" inverseName="journalEntries" inverseEntity="User"/>
+        <relationship name="userPlant" optional="YES" maxCount="1" deletionRule="Nullify" destinationEntity="UserPlant" inverseName="journalEntries" inverseEntity="UserPlant"/>
+    </entity>
+</model>
