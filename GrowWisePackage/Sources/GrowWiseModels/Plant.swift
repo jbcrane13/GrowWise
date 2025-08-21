@@ -33,10 +33,10 @@ public final class Plant {
     public var containerType: ContainerType? // CloudKit: made optional or with default value
     
     // Relationships
-    @Relationship(inverse: \Garden.plants) public var garden: Garden? // CloudKit: made optional or with default value
-    @Relationship(inverse: \PlantReminder.plant) public var reminders: [PlantReminder]? // CloudKit: made optional or with default value
-    @Relationship(inverse: \JournalEntry.plant) public var journalEntries: [JournalEntry]? // CloudKit: made optional or with default value
-    @Relationship(inverse: \Plant.companionPlants) public var companionPlants: [Plant]? // CloudKit: made optional or with default value
+    public var garden: Garden? // CloudKit: made optional or with default value
+    public var reminders: [PlantReminder]? // CloudKit: made optional or with default value
+    public var journalEntries: [JournalEntry]? // CloudKit: made optional or with default value
+    public var companionPlants: [Plant]? // CloudKit: made optional or with default value
     
     public init(
         name: String,
@@ -255,4 +255,3 @@ public enum ContainerType: String, CaseIterable, Codable, Sendable {
         }
     }
 }
-
