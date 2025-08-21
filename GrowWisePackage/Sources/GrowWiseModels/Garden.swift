@@ -3,44 +3,44 @@ import SwiftData
 
 @Model
 public final class Garden {
-    public var id: UUID
-    public var name: String
-    public var gardenType: GardenType
-    public var isIndoor: Bool
+    public var id: UUID?
+    public var name: String?
+    public var gardenType: GardenType?
+    public var isIndoor: Bool?
     
     // Location and environment
     public var hardinessZone: String?
     public var latitude: Double?
     public var longitude: Double?
-    public var sunExposure: SunExposure
-    public var soilType: SoilType
-    public var spaceAvailable: SpaceSize
+    public var sunExposure: SunExposure?
+    public var soilType: SoilType?
+    public var spaceAvailable: SpaceSize?
     
     // Garden planning
     public var plantingStartDate: Date?
     public var plantingEndDate: Date?
-    public var layout: String? // JSON string for garden layout
+    public var layout: String?
     
     // Relationships
-    public var plants: [Plant]
+    public var plants: [Plant] = []
     public var user: User?
     
     // Metadata
-    public var createdDate: Date
-    public var lastModified: Date
+    public var createdDate: Date?
+    public var lastModified: Date?
     
     public init(
         name: String,
-        gardenType: GardenType = .outdoor,
+        gardenType: GardenType = GardenType.outdoor,
         isIndoor: Bool = false
     ) {
         self.id = UUID()
         self.name = name
         self.gardenType = gardenType
         self.isIndoor = isIndoor
-        self.sunExposure = .fullSun
-        self.soilType = .loam
-        self.spaceAvailable = .small
+        self.sunExposure = SunExposure.fullSun
+        self.soilType = SoilType.loam
+        self.spaceAvailable = SpaceSize.small
         self.plants = []
         self.createdDate = Date()
         self.lastModified = Date()

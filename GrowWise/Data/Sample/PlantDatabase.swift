@@ -1,5 +1,6 @@
 import Foundation
-import CoreData
+import SwiftData
+import GrowWiseModels
 
 /// Sample plant database with 25+ common plants for MVP
 struct PlantDatabase {
@@ -584,30 +585,76 @@ struct PlantDatabase {
         )
     ]
     
-    /// Load sample plants into Core Data
-    static func loadSamplePlants(into context: NSManagedObjectContext) {
+    /// Load sample plants into SwiftData
+    static func loadSamplePlants(into context: ModelContext) {
         for plantData in samplePlants {
-            let plant = Plant(context: context)
-            plant.id = UUID()
-            plant.name = plantData.name
+            // Map category string to PlantType enum
+            let plantType: PlantType = {
+                switch plantData.category.lowercased() {
+                case "herb": return .herb
+                case "vegetable": return .vegetable
+                case "flower": return .flower
+                case "houseplant": return .houseplant
+                case "fruit": return .fruit
+                case "succulent": return .succulent
+                default: return .herb // Default fallback
+                }
+            }()
+            
+            // Map difficulty level string to DifficultyLevel enum
+            let difficultyLevel: DifficultyLevel = {
+                switch plantData.difficultyLevel.lowercased() {
+                case "beginner": return .beginner
+                case "intermediate": return .intermediate
+                case "advanced": return .advanced
+                default: return .beginner // Default fallback
+                }
+            }()
+            
+            // Map sun requirement string to SunlightLevel enum
+            let sunlightRequirement: SunlightLevel = {
+                switch plantData.sunRequirement.lowercased() {
+                case "full_sun": return .fullSun
+                case "partial_sun": return .partialSun
+                case "partial_shade": return .partialShade
+                case "full_shade", "low_light": return .fullShade
+                case "bright_indirect": return .partialSun
+                default: return .fullSun // Default fallback
+                }
+            }()
+            
+            // Map watering frequency days to WateringFrequency enum
+            let wateringFrequency: WateringFrequency = {
+                switch plantData.wateringFrequencyDays {
+                case 1: return .daily
+                case 2: return .everyOtherDay
+                case 3: return .twiceWeekly
+                case 7: return .weekly
+                case 14: return .biweekly
+                case 21...30: return .monthly
+                default: return .weekly // Default fallback
+                }
+            }()
+            
+            // Create SwiftData Plant model
+            let plant = Plant(
+                name: plantData.name,
+                plantType: plantType,
+                difficultyLevel: difficultyLevel,
+                isUserPlant: false // This is a database plant, not user's plant
+            )
+            
+            // Set additional properties
             plant.scientificName = plantData.scientificName
-            plant.plantDescription = plantData.description
-            plant.category = plantData.category
-            plant.difficultyLevel = plantData.difficultyLevel
-            plant.maintenanceLevel = plantData.maintenanceLevel
-            plant.wateringFrequencyDays = Int16(plantData.wateringFrequencyDays)
-            plant.sunRequirement = plantData.sunRequirement
-            plant.soilType = plantData.soilType
-            plant.temperatureMin = plantData.temperatureMin ?? 0
-            plant.temperatureMax = plantData.temperatureMax ?? 100
-            plant.hardinessZones = plantData.hardinessZones
-            plant.growthStages = plantData.growthStages
-            plant.harvestTimeWeeks = Int16(plantData.harvestTimeWeeks ?? 0)
-            plant.commonProblems = plantData.commonProblems
-            plant.careTips = plantData.careTips
-            plant.fertilizingFrequencyWeeks = Int16(plantData.fertilizingFrequencyWeeks ?? 4)
-            plant.pruningFrequencyWeeks = Int16(plantData.pruningFrequencyWeeks ?? 0)
-            plant.companionPlants = plantData.companionPlants
+            plant.sunlightRequirement = sunlightRequirement
+            plant.wateringFrequency = wateringFrequency
+            plant.spaceRequirement = .medium // Default value, could be enhanced
+            plant.growthStage = .seedling // Default starting stage
+            plant.healthStatus = .healthy // Default status
+            plant.notes = plantData.description
+            
+            // Insert the plant into the context
+            context.insert(plant)
         }
         
         do {

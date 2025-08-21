@@ -1,5 +1,6 @@
 import Foundation
-import CoreData
+import SwiftData
+import GrowWiseModels
 
 /// Comprehensive data validation rules for GrowWise entities
 struct DataValidationRules {
@@ -21,26 +22,11 @@ struct DataValidationRules {
     // MARK: - Constants
     
     private enum Constants {
-        static let validSkillLevels = ["beginner", "intermediate", "advanced"]
-        static let validDifficultyLevels = ["beginner", "intermediate", "advanced"]
-        static let validMaintenanceLevels = ["low", "medium", "high"]
-        static let validGardenTypes = ["indoor", "outdoor", "container", "raised_bed", "greenhouse"]
-        static let validSunRequirements = ["full_sun", "partial_sun", "partial_shade", "full_shade", "bright_indirect", "low_light"]
-        static let validSoilTypes = ["clay", "sandy", "loamy", "well_draining", "rich_loamy", "acidic", "alkaline", "potting_mix", "succulent_mix", "moist", "poor_to_average"]
-        static let validHealthStatuses = ["healthy", "stressed", "diseased", "dormant", "recovering"]
-        static let validGrowthStages = ["seed", "seedling", "juvenile", "vegetative", "flowering", "fruiting", "mature", "dormant", "declining"]
-        static let validReminderTypes = ["watering", "fertilizing", "pruning", "repotting", "pest_check", "harvesting", "custom"]
-        static let validPriorities = ["low", "medium", "high", "critical"]
-        static let validJournalEntryTypes = ["observation", "care", "harvest", "problem", "milestone", "general"]
-        static let validPlantCategories = ["herb", "vegetable", "flower", "succulent", "houseplant", "fruit", "tree", "shrub"]
-        
-        static let minWateringFrequency = 1
-        static let maxWateringFrequency = 365
-        static let minTemperature = -50.0
-        static let maxTemperature = 150.0
         static let maxNameLength = 100
         static let maxDescriptionLength = 1000
         static let maxNotesLength = 2000
+        static let maxCustomNameLength = 150
+        static let maxReminderTitleLength = 200
     }
     
     // MARK: - User Validation
@@ -49,34 +35,40 @@ struct DataValidationRules {
         var errors: [String] = []
         var warnings: [String] = []
         
-        // Skill level validation
-        if let skillLevel = user.skillLevel,
-           !Constants.validSkillLevels.contains(skillLevel) {
-            errors.append("Invalid skill level: \(skillLevel)")
+        // Email validation
+        if user.email.isEmpty {
+            errors.append("Email is required")
+        } else if !isValidEmail(user.email) {
+            errors.append("Invalid email format")
         }
         
-        // Garden type validation
-        if let gardenType = user.gardenType,
-           !Constants.validGardenTypes.contains(gardenType) {
-            errors.append("Invalid garden type: \(gardenType)")
+        // Display name validation
+        if user.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append("Display name is required")
         }
         
         // Date validation
-        if let createdDate = user.createdDate,
-           createdDate > Date() {
+        if user.createdDate > Date() {
             errors.append("Created date cannot be in the future")
         }
         
-        if let lastActiveDate = user.lastActiveDate,
-           let createdDate = user.createdDate,
-           lastActiveDate < createdDate {
-            warnings.append("Last active date is before created date")
+        if user.lastLoginDate < user.createdDate {
+            warnings.append("Last login date is before created date")
         }
         
         // Hardiness zone validation
         if let hardinessZone = user.hardinessZone,
            !isValidHardinessZone(hardinessZone) {
             warnings.append("Hardiness zone format may be invalid: \(hardinessZone)")
+        }
+        
+        // Experience years validation
+        if user.experienceYears < 0 {
+            errors.append("Experience years cannot be negative")
+        }
+        
+        if user.experienceYears > 100 {
+            warnings.append("Experience years seems unusually high: \(user.experienceYears)")
         }
         
         return errors.isEmpty ? .valid : .invalid(errors: errors, warnings: warnings)
@@ -89,71 +81,53 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Required fields
-        if plant.name?.isEmpty ?? true {
+        if plant.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Plant name is required")
-        } else if let name = plant.name, name.count > Constants.maxNameLength {
+        } else if plant.name.count > Constants.maxNameLength {
             errors.append("Plant name is too long (max \(Constants.maxNameLength) characters)")
         }
         
-        if plant.category?.isEmpty ?? true {
-            errors.append("Plant category is required")
-        } else if let category = plant.category,
-                  !Constants.validPlantCategories.contains(category.lowercased()) {
-            warnings.append("Unusual plant category: \(category)")
+        // Date validations
+        if let plantingDate = plant.plantingDate,
+           plantingDate > Date() {
+            errors.append("Planting date cannot be in the future")
         }
         
-        // Difficulty and maintenance levels
-        if let difficultyLevel = plant.difficultyLevel,
-           !Constants.validDifficultyLevels.contains(difficultyLevel) {
-            errors.append("Invalid difficulty level: \(difficultyLevel)")
+        if let harvestDate = plant.harvestDate,
+           harvestDate < Date() {
+            warnings.append("Harvest date is in the past")
         }
         
-        if let maintenanceLevel = plant.maintenanceLevel,
-           !Constants.validMaintenanceLevels.contains(maintenanceLevel) {
-            errors.append("Invalid maintenance level: \(maintenanceLevel)")
+        if let plantingDate = plant.plantingDate,
+           let harvestDate = plant.harvestDate,
+           harvestDate <= plantingDate {
+            errors.append("Harvest date must be after planting date")
         }
         
-        // Watering frequency
-        if plant.wateringFrequencyDays < Constants.minWateringFrequency ||
-           plant.wateringFrequencyDays > Constants.maxWateringFrequency {
-            errors.append("Watering frequency must be between \(Constants.minWateringFrequency) and \(Constants.maxWateringFrequency) days")
+        if let lastWatered = plant.lastWatered,
+           lastWatered > Date() {
+            errors.append("Last watered date cannot be in the future")
         }
         
-        // Sun requirement
-        if let sunRequirement = plant.sunRequirement,
-           !Constants.validSunRequirements.contains(sunRequirement) {
-            errors.append("Invalid sun requirement: \(sunRequirement)")
+        if let lastFertilized = plant.lastFertilized,
+           lastFertilized > Date() {
+            errors.append("Last fertilized date cannot be in the future")
         }
         
-        // Temperature range
-        if plant.temperatureMin < Constants.minTemperature ||
-           plant.temperatureMin > Constants.maxTemperature {
-            warnings.append("Temperature minimum seems unusual: \(plant.temperatureMin)°F")
+        if let lastPruned = plant.lastPruned,
+           lastPruned > Date() {
+            errors.append("Last pruned date cannot be in the future")
         }
         
-        if plant.temperatureMax < Constants.minTemperature ||
-           plant.temperatureMax > Constants.maxTemperature {
-            warnings.append("Temperature maximum seems unusual: \(plant.temperatureMax)°F")
+        // Notes length
+        if plant.notes.count > Constants.maxNotesLength {
+            warnings.append("Plant notes are very long (over \(Constants.maxNotesLength) characters)")
         }
         
-        if plant.temperatureMin > plant.temperatureMax {
-            errors.append("Minimum temperature cannot be higher than maximum temperature")
-        }
-        
-        // Harvest time validation
-        if plant.harvestTimeWeeks < 0 || plant.harvestTimeWeeks > 520 { // ~10 years
-            warnings.append("Harvest time seems unusual: \(plant.harvestTimeWeeks) weeks")
-        }
-        
-        // Fertilizing frequency
-        if plant.fertilizingFrequencyWeeks < 0 || plant.fertilizingFrequencyWeeks > 52 {
-            warnings.append("Fertilizing frequency seems unusual: \(plant.fertilizingFrequencyWeeks) weeks")
-        }
-        
-        // Description length
-        if let description = plant.plantDescription,
-           description.count > Constants.maxDescriptionLength {
-            warnings.append("Plant description is very long (over \(Constants.maxDescriptionLength) characters)")
+        // Garden location validation
+        if let location = plant.gardenLocation,
+           location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            warnings.append("Garden location should not be empty if provided")
         }
         
         return errors.isEmpty ? .valid : .invalid(errors: errors, warnings: warnings)
@@ -166,53 +140,45 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Required fields
-        if garden.name?.isEmpty ?? true {
+        if garden.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Garden name is required")
-        } else if let name = garden.name, name.count > Constants.maxNameLength {
+        } else if garden.name.count > Constants.maxNameLength {
             errors.append("Garden name is too long (max \(Constants.maxNameLength) characters)")
         }
         
-        if garden.gardenType?.isEmpty ?? true {
-            errors.append("Garden type is required")
-        } else if let gardenType = garden.gardenType,
-                  !Constants.validGardenTypes.contains(gardenType) {
-            errors.append("Invalid garden type: \(gardenType)")
-        }
-        
-        if garden.sunExposure?.isEmpty ?? true {
-            errors.append("Sun exposure is required")
-        } else if let sunExposure = garden.sunExposure,
-                  !Constants.validSunRequirements.contains(sunExposure) {
-            errors.append("Invalid sun exposure: \(sunExposure)")
-        }
-        
         // Date validation
-        if let createdDate = garden.createdDate,
-           createdDate > Date() {
+        if garden.createdDate > Date() {
             errors.append("Garden created date cannot be in the future")
         }
         
-        if let lastModified = garden.lastModifiedDate,
-           let created = garden.createdDate,
-           lastModified < created {
+        if garden.lastModified < garden.createdDate {
             warnings.append("Last modified date is before created date")
         }
         
-        // Owner validation
-        if garden.owner == nil {
-            errors.append("Garden must have an owner")
+        // Hardiness zone validation
+        if let hardinessZone = garden.hardinessZone,
+           !isValidHardinessZone(hardinessZone) {
+            warnings.append("Hardiness zone format may be invalid: \(hardinessZone)")
         }
         
-        // Soil type validation
-        if let soilType = garden.soilType,
-           !Constants.validSoilTypes.contains(soilType) {
-            warnings.append("Unusual soil type: \(soilType)")
+        // Planting date range validation
+        if let startDate = garden.plantingStartDate,
+           let endDate = garden.plantingEndDate,
+           endDate < startDate {
+            errors.append("Planting end date cannot be before start date")
         }
         
-        // Notes length
-        if let notes = garden.notes,
-           notes.count > Constants.maxNotesLength {
-            warnings.append("Garden notes are very long (over \(Constants.maxNotesLength) characters)")
+        // Location validation
+        if let lat = garden.latitude {
+            if lat < -90 || lat > 90 {
+                errors.append("Invalid latitude: must be between -90 and 90")
+            }
+        }
+        
+        if let lng = garden.longitude {
+            if lng < -180 || lng > 180 {
+                errors.append("Invalid longitude: must be between -180 and 180")
+            }
         }
         
         return errors.isEmpty ? .valid : .invalid(errors: errors, warnings: warnings)
@@ -220,111 +186,93 @@ struct DataValidationRules {
     
     // MARK: - UserPlant Validation
     
-    static func validateUserPlant(_ userPlant: UserPlant) -> ValidationResult {
+    static func validateUserPlant(_ plant: Plant) -> ValidationResult {
         var errors: [String] = []
         var warnings: [String] = []
         
-        // Required relationships
-        if userPlant.plant == nil {
-            errors.append("User plant must be associated with a plant")
+        // Validate this is actually a user plant
+        if !plant.isUserPlant {
+            errors.append("Plant must be marked as a user plant")
         }
         
-        if userPlant.garden == nil {
+        // Required relationships
+        if plant.garden == nil {
             errors.append("User plant must be associated with a garden")
         }
         
         // Date validations
-        if let plantingDate = userPlant.plantingDate,
+        if let plantingDate = plant.plantingDate,
            plantingDate > Date() {
             errors.append("Planting date cannot be in the future")
         }
         
-        if let lastWatered = userPlant.lastWateredDate,
+        if let lastWatered = plant.lastWatered,
            lastWatered > Date() {
             errors.append("Last watered date cannot be in the future")
         }
         
-        if let lastFertilized = userPlant.lastFertilizedDate,
+        if let lastFertilized = plant.lastFertilized,
            lastFertilized > Date() {
             errors.append("Last fertilized date cannot be in the future")
         }
         
-        if let lastPruned = userPlant.lastPrunedDate,
+        if let lastPruned = plant.lastPruned,
            lastPruned > Date() {
             errors.append("Last pruned date cannot be in the future")
         }
         
         // Logical date ordering
-        if let plantingDate = userPlant.plantingDate,
-           let lastWatered = userPlant.lastWateredDate,
+        if let plantingDate = plant.plantingDate,
+           let lastWatered = plant.lastWatered,
            lastWatered < plantingDate {
             warnings.append("Last watered date is before planting date")
         }
         
-        // Health status validation
-        if let healthStatus = userPlant.healthStatus,
-           !Constants.validHealthStatuses.contains(healthStatus) {
-            errors.append("Invalid health status: \(healthStatus)")
+        // Name validation
+        if plant.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            errors.append("Plant name cannot be empty")
+        }
+        if plant.name.count > Constants.maxCustomNameLength {
+            errors.append("Plant name exceeds maximum length of \(Constants.maxCustomNameLength) characters")
         }
         
-        // Growth stage validation
-        if let growthStage = userPlant.currentGrowthStage,
-           !Constants.validGrowthStages.contains(growthStage) {
-            errors.append("Invalid growth stage: \(growthStage)")
-        }
-        
-        // Custom frequencies validation
-        if userPlant.customWateringFrequency < 0 || userPlant.customWateringFrequency > 365 {
-            warnings.append("Custom watering frequency seems unusual: \(userPlant.customWateringFrequency) days")
-        }
-        
-        if userPlant.customFertilizingFrequency < 0 || userPlant.customFertilizingFrequency > 52 {
-            warnings.append("Custom fertilizing frequency seems unusual: \(userPlant.customFertilizingFrequency) weeks")
+        // Garden location validation
+        if let location = plant.gardenLocation {
+            if location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+                warnings.append("Garden location should not be empty")
+            }
         }
         
         // Notes length
-        if let notes = userPlant.notes,
-           notes.count > Constants.maxNotesLength {
+        if plant.notes.count > Constants.maxNotesLength {
             warnings.append("Plant notes are very long (over \(Constants.maxNotesLength) characters)")
         }
         
-        return errors.isEmpty ? .valid : .invalid(errors: errors, warnings: warnings)
+        return ValidationResult(
+            isValid: errors.isEmpty,
+            errors: errors,
+            warnings: warnings
+        )
     }
     
     // MARK: - Reminder Validation
     
-    static func validateReminder(_ reminder: Reminder) -> ValidationResult {
+    static func validateReminder(_ reminder: PlantReminder) -> ValidationResult {
         var errors: [String] = []
         var warnings: [String] = []
         
         // Required fields
-        if reminder.title?.isEmpty ?? true {
+        if reminder.title.isEmpty {
             errors.append("Reminder title is required")
         }
         
-        if reminder.type?.isEmpty ?? true {
-            errors.append("Reminder type is required")
-        } else if let type = reminder.type,
-                  !Constants.validReminderTypes.contains(type) {
-            errors.append("Invalid reminder type: \(type)")
-        }
-        
-        // Frequency validation
-        if reminder.frequencyDays <= 0 || reminder.frequencyDays > 365 {
-            errors.append("Reminder frequency must be between 1 and 365 days")
-        }
-        
-        // Priority validation
-        if let priority = reminder.priority,
-           !Constants.validPriorities.contains(priority) {
-            errors.append("Invalid priority: \(priority)")
+        if reminder.message.isEmpty {
+            errors.append("Reminder message is required")
         }
         
         // Date validations
-        if let nextDue = reminder.nextDueDate,
-           let created = reminder.createdDate,
-           nextDue < created {
-            warnings.append("Next due date is before created date")
+        if reminder.nextDueDate <= Date() {
+            warnings.append("Reminder is already due or overdue")
         }
         
         if let lastCompleted = reminder.lastCompletedDate,
@@ -332,17 +280,44 @@ struct DataValidationRules {
             errors.append("Last completed date cannot be in the future")
         }
         
-        // Relationship validation
-        if reminder.userPlant == nil {
-            errors.append("Reminder must be associated with a user plant")
+        if reminder.nextDueDate < reminder.createdDate {
+            warnings.append("Next due date is before created date")
+        }
+        
+        // Required relationships
+        if reminder.plant == nil {
+            errors.append("Reminder must be associated with a plant")
+        }
+        
+        if reminder.user == nil {
+            errors.append("Reminder must be associated with a user")
         }
         
         // Logic validation
-        if reminder.isCompleted && reminder.lastCompletedDate == nil {
-            warnings.append("Reminder is marked completed but has no completion date")
+        if !reminder.isEnabled && reminder.nextDueDate > Date() {
+            warnings.append("Disabled reminder has a future due date")
         }
         
-        return errors.isEmpty ? .valid : .invalid(errors: errors, warnings: warnings)
+        // Snooze validation
+        if reminder.snoozeCount > reminder.maxSnoozeCount {
+            errors.append("Snooze count exceeds maximum allowed snoozes")
+        }
+        
+        // Title length
+        if reminder.title.count > Constants.maxReminderTitleLength {
+            warnings.append("Reminder title is very long")
+        }
+        
+        // Message length
+        if reminder.message.count > Constants.maxNotesLength {
+            warnings.append("Reminder message is very long")
+        }
+        
+        return ValidationResult(
+            isValid: errors.isEmpty,
+            errors: errors,
+            warnings: warnings
+        )
     }
     
     // MARK: - Journal Entry Validation
@@ -352,36 +327,51 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Date validations
-        if let entryDate = entry.entryDate,
-           entryDate > Date() {
+        if entry.entryDate > Date() {
             errors.append("Entry date cannot be in the future")
         }
         
-        if let created = entry.createdDate,
-           created > Date() {
-            errors.append("Created date cannot be in the future")
-        }
-        
-        if let entryDate = entry.entryDate,
-           let created = entry.createdDate,
-           entryDate > created.addingTimeInterval(24 * 60 * 60) { // Allow 1 day tolerance
-            warnings.append("Entry date is significantly after created date")
-        }
-        
-        // Entry type validation
-        if let entryType = entry.entryType,
-           !Constants.validJournalEntryTypes.contains(entryType) {
-            warnings.append("Unusual entry type: \(entryType)")
+        if entry.lastModified < entry.entryDate {
+            warnings.append("Last modified date is before entry date")
         }
         
         // Content validation
-        if entry.title?.isEmpty ?? true && entry.content?.isEmpty ?? true {
+        if entry.title.isEmpty && entry.content.isEmpty {
             warnings.append("Journal entry has no title or content")
         }
         
-        if let content = entry.content,
-           content.count > Constants.maxNotesLength * 2 { // Allow longer content for journal
+        if entry.content.count > Constants.maxNotesLength * 2 { // Allow longer content for journal
             warnings.append("Journal entry content is very long")
+        }
+        
+        // Title length validation
+        if entry.title.count > Constants.maxNameLength {
+            warnings.append("Journal entry title is very long")
+        }
+        
+        // Measurement validations
+        if let height = entry.heightMeasurement, height < 0 {
+            errors.append("Height measurement cannot be negative")
+        }
+        
+        if let width = entry.widthMeasurement, width < 0 {
+            errors.append("Width measurement cannot be negative")
+        }
+        
+        if let temp = entry.temperature {
+            if temp < -50 || temp > 150 {
+                warnings.append("Temperature seems unusual: \(temp)°")
+            }
+        }
+        
+        if let humidity = entry.humidity {
+            if humidity < 0 || humidity > 100 {
+                errors.append("Humidity must be between 0 and 100%")
+            }
+        }
+        
+        if let wateringAmount = entry.wateringAmount, wateringAmount < 0 {
+            errors.append("Watering amount cannot be negative")
         }
         
         // Relationship validation
@@ -402,45 +392,46 @@ struct DataValidationRules {
         return regex?.firstMatch(in: zone, options: [], range: range) != nil
     }
     
+    private static func isValidEmail(_ email: String) -> Bool {
+        let emailPattern = "^[A-Z0-9a-z._%+-]+@[A-Za-z0-9.-]+\\.[A-Za-z]{2,}$"
+        let regex = try? NSRegularExpression(pattern: emailPattern, options: .caseInsensitive)
+        let range = NSRange(location: 0, length: email.utf16.count)
+        return regex?.firstMatch(in: email, options: [], range: range) != nil
+    }
+    
     // MARK: - Batch Validation
     
-    static func validateAllEntities(in context: NSManagedObjectContext) -> [String: [ValidationResult]] {
+    static func validateAllEntities(in context: ModelContext) -> [String: [ValidationResult]] {
         var results: [String: [ValidationResult]] = [:]
         
-        // Validate all users
-        let userRequest: NSFetchRequest<User> = User.fetchRequest()
-        if let users = try? context.fetch(userRequest) {
+        do {
+            // Validate all users
+            let userDescriptor = FetchDescriptor<User>()
+            let users = try context.fetch(userDescriptor)
             results["User"] = users.map { validateUser($0) }
-        }
-        
-        // Validate all plants
-        let plantRequest: NSFetchRequest<Plant> = Plant.fetchRequest()
-        if let plants = try? context.fetch(plantRequest) {
+            
+            // Validate all plants
+            let plantDescriptor = FetchDescriptor<Plant>()
+            let plants = try context.fetch(plantDescriptor)
             results["Plant"] = plants.map { validatePlant($0) }
-        }
-        
-        // Validate all gardens
-        let gardenRequest: NSFetchRequest<Garden> = Garden.fetchRequest()
-        if let gardens = try? context.fetch(gardenRequest) {
+            
+            // Validate all gardens
+            let gardenDescriptor = FetchDescriptor<Garden>()
+            let gardens = try context.fetch(gardenDescriptor)
             results["Garden"] = gardens.map { validateGarden($0) }
-        }
-        
-        // Validate all user plants
-        let userPlantRequest: NSFetchRequest<UserPlant> = UserPlant.fetchRequest()
-        if let userPlants = try? context.fetch(userPlantRequest) {
-            results["UserPlant"] = userPlants.map { validateUserPlant($0) }
-        }
-        
-        // Validate all reminders
-        let reminderRequest: NSFetchRequest<Reminder> = Reminder.fetchRequest()
-        if let reminders = try? context.fetch(reminderRequest) {
-            results["Reminder"] = reminders.map { validateReminder($0) }
-        }
-        
-        // Validate all journal entries
-        let entryRequest: NSFetchRequest<JournalEntry> = JournalEntry.fetchRequest()
-        if let entries = try? context.fetch(entryRequest) {
+            
+            // Validate all plant reminders
+            let reminderDescriptor = FetchDescriptor<PlantReminder>()
+            let reminders = try context.fetch(reminderDescriptor)
+            results["PlantReminder"] = reminders.map { validateReminder($0) }
+            
+            // Validate all journal entries
+            let entryDescriptor = FetchDescriptor<JournalEntry>()
+            let entries = try context.fetch(entryDescriptor)
             results["JournalEntry"] = entries.map { validateJournalEntry($0) }
+            
+        } catch {
+            print("Error fetching entities for validation: \(error)")
         }
         
         return results

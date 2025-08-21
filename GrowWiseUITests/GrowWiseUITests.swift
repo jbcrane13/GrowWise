@@ -1,26 +1,61 @@
 import XCTest
 
 final class GrowWiseUITests: XCTestCase {
+    var app: XCUIApplication!
+    
     override func setUpWithError() throws {
-        // Put setup code here. This method is called before the invocation of each test method in the class.
-
-        // In UI tests it is usually best to stop immediately when a failure occurs.
         continueAfterFailure = false
-
-        // In UI tests it’s important to set the initial state - such as interface orientation - required for your tests before they run. The setUp method is a good place to do this.
+        app = XCUIApplication()
+        
+        // Configure app for UI testing
+        app.launchArguments = ["--uitesting"]
+        app.launch()
     }
 
     override func tearDownWithError() throws {
-        // Put teardown code here. This method is called after the invocation of each test method in the class.
+        app.terminate()
     }
 
+    // MARK: - App Launch Tests
+    
     @MainActor
-    func testExample() throws {
-        // UI tests must launch the application that they test.
-        let app = XCUIApplication()
-        app.launch()
-
-        // Use XCTAssert and related functions to verify your tests produce the correct results.
-        XCTAssertTrue(true)
+    func testAppLaunches() throws {
+        // Test that the app launches successfully
+        XCTAssertTrue(app.exists)
+        
+        // Check for main UI elements
+        let mainElement = app.otherElements["MainAppView"]
+        let onboardingElement = app.otherElements["OnboardingView"]
+        
+        // Either main app or onboarding should be visible
+        XCTAssertTrue(mainElement.exists || onboardingElement.exists)
+    }
+    
+    @MainActor
+    func testAppLaunchPerformance() throws {
+        // Measure app launch time
+        measure(metrics: [XCTApplicationLaunchMetric()]) {
+            app.launch()
+        }
+    }
+    
+    // MARK: - Helper Methods
+    
+    private func skipOnboardingIfNeeded() {
+        // Skip onboarding if it appears
+        let onboardingView = app.otherElements["OnboardingView"]
+        
+        if onboardingView.waitForExistence(timeout: 2.0) {
+            // Look for skip button
+            let skipButton = app.buttons["Skip"]
+            if skipButton.exists {
+                skipButton.tap()
+                return
+            }
+        }
+        
+        // Wait for main app to load
+        let mainView = app.otherElements["MainAppView"]
+        XCTAssertTrue(mainView.waitForExistence(timeout: 5.0))
     }
 }

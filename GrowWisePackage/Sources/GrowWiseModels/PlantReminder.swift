@@ -6,8 +6,9 @@ public final class PlantReminder {
     public var id: UUID
     public var title: String
     public var message: String
-    public var reminderType: ReminderType
-    public var frequency: ReminderFrequency
+    public var reminderTypeRawValue: String
+    public var storedFrequency: String
+    public var customFrequencyDays: Int?
     
     // Scheduling
     public var nextDueDate: Date
@@ -23,10 +24,53 @@ public final class PlantReminder {
     public var notificationIdentifier: String?
     public var snoozeCount: Int
     public var maxSnoozeCount: Int
+    public var preferredNotificationTime: Date?
+    
+    // Smart reminder properties
+    public var priorityRawValue: String
+    public var enableWeatherAdjustment: Bool
+    public var baseFrequencyDays: Int
+    
+    // Seasonal properties
+    public var seasonalContext: String?
+    public var isSeasonalReminder: Bool
     
     // Metadata
     public var createdDate: Date
     public var lastModified: Date
+    
+    public var reminderType: ReminderType {
+        get { ReminderType(rawValue: reminderTypeRawValue) ?? .custom }
+        set { reminderTypeRawValue = newValue.rawValue }
+    }
+    
+    public var frequency: ReminderFrequency {
+        get {
+            if let frequency = ReminderFrequency(rawValue: storedFrequency) {
+                if frequency == .custom {
+                    return .custom
+                }
+                return frequency
+            }
+            // fallback
+            return .daily
+        }
+        set {
+            switch newValue {
+            case .custom:
+                storedFrequency = ReminderFrequency.custom.rawValue
+                // customFrequencyDays is handled elsewhere if needed
+            default:
+                storedFrequency = newValue.rawValue
+                customFrequencyDays = nil
+            }
+        }
+    }
+    
+    public var priority: ReminderPriority {
+        get { ReminderPriority(rawValue: priorityRawValue) ?? ReminderPriority.medium }
+        set { priorityRawValue = newValue.rawValue }
+    }
     
     public init(
         title: String,
@@ -39,23 +83,40 @@ public final class PlantReminder {
         self.id = UUID()
         self.title = title
         self.message = message
-        self.reminderType = reminderType
-        self.frequency = frequency
+        self.reminderTypeRawValue = reminderType.rawValue
         self.nextDueDate = nextDueDate
         self.plant = plant
+        self.user = nil
         self.isEnabled = true
         self.isRecurring = true
         self.snoozeCount = 0
         self.maxSnoozeCount = 3
+        self.preferredNotificationTime = nil
+        self.priorityRawValue = ReminderPriority.medium.rawValue
+        self.enableWeatherAdjustment = false
+        self.customFrequencyDays = nil
+        self.seasonalContext = nil
+        self.isSeasonalReminder = false
         self.createdDate = Date()
         self.lastModified = Date()
+        
+        switch frequency {
+        case .custom:
+            self.storedFrequency = ReminderFrequency.custom.rawValue
+            // customFrequencyDays should be set outside as needed; leave as initialized
+        default:
+            self.storedFrequency = frequency.rawValue
+            self.customFrequencyDays = nil
+        }
+        self.baseFrequencyDays = frequency.days
     }
     
     // Calculate next due date based on frequency
     public func calculateNextDueDate(from completedDate: Date = Date()) -> Date {
         let calendar = Calendar.current
+        let freq = self.frequency
         
-        switch frequency {
+        switch freq {
         case .daily:
             return calendar.date(byAdding: .day, value: 1, to: completedDate) ?? completedDate
         case .everyOtherDay:
@@ -74,7 +135,8 @@ public final class PlantReminder {
             return calendar.date(byAdding: .month, value: 6, to: completedDate) ?? completedDate
         case .yearly:
             return calendar.date(byAdding: .year, value: 1, to: completedDate) ?? completedDate
-        case .custom(let days):
+        case .custom:
+            let days = self.customFrequencyDays ?? 1
             return calendar.date(byAdding: .day, value: days, to: completedDate) ?? completedDate
         case .once:
             return completedDate // One-time reminder
@@ -116,6 +178,20 @@ public final class PlantReminder {
         nextDueDate = snoozeDate
         snoozeCount += 1
         lastModified = Date()
+    }
+    
+    // MARK: - Computed Properties
+    
+    public var plantName: String {
+        return plant?.name ?? "Your Plant"
+    }
+    
+    public var plantId: UUID {
+        return plant?.id ?? UUID()
+    }
+    
+    public var type: ReminderType {
+        return reminderType
     }
 }
 
@@ -166,6 +242,10 @@ public enum ReminderType: String, CaseIterable, Codable, Sendable {
         }
     }
     
+    public var notificationMessage: String {
+        return self.defaultMessage
+    }
+    
     public var iconName: String {
         switch self {
         case .watering: return "drop.fill"
@@ -173,7 +253,7 @@ public enum ReminderType: String, CaseIterable, Codable, Sendable {
         case .pruning: return "scissors"
         case .repotting: return "circle.fill"
         case .harvest: return "basket.fill"
-        case .planting: return "seedling"
+        case .planting: return "sprout.circle"
         case .inspection: return "magnifyingglass"
         case .pestControl: return "ladybug.fill"
         case .soilTest: return "testtube.2"
@@ -183,7 +263,7 @@ public enum ReminderType: String, CaseIterable, Codable, Sendable {
     }
 }
 
-public enum ReminderFrequency: Codable, Sendable {
+public enum ReminderFrequency: String, Codable, Sendable, Hashable, Equatable, CaseIterable {
     case daily
     case everyOtherDay
     case twiceWeekly
@@ -193,7 +273,7 @@ public enum ReminderFrequency: Codable, Sendable {
     case quarterly
     case seasonally
     case yearly
-    case custom(days: Int)
+    case custom
     case once
     
     public var displayName: String {
@@ -207,7 +287,7 @@ public enum ReminderFrequency: Codable, Sendable {
         case .quarterly: return "Quarterly"
         case .seasonally: return "Seasonally"
         case .yearly: return "Yearly"
-        case .custom(let days): return "Every \(days) days"
+        case .custom: return "Custom"
         case .once: return "One-time"
         }
     }
@@ -223,7 +303,7 @@ public enum ReminderFrequency: Codable, Sendable {
         case .quarterly: return 90
         case .seasonally: return 180
         case .yearly: return 365
-        case .custom(let days): return days
+        case .custom: return 0 // handled separately
         case .once: return 0
         }
     }
@@ -243,6 +323,40 @@ public enum SnoozeDuration: String, CaseIterable, Codable, Sendable {
         case .oneHour: return "1 hour"
         case .twoHours: return "2 hours"
         case .tomorrow: return "Tomorrow"
+        }
+    }
+}
+
+public enum ReminderPriority: String, CaseIterable, Codable, Sendable {
+    case low
+    case medium
+    case high
+    case critical
+    
+    public var displayName: String {
+        switch self {
+        case .low: return "Low"
+        case .medium: return "Medium"
+        case .high: return "High"
+        case .critical: return "Critical"
+        }
+    }
+    
+    public var color: String {
+        switch self {
+        case .low: return "gray"
+        case .medium: return "blue"
+        case .high: return "orange"
+        case .critical: return "red"
+        }
+    }
+    
+    public var numericValue: Int {
+        switch self {
+        case .low: return 1
+        case .medium: return 2
+        case .high: return 3
+        case .critical: return 4
         }
     }
 }

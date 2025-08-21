@@ -3,266 +3,194 @@ import UserNotifications
 import GrowWiseModels
 
 @MainActor
-public final class NotificationService: NSObject, ObservableObject, Sendable {
+public final class NotificationService: NSObject, ObservableObject {
     public static let shared = NotificationService()
     
+    @Published public var isAuthorized = false
+    @Published public var badgeCount = 0
     @Published public var authorizationStatus: UNAuthorizationStatus = .notDetermined
-    @Published public var isEnabled: Bool = false
     
-    private let center = UNUserNotificationCenter.current()
+    private let notificationCenter: UNUserNotificationCenter
+    
+    /// Alias for isAuthorized to maintain backward compatibility
+    public var isEnabled: Bool {
+        return isAuthorized
+    }
     
     override init() {
+        self.notificationCenter = UNUserNotificationCenter.current()
         super.init()
-        center.delegate = self
-        Task {
-            await checkAuthorizationStatus()
-        }
+        
+        notificationCenter.delegate = self
+        checkNotificationPermissions()
     }
     
     // MARK: - Permission Management
     
-    public func requestPermission() async throws {
-        let granted = try await center.requestAuthorization(options: [.alert, .badge, .sound, .provisional])
-        await checkAuthorizationStatus()
-        isEnabled = granted
-    }
-    
-    public func checkAuthorizationStatus() async {
-        let settings = await center.notificationSettings()
-        authorizationStatus = settings.authorizationStatus
-        isEnabled = settings.authorizationStatus == .authorized || settings.authorizationStatus == .provisional
-    }
-    
-    // MARK: - Reminder Notifications
-    
-    public func scheduleReminderNotification(for reminder: PlantReminder) async throws {
-        guard isEnabled else { return }
-        
-        // Cancel existing notification if it exists
-        if let identifier = reminder.notificationIdentifier {
-            center.removePendingNotificationRequests(withIdentifiers: [identifier])
-        }
-        
-        let content = UNMutableNotificationContent()
-        content.title = reminder.title
-        content.body = reminder.message
-        content.sound = .default
-        content.badge = 1
-        
-        // Add plant name and type to user info
-        if let plant = reminder.plant {
-            content.userInfo = [
-                "reminderId": reminder.id.uuidString,
-                "plantId": plant.id.uuidString,
-                "plantName": plant.name,
-                "reminderType": reminder.reminderType.rawValue
-            ]
-        }
-        
-        // Create trigger based on due date
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: reminder.nextDueDate)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-        
-        let identifier = "reminder_\(reminder.id.uuidString)"
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        
-        try await center.add(request)
-        
-        // Store the notification identifier
-        reminder.notificationIdentifier = identifier
-    }
-    
-    public func cancelReminderNotification(for reminder: PlantReminder) {
-        if let identifier = reminder.notificationIdentifier {
-            center.removePendingNotificationRequests(withIdentifiers: [identifier])
-            reminder.notificationIdentifier = nil
+    public func requestNotificationPermissions() async -> Bool {
+        do {
+            let granted = try await notificationCenter.requestAuthorization(options: [.alert, .badge, .sound])
+            await MainActor.run {
+                self.isAuthorized = granted
+            }
+            return granted
+        } catch {
+            print("Failed to request notification permissions: \(error)")
+            return false
         }
     }
     
-    // MARK: - Batch Operations
-    
-    public func scheduleAllActiveReminders(_ reminders: [PlantReminder]) async {
-        for reminder in reminders where reminder.isEnabled {
-            do {
-                try await scheduleReminderNotification(for: reminder)
-            } catch {
-                print("Failed to schedule notification for reminder \(reminder.id): \(error)")
+    private func checkNotificationPermissions() {
+        Task {
+            let settings = await notificationCenter.notificationSettings()
+            await MainActor.run {
+                self.authorizationStatus = settings.authorizationStatus
+                self.isAuthorized = settings.authorizationStatus == .authorized
             }
         }
     }
     
-    public func cancelAllNotifications() {
-        center.removeAllPendingNotificationRequests()
-        center.removeAllDeliveredNotifications()
+    public func checkAuthorizationStatus() async {
+        let settings = await notificationCenter.notificationSettings()
+        await MainActor.run {
+            self.authorizationStatus = settings.authorizationStatus
+            self.isAuthorized = settings.authorizationStatus == .authorized
+        }
     }
     
-    // MARK: - Seasonal and Plant-Specific Notifications
+    // MARK: - Scheduling Notifications
     
-    public func scheduleSeasonalReminder(
-        title: String,
-        body: String,
-        date: Date,
-        identifier: String
-    ) async throws {
-        guard isEnabled else { return }
+    public func scheduleReminderNotification(for reminder: PlantReminder) async throws {
+        guard isAuthorized else { return }
         
+        let content = createReminderNotificationContent(for: reminder)
+        let trigger = createNotificationTrigger(for: reminder.nextDueDate, repeats: false)
+        
+        let request = UNNotificationRequest(
+            identifier: reminder.id.uuidString,
+            content: content,
+            trigger: trigger
+        )
+        
+        try await notificationCenter.add(request)
+    }
+    
+    public func cancelNotification(with identifier: String) async {
+        notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+    }
+    
+    public func cancelAllNotifications() async {
+        notificationCenter.removeAllPendingNotificationRequests()
+    }
+    
+    // MARK: - Helper Functions
+    
+    private func updateBadgeCount() async {
+        let pendingCount = await getPendingNotificationsCount()
+        await MainActor.run {
+            self.badgeCount = pendingCount
+        }
+        
+        try? await notificationCenter.setBadgeCount(pendingCount)
+    }
+    
+    private func createReminderNotificationContent(for reminder: PlantReminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
+        content.title = reminder.title
+        content.body = reminder.message
         content.sound = .default
-        content.badge = 1
-        content.userInfo = ["type": "seasonal", "identifier": identifier]
+        content.badge = NSNumber(value: badgeCount + 1)
         
-        let calendar = Calendar.current
-        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
-        let trigger = UNCalendarNotificationTrigger(dateMatching: components, repeats: false)
-        
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        try await center.add(request)
-    }
-    
-    public func scheduleWeatherAlert(
-        title: String,
-        body: String,
-        category: WeatherAlertCategory = .general
-    ) async throws {
-        guard isEnabled else { return }
-        
-        let content = UNMutableNotificationContent()
-        content.title = title
-        content.body = body
-        content.sound = .default
-        content.badge = 1
-        content.categoryIdentifier = category.rawValue
-        content.userInfo = ["type": "weather", "category": category.rawValue]
-        
-        // Immediate delivery for weather alerts
-        let identifier = "weather_\(UUID().uuidString)"
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
-        
-        try await center.add(request)
-    }
-    
-    // MARK: - Plant Health Notifications
-    
-    public func schedulePlantHealthAlert(
-        for plant: Plant,
-        issue: HealthIssue,
-        severity: AlertSeverity = .medium
-    ) async throws {
-        guard isEnabled else { return }
-        
-        let content = UNMutableNotificationContent()
-        content.title = "\(plant.name) Needs Attention"
-        content.body = issue.description
-        content.sound = severity.sound
-        content.badge = 1
-        content.categoryIdentifier = "PLANT_HEALTH"
-        
-        content.userInfo = [
-            "type": "health",
-            "plantId": plant.id.uuidString,
-            "plantName": plant.name,
-            "issue": issue.rawValue,
-            "severity": severity.rawValue
+        // Add custom user info for handling actions
+        var userInfo: [String: Any] = [
+            "reminderId": reminder.id.uuidString,
+            "reminderType": reminder.reminderType.rawValue
         ]
         
-        let identifier = "health_\(plant.id.uuidString)_\(issue.rawValue)"
-        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: nil)
+        if let plantId = reminder.plant?.id {
+            userInfo["plantId"] = plantId.uuidString
+        }
         
-        try await center.add(request)
+        content.userInfo = userInfo
+        return content
     }
     
-    // MARK: - Notification Categories and Actions
-    
-    public func setupNotificationCategories() {
-        let completeAction = UNNotificationAction(
-            identifier: "COMPLETE_ACTION",
-            title: "Mark Complete",
-            options: [.foreground]
-        )
-        
-        let snoozeAction = UNNotificationAction(
-            identifier: "SNOOZE_ACTION",
-            title: "Snooze 1 Hour",
-            options: []
-        )
-        
-        let viewPlantAction = UNNotificationAction(
-            identifier: "VIEW_PLANT_ACTION",
-            title: "View Plant",
-            options: [.foreground]
-        )
-        
-        // Reminder category
-        let reminderCategory = UNNotificationCategory(
-            identifier: "PLANT_REMINDER",
-            actions: [completeAction, snoozeAction, viewPlantAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        // Health alert category
-        let healthCategory = UNNotificationCategory(
-            identifier: "PLANT_HEALTH",
-            actions: [viewPlantAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        // Weather alert category
-        let weatherCategory = UNNotificationCategory(
-            identifier: "WEATHER_ALERT",
-            actions: [viewPlantAction],
-            intentIdentifiers: [],
-            options: []
-        )
-        
-        center.setNotificationCategories([reminderCategory, healthCategory, weatherCategory])
+    private func createNotificationTrigger(for date: Date, repeats: Bool) -> UNNotificationTrigger {
+        let calendar = Calendar.current
+        let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
+        return UNCalendarNotificationTrigger(dateMatching: components, repeats: repeats)
     }
     
-    // MARK: - Statistics
-    
-    public func getPendingNotificationsCount() async -> Int {
-        let requests = await center.pendingNotificationRequests()
+    private func getPendingNotificationsCount() async -> Int {
+        let requests = await notificationCenter.pendingNotificationRequests()
         return requests.count
     }
     
-    public func getDeliveredNotificationsCount() async -> Int {
-        let notifications = await center.deliveredNotifications()
-        return notifications.count
-    }
-    
-    // MARK: - Settings Management
-    
-    public func updateQuietHours(start: Date?, end: Date?) {
-        UserDefaults.standard.set(start, forKey: "quietHoursStart")
-        UserDefaults.standard.set(end, forKey: "quietHoursEnd")
-    }
+    // MARK: - Additional Helper Methods
     
     public func isInQuietHours() -> Bool {
-        guard let start = UserDefaults.standard.object(forKey: "quietHoursStart") as? Date,
-              let end = UserDefaults.standard.object(forKey: "quietHoursEnd") as? Date else {
-            return false
+        let hour = Calendar.current.component(.hour, from: Date())
+        return hour < 8 || hour > 21 // Quiet hours are before 8 AM and after 9 PM
+    }
+    
+    public func cancelReminderNotification(for reminderId: UUID) async {
+        await cancelNotification(with: reminderId.uuidString)
+    }
+    
+    public func requestPermission() async -> Bool {
+        return await requestNotificationPermissions()
+    }
+    
+    public func setupNotificationCategories() {
+        // Setup notification categories for reminder actions
+        // This would be implementation-specific for garden care categories
+    }
+    
+    // MARK: - Additional Methods for View Compatibility
+    
+    public func scheduleSeasonalReminder(title: String, body: String, date: Date, identifier: String) async throws {
+        guard isAuthorized else { return }
+        
+        let content = UNMutableNotificationContent()
+        content.title = title
+        content.body = body
+        content.sound = .default
+        content.badge = NSNumber(value: badgeCount + 1)
+        
+        let trigger = createNotificationTrigger(for: date, repeats: false)
+        let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
+        
+        try await notificationCenter.add(request)
+    }
+    
+    public func getPendingNotifications() async -> [UNNotificationRequest] {
+        return await notificationCenter.pendingNotificationRequests()
+    }
+    
+    public func clearAllNotifications() {
+        Task {
+            await cancelAllNotifications()
         }
-        
-        let now = Date()
-        let calendar = Calendar.current
-        
-        let currentTime = calendar.dateComponents([.hour, .minute], from: now)
-        let startTime = calendar.dateComponents([.hour, .minute], from: start)
-        let endTime = calendar.dateComponents([.hour, .minute], from: end)
-        
-        let current = currentTime.hour! * 60 + currentTime.minute!
-        let startMinutes = startTime.hour! * 60 + startTime.minute!
-        let endMinutes = endTime.hour! * 60 + endTime.minute!
-        
-        if startMinutes <= endMinutes {
-            return current >= startMinutes && current <= endMinutes
-        } else {
-            return current >= startMinutes || current <= endMinutes
-        }
+    }
+}
+
+// MARK: - Supporting Types
+
+public struct NotificationStatistics: Sendable {
+    public let pendingCount: Int
+    public let deliveredCount: Int
+    public let isAuthorized: Bool
+    public let badgeEnabled: Bool
+    public let soundEnabled: Bool
+    public let alertEnabled: Bool
+    
+    public init(pendingCount: Int, deliveredCount: Int, isAuthorized: Bool, badgeEnabled: Bool, soundEnabled: Bool, alertEnabled: Bool) {
+        self.pendingCount = pendingCount
+        self.deliveredCount = deliveredCount
+        self.isAuthorized = isAuthorized
+        self.badgeEnabled = badgeEnabled
+        self.soundEnabled = soundEnabled
+        self.alertEnabled = alertEnabled
     }
 }
 
@@ -271,144 +199,31 @@ public final class NotificationService: NSObject, ObservableObject, Sendable {
 extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate {
     public func userNotificationCenter(
         _ center: UNUserNotificationCenter,
-        willPresent notification: UNNotification,
-        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
-    ) {
-        // Show notification even when app is in foreground
-        completionHandler([.banner, .sound, .badge])
-    }
-    
-    public func userNotificationCenter(
-        _ center: UNUserNotificationCenter,
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        let userInfo = response.notification.request.content.userInfo
+        let _ = response.notification.request.content.userInfo
         
         switch response.actionIdentifier {
-        case "COMPLETE_ACTION":
-            handleCompleteAction(userInfo: userInfo)
-        case "SNOOZE_ACTION":
-            handleSnoozeAction(userInfo: userInfo)
-        case "VIEW_PLANT_ACTION":
-            handleViewPlantAction(userInfo: userInfo)
         case UNNotificationDefaultActionIdentifier:
-            handleDefaultAction(userInfo: userInfo)
+            // Handle default tap action
+            break
         default:
             break
+        }
+        
+        Task {
+            await updateBadgeCount()
         }
         
         completionHandler()
     }
     
-    private func handleCompleteAction(userInfo: [AnyHashable: Any]) {
-        guard let reminderIdString = userInfo["reminderId"] as? String,
-              let reminderId = UUID(uuidString: reminderIdString) else { return }
-        
-        // Post notification for app to handle reminder completion
-        NotificationCenter.default.post(
-            name: .completeReminder,
-            object: nil,
-            userInfo: ["reminderId": reminderId]
-        )
+    public func userNotificationCenter(
+        _ center: UNUserNotificationCenter,
+        willPresent notification: UNNotification,
+        withCompletionHandler completionHandler: @escaping (UNNotificationPresentationOptions) -> Void
+    ) {
+        completionHandler([.banner, .sound, .badge])
     }
-    
-    private func handleSnoozeAction(userInfo: [AnyHashable: Any]) {
-        guard let reminderIdString = userInfo["reminderId"] as? String,
-              let reminderId = UUID(uuidString: reminderIdString) else { return }
-        
-        // Post notification for app to handle reminder snooze
-        NotificationCenter.default.post(
-            name: .snoozeReminder,
-            object: nil,
-            userInfo: ["reminderId": reminderId]
-        )
-    }
-    
-    private func handleViewPlantAction(userInfo: [AnyHashable: Any]) {
-        guard let plantIdString = userInfo["plantId"] as? String,
-              let plantId = UUID(uuidString: plantIdString) else { return }
-        
-        // Post notification for app to navigate to plant detail
-        NotificationCenter.default.post(
-            name: .viewPlant,
-            object: nil,
-            userInfo: ["plantId": plantId]
-        )
-    }
-    
-    private func handleDefaultAction(userInfo: [AnyHashable: Any]) {
-        // Handle tap on notification body
-        handleViewPlantAction(userInfo: userInfo)
-    }
-}
-
-// MARK: - Supporting Types
-
-public enum WeatherAlertCategory: String, CaseIterable, Sendable {
-    case frost = "frost"
-    case heatwave = "heatwave"
-    case heavyRain = "heavyRain"
-    case drought = "drought"
-    case wind = "wind"
-    case general = "general"
-    
-    public var displayName: String {
-        switch self {
-        case .frost: return "Frost Warning"
-        case .heatwave: return "Heat Warning"
-        case .heavyRain: return "Heavy Rain Alert"
-        case .drought: return "Drought Conditions"
-        case .wind: return "High Wind Warning"
-        case .general: return "Weather Alert"
-        }
-    }
-}
-
-public enum HealthIssue: String, CaseIterable, Sendable {
-    case overwatering = "overwatering"
-    case underwatering = "underwatering"
-    case pestInfestation = "pestInfestation"
-    case disease = "disease"
-    case nutrientDeficiency = "nutrientDeficiency"
-    case rootBound = "rootBound"
-    case sunStress = "sunStress"
-    case temperatureStress = "temperatureStress"
-    
-    public var description: String {
-        switch self {
-        case .overwatering: return "Signs of overwatering detected. Check soil drainage."
-        case .underwatering: return "Plant appears dehydrated. Consider watering."
-        case .pestInfestation: return "Possible pest activity observed."
-        case .disease: return "Potential plant disease detected."
-        case .nutrientDeficiency: return "Nutrient deficiency symptoms visible."
-        case .rootBound: return "Plant may need repotting."
-        case .sunStress: return "Plant showing signs of sun stress."
-        case .temperatureStress: return "Temperature stress detected."
-        }
-    }
-}
-
-public enum AlertSeverity: String, CaseIterable, Sendable {
-    case low = "low"
-    case medium = "medium"
-    case high = "high"
-    case critical = "critical"
-    
-    public var sound: UNNotificationSound {
-        switch self {
-        case .low: return .default
-        case .medium: return .default
-        case .high: return .defaultCritical
-        case .critical: return .defaultCritical
-        }
-    }
-}
-
-// MARK: - Notification Names
-
-public extension Notification.Name {
-    static let completeReminder = Notification.Name("completeReminder")
-    static let snoozeReminder = Notification.Name("snoozeReminder")
-    static let viewPlant = Notification.Name("viewPlant")
 }

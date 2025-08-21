@@ -119,7 +119,7 @@ public enum JournalEntryType: String, CaseIterable, Codable, Sendable {
         case .pruning: return "scissors"
         case .repotting: return "circle.grid.cross.fill"
         case .harvest: return "basket.fill"
-        case .planting: return "seedling"
+        case .planting: return "sprout.circle"
         case .problemReport: return "exclamationmark.triangle.fill"
         case .milestone: return "flag.fill"
         case .experiment: return "flask.fill"

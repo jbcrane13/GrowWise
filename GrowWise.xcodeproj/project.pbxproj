@@ -8,7 +8,8 @@
 
 /* Begin PBXBuildFile section */
 		8B41F6832DEDD23B001A66F9 /* GrowWiseFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6822DEDD23B001A66F9 /* GrowWiseFeature */; };
-		8B41F6852DEDD25C001A66F9 /* GrowWiseFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6842DEDD25C001A66F9 /* GrowWiseFeature */; };
+		8B41F6842DEDD23C001A66F9 /* GrowWiseModels in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6852DEDD23C001A66F9 /* GrowWiseModels */; };
+		8B41F6862DEDD23D001A66F9 /* GrowWiseServices in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6872DEDD23D001A66F9 /* GrowWiseServices */; };
 /* End PBXBuildFile section */
 
 /* Begin PBXContainerItemProxy section */
@@ -65,7 +66,9 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8B41F6852DEDD25C001A66F9 /* GrowWiseFeature in Frameworks */,
+				8B41F6832DEDD23B001A66F9 /* GrowWiseFeature in Frameworks */,
+				8B41F6842DEDD23C001A66F9 /* GrowWiseModels in Frameworks */,
+				8B41F6862DEDD23D001A66F9 /* GrowWiseServices in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -128,7 +131,9 @@
 			);
 			name = GrowWise;
 			packageProductDependencies = (
-				8B41F6842DEDD25C001A66F9 /* GrowWiseFeature */,
+				8B41F6822DEDD23B001A66F9 /* GrowWiseFeature */,
+				8B41F6852DEDD23C001A66F9 /* GrowWiseModels */,
+				8B41F6872DEDD23D001A66F9 /* GrowWiseServices */,
 			);
 			productName = GrowWise;
 			productReference = 8B41F6452DEDD0D5001A66F9 /* GrowWise.app */;
@@ -188,6 +193,9 @@
 			minimizedProjectReferenceProxies = 1;
 			preferredProjectObjectVersion = 77;
 			productRefGroup = 8B41F6462DEDD0D5001A66F9 /* Products */;
+			packageReferences = (
+				8B41F6882DEDD240001A66F9 /* XCLocalSwiftPackageReference "GrowWisePackage" */,
+			);
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -273,6 +281,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = dwarf;
 				ENABLE_STRICT_OBJC_MSGSEND = YES;
@@ -337,6 +346,7 @@
 				CLANG_WARN_UNGUARDED_AVAILABILITY = YES_AGGRESSIVE;
 				CLANG_WARN_UNREACHABLE_CODE = YES;
 				CLANG_WARN__DUPLICATE_METHOD_MATCH = YES;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				COPY_PHASE_STRIP = NO;
 				DEBUG_INFORMATION_FORMAT = "dwarf-with-dsym";
 				ENABLE_NS_ASSERTIONS = NO;
@@ -368,17 +378,26 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GrowWise/GrowWise.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 32XZRDTGK3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "$(PRODUCT_DISPLAY_NAME)";
+				INFOPLIST_KEY_CFBundleDisplayName = GrowWise;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GrowWise uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "portrait landscape-left landscape-right";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "portrait landscape-left landscape-right portrait-upside-down";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.growwiser.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -391,17 +410,26 @@
 			buildSettings = {
 				ASSETCATALOG_COMPILER_APPICON_NAME = AppIcon;
 				ASSETCATALOG_COMPILER_GLOBAL_ACCENT_COLOR_NAME = AccentColor;
+				CODE_SIGN_ENTITLEMENTS = GrowWise/GrowWise.entitlements;
+				CODE_SIGN_IDENTITY = "Apple Development";
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = 32XZRDTGK3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
-				INFOPLIST_KEY_CFBundleDisplayName = "$(PRODUCT_DISPLAY_NAME)";
+				INFOPLIST_KEY_CFBundleDisplayName = GrowWise;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GrowWise uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
+				INFOPLIST_KEY_UISupportedInterfaceOrientations = "portrait landscape-left landscape-right";
+				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "portrait landscape-left landscape-right portrait-upside-down";
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
 				);
+				PRODUCT_BUNDLE_IDENTIFIER = com.growwiser.app;
+				PROVISIONING_PROFILE_SPECIFIER = "";
 				SWIFT_EMIT_LOC_STRINGS = YES;
 				SWIFT_VERSION = 5.0;
 			};
@@ -413,6 +441,7 @@
 			baseConfigurationReferenceRelativePath = Tests.xcconfig;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -427,6 +456,7 @@
 			baseConfigurationReferenceRelativePath = Tests.xcconfig;
 			buildSettings = {
 				CODE_SIGN_STYLE = Automatic;
+				DEVELOPMENT_TEAM = "";
 				GENERATE_INFOPLIST_FILE = YES;
 				SWIFT_EMIT_LOC_STRINGS = NO;
 				SWIFT_VERSION = 5.0;
@@ -445,7 +475,7 @@
 				8B41F6652DEDD0D6001A66F9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		8B41F6662DEDD0D6001A66F9 /* Build configuration list for PBXNativeTarget "GrowWise" */ = {
 			isa = XCConfigurationList;
@@ -454,7 +484,7 @@
 				8B41F6682DEDD0D6001A66F9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 		8B41F66C2DEDD0D6001A66F9 /* Build configuration list for PBXNativeTarget "GrowWiseUITests" */ = {
 			isa = XCConfigurationList;
@@ -463,18 +493,32 @@
 				8B41F66E2DEDD0D6001A66F9 /* Release */,
 			);
 			defaultConfigurationIsVisible = 0;
-			defaultConfigurationName = Release;
+			defaultConfigurationName = Debug;
 		};
 /* End XCConfigurationList section */
+
+/* Begin XCLocalSwiftPackageReference section */
+		8B41F6882DEDD240001A66F9 /* XCLocalSwiftPackageReference "GrowWisePackage" */ = {
+			isa = XCLocalSwiftPackageReference;
+			relativePath = GrowWisePackage;
+		};
+/* End XCLocalSwiftPackageReference section */
 
 /* Begin XCSwiftPackageProductDependency section */
 		8B41F6822DEDD23B001A66F9 /* GrowWiseFeature */ = {
 			isa = XCSwiftPackageProductDependency;
+			package = 8B41F6882DEDD240001A66F9 /* XCLocalSwiftPackageReference "GrowWisePackage" */;
 			productName = GrowWiseFeature;
 		};
-		8B41F6842DEDD25C001A66F9 /* GrowWiseFeature */ = {
+		8B41F6852DEDD23C001A66F9 /* GrowWiseModels */ = {
 			isa = XCSwiftPackageProductDependency;
-			productName = GrowWiseFeature;
+			package = 8B41F6882DEDD240001A66F9 /* XCLocalSwiftPackageReference "GrowWisePackage" */;
+			productName = GrowWiseModels;
+		};
+		8B41F6872DEDD23D001A66F9 /* GrowWiseServices */ = {
+			isa = XCSwiftPackageProductDependency;
+			package = 8B41F6882DEDD240001A66F9 /* XCLocalSwiftPackageReference "GrowWisePackage" */;
+			productName = GrowWiseServices;
 		};
 /* End XCSwiftPackageProductDependency section */
 	};

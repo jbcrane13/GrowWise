@@ -368,6 +368,13 @@ public struct PlantingWindow: Sendable {
     }
 }
 
+public enum AlertSeverity: String, Sendable, CaseIterable {
+    case low = "low"
+    case medium = "medium"
+    case high = "high"
+    case critical = "critical"
+}
+
 public struct WeatherAlert: Sendable, Identifiable {
     public let id = UUID()
     public let type: WeatherAlertType

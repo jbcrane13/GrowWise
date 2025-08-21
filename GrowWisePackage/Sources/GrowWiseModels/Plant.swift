@@ -3,40 +3,40 @@ import SwiftData
 
 @Model
 public final class Plant {
-    public var id: UUID
-    public var name: String
-    public var scientificName: String?
-    public var plantType: PlantType
-    public var difficultyLevel: DifficultyLevel
-    public var isUserPlant: Bool // true for user's garden, false for database plants
+    @Attribute(.unique) public var id: UUID? = UUID() // CloudKit: made optional or with default value
+    public var name: String? = nil // CloudKit: made optional or with default value
+    public var scientificName: String? // CloudKit: made optional or with default value
+    public var plantType: PlantType? = PlantType.vegetable // CloudKit: made optional or with default value
+    public var difficultyLevel: DifficultyLevel? = DifficultyLevel.beginner // CloudKit: made optional or with default value
+    public var isUserPlant: Bool? = true // CloudKit: made optional or with default value
     
     // Growing information
-    public var plantingDate: Date?
-    public var harvestDate: Date?
-    public var sunlightRequirement: SunlightLevel
-    public var wateringFrequency: WateringFrequency
-    public var spaceRequirement: SpaceRequirement
-    public var growthStage: GrowthStage
+    public var plantingDate: Date? // CloudKit: made optional or with default value
+    public var harvestDate: Date? // CloudKit: made optional or with default value
+    public var sunlightRequirement: SunlightLevel? = SunlightLevel.fullSun // CloudKit: made optional or with default value
+    public var wateringFrequency: WateringFrequency? = WateringFrequency.daily // CloudKit: made optional or with default value
+    public var spaceRequirement: SpaceRequirement? = SpaceRequirement.small // CloudKit: made optional or with default value
+    public var growthStage: GrowthStage? = GrowthStage.seedling // CloudKit: made optional or with default value
     
     // Care tracking
-    public var lastWatered: Date?
-    public var lastFertilized: Date?
-    public var lastPruned: Date?
-    public var healthStatus: HealthStatus
+    public var lastWatered: Date? // CloudKit: made optional or with default value
+    public var lastFertilized: Date? // CloudKit: made optional or with default value
+    public var lastPruned: Date? // CloudKit: made optional or with default value
+    public var healthStatus: HealthStatus? = HealthStatus.healthy // CloudKit: made optional or with default value
     
     // User notes and photos
-    public var notes: String
-    public var photoURLs: [String] // Local file paths or cloud URLs
+    public var notes: String? = "" // CloudKit: made optional or with default value
+    public var photoURLs: [String]? = [] // CloudKit: made optional or with default value
     
     // Location in garden
-    public var gardenLocation: String?
-    public var containerType: ContainerType?
+    public var gardenLocation: String? // CloudKit: made optional or with default value
+    public var containerType: ContainerType? // CloudKit: made optional or with default value
     
     // Relationships
-    public var garden: Garden?
-    public var reminders: [PlantReminder]
-    public var journalEntries: [JournalEntry]
-    public var companionPlants: [Plant]
+    @Relationship(inverse: \Garden.plants) public var garden: Garden? // CloudKit: made optional or with default value
+    @Relationship(inverse: \PlantReminder.plant) public var reminders: [PlantReminder]? // CloudKit: made optional or with default value
+    @Relationship(inverse: \JournalEntry.plant) public var journalEntries: [JournalEntry]? // CloudKit: made optional or with default value
+    @Relationship(inverse: \Plant.companionPlants) public var companionPlants: [Plant]? // CloudKit: made optional or with default value
     
     public init(
         name: String,
@@ -106,6 +106,14 @@ public enum DifficultyLevel: String, CaseIterable, Codable, Sendable {
         case .beginner: return "Easy to grow, forgiving"
         case .intermediate: return "Some experience helpful"
         case .advanced: return "Requires expertise"
+        }
+    }
+    
+    public var colorName: String {
+        switch self {
+        case .beginner: return "green"
+        case .intermediate: return "orange"
+        case .advanced: return "red"
         }
     }
 }
@@ -247,3 +255,4 @@ public enum ContainerType: String, CaseIterable, Codable, Sendable {
         }
     }
 }
+
