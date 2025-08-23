@@ -66,10 +66,10 @@ public struct JournalEntryDetailView: View {
                                     .foregroundColor(.green)
                                 
                                 VStack(alignment: .leading, spacing: 2) {
-                                    Text(plant.name)
+                                    Text(plant.name ?? "Unknown Plant")
                                         .font(.headline)
                                     
-                                    Text(plant.plantType.displayName)
+                                    Text(plant.plantType?.displayName ?? "Unknown Type")
                                         .font(.caption)
                                         .foregroundColor(.secondary)
                                 }

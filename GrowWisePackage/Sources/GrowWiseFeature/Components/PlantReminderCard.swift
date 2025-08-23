@@ -36,13 +36,13 @@ public struct PlantReminderCard: View {
                         )
                     
                     VStack(alignment: .leading, spacing: 2) {
-                        Text(plant.name)
+                        Text(plant.name ?? "Unknown Plant")
                             .font(.headline)
                             .fontWeight(.medium)
                             .lineLimit(1)
                             .foregroundColor(.primary)
                         
-                        Text(plant.plantType.displayName)
+                        Text(plant.plantType?.displayName ?? "Unknown Type")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -116,6 +116,8 @@ public struct PlantReminderCard: View {
             return "tree.fill"
         case .shrub:
             return "leaf.circle.fill"
+        case .none:
+            return "questionmark.circle.fill"
         }
     }
     
@@ -137,6 +139,8 @@ public struct PlantReminderCard: View {
             return .brown
         case .shrub:
             return .green
+        case .none:
+            return .gray
         }
     }
     

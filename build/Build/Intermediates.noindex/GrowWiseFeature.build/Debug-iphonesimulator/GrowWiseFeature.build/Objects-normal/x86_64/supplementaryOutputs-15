@@ -1,0 +1,30 @@
+{
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/PlantReminderDetailView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/PlantReminderDetailView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/PlantReminderDetailView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/PlantReminderDetailView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/PlantReminderDetailView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/PlantReminderDetailView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/ReminderManagementView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderManagementView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderManagementView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderManagementView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderManagementView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderManagementView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/ReminderSettingsView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderSettingsView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderSettingsView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderSettingsView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/ReminderSettingsView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/Tutorials/TutorialDetailView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/TutorialDetailView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/TutorialDetailView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/TutorialDetailView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/TutorialDetailView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/x86_64/TutorialDetailView.swiftdeps"
+  }
+}

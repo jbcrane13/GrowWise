@@ -68,7 +68,7 @@ public struct JournalEntryRow: View {
                 // Plant name and mood
                 HStack {
                     if let plant = entry.plant {
-                        Text(plant.name)
+                        Text(plant.name ?? "Unknown Plant")
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                     }

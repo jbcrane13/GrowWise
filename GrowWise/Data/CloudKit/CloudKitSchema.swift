@@ -160,27 +160,27 @@ struct CloudKitSchema {
         
         record[PlantFields.name.rawValue] = plant.name
         record[PlantFields.scientificName.rawValue] = plant.scientificName
-        record[PlantFields.plantType.rawValue] = plant.plantType.rawValue
-        record[PlantFields.difficultyLevel.rawValue] = plant.difficultyLevel.rawValue
+        record[PlantFields.plantType.rawValue] = plant.plantType?.rawValue
+        record[PlantFields.difficultyLevel.rawValue] = plant.difficultyLevel?.rawValue
         record[PlantFields.isUserPlant.rawValue] = plant.isUserPlant
         record[PlantFields.plantingDate.rawValue] = plant.plantingDate
         record[PlantFields.harvestDate.rawValue] = plant.harvestDate
-        record[PlantFields.sunlightRequirement.rawValue] = plant.sunlightRequirement.rawValue
-        record[PlantFields.wateringFrequency.rawValue] = plant.wateringFrequency.rawValue
-        record[PlantFields.spaceRequirement.rawValue] = plant.spaceRequirement.rawValue
-        record[PlantFields.growthStage.rawValue] = plant.growthStage.rawValue
+        record[PlantFields.sunlightRequirement.rawValue] = plant.sunlightRequirement?.rawValue
+        record[PlantFields.wateringFrequency.rawValue] = plant.wateringFrequency?.rawValue
+        record[PlantFields.spaceRequirement.rawValue] = plant.spaceRequirement?.rawValue
+        record[PlantFields.growthStage.rawValue] = plant.growthStage?.rawValue
         record[PlantFields.lastWatered.rawValue] = plant.lastWatered
         record[PlantFields.lastFertilized.rawValue] = plant.lastFertilized
         record[PlantFields.lastPruned.rawValue] = plant.lastPruned
-        record[PlantFields.healthStatus.rawValue] = plant.healthStatus.rawValue
+        record[PlantFields.healthStatus.rawValue] = plant.healthStatus?.rawValue
         record[PlantFields.notes.rawValue] = plant.notes
         record[PlantFields.photoURLs.rawValue] = plant.photoURLs
         record[PlantFields.gardenLocation.rawValue] = plant.gardenLocation
         record[PlantFields.containerType.rawValue] = plant.containerType?.rawValue
         
         // Add garden reference if exists
-        if let garden = plant.garden {
-            let gardenReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: garden.id.uuidString), action: .deleteSelf)
+        if let garden = plant.garden, let gardenId = garden.id {
+            let gardenReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: gardenId.uuidString), action: .deleteSelf)
             record[PlantFields.gardenReference.rawValue] = gardenReference
         }
         
@@ -191,9 +191,9 @@ struct CloudKitSchema {
         let record = CKRecord(recordType: gardenRecordType)
         
         record[GardenFields.name.rawValue] = garden.name
-        record[GardenFields.sunExposure.rawValue] = garden.sunExposure.rawValue
-        record[GardenFields.gardenType.rawValue] = garden.gardenType.rawValue
-        record[GardenFields.soilType.rawValue] = garden.soilType.rawValue
+        record[GardenFields.sunExposure.rawValue] = garden.sunExposure?.rawValue
+        record[GardenFields.gardenType.rawValue] = garden.gardenType?.rawValue
+        record[GardenFields.soilType.rawValue] = garden.soilType?.rawValue
         record[GardenFields.hardinessZone.rawValue] = garden.hardinessZone
         record[GardenFields.createdDate.rawValue] = garden.createdDate
         record[GardenFields.lastModifiedDate.rawValue] = garden.lastModified
@@ -205,7 +205,7 @@ struct CloudKitSchema {
         }
         
         // Size from spaceAvailable
-        record[GardenFields.size.rawValue] = garden.spaceAvailable.rawValue
+        record[GardenFields.size.rawValue] = garden.spaceAvailable?.rawValue
         
         // Add owner reference (user)
         if let user = garden.user {
@@ -237,35 +237,12 @@ struct CloudKitSchema {
         record[PlantReminderFields.createdDate.rawValue] = reminder.createdDate
         record[PlantReminderFields.lastModified.rawValue] = reminder.lastModified
         
-        // Encode the frequency enum
-        switch reminder.frequency {
-        case .daily:
-            record[PlantReminderFields.frequency.rawValue] = "daily"
-        case .everyOtherDay:
-            record[PlantReminderFields.frequency.rawValue] = "everyOtherDay"
-        case .twiceWeekly:
-            record[PlantReminderFields.frequency.rawValue] = "twiceWeekly"
-        case .weekly:
-            record[PlantReminderFields.frequency.rawValue] = "weekly"
-        case .biweekly:
-            record[PlantReminderFields.frequency.rawValue] = "biweekly"
-        case .monthly:
-            record[PlantReminderFields.frequency.rawValue] = "monthly"
-        case .quarterly:
-            record[PlantReminderFields.frequency.rawValue] = "quarterly"
-        case .seasonally:
-            record[PlantReminderFields.frequency.rawValue] = "seasonally"
-        case .yearly:
-            record[PlantReminderFields.frequency.rawValue] = "yearly"
-        case .custom(let days):
-            record[PlantReminderFields.frequency.rawValue] = "custom_\(days)"
-        case .once:
-            record[PlantReminderFields.frequency.rawValue] = "once"
-        }
+        // Encode the frequency enum using rawValue
+        record[PlantReminderFields.frequency.rawValue] = reminder.frequency.rawValue
         
         // Add plant reference
-        if let plant = reminder.plant {
-            let plantReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: plant.id.uuidString), action: .deleteSelf)
+        if let plant = reminder.plant, let plantId = plant.id {
+            let plantReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: plantId.uuidString), action: .deleteSelf)
             record[PlantReminderFields.plantReference.rawValue] = plantReference
         }
         
@@ -321,8 +298,8 @@ struct CloudKitSchema {
         }
         
         // Add plant reference (optional) - now references Plant directly, not UserPlant
-        if let plant = entry.plant {
-            let plantReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: plant.id.uuidString), action: .deleteSelf)
+        if let plant = entry.plant, let plantId = plant.id {
+            let plantReference = CKRecord.Reference(recordID: CKRecord.ID(recordName: plantId.uuidString), action: .deleteSelf)
             record[JournalEntryFields.userPlantReference.rawValue] = plantReference
         }
         

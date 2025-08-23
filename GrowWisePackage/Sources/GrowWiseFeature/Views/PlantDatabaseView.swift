@@ -217,9 +217,9 @@ public struct PlantDatabaseView: View {
         // Filter by search text
         if !searchText.isEmpty {
             filtered = filtered.filter { plant in
-                plant.name.localizedCaseInsensitiveContains(searchText) ||
+                (plant.name ?? "").localizedCaseInsensitiveContains(searchText) ||
                 (plant.scientificName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                plant.notes.localizedCaseInsensitiveContains(searchText)
+                (plant.notes ?? "").localizedCaseInsensitiveContains(searchText)
             }
         }
         
@@ -245,27 +245,27 @@ public struct PlantDatabaseView: View {
     private func sortPlants(_ plants: [Plant]) -> [Plant] {
         switch selectedSortOption {
         case .name:
-            return plants.sorted { $0.name < $1.name }
+            return plants.sorted { ($0.name ?? "") < ($1.name ?? "") }
         case .difficulty:
             return plants.sorted { 
                 if $0.difficultyLevel != $1.difficultyLevel {
-                    return $0.difficultyLevel.rawValue < $1.difficultyLevel.rawValue
+                    return ($0.difficultyLevel?.rawValue ?? "") < ($1.difficultyLevel?.rawValue ?? "")
                 }
-                return $0.name < $1.name
+                return ($0.name ?? "") < ($1.name ?? "")
             }
         case .plantType:
             return plants.sorted { 
                 if $0.plantType != $1.plantType {
-                    return $0.plantType.rawValue < $1.plantType.rawValue
+                    return ($0.plantType?.rawValue ?? "") < ($1.plantType?.rawValue ?? "")
                 }
-                return $0.name < $1.name
+                return ($0.name ?? "") < ($1.name ?? "")
             }
         case .sunlightRequirement:
             return plants.sorted { 
                 if $0.sunlightRequirement != $1.sunlightRequirement {
-                    return $0.sunlightRequirement.rawValue < $1.sunlightRequirement.rawValue
+                    return ($0.sunlightRequirement?.rawValue ?? "") < ($1.sunlightRequirement?.rawValue ?? "")
                 }
-                return $0.name < $1.name
+                return ($0.name ?? "") < ($1.name ?? "")
             }
         }
     }
@@ -302,7 +302,7 @@ struct DatabasePlantCardView: View {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
-                        Text(plant.name)
+                        Text(plant.name ?? "Unknown Plant")
                             .font(.headline)
                             .foregroundColor(.primary)
                         
@@ -317,8 +317,12 @@ struct DatabasePlantCardView: View {
                     Spacer()
                     
                     VStack(alignment: .trailing, spacing: 2) {
-                        DifficultyBadge(level: plant.difficultyLevel)
-                        PlantTypeBadge(type: plant.plantType)
+                        if let difficultyLevel = plant.difficultyLevel {
+                            DifficultyBadge(level: difficultyLevel)
+                        }
+                        if let plantType = plant.plantType {
+                            PlantTypeBadge(type: plantType)
+                        }
                     }
                 }
                 
@@ -326,19 +330,19 @@ struct DatabasePlantCardView: View {
                 HStack {
                     RequirementIcon(
                         icon: "sun.max.fill",
-                        text: sunlightShorthand(plant.sunlightRequirement),
+                        text: plant.sunlightRequirement != nil ? sunlightShorthand(plant.sunlightRequirement!) : "Unknown",
                         color: .yellow
                     )
                     
                     RequirementIcon(
                         icon: "drop.fill",
-                        text: wateringShorthand(plant.wateringFrequency),
+                        text: plant.wateringFrequency != nil ? wateringShorthand(plant.wateringFrequency!) : "Unknown",
                         color: .blue
                     )
                     
                     RequirementIcon(
                         icon: "square.grid.3x3.fill",
-                        text: spaceShorthand(plant.spaceRequirement),
+                        text: plant.spaceRequirement != nil ? spaceShorthand(plant.spaceRequirement!) : "Unknown",
                         color: .green
                     )
                     
@@ -346,8 +350,8 @@ struct DatabasePlantCardView: View {
                 }
                 
                 // Description preview
-                if !plant.notes.isEmpty {
-                    Text(descriptionPreview(plant.notes))
+                if !(plant.notes?.isEmpty ?? true) {
+                    Text(descriptionPreview(plant.notes ?? ""))
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
@@ -555,7 +559,7 @@ struct PlantDatabaseDetailView: View {
                 }
                 .padding()
             }
-            .navigationTitle(plant.name)
+            .navigationTitle(plant.name ?? "Unknown Plant")
             .navigationBarTitleDisplayMode(.large)
             .toolbar {
                 ToolbarItem(placement: .navigationBarLeading) {
@@ -583,8 +587,12 @@ struct PlantDatabaseDetailView: View {
             }
             
             HStack {
-                DifficultyBadge(level: plant.difficultyLevel)
-                PlantTypeBadge(type: plant.plantType)
+                if let difficultyLevel = plant.difficultyLevel {
+                    DifficultyBadge(level: difficultyLevel)
+                }
+                if let plantType = plant.plantType {
+                    PlantTypeBadge(type: plantType)
+                }
                 Spacer()
             }
         }
@@ -599,14 +607,14 @@ struct PlantDatabaseDetailView: View {
                 RequirementDetail(
                     icon: "sun.max.fill",
                     title: "Sunlight",
-                    value: plant.sunlightRequirement.displayName,
+                    value: plant.sunlightRequirement?.displayName ?? "Unknown",
                     color: .yellow
                 )
                 
                 RequirementDetail(
                     icon: "drop.fill",
                     title: "Watering",
-                    value: plant.wateringFrequency.displayName,
+                    value: plant.wateringFrequency?.displayName ?? "Unknown",
                     color: .blue
                 )
             }
@@ -615,14 +623,14 @@ struct PlantDatabaseDetailView: View {
                 RequirementDetail(
                     icon: "square.grid.3x3.fill",
                     title: "Space",
-                    value: plant.spaceRequirement.displayName,
+                    value: plant.spaceRequirement?.displayName ?? "Unknown",
                     color: .green
                 )
                 
                 RequirementDetail(
                     icon: "graduationcap.fill",
                     title: "Difficulty",
-                    value: plant.difficultyLevel.description,
+                    value: plant.difficultyLevel?.description ?? "Unknown",
                     color: .purple
                 )
             }
@@ -637,7 +645,7 @@ struct PlantDatabaseDetailView: View {
             Text("About This Plant")
                 .font(.headline)
             
-            Text(extractDescription(from: plant.notes))
+            Text(extractDescription(from: plant.notes ?? ""))
                 .font(.body)
                 .fixedSize(horizontal: false, vertical: true)
         }
@@ -649,7 +657,7 @@ struct PlantDatabaseDetailView: View {
                 .font(.headline)
             
             VStack(alignment: .leading, spacing: 8) {
-                ForEach(extractCareInstructions(from: plant.notes), id: \.self) { instruction in
+                ForEach(extractCareInstructions(from: plant.notes ?? ""), id: \.self) { instruction in
                     HStack(alignment: .top, spacing: 8) {
                         Image(systemName: "checkmark.circle.fill")
                             .foregroundColor(.green)
@@ -752,13 +760,133 @@ struct RequirementDetail: View {
 struct AddPlantToGardenFromDatabaseSheet: View {
     let plant: Plant
     @Environment(\.dismiss) private var dismiss
+    @State private var dataService: DataService?
+    
+    // Customization fields
+    @State private var selectedGarden: Garden?
+    @State private var location: String = ""
+    @State private var plantingDate = Date()
+    @State private var healthStatus: HealthStatus = .healthy
+    @State private var notes: String = ""
+    @State private var availableGardens: [Garden] = []
+    @State private var isLoading = false
+    @State private var showingError = false
+    @State private var errorMessage = ""
     
     var body: some View {
         NavigationView {
-            VStack {
-                Text("Add \(plant.name) to garden functionality will be implemented")
-                    .padding()
-                Spacer()
+            Form {
+                // Plant Info Section
+                Section {
+                    HStack {
+                        VStack(alignment: .leading, spacing: 4) {
+                            Text(plant.name ?? "Unknown Plant")
+                                .font(.headline)
+                            if let scientificName = plant.scientificName {
+                                Text(scientificName)
+                                    .font(.caption)
+                                    .italic()
+                                    .foregroundColor(.secondary)
+                            }
+                        }
+                        Spacer()
+                        PlantTypeIcon(plantType: plant.plantType ?? .houseplant)
+                    }
+                    
+                    if let description = plant.notes, !description.isEmpty {
+                        Text(description)
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                            .lineLimit(3)
+                    }
+                } header: {
+                    Text("Plant Information")
+                }
+                
+                // Garden Selection
+                if !availableGardens.isEmpty {
+                    Section {
+                        Picker("Select Garden", selection: $selectedGarden) {
+                            Text("No Garden").tag(nil as Garden?)
+                            ForEach(availableGardens, id: \.id) { garden in
+                                Text(garden.name ?? "Unnamed Garden").tag(garden as Garden?)
+                            }
+                        }
+                        .pickerStyle(MenuPickerStyle())
+                    } header: {
+                        Text("Garden")
+                    } footer: {
+                        Text("Choose which garden to add this plant to")
+                    }
+                }
+                
+                // Location & Planting
+                Section {
+                    TextField("Location in Garden", text: $location)
+                        .textInputAutocapitalization(.words)
+                    
+                    DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
+                } header: {
+                    Text("Planting Details")
+                }
+                
+                // Health Status
+                Section {
+                    Picker("Initial Health Status", selection: $healthStatus) {
+                        ForEach(HealthStatus.allCases, id: \.self) { status in
+                            Label(status.displayName, systemImage: status.iconName)
+                                .tag(status)
+                        }
+                    }
+                    .pickerStyle(SegmentedPickerStyle())
+                } header: {
+                    Text("Health Status")
+                }
+                
+                // Care Requirements Preview
+                Section {
+                    if let sunlight = plant.sunlightRequirement {
+                        HStack {
+                            Label("Sunlight", systemImage: "sun.max.fill")
+                                .foregroundColor(.orange)
+                            Spacer()
+                            Text(sunlight.displayName)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if let watering = plant.wateringFrequency {
+                        HStack {
+                            Label("Watering", systemImage: "drop.fill")
+                                .foregroundColor(.blue)
+                            Spacer()
+                            Text("Every \(watering.days) days")
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                    
+                    if let difficulty = plant.difficultyLevel {
+                        HStack {
+                            Label("Difficulty", systemImage: "star.fill")
+                                .foregroundColor(.yellow)
+                            Spacer()
+                            Text(difficulty.displayName)
+                                .foregroundColor(.secondary)
+                        }
+                    }
+                } header: {
+                    Text("Care Requirements")
+                }
+                
+                // Notes
+                Section {
+                    TextEditor(text: $notes)
+                        .frame(minHeight: 100)
+                } header: {
+                    Text("Notes")
+                } footer: {
+                    Text("Add any specific notes about this plant")
+                }
             }
             .navigationTitle("Add to Garden")
             .navigationBarTitleDisplayMode(.inline)
@@ -767,8 +895,164 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .disabled(isLoading)
+                }
+                
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") {
+                        Task {
+                            await saveToGarden()
+                        }
+                    }
+                    .fontWeight(.semibold)
+                    .disabled(isLoading)
                 }
             }
+            .disabled(isLoading)
+            .overlay {
+                if isLoading {
+                    Color.black.opacity(0.3)
+                        .ignoresSafeArea()
+                    ProgressView("Adding to garden...")
+                        .padding()
+                        .background(Color(.systemBackground))
+                        .cornerRadius(10)
+                        .shadow(radius: 5)
+                }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
+            .onAppear {
+                loadData()
+            }
+        }
+    }
+    
+    private func loadData() {
+        do {
+            dataService = try DataService()
+            availableGardens = dataService?.fetchGardens() ?? []
+            
+            // Auto-select first garden if only one exists
+            if availableGardens.count == 1 {
+                selectedGarden = availableGardens.first
+            }
+        } catch {
+            errorMessage = "Failed to load data: \(error.localizedDescription)"
+            showingError = true
+        }
+    }
+    
+    @MainActor
+    private func saveToGarden() async {
+        isLoading = true
+        
+        do {
+            guard let dataService = dataService else {
+                throw GrowWiseError.dataServiceError
+            }
+            
+            // Create a user instance of the database plant
+            let userPlant = try dataService.createPlant(
+                name: plant.name ?? "Unknown Plant",
+                type: plant.plantType ?? .houseplant,
+                difficultyLevel: plant.difficultyLevel ?? .beginner,
+                garden: selectedGarden
+            )
+            
+            // Copy properties from database plant
+            userPlant.scientificName = plant.scientificName
+            userPlant.sunlightRequirement = plant.sunlightRequirement
+            userPlant.wateringFrequency = plant.wateringFrequency
+            
+            // Set customized properties
+            userPlant.plantingDate = plantingDate
+            userPlant.healthStatus = healthStatus
+            userPlant.notes = notes.isEmpty ? plant.notes : notes
+            userPlant.isUserPlant = true
+            
+            // Save the plant
+            try dataService.updatePlant(userPlant)
+            
+            // Create a journal entry for planting
+            let journalEntry = try dataService.createJournalEntry(
+                title: "Added \(userPlant.name ?? "plant") to garden",
+                content: "Added from plant database. Location: \(location.isEmpty ? "Not specified" : location)",
+                type: .planting,
+                plant: userPlant
+            )
+            
+            isLoading = false
+            dismiss()
+            
+        } catch {
+            isLoading = false
+            errorMessage = "Failed to add plant: \(error.localizedDescription)"
+            showingError = true
+        }
+    }
+}
+
+// MARK: - Supporting Types
+
+extension HealthStatus {
+    var iconName: String {
+        switch self {
+        case .healthy: return "checkmark.circle.fill"
+        case .needsAttention: return "exclamationmark.triangle.fill"
+        case .sick: return "xmark.octagon.fill"
+        case .dying: return "exclamationmark.octagon.fill"
+        case .dead: return "xmark.circle.fill"
+        }
+    }
+    
+    var color: Color {
+        switch self {
+        case .healthy: return .green
+        case .needsAttention: return .orange
+        case .sick: return .red
+        case .dying: return .red
+        case .dead: return .gray
+        }
+    }
+}
+
+struct PlantTypeIcon: View {
+    let plantType: PlantType
+    
+    var body: some View {
+        Image(systemName: plantType.iconName)
+            .foregroundColor(plantType.color)
+            .font(.title2)
+    }
+}
+
+// PlantType extension removed - already defined in SkillAssessmentView.swift
+extension PlantType {
+    var color: Color {
+        switch self {
+        case .houseplant: return .green
+        case .succulent: return .mint
+        case .flower: return .pink
+        case .vegetable: return .orange
+        case .herb: return .green
+        case .tree: return .brown
+        case .shrub: return .green
+        case .fruit: return .red
+        }
+    }
+}
+
+enum GrowWiseError: LocalizedError {
+    case dataServiceError
+    
+    var errorDescription: String? {
+        switch self {
+        case .dataServiceError:
+            return "Data service is not available"
         }
     }
 }

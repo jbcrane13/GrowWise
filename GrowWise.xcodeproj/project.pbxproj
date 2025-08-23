@@ -7,6 +7,8 @@
 	objects = {
 
 /* Begin PBXBuildFile section */
+		25102EB62E5751EA00E3A646 /* (null) in Frameworks */ = {isa = PBXBuildFile; };
+		25102EB72E5751EA00E3A646 /* GrowWiseFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6822DEDD23B001A66F9 /* GrowWiseFeature */; };
 		8B41F6832DEDD23B001A66F9 /* GrowWiseFeature in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6822DEDD23B001A66F9 /* GrowWiseFeature */; };
 		8B41F6842DEDD23C001A66F9 /* GrowWiseModels in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6852DEDD23C001A66F9 /* GrowWiseModels */; };
 		8B41F6862DEDD23D001A66F9 /* GrowWiseServices in Frameworks */ = {isa = PBXBuildFile; productRef = 8B41F6872DEDD23D001A66F9 /* GrowWiseServices */; };
@@ -28,6 +30,13 @@
 /* End PBXFileReference section */
 
 /* Begin PBXFileSystemSynchronizedBuildFileExceptionSet section */
+		25102EE42E5810EF00E3A646 /* Exceptions for "GrowWise" folder in "GrowWise" target */ = {
+			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
+			membershipExceptions = (
+				Info.plist,
+			);
+			target = 8B41F6442DEDD0D5001A66F9 /* GrowWise */;
+		};
 		8BD71C0A2DEE41E000CEDD92 /* Exceptions for "Config" folder in "GrowWise" target */ = {
 			isa = PBXFileSystemSynchronizedBuildFileExceptionSet;
 			membershipExceptions = (
@@ -43,6 +52,9 @@
 /* Begin PBXFileSystemSynchronizedRootGroup section */
 		8B41F6472DEDD0D5001A66F9 /* GrowWise */ = {
 			isa = PBXFileSystemSynchronizedRootGroup;
+			exceptions = (
+				25102EE42E5810EF00E3A646 /* Exceptions for "GrowWise" folder in "GrowWise" target */,
+			);
 			path = GrowWise;
 			sourceTree = "<group>";
 		};
@@ -76,7 +88,8 @@
 			isa = PBXFrameworksBuildPhase;
 			buildActionMask = 2147483647;
 			files = (
-				8B41F6832DEDD23B001A66F9 /* GrowWiseFeature in Frameworks */,
+				25102EB72E5751EA00E3A646 /* GrowWiseFeature in Frameworks */,
+				25102EB62E5751EA00E3A646 /* (null) in Frameworks */,
 			);
 			runOnlyForDeploymentPostprocessing = 0;
 		};
@@ -191,11 +204,11 @@
 			);
 			mainGroup = 8B41F63C2DEDD0D5001A66F9;
 			minimizedProjectReferenceProxies = 1;
-			preferredProjectObjectVersion = 77;
-			productRefGroup = 8B41F6462DEDD0D5001A66F9 /* Products */;
 			packageReferences = (
 				8B41F6882DEDD240001A66F9 /* XCLocalSwiftPackageReference "GrowWisePackage" */,
 			);
+			preferredProjectObjectVersion = 77;
+			productRefGroup = 8B41F6462DEDD0D5001A66F9 /* Products */;
 			projectDirPath = "";
 			projectRoot = "";
 			targets = (
@@ -384,14 +397,15 @@
 				DEVELOPMENT_TEAM = 32XZRDTGK3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GrowWise/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GrowWise;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GrowWise uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "portrait landscape-left landscape-right";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "portrait landscape-left landscape-right portrait-upside-down";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",
@@ -416,14 +430,15 @@
 				DEVELOPMENT_TEAM = 32XZRDTGK3;
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
+				INFOPLIST_FILE = GrowWise/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = GrowWise;
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GrowWise uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
-				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				INFOPLIST_KEY_UISupportedInterfaceOrientations = "portrait landscape-left landscape-right";
 				INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = "portrait landscape-left landscape-right portrait-upside-down";
+				INFOPLIST_KEY_UIUserInterfaceStyle = Dark;
 				LD_RUNPATH_SEARCH_PATHS = (
 					"$(inherited)",
 					"@executable_path/Frameworks",

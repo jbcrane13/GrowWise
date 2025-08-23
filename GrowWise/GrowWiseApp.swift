@@ -5,7 +5,7 @@ import GrowWiseFeature
 struct GrowWiseApp: App {
     var body: some Scene {
         WindowGroup {
-            OnboardingView()
+            MainAppView()
         }
     }
 }

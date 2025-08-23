@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 public final class Plant {
-    @Attribute(.unique) public var id: UUID? = UUID() // CloudKit: made optional or with default value
+    public var id: UUID? = UUID() // CloudKit: made optional or with default value
     public var name: String? = nil // CloudKit: made optional or with default value
     public var scientificName: String? // CloudKit: made optional or with default value
     public var plantType: PlantType? = PlantType.vegetable // CloudKit: made optional or with default value

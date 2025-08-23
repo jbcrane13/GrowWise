@@ -3,7 +3,7 @@ import SwiftData
 
 @Model
 public final class User {
-    public var id: UUID // CloudKit: made optional or with default value
+    public var id: UUID = UUID() // CloudKit: made optional or with default value
     public var email: String? // CloudKit: made optional or with default value
     public var displayName: String? // CloudKit: made optional or with default value
     public var skillLevel: GardeningSkillLevel = GardeningSkillLevel.beginner // CloudKit: made optional or with default value

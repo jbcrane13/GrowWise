@@ -1,0 +1,89 @@
+{
+  "" : {
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/GrowWiseServices-primary.dia",
+    "emit-module-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/GrowWiseServices-primary-emit-module.d",
+    "emit-module-diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/GrowWiseServices-primary-emit-module.dia",
+    "pch" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/GrowWiseServices-primary-Bridging-header.pch",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/GrowWiseServices-primary.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/DataService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/DataService~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/LocationService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/LocationService~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/NotificationService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/NotificationService~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/PhotoService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PhotoService~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/PlantDatabaseService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/PlantDatabaseService~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/ReminderService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/ReminderService~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/SwiftDataCache.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/SwiftDataCache~partial.swiftmodule"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseServices/TutorialService.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.dia",
+    "index-unit-output-path" : "/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.o",
+    "llvm-bc" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.bc",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService.swiftdeps",
+    "swiftmodule" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseServices.build/Objects-normal/x86_64/TutorialService~partial.swiftmodule"
+  }
+}

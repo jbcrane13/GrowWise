@@ -22,7 +22,7 @@ public final class Garden {
     public var layout: String?
     
     // Relationships
-    public var plants: [Plant] = []
+    public var plants: [Plant]? = []
     public var user: User?
     
     // Metadata

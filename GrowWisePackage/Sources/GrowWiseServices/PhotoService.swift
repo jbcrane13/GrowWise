@@ -52,7 +52,9 @@ public final class PhotoService: ObservableObject {
     // MARK: - Photo Saving
     
     public func savePhoto(_ image: UIImage, for plant: Plant, type: PhotoType = .general, notes: String = "") async throws -> PlantPhoto {
-        let plantId = plant.id
+        guard let plantId = plant.id else {
+            throw PhotoError.invalidPlantID
+        }
         createPlantDirectoryIfNeeded(for: plantId)
         
         // Process and compress image
@@ -126,7 +128,8 @@ public final class PhotoService: ObservableObject {
     }
     
     public func getPhotos(for plant: Plant, type: PhotoType? = nil) async -> [PlantPhoto] {
-        let allPhotos = await getAllPhotosMetadata(for: plant.id)
+        guard let plantId = plant.id else { return [] }
+        let allPhotos = await getAllPhotosMetadata(for: plantId)
         
         if let type = type {
             return allPhotos.filter { $0.photoType == type }
@@ -172,7 +175,8 @@ public final class PhotoService: ObservableObject {
     }
     
     public func deleteAllPhotos(for plant: Plant) async throws {
-        let plantPath = plantPhotoPath(for: plant.id)
+        guard let plantId = plant.id else { throw PhotoError.invalidPlantID }
+        let plantPath = plantPhotoPath(for: plantId)
         
         // Delete all files in plant directory
         if FileManager.default.fileExists(atPath: plantPath.path) {
@@ -180,7 +184,7 @@ public final class PhotoService: ObservableObject {
         }
         
         // Remove all metadata for this plant
-        await removeAllPhotoMetadata(for: plant.id)
+        await removeAllPhotoMetadata(for: plantId)
     }
     
     // MARK: - Image Processing
@@ -346,10 +350,11 @@ public final class PhotoService: ObservableObject {
     // MARK: - Backup and Export
     
     public func exportPhotos(for plant: Plant) async throws -> URL {
-        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("plant_\(plant.id.uuidString)_photos.zip")
+        guard let plantId = plant.id else { throw PhotoError.invalidPlantID }
+        let tempURL = FileManager.default.temporaryDirectory.appendingPathComponent("plant_\(plantId.uuidString)_photos.zip")
         
         // Create zip archive of all photos for this plant
-        let plantPath = plantPhotoPath(for: plant.id)
+        let plantPath = plantPhotoPath(for: plantId)
         
         // This is a simplified implementation - in a real app you'd use a zip library
         try FileManager.default.copyItem(at: plantPath, to: tempURL)
@@ -468,6 +473,7 @@ public enum PhotoError: Error {
     case saveLocationUnavailable
     case fileNotFound
     case permissionDenied
+    case invalidPlantID
     
     public var localizedDescription: String {
         switch self {
@@ -479,6 +485,8 @@ public enum PhotoError: Error {
             return "Photo file not found"
         case .permissionDenied:
             return "Permission denied to access photos"
+        case .invalidPlantID:
+            return "Invalid plant ID provided"
         }
     }
 }

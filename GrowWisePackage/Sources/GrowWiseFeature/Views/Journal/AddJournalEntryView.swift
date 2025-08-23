@@ -68,8 +68,8 @@ public struct AddJournalEntryView: View {
                         Text("Select a plant")
                             .tag(nil as Plant?)
                         
-                        ForEach(plants.filter { $0.isUserPlant }) { plant in
-                            Text(plant.name)
+                        ForEach(plants.filter { $0.isUserPlant ?? false }) { plant in
+                            Text(plant.name ?? "Unknown Plant")
                                 .tag(plant as Plant?)
                         }
                     }

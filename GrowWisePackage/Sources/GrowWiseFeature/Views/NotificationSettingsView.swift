@@ -129,11 +129,11 @@ public struct NotificationSettingsView: View {
     
     private var reminderTypesSection: some View {
         Section("Reminder Types") {
-            Toggle("Watering Reminders", isOn: $reminderSettings.enableWateringReminders)
-            Toggle("Fertilizing Reminders", isOn: $reminderSettings.enableFertilizingReminders)
-            Toggle("Pruning Reminders", isOn: $reminderSettings.enablePruningReminders)
-            Toggle("Harvest Reminders", isOn: $reminderSettings.enableHarvestReminders)
-            Toggle("Seasonal Care", isOn: $reminderSettings.enableSeasonalReminders)
+            Toggle("Watering Reminders", isOn: enableWateringRemindersBinding)
+            Toggle("Fertilizing Reminders", isOn: enableFertilizingRemindersBinding)
+            Toggle("Pruning Reminders", isOn: enablePruningRemindersBinding)
+            Toggle("Harvest Reminders", isOn: enableHarvestRemindersBinding)
+            Toggle("Seasonal Care", isOn: enableSeasonalRemindersBinding)
         }
         .disabled(!notificationService.isAuthorized)
     }
@@ -154,7 +154,7 @@ public struct NotificationSettingsView: View {
             }
             .disabled(!notificationService.isAuthorized)
             
-            Toggle("Weekend Reminders", isOn: $reminderSettings.weekendReminders)
+            Toggle("Weekend Reminders", isOn: weekendRemindersBinding)
                 .disabled(!notificationService.isAuthorized)
         }, header: {
             Text("Timing & Schedule")
@@ -257,6 +257,50 @@ public struct NotificationSettingsView: View {
             testResultMessage = "Failed to schedule test notification: \(error.localizedDescription)"
             showingTestResult = true
         }
+    }
+    
+    // MARK: - Computed Binding Properties
+    
+    private var enableWateringRemindersBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.enableWateringReminders ?? true },
+            set: { reminderSettings.enableWateringReminders = $0 }
+        )
+    }
+    
+    private var enableFertilizingRemindersBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.enableFertilizingReminders ?? true },
+            set: { reminderSettings.enableFertilizingReminders = $0 }
+        )
+    }
+    
+    private var enablePruningRemindersBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.enablePruningReminders ?? true },
+            set: { reminderSettings.enablePruningReminders = $0 }
+        )
+    }
+    
+    private var enableHarvestRemindersBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.enableHarvestReminders ?? true },
+            set: { reminderSettings.enableHarvestReminders = $0 }
+        )
+    }
+    
+    private var enableSeasonalRemindersBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.enableSeasonalReminders ?? true },
+            set: { reminderSettings.enableSeasonalReminders = $0 }
+        )
+    }
+    
+    private var weekendRemindersBinding: Binding<Bool> {
+        Binding(
+            get: { reminderSettings.weekendReminders ?? true },
+            set: { reminderSettings.weekendReminders = $0 }
+        )
     }
 }
 

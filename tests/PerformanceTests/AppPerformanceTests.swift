@@ -2,6 +2,7 @@ import XCTest
 import Testing
 @testable import GrowWiseServices
 @testable import GrowWiseModels
+@testable import TestUtilities
 
 @Suite("App Performance Tests")
 struct AppPerformanceTests {

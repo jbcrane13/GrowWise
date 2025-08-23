@@ -1,0 +1,27 @@
+{
+  "object" : {
+    "artifacts" : [
+
+    ],
+    "dependencies" : [
+      {
+        "basedOn" : null,
+        "packageRef" : {
+          "identity" : "growwisepackage",
+          "kind" : "fileSystem",
+          "location" : "/Users/blake/GitHub/Gardener/GrowWisePackage",
+          "name" : "GrowWiseFeature"
+        },
+        "state" : {
+          "name" : "fileSystem",
+          "path" : "/Users/blake/GitHub/Gardener/GrowWisePackage"
+        },
+        "subpath" : "growwisepackage"
+      }
+    ],
+    "prebuilts" : [
+
+    ]
+  },
+  "version" : 7
+}

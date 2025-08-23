@@ -37,7 +37,9 @@ public struct PlantCardView: View {
             Spacer()
             
             // Health status badge
-            HealthStatusBadge(status: plant.healthStatus)
+            if let healthStatus = plant.healthStatus {
+                HealthStatusBadge(status: healthStatus)
+            }
         }
     }
     
@@ -59,7 +61,7 @@ public struct PlantCardView: View {
     
     private var plantInfoSection: some View {
         VStack(alignment: .leading, spacing: 4) {
-            Text(plant.name)
+            Text(plant.name ?? "Unknown Plant")
                 .font(.headline)
                 .fontWeight(.semibold)
                 .lineLimit(1)
@@ -73,8 +75,12 @@ public struct PlantCardView: View {
             }
             
             HStack(spacing: 8) {
-                PlantTypeBadge(type: plant.plantType)
-                DifficultyBadge(level: plant.difficultyLevel)
+                if let plantType = plant.plantType {
+                    PlantTypeBadge(type: plantType)
+                }
+                if let difficultyLevel = plant.difficultyLevel {
+                    DifficultyBadge(level: difficultyLevel)
+                }
                 Spacer()
             }
         }
@@ -145,6 +151,7 @@ public struct PlantCardView: View {
         case .succulent: return "circle.grid.3x3.fill"
         case .tree: return "tree.fill"
         case .shrub: return "leaf.circle.fill"
+        case .none: return "questionmark.circle.fill"
         }
     }
     
@@ -154,7 +161,7 @@ public struct PlantCardView: View {
         }
         
         let daysSinceWatering = Calendar.current.dateComponents([.day], from: lastWatered, to: Date()).day ?? 0
-        let wateringInterval = plant.wateringFrequency.days
+        let wateringInterval = plant.wateringFrequency?.days ?? 7
         
         if daysSinceWatering >= wateringInterval + 1 {
             return .overdue
@@ -177,6 +184,7 @@ public struct PlantCardView: View {
         case .needsAttention: return .due
         case .sick, .dying: return .overdue
         case .dead: return .overdue
+        case .none: return .due
         }
     }
 }

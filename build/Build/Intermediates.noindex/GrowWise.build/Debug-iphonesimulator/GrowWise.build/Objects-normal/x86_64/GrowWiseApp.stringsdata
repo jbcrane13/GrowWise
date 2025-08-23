@@ -1,0 +1,56 @@
+{
+  "source": "/Users/blake/GitHub/Gardener/GrowWise/GrowWiseApp.swift",
+  "tables": {
+    "Localizable": [
+      {
+        "comment": "",
+        "key": "🌱 GrowWise",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 16
+        }
+      },
+      {
+        "comment": "",
+        "key": "Your Personal Gardening Companion",
+        "location": {
+          "startingColumn": 18,
+          "startingLine": 20
+        }
+      },
+      {
+        "comment": "",
+        "key": "Continue to Onboarding",
+        "location": {
+          "startingColumn": 20,
+          "startingLine": 47
+        }
+      },
+      {
+        "comment": "",
+        "key": "Track your plants",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 28
+        }
+      },
+      {
+        "comment": "",
+        "key": "Set care reminders",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 34
+        }
+      },
+      {
+        "comment": "",
+        "key": "Keep a garden journal",
+        "location": {
+          "startingColumn": 26,
+          "startingLine": 40
+        }
+      }
+    ]
+  },
+  "version": 1
+}

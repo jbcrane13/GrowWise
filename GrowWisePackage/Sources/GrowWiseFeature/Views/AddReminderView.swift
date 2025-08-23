@@ -114,10 +114,10 @@ public struct AddReminderView: View {
                         .frame(width: 24, height: 24)
                     
                     VStack(alignment: .leading) {
-                        Text(selectedPlant.name)
+                        Text(selectedPlant.name ?? "Unknown Plant")
                             .font(.headline)
                         
-                        Text(selectedPlant.plantType.displayName)
+                        Text(selectedPlant.plantType?.displayName ?? "Unknown Type")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
@@ -257,11 +257,11 @@ public struct AddReminderView: View {
     // MARK: - Computed Properties
     
     private var frequencyOptions: [ReminderFrequency] {
-        [.daily, .everyOtherDay, .twiceWeekly, .weekly, .biweekly, .monthly, .custom(days: customDays)]
+        [.daily, .everyOtherDay, .twiceWeekly, .weekly, .biweekly, .monthly, .custom]
     }
     
     private var frequencyDescription: String {
-        let freq = frequency == .custom(days: 0) ? .custom(days: customDays) : frequency
+        let freq = frequency == .custom ? frequency : frequency
         
         switch freq {
         case .daily:
@@ -276,8 +276,8 @@ public struct AddReminderView: View {
             return "every 2 weeks"
         case .monthly:
             return "once a month"
-        case .custom(let days):
-            return "every \(days) day\(days == 1 ? "" : "s")"
+        case .custom:
+            return "every \(customDays) day\(customDays == 1 ? "" : "s")"
         case .once:
             return "one time only"
         default:
@@ -297,6 +297,7 @@ public struct AddReminderView: View {
         case .fruit: return "apple.logo"
         case .tree: return "tree.fill"
         case .shrub: return "leaf.circle.fill"
+        case .none: return "questionmark.circle.fill"
         }
     }
     
@@ -308,6 +309,7 @@ public struct AddReminderView: View {
         case .flower: return .pink
         case .fruit: return .red
         case .tree: return .brown
+        case .none: return .gray
         }
     }
     
@@ -331,7 +333,7 @@ public struct AddReminderView: View {
         
         Task {
             do {
-                let actualFrequency = frequency == .custom(days: 0) ? .custom(days: customDays) : frequency
+                let actualFrequency = frequency == .custom ? frequency : frequency
                 
                 let reminder = try await reminderService.createSmartReminder(
                     for: plant,
@@ -390,11 +392,11 @@ struct PlantPickerView: View {
                             .frame(width: 24, height: 24)
                         
                         VStack(alignment: .leading) {
-                            Text(plant.name)
+                            Text(plant.name ?? "Unknown Plant")
                                 .font(.headline)
                                 .foregroundColor(.primary)
                             
-                            Text(plant.plantType.displayName)
+                            Text(plant.plantType?.displayName ?? "Unknown Type")
                                 .font(.caption)
                                 .foregroundColor(.secondary)
                         }
@@ -431,6 +433,7 @@ struct PlantPickerView: View {
         case .fruit: return "apple.logo"
         case .tree: return "tree.fill"
         case .shrub: return "leaf.circle.fill"
+        case .none: return "questionmark.circle.fill"
         }
     }
     
@@ -442,6 +445,7 @@ struct PlantPickerView: View {
         case .flower: return .pink
         case .fruit: return .red
         case .tree: return .brown
+        case .none: return .gray
         }
     }
 }

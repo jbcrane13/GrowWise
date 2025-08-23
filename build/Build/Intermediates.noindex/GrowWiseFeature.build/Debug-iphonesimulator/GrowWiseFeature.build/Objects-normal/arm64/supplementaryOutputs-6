@@ -1,0 +1,23 @@
+{
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/Journal/JournalView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/MyGardenView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/MyGardenView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/MyGardenView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/MyGardenView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/MyGardenView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/MyGardenView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/NotificationSettingsView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/NotificationSettingsView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/NotificationSettingsView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/NotificationSettingsView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/NotificationSettingsView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/NotificationSettingsView.swiftdeps"
+  }
+}

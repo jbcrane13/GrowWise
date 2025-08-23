@@ -43,9 +43,9 @@ public struct JournalView: View {
                                 action: { selectedPlant = nil }
                             )
                             
-                            ForEach(plants.filter { $0.isUserPlant }) { plant in
+                            ForEach(plants.filter { $0.isUserPlant ?? false }) { plant in
                                 JournalFilterChip(
-                                    title: plant.name,
+                                    title: plant.name ?? "Unknown Plant",
                                     isSelected: selectedPlant?.id == plant.id,
                                     action: { selectedPlant = plant }
                                 )
@@ -152,7 +152,7 @@ public struct JournalView: View {
             entries = entries.filter { entry in
                 entry.title.localizedCaseInsensitiveContains(searchText) ||
                 entry.content.localizedCaseInsensitiveContains(searchText) ||
-                entry.plant?.name.localizedCaseInsensitiveContains(searchText) == true ||
+                (entry.plant?.name?.localizedCaseInsensitiveContains(searchText) ?? false) ||
                 entry.tags.contains { $0.localizedCaseInsensitiveContains(searchText) }
             }
         }

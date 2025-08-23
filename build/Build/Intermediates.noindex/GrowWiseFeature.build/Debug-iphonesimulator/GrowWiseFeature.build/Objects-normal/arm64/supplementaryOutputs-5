@@ -1,0 +1,30 @@
+{
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/HomeView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/HomeView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/HomeView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/HomeView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/HomeView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/HomeView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/Journal/AddJournalEntryView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/AddJournalEntryView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/AddJournalEntryView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/AddJournalEntryView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/AddJournalEntryView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/AddJournalEntryView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/Journal/JournalEntryDetailView.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryDetailView.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryDetailView.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryDetailView.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryDetailView.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryDetailView.swiftdeps"
+  },
+  "/Users/blake/GitHub/Gardener/GrowWisePackage/Sources/GrowWiseFeature/Views/Journal/JournalEntryRow.swift" : {
+    "const-values" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryRow.swiftconstvalues",
+    "dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryRow.d",
+    "diagnostics" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryRow.dia",
+    "object" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryRow.o",
+    "swift-dependencies" : "/Users/blake/GitHub/Gardener/build/Build/Intermediates.noindex/GrowWiseFeature.build/Debug-iphonesimulator/GrowWiseFeature.build/Objects-normal/arm64/JournalEntryRow.swiftdeps"
+  }
+}

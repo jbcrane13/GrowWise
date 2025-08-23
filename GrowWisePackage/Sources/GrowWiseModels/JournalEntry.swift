@@ -3,11 +3,11 @@ import SwiftData
 
 @Model
 public final class JournalEntry {
-    public var id: UUID
-    public var title: String
-    public var content: String
-    public var entryDate: Date
-    public var entryType: JournalEntryType
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var content: String = ""
+    public var entryDate: Date = Date()
+    public var entryType: JournalEntryType = JournalEntryType.observation
     
     // Plant tracking
     public var growthStage: GrowthStage?
@@ -29,18 +29,18 @@ public final class JournalEntry {
     public var pestObservations: String?
     
     // Media
-    public var photoURLs: [String]
-    public var videoURLs: [String]
+    public var photoURLs: [String] = []
+    public var videoURLs: [String] = []
     
     // Relationships
     public var plant: Plant?
     public var user: User?
     
     // Metadata
-    public var isPrivate: Bool
-    public var tags: [String]
+    public var isPrivate: Bool = false
+    public var tags: [String] = []
     public var mood: PlantMood? // How the plant "looks" - anthropomorphic tracking
-    public var lastModified: Date
+    public var lastModified: Date = Date()
     
     public init(
         title: String = "",

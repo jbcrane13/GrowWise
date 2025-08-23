@@ -107,20 +107,20 @@ public struct PlantReminderDetailView: View {
                 )
             
             VStack(alignment: .leading, spacing: 4) {
-                Text(plant.name)
+                Text(plant.name ?? "Unknown Plant")
                     .font(.title2)
                     .fontWeight(.bold)
                 
-                Text(plant.scientificName ?? plant.plantType.displayName)
+                Text(plant.scientificName ?? plant.plantType?.displayName ?? "Unknown Type")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                 
                 HStack(spacing: 12) {
-                    Label(plant.plantType.displayName, systemImage: "leaf")
+                    Label(plant.plantType?.displayName ?? "Unknown Type", systemImage: "leaf")
                         .font(.caption)
                         .foregroundColor(.secondary)
                     
-                    Label(plant.difficultyLevel.displayName, systemImage: "star")
+                    Label(plant.difficultyLevel?.displayName ?? "Unknown", systemImage: "star")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
@@ -317,6 +317,7 @@ public struct PlantReminderDetailView: View {
         case .fruit: return "apple.logo"
         case .tree: return "tree.fill"
         case .shrub: return "leaf.circle.fill"
+        case .none: return "questionmark.circle.fill"
         }
     }
     
@@ -328,6 +329,7 @@ public struct PlantReminderDetailView: View {
         case .flower: return .pink
         case .fruit: return .red
         case .tree: return .brown
+        case .none: return .gray
         }
     }
     

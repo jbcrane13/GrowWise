@@ -38,7 +38,7 @@ public final class ReminderService: ObservableObject {
             title: generateReminderTitle(type: type, plant: plant),
             message: generateReminderMessage(type: type, plant: plant),
             type: type,
-            frequency: .custom(days: baseFrequencyDays),
+            frequency: .custom,
             dueDate: nextDueDate,
             plant: plant
         )
@@ -375,6 +375,9 @@ public final class ReminderService: ObservableObject {
         case .tree, .shrub:
             // Trees and shrubs need all seasonal care
             return true
+        @unknown default:
+            // Handle any future PlantType cases
+            return true
         }
     }
     
@@ -413,7 +416,7 @@ public final class ReminderService: ObservableObject {
         for reminder in reminders {
             if let newFrequency = newFrequencyDays {
                 reminder.baseFrequencyDays = newFrequency
-                reminder.frequency = .custom(days: newFrequency)
+                reminder.frequency = .custom
             }
             
             if let weatherAdjustment = enableWeatherAdjustment {

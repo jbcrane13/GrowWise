@@ -227,7 +227,7 @@ public struct ReminderManagementView: View {
             return plants
         } else {
             return plants.filter { plant in
-                plant.name.localizedCaseInsensitiveContains(searchText)
+                (plant.name ?? "").localizedCaseInsensitiveContains(searchText)
             }
         }
     }

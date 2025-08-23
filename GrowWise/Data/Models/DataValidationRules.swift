@@ -36,14 +36,14 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Email validation
-        if user.email.isEmpty {
+        if user.email?.isEmpty ?? true {
             errors.append("Email is required")
-        } else if !isValidEmail(user.email) {
+        } else if !isValidEmail(user.email ?? "") {
             errors.append("Invalid email format")
         }
         
         // Display name validation
-        if user.displayName.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if (user.displayName ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Display name is required")
         }
         
@@ -81,9 +81,9 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Required fields
-        if plant.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if (plant.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Plant name is required")
-        } else if plant.name.count > Constants.maxNameLength {
+        } else if (plant.name?.count ?? 0) > Constants.maxNameLength {
             errors.append("Plant name is too long (max \(Constants.maxNameLength) characters)")
         }
         
@@ -120,7 +120,7 @@ struct DataValidationRules {
         }
         
         // Notes length
-        if plant.notes.count > Constants.maxNotesLength {
+        if (plant.notes?.count ?? 0) > Constants.maxNotesLength {
             warnings.append("Plant notes are very long (over \(Constants.maxNotesLength) characters)")
         }
         
@@ -140,18 +140,18 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Required fields
-        if garden.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if (garden.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Garden name is required")
-        } else if garden.name.count > Constants.maxNameLength {
+        } else if (garden.name?.count ?? 0) > Constants.maxNameLength {
             errors.append("Garden name is too long (max \(Constants.maxNameLength) characters)")
         }
         
         // Date validation
-        if garden.createdDate > Date() {
+        if let createdDate = garden.createdDate, createdDate > Date() {
             errors.append("Garden created date cannot be in the future")
         }
         
-        if garden.lastModified < garden.createdDate {
+        if let lastModified = garden.lastModified, let createdDate = garden.createdDate, lastModified < createdDate {
             warnings.append("Last modified date is before created date")
         }
         
@@ -191,7 +191,7 @@ struct DataValidationRules {
         var warnings: [String] = []
         
         // Validate this is actually a user plant
-        if !plant.isUserPlant {
+        if !(plant.isUserPlant ?? false) {
             errors.append("Plant must be marked as a user plant")
         }
         
@@ -229,10 +229,10 @@ struct DataValidationRules {
         }
         
         // Name validation
-        if plant.name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+        if (plant.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
             errors.append("Plant name cannot be empty")
         }
-        if plant.name.count > Constants.maxCustomNameLength {
+        if (plant.name?.count ?? 0) > Constants.maxCustomNameLength {
             errors.append("Plant name exceeds maximum length of \(Constants.maxCustomNameLength) characters")
         }
         
@@ -244,7 +244,7 @@ struct DataValidationRules {
         }
         
         // Notes length
-        if plant.notes.count > Constants.maxNotesLength {
+        if (plant.notes?.count ?? 0) > Constants.maxNotesLength {
             warnings.append("Plant notes are very long (over \(Constants.maxNotesLength) characters)")
         }
         

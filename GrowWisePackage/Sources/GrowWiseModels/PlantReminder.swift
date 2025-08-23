@@ -3,18 +3,18 @@ import SwiftData
 
 @Model
 public final class PlantReminder {
-    public var id: UUID
-    public var title: String
-    public var message: String
-    public var reminderTypeRawValue: String
-    public var storedFrequency: String
+    public var id: UUID = UUID()
+    public var title: String = ""
+    public var message: String = ""
+    public var reminderTypeRawValue: String = "watering"
+    public var storedFrequency: String = "daily"
     public var customFrequencyDays: Int?
     
     // Scheduling
-    public var nextDueDate: Date
+    public var nextDueDate: Date = Date()
     public var lastCompletedDate: Date?
-    public var isEnabled: Bool
-    public var isRecurring: Bool
+    public var isEnabled: Bool = true
+    public var isRecurring: Bool = true
     
     // Relationships
     public var plant: Plant?
@@ -22,22 +22,22 @@ public final class PlantReminder {
     
     // Notification settings
     public var notificationIdentifier: String?
-    public var snoozeCount: Int
-    public var maxSnoozeCount: Int
+    public var snoozeCount: Int = 0
+    public var maxSnoozeCount: Int = 3
     public var preferredNotificationTime: Date?
     
     // Smart reminder properties
-    public var priorityRawValue: String
-    public var enableWeatherAdjustment: Bool
-    public var baseFrequencyDays: Int
+    public var priorityRawValue: String = "medium"
+    public var enableWeatherAdjustment: Bool = false
+    public var baseFrequencyDays: Int = 1
     
     // Seasonal properties
     public var seasonalContext: String?
-    public var isSeasonalReminder: Bool
+    public var isSeasonalReminder: Bool = false
     
     // Metadata
-    public var createdDate: Date
-    public var lastModified: Date
+    public var createdDate: Date = Date()
+    public var lastModified: Date = Date()
     
     public var reminderType: ReminderType {
         get { ReminderType(rawValue: reminderTypeRawValue) ?? .custom }

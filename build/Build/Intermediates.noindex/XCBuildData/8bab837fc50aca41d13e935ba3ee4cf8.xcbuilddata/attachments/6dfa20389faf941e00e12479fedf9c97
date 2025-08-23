@@ -1,0 +1,4 @@
+module GrowWiseModels {
+header "GrowWiseModels-Swift.h"
+export *
+}
