@@ -55,7 +55,13 @@ public struct AddJournalEntryView: View {
             Form {
                 // Basic Information Section
                 Section("Entry Details") {
-                    TextField("Entry title (optional)", text: $title)
+                    ValidatedTextField(
+                        "Entry title (optional)",
+                        text: $title,
+                        validation: { text in
+                            ValidationService.shared.validateText(text, fieldName: "Title", minLength: 0, maxLength: 100)
+                        }
+                    )
                     
                     Picker("Entry Type", selection: $entryType) {
                         ForEach(JournalEntryType.allCases, id: \.self) { type in
@@ -77,8 +83,25 @@ public struct AddJournalEntryView: View {
                 
                 // Content Section
                 Section("Notes") {
-                    TextField("What's happening with your plant?", text: $content, axis: .vertical)
-                        .lineLimit(3...6)
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $content)
+                            .frame(minHeight: 100)
+                        
+                        if content.isEmpty {
+                            Text("What's happening with your plant?")
+                                .foregroundColor(.secondary)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 8)
+                                .allowsHitTesting(false)
+                        }
+                    }
+                    .onChange(of: content) { _, newValue in
+                        let validation = ValidationService.shared.validateText(newValue, fieldName: "Notes", maxLength: 1000)
+                        if !validation.isValid {
+                            // Truncate if too long
+                            content = String(newValue.prefix(1000))
+                        }
+                    }
                 }
                 
                 // Photos Section
@@ -94,17 +117,23 @@ public struct AddJournalEntryView: View {
                 // Quick Measurements Section
                 Section("Quick Measurements") {
                     HStack {
-                        TextField("Height", text: $heightMeasurement)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.decimalPad)
+                        ValidatedTextField(
+                            "Height",
+                            text: $heightMeasurement,
+                            validation: { ValidationService.shared.validateHeight($0) },
+                            keyboardType: .decimalPad
+                        )
                         Text("inches")
                             .foregroundColor(.secondary)
                     }
                     
                     HStack {
-                        TextField("Temperature", text: $temperature)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .keyboardType(.decimalPad)
+                        ValidatedTextField(
+                            "Temperature",
+                            text: $temperature,
+                            validation: { ValidationService.shared.validateTemperature($0) },
+                            keyboardType: .decimalPad
+                        )
                         Text("°F")
                             .foregroundColor(.secondary)
                     }
@@ -137,17 +166,23 @@ public struct AddJournalEntryView: View {
                 if showingAdvancedFields {
                     Section("Detailed Measurements") {
                         HStack {
-                            TextField("Width", text: $widthMeasurement)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.decimalPad)
+                            ValidatedTextField(
+                                "Width",
+                                text: $widthMeasurement,
+                                validation: { ValidationService.shared.validateWidth($0) },
+                                keyboardType: .decimalPad
+                            )
                             Text("inches")
                                 .foregroundColor(.secondary)
                         }
                         
                         HStack {
-                            TextField("Humidity", text: $humidity)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
-                                .keyboardType(.decimalPad)
+                            ValidatedTextField(
+                                "Humidity",
+                                text: $humidity,
+                                validation: { ValidationService.shared.validateHumidity($0) },
+                                keyboardType: .decimalPad
+                            )
                             Text("%")
                                 .foregroundColor(.secondary)
                         }
@@ -166,20 +201,29 @@ public struct AddJournalEntryView: View {
                     Section("Care Activities") {
                         if entryType == .watering {
                             HStack {
-                                TextField("Water amount", text: $wateringAmount)
-                                    .textFieldStyle(RoundedBorderTextFieldStyle())
-                                    .keyboardType(.decimalPad)
+                                ValidatedTextField(
+                                    "Water amount",
+                                    text: $wateringAmount,
+                                    validation: { ValidationService.shared.validateWaterAmount($0) },
+                                    keyboardType: .decimalPad
+                                )
                                 Text("fl oz")
                                     .foregroundColor(.secondary)
                             }
                         }
                         
                         if entryType == .fertilizing {
-                            TextField("Fertilizer type", text: $fertilizer)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            ValidatedTextField(
+                                "Fertilizer type",
+                                text: $fertilizer,
+                                validation: { ValidationService.shared.validateText($0, fieldName: "Fertilizer", maxLength: 50) }
+                            )
                             
-                            TextField("Amount used", text: $fertilizerAmount)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                            ValidatedTextField(
+                                "Amount used",
+                                text: $fertilizerAmount,
+                                validation: { ValidationService.shared.validateText($0, fieldName: "Amount", maxLength: 50) }
+                            )
                         }
                         
                         if entryType == .pruning {

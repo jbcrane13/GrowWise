@@ -1,5 +1,6 @@
 import SwiftUI
 import GrowWiseModels
+import GrowWiseServices
 
 public struct SearchBarView: View {
     @Binding var text: String
@@ -49,7 +50,18 @@ public struct SearchBarView: View {
                 .focused($isSearchFieldFocused)
                 .textFieldStyle(PlainTextFieldStyle())
                 .onSubmit {
-                    onSearchButtonClicked?()
+                    // Validate search query before submission
+                    let validation = ValidationService.shared.validateSearchQuery(text)
+                    if validation.isValid {
+                        onSearchButtonClicked?()
+                    }
+                }
+                .onChange(of: text) { _, newValue in
+                    // Sanitize input as user types
+                    let sanitized = ValidationService.shared.sanitizeInput(newValue)
+                    if sanitized != newValue {
+                        text = sanitized
+                    }
                 }
             
             if !text.isEmpty {

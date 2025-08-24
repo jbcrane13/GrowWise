@@ -245,12 +245,34 @@ public struct AddReminderView: View {
     
     private var customContentSection: some View {
         Section("Custom Content (Optional)") {
-            TextField("Custom Title", text: $customTitle)
-                .textFieldStyle(.roundedBorder)
+            ValidatedTextField(
+                "Custom Title",
+                text: $customTitle,
+                validation: { ValidationService.shared.validateText($0, fieldName: "Title", maxLength: 100) }
+            )
             
-            TextField("Custom Message", text: $customMessage, axis: .vertical)
-                .textFieldStyle(.roundedBorder)
-                .lineLimit(3...6)
+            ZStack(alignment: .topLeading) {
+                TextEditor(text: $customMessage)
+                    .frame(minHeight: 80)
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 8)
+                            .stroke(Color(.systemGray4), lineWidth: 1)
+                    )
+                
+                if customMessage.isEmpty {
+                    Text("Custom Message")
+                        .foregroundColor(.secondary)
+                        .padding(.horizontal, 4)
+                        .padding(.vertical, 8)
+                        .allowsHitTesting(false)
+                }
+            }
+            .onChange(of: customMessage) { _, newValue in
+                let validation = ValidationService.shared.validateText(newValue, fieldName: "Message", maxLength: 500)
+                if !validation.isValid {
+                    customMessage = String(newValue.prefix(500))
+                }
+            }
         }
     }
     

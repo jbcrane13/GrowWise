@@ -808,20 +808,23 @@ extension ReminderService {
         enabled: Bool
     ) {
         for type in reminderTypes {
-            UserDefaults.standard.set(enabled, forKey: "notification_\(type.rawValue)_enabled")
+            try? KeychainManager.shared.storeBool(enabled, for: "notification_\(type.rawValue)_enabled")
         }
     }
     
     public func isNotificationEnabled(for type: ReminderType) -> Bool {
-        return UserDefaults.standard.bool(forKey: "notification_\(type.rawValue)_enabled")
+        return (try? KeychainManager.shared.retrieveBool(for: "notification_\(type.rawValue)_enabled")) ?? false
     }
     
     public func setDefaultNotificationTime(_ time: Date) {
-        UserDefaults.standard.set(time, forKey: "default_notification_time")
+        if let timeData = try? JSONEncoder().encode(time) {
+            try? KeychainManager.shared.store(timeData, for: "default_notification_time")
+        }
     }
     
     public func getDefaultNotificationTime() -> Date {
-        if let time = UserDefaults.standard.object(forKey: "default_notification_time") as? Date {
+        if let timeData = try? KeychainManager.shared.retrieve(for: "default_notification_time"),
+           let time = try? JSONDecoder().decode(Date.self, from: timeData) {
             return time
         }
         
@@ -833,17 +836,19 @@ extension ReminderService {
     // MARK: - Reminder Settings
     
     public func updateReminderSettings(_ settings: ReminderSettings) {
-        UserDefaults.standard.set(settings.enableWateringReminders, forKey: "enable_watering_reminders")
-        UserDefaults.standard.set(settings.enableFertilizingReminders, forKey: "enable_fertilizing_reminders")
-        UserDefaults.standard.set(settings.enablePestControlReminders, forKey: "enable_pest_control_reminders")
-        UserDefaults.standard.set(settings.enableWeatherBasedAdjustments, forKey: "enable_weather_adjustments")
+        try? KeychainManager.shared.storeBool(settings.enableWateringReminders, for: "enable_watering_reminders")
+        try? KeychainManager.shared.storeBool(settings.enableFertilizingReminders, for: "enable_fertilizing_reminders")
+        try? KeychainManager.shared.storeBool(settings.enablePestControlReminders, for: "enable_pest_control_reminders")
+        try? KeychainManager.shared.storeBool(settings.enableWeatherBasedAdjustments, for: "enable_weather_adjustments")
         
-        if let quietStart = settings.quietHoursStart {
-            UserDefaults.standard.set(quietStart, forKey: "quiet_hours_start")
+        if let quietStart = settings.quietHoursStart,
+           let startData = try? JSONEncoder().encode(quietStart) {
+            try? KeychainManager.shared.store(startData, for: "quiet_hours_start")
         }
         
-        if let quietEnd = settings.quietHoursEnd {
-            UserDefaults.standard.set(quietEnd, forKey: "quiet_hours_end")
+        if let quietEnd = settings.quietHoursEnd,
+           let endData = try? JSONEncoder().encode(quietEnd) {
+            try? KeychainManager.shared.store(endData, for: "quiet_hours_end")
         }
         
         if let defaultTime = settings.defaultNotificationTime {
@@ -852,15 +857,30 @@ extension ReminderService {
     }
     
     public func getReminderSettings() -> ReminderSettings {
-        let quietStart = UserDefaults.standard.object(forKey: "quiet_hours_start") as? Date
-        let quietEnd = UserDefaults.standard.object(forKey: "quiet_hours_end") as? Date
-        let defaultTime = UserDefaults.standard.object(forKey: "default_notification_time") as? Date
+        let quietStart: Date? = {
+            if let data = try? KeychainManager.shared.retrieve(for: "quiet_hours_start") {
+                return try? JSONDecoder().decode(Date.self, from: data)
+            }
+            return nil
+        }()
+        let quietEnd: Date? = {
+            if let data = try? KeychainManager.shared.retrieve(for: "quiet_hours_end") {
+                return try? JSONDecoder().decode(Date.self, from: data)
+            }
+            return nil
+        }()
+        let defaultTime: Date? = {
+            if let data = try? KeychainManager.shared.retrieve(for: "default_notification_time") {
+                return try? JSONDecoder().decode(Date.self, from: data)
+            }
+            return nil
+        }()
         
         return ReminderSettings(
-            enableWateringReminders: UserDefaults.standard.bool(forKey: "enable_watering_reminders"),
-            enableFertilizingReminders: UserDefaults.standard.bool(forKey: "enable_fertilizing_reminders"),
-            enablePestControlReminders: UserDefaults.standard.bool(forKey: "enable_pest_control_reminders"),
-            enableWeatherBasedAdjustments: UserDefaults.standard.bool(forKey: "enable_weather_adjustments"),
+            enableWateringReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_watering_reminders")) ?? false,
+            enableFertilizingReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_fertilizing_reminders")) ?? false,
+            enablePestControlReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_pest_control_reminders")) ?? false,
+            enableWeatherBasedAdjustments: (try? KeychainManager.shared.retrieveBool(for: "enable_weather_adjustments")) ?? false,
             quietHoursStart: quietStart,
             quietHoursEnd: quietEnd,
             defaultNotificationTime: defaultTime ?? getDefaultNotificationTime()

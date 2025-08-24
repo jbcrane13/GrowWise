@@ -89,10 +89,32 @@ struct OnboardingNavigationView: View {
                     dataService = DataService.createFallback()
                 }
                 
-                // For now, use a placeholder email - in a real app this would come from authentication
+                // Email and display name validation will be added when user authentication is implemented
+                // For now, we use placeholder values
+                let email = "user@example.com"
+                let displayName = "Gardener"
+                
+                // Validate email for future use
+                let emailValidation = ValidationService.shared.validateEmail(email)
+                
+                guard emailValidation.isValid else {
+                    print("Invalid email: \(emailValidation.errorMessage ?? "Unknown error")")
+                    // In production, show error to user
+                    return
+                }
+                
+                // Validate display name for future use
+                let nameValidation = ValidationService.shared.validateName(displayName)
+                
+                guard nameValidation.isValid else {
+                    print("Invalid name: \(nameValidation.errorMessage ?? "Unknown error")")
+                    // In production, show error to user
+                    return
+                }
+                
                 let user = try dataService.createUser(
-                    email: "user@example.com",
-                    displayName: "Gardener",
+                    email: email,
+                    displayName: displayName,
                     skillLevel: userProfile.skillLevel
                 )
                 
@@ -100,7 +122,7 @@ struct OnboardingNavigationView: View {
                 await saveUserPreferences(user: user)
                 
                 // Mark onboarding as completed
-                UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                try? KeychainManager.shared.storeBool(true, for: "hasCompletedOnboarding")
                 
                 await MainActor.run {
                     isCompleted = true
@@ -113,16 +135,23 @@ struct OnboardingNavigationView: View {
     }
     
     private func saveUserPreferences(user: User) async {
-        // Save goals and interests as JSON in user defaults for now
+        // Save goals and interests securely in Keychain
         // In a more complex app, these might be separate entities
         let goalsData = try? JSONEncoder().encode(userProfile.goals.map(\.rawValue))
         let interestsData = try? JSONEncoder().encode(userProfile.interests.map(\.rawValue))
         
-        UserDefaults.standard.set(goalsData, forKey: "userGardeningGoals")
-        UserDefaults.standard.set(interestsData, forKey: "userPlantInterests")
-        UserDefaults.standard.set(userProfile.gardenType.rawValue, forKey: "userGardenType")
-        UserDefaults.standard.set(userProfile.spaceSize.rawValue, forKey: "userSpaceSize")
-        UserDefaults.standard.set(userProfile.preferredNotificationTime, forKey: "userPreferredNotificationTime")
+        if let goalsData = goalsData {
+            try? KeychainManager.shared.store(goalsData, for: "userGardeningGoals")
+        }
+        if let interestsData = interestsData {
+            try? KeychainManager.shared.store(interestsData, for: "userPlantInterests")
+        }
+        try? KeychainManager.shared.storeString(userProfile.gardenType.rawValue, for: "userGardenType")
+        try? KeychainManager.shared.storeString(userProfile.spaceSize.rawValue, for: "userSpaceSize")
+        let timeData = try? JSONEncoder().encode(userProfile.preferredNotificationTime)
+        if let timeData = timeData {
+            try? KeychainManager.shared.store(timeData, for: "userPreferredNotificationTime")
+        }
         
         // Set up notifications if permission granted
         if userProfile.hasNotificationPermission {

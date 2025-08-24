@@ -1,8 +1,17 @@
 import SwiftUI
 import GrowWiseFeature
+import GrowWiseServices
 
 @main
 struct GrowWiseApp: App {
+    
+    init() {
+        // Initialize authentication services with proper dependency injection
+        Task { @MainActor in
+            AuthenticationInitializer.initialize()
+        }
+    }
+    
     var body: some Scene {
         WindowGroup {
             MainAppView()

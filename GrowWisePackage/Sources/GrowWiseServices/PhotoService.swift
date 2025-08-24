@@ -237,13 +237,13 @@ public final class PhotoService: ObservableObject {
         
         let key = "plant_photos_\(photo.plantId.uuidString)"
         if let encodedData = try? JSONEncoder().encode(existingPhotos) {
-            UserDefaults.standard.set(encodedData, forKey: key)
+            try? KeychainManager.shared.store(encodedData, for: key)
         }
     }
     
     private func getAllPhotosMetadata(for plantId: UUID) async -> [PlantPhoto] {
         let key = "plant_photos_\(plantId.uuidString)"
-        guard let data = UserDefaults.standard.data(forKey: key),
+        guard let data = try? KeychainManager.shared.retrieve(for: key),
               let photos = try? JSONDecoder().decode([PlantPhoto].self, from: data) else {
             return []
         }
@@ -256,13 +256,13 @@ public final class PhotoService: ObservableObject {
         
         let key = "plant_photos_\(photo.plantId.uuidString)"
         if let encodedData = try? JSONEncoder().encode(existingPhotos) {
-            UserDefaults.standard.set(encodedData, forKey: key)
+            try? KeychainManager.shared.store(encodedData, for: key)
         }
     }
     
     private func removeAllPhotoMetadata(for plantId: UUID) async {
         let key = "plant_photos_\(plantId.uuidString)"
-        UserDefaults.standard.removeObject(forKey: key)
+        try? KeychainManager.shared.delete(for: key)
     }
     
     // MARK: - Storage Statistics

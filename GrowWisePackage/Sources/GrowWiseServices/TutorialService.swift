@@ -50,13 +50,15 @@ public final class TutorialService: ObservableObject {
     
     public func markStepComplete(tutorialId: String, stepIndex: Int) {
         let key = "tutorial_\(tutorialId)_step_\(stepIndex)"
-        UserDefaults.standard.set(true, forKey: key)
-        UserDefaults.standard.set(Date(), forKey: "\(key)_completed_date")
+        try? KeychainManager.shared.storeBool(true, for: key)
+        if let dateData = try? JSONEncoder().encode(Date()) {
+            try? KeychainManager.shared.store(dateData, for: "\(key)_completed_date")
+        }
     }
     
     public func isStepCompleted(tutorialId: String, stepIndex: Int) -> Bool {
         let key = "tutorial_\(tutorialId)_step_\(stepIndex)"
-        return UserDefaults.standard.bool(forKey: key)
+        return (try? KeychainManager.shared.retrieveBool(for: key)) ?? false
     }
     
     public func getTutorialProgress(tutorialId: String) -> TutorialProgress {
@@ -71,7 +73,9 @@ public final class TutorialService: ObservableObject {
         let isCompleted = completedSteps == tutorial.steps.count
         
         if isCompleted {
-            UserDefaults.standard.set(Date(), forKey: "tutorial_\(tutorialId)_completed")
+            if let dateData = try? JSONEncoder().encode(Date()) {
+                try? KeychainManager.shared.store(dateData, for: "tutorial_\(tutorialId)_completed")
+            }
         }
         
         return TutorialProgress(
@@ -87,11 +91,11 @@ public final class TutorialService: ObservableObject {
         
         for index in 0..<tutorial.steps.count {
             let key = "tutorial_\(tutorialId)_step_\(index)"
-            UserDefaults.standard.removeObject(forKey: key)
-            UserDefaults.standard.removeObject(forKey: "\(key)_completed_date")
+            try? KeychainManager.shared.delete(for: key)
+            try? KeychainManager.shared.delete(for: "\(key)_completed_date")
         }
         
-        UserDefaults.standard.removeObject(forKey: "tutorial_\(tutorialId)_completed")
+        try? KeychainManager.shared.delete(for: "tutorial_\(tutorialId)_completed")
     }
     
     // MARK: - Analytics
