@@ -5,6 +5,7 @@ import CryptoKit
 
 /// Security test suite for JWT token-based authentication
 /// Validates OWASP compliance and security best practices
+/// Updated for refactored KeychainManager with service composition
 final class KeychainSecurityTests: XCTestCase {
     
     var keychainManager: KeychainManager!
@@ -115,8 +116,11 @@ final class KeychainSecurityTests: XCTestCase {
                     case .invalidKey:
                         // Expected error
                         break
+                    case .serviceError:
+                        // Also acceptable - service layer caught the error
+                        break
                     default:
-                        XCTFail("Expected invalidKey error for dangerous key: \(key)")
+                        XCTFail("Expected invalidKey or serviceError error for dangerous key: \(key)")
                     }
                 }
             }

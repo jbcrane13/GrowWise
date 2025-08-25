@@ -2,39 +2,30 @@ import Foundation
 import Security
 import LocalAuthentication
 import CryptoKit
+import GrowWiseModels
 
 /// KeychainManager provides secure storage for sensitive data
 /// This replaces UserDefaults for storing API keys, tokens, and user credentials
 /// Now enhanced with biometric protection support
-@MainActor
+/// Refactored as a coordinator using service composition
 public final class KeychainManager: KeychainStorageProtocol {
     
     // MARK: - Singleton
     
     public static let shared = KeychainManager()
     
+    // MARK: - Services
+    
+    private let storageService: KeychainStorageService
+    private let encryptionService: EncryptionService
+    private let tokenService: TokenManagementService
+    private let dataTransformationService: DataTransformationService
+    
     // MARK: - Properties
     
     private let service = "com.growwiser.app"
     private let accessGroup: String? = nil // Can be set for app groups
     private var biometricAuth: BiometricAuthenticationProtocol?
-    
-    // Encryption key for secure token storage
-    private lazy var encryptionKey: SymmetricKey = {
-        // Try to retrieve existing key or generate new one
-        if let keyData = try? retrieve(for: "_encryption_key_v2") {
-            return SymmetricKey(data: keyData)
-        } else {
-            let newKey = SecureTokenEncryption.generateKey()
-            // Store the key securely (this is metadata, not sensitive data)
-            try? store(newKey.withUnsafeBytes { Data($0) }, for: "_encryption_key_v2")
-            return newKey
-        }
-    }()
-    
-    // Key validation regex patterns
-    private let keyValidationPattern = "^[a-zA-Z0-9_.-]+$"
-    private let maxKeyLength = 256
     
     // MARK: - Error Types
     
@@ -50,6 +41,7 @@ public final class KeychainManager: KeychainStorageProtocol {
         case encryptionFailed
         case decryptionFailed
         case insecureOperation
+        case serviceError(Error)
         
         public var errorDescription: String? {
             switch self {
@@ -75,6 +67,8 @@ public final class KeychainManager: KeychainStorageProtocol {
                 return "Failed to decrypt sensitive data"
             case .insecureOperation:
                 return "Operation not allowed: insecure method deprecated"
+            case .serviceError(let error):
+                return "Service error: \(error.localizedDescription)"
             }
         }
     }
@@ -82,9 +76,17 @@ public final class KeychainManager: KeychainStorageProtocol {
     // MARK: - Initialization
     
     private init() {
+        // Initialize services
+        self.storageService = KeychainStorageService(service: service, accessGroup: accessGroup)
+        self.encryptionService = EncryptionService(storage: storageService)
+        self.tokenService = TokenManagementService(encryptionService: encryptionService, storage: storageService)
+        self.dataTransformationService = DataTransformationService(storage: storageService, encryptionService: encryptionService)
+        
         // Register self with dependency container after initialization
-        Task { @MainActor in
-            AuthenticationDependencyContainer.shared.setKeychainStorage(self)
+        Task {
+            await MainActor.run {
+                AuthenticationDependencyContainer.shared.setKeychainStorage(self)
+            }
         }
     }
     
@@ -95,181 +97,134 @@ public final class KeychainManager: KeychainStorageProtocol {
         self.biometricAuth = auth
     }
     
-    // MARK: - Public Methods
+    // MARK: - Public Methods - KeychainStorageProtocol Implementation
     
     /// Store data securely in the keychain
     public func store(_ data: Data, for key: String) throws {
-        // Validate key to prevent injection
-        try validateKey(key)
-        
-        let query = createQuery(for: key)
-        
-        // Check if item exists
-        let status = SecItemCopyMatching(query as CFDictionary, nil)
-        
-        if status == errSecSuccess {
-            // Update existing item
-            let updateQuery: [String: Any] = [
-                kSecValueData as String: data
-            ]
-            
-            let updateStatus = SecItemUpdate(query as CFDictionary, updateQuery as CFDictionary)
-            
-            guard updateStatus == errSecSuccess else {
-                throw KeychainError.unknown(updateStatus)
-            }
-        } else if status == errSecItemNotFound {
-            // Add new item
-            var addQuery = query
-            addQuery[kSecValueData as String] = data
-            
-            let addStatus = SecItemAdd(addQuery as CFDictionary, nil)
-            
-            guard addStatus == errSecSuccess else {
-                if addStatus == errSecDuplicateItem {
-                    throw KeychainError.duplicateEntry
-                }
-                throw KeychainError.unknown(addStatus)
-            }
-        } else {
-            throw KeychainError.unknown(status)
+        do {
+            try storageService.store(data, for: key)
+        } catch {
+            throw mapStorageError(error)
         }
     }
     
     /// Store a string securely in the keychain
     public func storeString(_ string: String, for key: String) throws {
-        guard let data = string.data(using: .utf8) else {
-            throw KeychainError.invalidData
+        do {
+            try dataTransformationService.storeString(string, for: key)
+        } catch {
+            throw mapServiceError(error)
         }
-        try store(data, for: key)
     }
     
     /// Store a boolean securely in the keychain
     public func storeBool(_ value: Bool, for key: String) throws {
-        let data = Data([value ? 1 : 0])
-        try store(data, for: key)
+        do {
+            try dataTransformationService.storeBool(value, for: key)
+        } catch {
+            throw mapServiceError(error)
+        }
     }
     
     /// Retrieve data from the keychain
     public func retrieve(for key: String) throws -> Data {
-        // Validate key to prevent injection
-        try validateKey(key)
-        
-        var query = createQuery(for: key)
-        query[kSecReturnData as String] = true
-        query[kSecMatchLimit as String] = kSecMatchLimitOne
-        
-        var item: CFTypeRef?
-        let status = SecItemCopyMatching(query as CFDictionary, &item)
-        
-        guard status == errSecSuccess else {
-            if status == errSecItemNotFound {
-                throw KeychainError.itemNotFound
-            }
-            throw KeychainError.unknown(status)
+        do {
+            return try storageService.retrieve(for: key)
+        } catch {
+            throw mapStorageError(error)
         }
-        
-        guard let data = item as? Data else {
-            throw KeychainError.unexpectedPasswordData
-        }
-        
-        return data
     }
     
     /// Retrieve a string from the keychain
     public func retrieveString(for key: String) throws -> String {
-        let data = try retrieve(for: key)
-        guard let string = String(data: data, encoding: .utf8) else {
-            throw KeychainError.invalidData
+        do {
+            return try dataTransformationService.retrieveString(for: key)
+        } catch {
+            throw mapServiceError(error)
         }
-        return string
     }
     
     /// Retrieve a boolean from the keychain
     public func retrieveBool(for key: String) throws -> Bool {
-        let data = try retrieve(for: key)
-        guard let byte = data.first else {
-            throw KeychainError.invalidData
+        do {
+            return try dataTransformationService.retrieveBool(for: key)
+        } catch {
+            throw mapServiceError(error)
         }
-        return byte != 0
     }
     
     /// Delete an item from the keychain
     public func delete(for key: String) throws {
-        // Validate key to prevent injection
-        try validateKey(key)
-        
-        let query = createQuery(for: key)
-        let status = SecItemDelete(query as CFDictionary)
-        
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw KeychainError.unknown(status)
+        do {
+            try storageService.delete(for: key)
+        } catch {
+            throw mapStorageError(error)
         }
     }
     
     /// Delete all items for this app from the keychain
     public func deleteAll() throws {
-        let query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service
-        ]
-        
-        let status = SecItemDelete(query as CFDictionary)
-        
-        guard status == errSecSuccess || status == errSecItemNotFound else {
-            throw KeychainError.unknown(status)
+        do {
+            try storageService.deleteAll()
+        } catch {
+            throw mapStorageError(error)
         }
     }
     
     /// Check if a key exists in the keychain
     public func exists(for key: String) -> Bool {
-        // Validate key - return false if invalid
-        guard (try? validateKey(key)) != nil else { return false }
-        
-        let query = createQuery(for: key)
-        let status = SecItemCopyMatching(query as CFDictionary, nil)
-        return status == errSecSuccess
+        return storageService.exists(for: key)
     }
     
-    // MARK: - Private Methods
+    // MARK: - Private Methods - Error Mapping
     
-    /// Validate key to prevent injection attacks
-    private func validateKey(_ key: String) throws {
-        // Check key length
-        guard key.count > 0 && key.count <= maxKeyLength else {
-            throw KeychainError.invalidKey("Key length must be between 1 and \(maxKeyLength) characters")
-        }
-        
-        // Check for valid characters only
-        let regex = try NSRegularExpression(pattern: keyValidationPattern, options: [])
-        let range = NSRange(location: 0, length: key.count)
-        
-        guard regex.firstMatch(in: key, options: [], range: range) != nil else {
-            throw KeychainError.invalidKey("Key contains invalid characters. Only alphanumeric, underscore, hyphen, and period allowed.")
-        }
-        
-        // Check for common injection patterns
-        let dangerousPatterns = ["--", "/*", "*/", "<script", "javascript:", "data:", "vbscript:", "onload=", "onerror="]
-        for pattern in dangerousPatterns {
-            if key.lowercased().contains(pattern) {
-                throw KeychainError.invalidKey("Key contains potentially dangerous pattern")
+    /// Map storage service errors to KeychainError
+    private func mapStorageError(_ error: Error) -> KeychainError {
+        if let storageError = error as? KeychainStorageService.StorageError {
+            switch storageError {
+            case .duplicateEntry:
+                return .duplicateEntry
+            case .itemNotFound:
+                return .itemNotFound
+            case .invalidData:
+                return .invalidData
+            case .unexpectedPasswordData:
+                return .unexpectedPasswordData
+            case .invalidKey(let reason):
+                return .invalidKey(reason)
+            case .unknown(let status):
+                return .unknown(status)
+            case .unhandledError(let status):
+                return .unhandledError(status: status)
             }
         }
+        return .serviceError(error)
     }
     
-    private func createQuery(for key: String) -> [String: Any] {
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: key,
-            kSecAttrSynchronizable as String: kCFBooleanFalse as Any
-        ]
-        
-        if let accessGroup = accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
+    /// Map general service errors to KeychainError
+    private func mapServiceError(_ error: Error) -> KeychainError {
+        if let transformationError = error as? DataTransformationService.TransformationError {
+            switch transformationError {
+            case .invalidData:
+                return .invalidData
+            case .encodingFailed, .decodingFailed, .serializationFailed:
+                return .serviceError(transformationError)
+            }
+        } else if let tokenError = error as? TokenManagementService.TokenError {
+            switch tokenError {
+            case .tokenExpired:
+                return .tokenExpired
+            case .invalidTokenFormat:
+                return .invalidData
+            case .encryptionFailed:
+                return .encryptionFailed
+            case .decryptionFailed:
+                return .decryptionFailed
+            case .storageError(let underlyingError):
+                return mapServiceError(underlyingError)
+            }
         }
-        
-        return query
+        return .serviceError(error)
     }
     
     // MARK: - Migration from UserDefaults
@@ -290,54 +245,8 @@ public final class KeychainManager: KeychainStorageProtocol {
             "quiet_hours_end"
         ]
         
-        for key in keysToMigrate {
-            // Check if already migrated
-            if exists(for: key) {
-                continue
-            }
-            
-            // Get value from UserDefaults
-            if let data = UserDefaults.standard.data(forKey: key) {
-                do {
-                    try store(data, for: key)
-                    // Remove from UserDefaults after successful migration
-                    UserDefaults.standard.removeObject(forKey: key)
-                    #if DEBUG
-                    print("Migrated \(key) to Keychain")
-                    #endif
-                } catch {
-                    #if DEBUG
-                    print("Failed to migrate \(key) to Keychain: \(error)")
-                    #endif
-                }
-            } else if let string = UserDefaults.standard.string(forKey: key) {
-                do {
-                    try storeString(string, for: key)
-                    UserDefaults.standard.removeObject(forKey: key)
-                    #if DEBUG
-                    print("Migrated \(key) to Keychain")
-                    #endif
-                } catch {
-                    #if DEBUG
-                    print("Failed to migrate \(key) to Keychain: \(error)")
-                    #endif
-                }
-            } else if UserDefaults.standard.object(forKey: key) != nil {
-                // Handle boolean and other types
-                let value = UserDefaults.standard.bool(forKey: key)
-                do {
-                    try storeBool(value, for: key)
-                    UserDefaults.standard.removeObject(forKey: key)
-                    #if DEBUG
-                    print("Migrated \(key) to Keychain")
-                    #endif
-                } catch {
-                    #if DEBUG
-                    print("Failed to migrate \(key) to Keychain: \(error)")
-                    #endif
-                }
-            }
-        }
+        // Use data transformation service for migration
+        dataTransformationService.migrateFromUserDefaults(keys: keysToMigrate)
         
         // Clean up any legacy password data
         migrateLegacyPasswordData()
@@ -345,9 +254,6 @@ public final class KeychainManager: KeychainStorageProtocol {
     
     /// Migrate and remove legacy password data
     private func migrateLegacyPasswordData() {
-        // SECURITY: Remove any legacy password storage
-        // This method ensures no passwords remain in the keychain
-        
         let legacyPasswordKeys = [
             "user_credentials",
             "user_password",
@@ -357,17 +263,8 @@ public final class KeychainManager: KeychainStorageProtocol {
             "login_credentials"
         ]
         
-        for key in legacyPasswordKeys {
-            if exists(for: key) {
-                // Log that we're removing legacy data (no sensitive info in logs)
-                #if DEBUG
-                print("[Security Migration] Removing legacy credential storage for key: \(key)")
-                #endif
-                
-                // Delete the insecure data
-                try? delete(for: key)
-            }
-        }
+        // Use data transformation service to cleanup legacy data
+        dataTransformationService.cleanupLegacyData(keys: legacyPasswordKeys)
         
         // Mark migration as complete
         try? storeBool(true, for: "_password_migration_complete_v2")
@@ -394,123 +291,52 @@ public final class KeychainManager: KeychainStorageProtocol {
     
     /// Store secure JWT credentials with encryption
     public func storeSecureCredentials(_ credentials: SecureCredentials) throws {
-        // Validate token format
-        guard SecureCredentials.isValidJWTFormat(credentials.accessToken) else {
-            throw KeychainError.invalidData
-        }
-        
-        if !credentials.refreshToken.isEmpty {
-            guard SecureCredentials.isValidJWTFormat(credentials.refreshToken) else {
-                throw KeychainError.invalidData
-            }
-        }
-        
-        // Encrypt credentials using AES-256-GCM
-        let encryptedData = try SecureTokenEncryption.createSecureStorage(
-            credentials: credentials,
-            key: encryptionKey,
-            additionalAuthenticatedData: Data(service.utf8)
-        )
-        
-        // Store encrypted data
-        try store(encryptedData, for: "secure_jwt_credentials_v2")
-        
-        // Store token metadata separately (non-sensitive)
-        let metadata = [
-            "issuedAt": credentials.issuedAt.timeIntervalSince1970,
-            "expiresAt": credentials.expiresAt.timeIntervalSince1970,
-            "tokenType": credentials.tokenType
-        ]
-        
-        if let metadataData = try? JSONSerialization.data(withJSONObject: metadata) {
-            try? store(metadataData, for: "jwt_metadata_v2")
+        do {
+            try tokenService.storeSecureCredentials(credentials)
+        } catch {
+            throw mapServiceError(error)
         }
     }
     
     /// Retrieve secure JWT credentials with decryption
     public func retrieveSecureCredentials() throws -> SecureCredentials {
-        let encryptedData = try retrieve(for: "secure_jwt_credentials_v2")
-        
-        // Decrypt credentials
-        let credentials = try SecureTokenEncryption.retrieveFromSecureStorage(
-            encryptedData,
-            key: encryptionKey
-        )
-        
-        // Check if token is expired
-        if credentials.isExpired {
-            throw KeychainError.tokenExpired
+        do {
+            return try tokenService.retrieveSecureCredentials()
+        } catch {
+            throw mapServiceError(error)
         }
-        
-        return credentials
     }
     
     /// Store only the access token (for quick access without full credentials)
     public func storeAccessToken(_ token: String) throws {
-        // Validate JWT format
-        guard SecureCredentials.isValidJWTFormat(token) else {
-            throw KeychainError.invalidData
+        do {
+            try tokenService.storeAccessToken(token)
+        } catch {
+            throw mapServiceError(error)
         }
-        
-        // Encrypt the token
-        guard let tokenData = token.data(using: .utf8) else {
-            throw KeychainError.invalidData
-        }
-        
-        let encryptedToken = try AES.GCM.seal(tokenData, using: encryptionKey)
-        guard let encryptedData = encryptedToken.combined else {
-            throw KeychainError.encryptionFailed
-        }
-        
-        try store(encryptedData, for: "encrypted_access_token_v2")
     }
     
     /// Retrieve the access token
     public func retrieveAccessToken() throws -> String {
-        let encryptedData = try retrieve(for: "encrypted_access_token_v2")
-        
-        let sealedBox = try AES.GCM.SealedBox(combined: encryptedData)
-        let decryptedData = try AES.GCM.open(sealedBox, using: encryptionKey)
-        
-        guard let token = String(data: decryptedData, encoding: .utf8) else {
-            throw KeychainError.decryptionFailed
+        do {
+            return try tokenService.retrieveAccessToken()
+        } catch {
+            throw mapServiceError(error)
         }
-        
-        return token
     }
     
     /// Update tokens after refresh
     public func updateTokensAfterRefresh(response: TokenRefreshResponse) throws {
-        // Retrieve existing credentials to preserve metadata
-        if let existingCredentials = try? retrieveSecureCredentials() {
-            let updatedCredentials = SecureCredentials(
-                accessToken: response.accessToken,
-                refreshToken: response.refreshToken ?? existingCredentials.refreshToken,
-                expiresIn: response.expiresIn,
-                userId: existingCredentials.userId,
-                tokenType: response.tokenType
-            )
-            
-            try storeSecureCredentials(updatedCredentials)
-        } else {
-            // Create new credentials if none exist
-            let newCredentials = SecureCredentials(
-                accessToken: response.accessToken,
-                refreshToken: response.refreshToken ?? "",
-                expiresIn: response.expiresIn,
-                tokenType: response.tokenType
-            )
-            
-            try storeSecureCredentials(newCredentials)
+        do {
+            try tokenService.updateTokensAfterRefresh(response: response)
+        } catch {
+            throw mapServiceError(error)
         }
     }
     
     /// Check if credentials need refresh
     public func credentialsNeedRefresh() -> Bool {
-        guard let credentials = try? retrieveSecureCredentials() else {
-            return true
-        }
-        return credentials.needsRefresh
+        return tokenService.credentialsNeedRefresh()
     }
     
     /// DEPRECATED: These methods are no longer supported for security reasons
@@ -542,131 +368,99 @@ public final class KeychainManager: KeychainStorageProtocol {
     
     /// Clear all sensitive data (useful for logout)
     public func clearSensitiveData() {
-        let sensitiveKeys = [
-            "secure_jwt_credentials_v2",
-            "encrypted_access_token_v2",
-            "jwt_metadata_v2",
-            "auth_token", // Legacy
-            "user_credentials", // Legacy - should be removed
+        // Use token service to clear tokens
+        tokenService.clearAllTokens()
+
+        // Clear additional sensitive keys
+        let additionalSensitiveKeys = [
             "api_key_weather",
             "api_key_plant_database",
             // Biometric protected keys
             "biometric_secure_jwt_credentials_v2",
             "biometric_encrypted_access_token_v2"
         ]
-        
-        for key in sensitiveKeys {
+
+        for key in additionalSensitiveKeys {
             try? delete(for: key)
         }
-        
-        // Clear any legacy password data if it exists
-        clearLegacyPasswordData()
-    }
-    
-    /// Clear legacy password data (for migration)
-    private func clearLegacyPasswordData() {
-        // Remove any legacy credential storage
-        try? delete(for: "user_credentials")
-        try? delete(for: "user_password")
-        try? delete(for: "credentials")
-        
-        // Log security event (without sensitive data)
-        #if DEBUG
-        print("[Security] Legacy password data cleared")
-        #endif
-    }
-    
-    // MARK: - Biometric Protection Methods
-    
-    /// Store data with biometric protection
-    public func storeWithBiometricProtection(_ data: Data, for key: String) throws {
-        // Validate key to prevent injection
-        try validateKey(key)
-        
-        let accessControl = SecAccessControlCreateWithFlags(
-            nil,
-            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
-            .biometryCurrentSet,
-            nil
-        )
-        
-        var query: [String: Any] = [
-            kSecClass as String: kSecClassGenericPassword,
-            kSecAttrService as String: service,
-            kSecAttrAccount as String: "biometric_\(key)",
-            kSecValueData as String: data,
-            kSecAttrAccessControl as String: accessControl as Any
-        ]
-        
-        if let accessGroup = accessGroup {
-            query[kSecAttrAccessGroup as String] = accessGroup
-        }
-        
-        // Delete existing item if it exists
-        SecItemDelete(query as CFDictionary)
-        
-        // Add new item with biometric protection
-        let status = SecItemAdd(query as CFDictionary, nil)
-        
-        guard status == errSecSuccess else {
-            if status == errSecDuplicateItem {
-                throw KeychainError.duplicateEntry
-            }
-            throw KeychainError.unknown(status)
-        }
-    }
-    
-    /// Store string with biometric protection
-    public func storeStringWithBiometricProtection(_ string: String, for key: String) throws {
-        guard let data = string.data(using: .utf8) else {
-            throw KeychainError.invalidData
-        }
-        try storeWithBiometricProtection(data, for: key)
-    }
-    
-    /// Store secure credentials with biometric protection
-    public func storeSecureCredentialsWithBiometric(_ credentials: SecureCredentials) throws {
-        // Validate tokens
-        guard SecureCredentials.isValidJWTFormat(credentials.accessToken) else {
-            throw KeychainError.invalidData
-        }
-        
-        if !credentials.refreshToken.isEmpty {
-            guard SecureCredentials.isValidJWTFormat(credentials.refreshToken) else {
-                throw KeychainError.invalidData
-            }
-        }
-        
-        // Encrypt credentials
-        let encryptedData = try SecureTokenEncryption.createSecureStorage(
-            credentials: credentials,
-            key: encryptionKey,
-            additionalAuthenticatedData: Data(service.utf8)
-        )
-        
-        // Store with biometric protection
-        try storeWithBiometricProtection(encryptedData, for: "secure_jwt_credentials_v2")
     }
     
     /// Retrieve secure credentials with biometric protection
     public func retrieveSecureCredentialsWithBiometric(reason: String = "Authenticate to access your account") async throws -> SecureCredentials {
+        // Read the JSON-encoded credentials that were stored with biometric protection
         let encryptedData = try await retrieveWithBiometricProtection(
-            for: "secure_jwt_credentials_v2",
+            for: "biometric_secure_jwt_credentials_v2",
             reason: reason
         )
-        
-        // Decrypt credentials
-        let credentials = try SecureTokenEncryption.retrieveFromSecureStorage(
-            encryptedData,
-            key: encryptionKey
-        )
-        
-        // Check if token is expired
-        if credentials.isExpired {
-            throw KeychainError.tokenExpired
-        }
-        
+
+        // Decode into SecureCredentials. We intentionally avoid any custom crypto here
+        // because the Keychain item itself is protected by the device's Secure Enclave.
+        let decoder = JSONDecoder()
+        let credentials = try decoder.decode(SecureCredentials.self, from: encryptedData)
         return credentials
+    }
+    /// Store data with biometric protection (Face ID / Touch ID)
+    public func storeWithBiometricProtection(_ data: Data, for key: String) throws {
+        // Validate key to prevent injection
+        try validateKey(key)
+
+        let account = "biometric_\(key)"
+
+        // Create access control requiring the current biometric set on this device
+        var acError: Unmanaged<CFError>?
+        guard let accessControl = SecAccessControlCreateWithFlags(
+            nil,
+            kSecAttrAccessibleWhenUnlockedThisDeviceOnly,
+            [.biometryCurrentSet],
+            &acError
+        ) else {
+            let err = (acError?.takeRetainedValue()) as Error?
+            throw err.map { KeychainError.serviceError($0) } ?? KeychainError.unknown(errSecParam)
+        }
+
+        // Try to add (create if missing)
+        var addQuery: [String: Any] = [
+            kSecClass as String: kSecClassGenericPassword,
+            kSecAttrService as String: service,
+            kSecAttrAccount as String: account,
+            kSecValueData as String: data,
+            kSecAttrAccessControl as String: accessControl
+        ]
+
+        if let accessGroup = accessGroup {
+            addQuery[kSecAttrAccessGroup as String] = accessGroup
+        }
+
+        var status = SecItemAdd(addQuery as CFDictionary, nil)
+
+        // If the item already exists, update its value
+        if status == errSecDuplicateItem {
+            var matchQuery: [String: Any] = [
+                kSecClass as String: kSecClassGenericPassword,
+                kSecAttrService as String: service,
+                kSecAttrAccount as String: account
+            ]
+            if let accessGroup = accessGroup {
+                matchQuery[kSecAttrAccessGroup as String] = accessGroup
+            }
+            let attributesToUpdate: [String: Any] = [
+                kSecValueData as String: data
+            ]
+            status = SecItemUpdate(matchQuery as CFDictionary, attributesToUpdate as CFDictionary)
+        }
+
+        guard status == errSecSuccess else {
+            throw KeychainError.unknown(status)
+        }
+    }
+    /// Validate keys used to address Keychain records
+    private func validateKey(_ key: String) throws {
+        guard !key.isEmpty else { throw KeychainError.invalidKey("empty") }
+        guard key.count <= 128 else { throw KeychainError.invalidKey("too long") }
+        let allowed = CharacterSet(charactersIn: "abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789_-.")
+        if key.rangeOfCharacter(from: allowed.inverted) != nil {
+            throw KeychainError.invalidKey("contains illegal characters")
+        }
     }
     
     /// Retrieve data with biometric protection
@@ -744,16 +538,20 @@ extension KeychainManager {
     
     /// Store Codable object in Keychain
     public func storeCodable<T: Codable>(_ object: T, for key: String) throws {
-        let encoder = JSONEncoder()
-        let data = try encoder.encode(object)
-        try store(data, for: key)
+        do {
+            try dataTransformationService.storeCodable(object, for: key)
+        } catch {
+            throw mapServiceError(error)
+        }
     }
     
     /// Retrieve Codable object from Keychain
     public func retrieveCodable<T: Codable>(_ type: T.Type, for key: String) throws -> T {
-        let data = try retrieve(for: key)
-        let decoder = JSONDecoder()
-        return try decoder.decode(type, from: data)
+        do {
+            return try dataTransformationService.retrieveCodable(type, for: key)
+        } catch {
+            throw mapServiceError(error)
+        }
     }
     
     /// Store Codable object with biometric protection

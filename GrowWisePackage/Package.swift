@@ -5,7 +5,10 @@ import PackageDescription
 
 let package = Package(
     name: "GrowWiseFeature",
-    platforms: [.iOS(.v17)],
+    platforms: [
+        .iOS(.v17),
+        .macOS(.v14)
+    ],
     products: [
         .library(
             name: "GrowWiseFeature",

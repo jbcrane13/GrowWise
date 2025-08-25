@@ -1,6 +1,9 @@
 import LocalAuthentication
 import Foundation
 import Security
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// BiometricAuthenticationManager handles Face ID/Touch ID authentication
 @MainActor
@@ -348,19 +351,37 @@ public final class BiometricAuthenticationManager: ObservableObject, BiometricAu
     
     private func setupNotifications() {
         // Listen for app lifecycle events
+        #if canImport(UIKit)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleAppDidEnterBackground),
             name: UIApplication.didEnterBackgroundNotification,
             object: nil
         )
+        #else
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppDidEnterBackground),
+            name: Notification.Name("ApplicationDidEnterBackground"),
+            object: nil
+        )
+        #endif
         
+        #if canImport(UIKit)
         NotificationCenter.default.addObserver(
             self,
             selector: #selector(handleAppWillEnterForeground),
             name: UIApplication.willEnterForegroundNotification,
             object: nil
         )
+        #else
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleAppWillEnterForeground),
+            name: Notification.Name("ApplicationWillEnterForeground"),
+            object: nil
+        )
+        #endif
     }
     
     @objc private func handleAppDidEnterBackground() {

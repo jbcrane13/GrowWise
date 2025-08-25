@@ -1,5 +1,8 @@
 import Foundation
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 /// ValidationService provides comprehensive input validation for all user inputs
 public final class ValidationService: Sendable {
@@ -318,11 +321,16 @@ public struct ValidatedTextField: View {
     let title: String
     @Binding var text: String
     let validation: (String) -> ValidationService.ValidationResult
+    #if canImport(UIKit)
     let keyboardType: UIKeyboardType
+    #else
+    let keyboardType: Int
+    #endif
     
     @State private var errorMessage: String?
     @FocusState private var isFocused: Bool
     
+    #if canImport(UIKit)
     public init(
         _ title: String,
         text: Binding<String>,
@@ -334,12 +342,27 @@ public struct ValidatedTextField: View {
         self.validation = validation
         self.keyboardType = keyboardType
     }
+    #else
+    public init(
+        _ title: String,
+        text: Binding<String>,
+        validation: @escaping (String) -> ValidationService.ValidationResult,
+        keyboardType: Int = 0
+    ) {
+        self.title = title
+        self._text = text
+        self.validation = validation
+        self.keyboardType = keyboardType
+    }
+    #endif
     
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             TextField(title, text: $text)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
+                #if canImport(UIKit)
                 .keyboardType(keyboardType)
+                #endif
                 .focused($isFocused)
                 .onChange(of: isFocused) { _, newValue in
                     if !newValue {
