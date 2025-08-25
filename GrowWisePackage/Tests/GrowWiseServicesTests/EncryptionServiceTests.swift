@@ -2,12 +2,12 @@ import XCTest
 import CryptoKit
 @testable import GrowWiseServices
 
-/// Unit tests for EncryptionService - AES-256-GCM encryption operations
+/// Unit tests for EncryptionService - Secure Enclave-based AES-256-GCM encryption operations
 final class EncryptionServiceTests: XCTestCase {
     
     var storage: KeychainStorageService!
     var encryptionService: EncryptionService!
-    private let testService = "com.growwiser.encryption.test"
+    private let testService = "com.growwise.encryption.test"
     
     override func setUp() {
         super.setUp()
@@ -16,10 +16,12 @@ final class EncryptionServiceTests: XCTestCase {
         
         // Clean up any existing test data
         try? storage.deleteAll()
+        try? encryptionService.clearEncryptionKey()
     }
     
     override func tearDown() {
         // Clean up after tests
+        try? encryptionService.clearEncryptionKey()
         try? storage.deleteAll()
         encryptionService = nil
         storage = nil
@@ -47,6 +49,192 @@ final class EncryptionServiceTests: XCTestCase {
         // Verify string content
         let decryptedString = String(data: decryptedData, encoding: .utf8)
         XCTAssertEqual(decryptedString, "Hello, World! This is a test message.")
+    }
+    
+    // MARK: - Key Rotation Tests
+    
+    func testKeyRotation() async throws {
+        let originalData = "Test data for key rotation".data(using: .utf8)!
+        
+        // Encrypt with initial key
+        let encryptedData1 = try encryptionService.encrypt(originalData)
+        let initialVersion = encryptionService.currentKeyVersion
+        
+        // Rotate key
+        let newVersion = try await encryptionService.rotateKey(reason: "Test rotation")
+        
+        // Verify key was rotated
+        XCTAssertGreaterThan(newVersion, initialVersion)
+        XCTAssertEqual(encryptionService.currentKeyVersion, newVersion)
+        
+        // Encrypt with new key
+        let encryptedData2 = try encryptionService.encrypt(originalData)
+        
+        // Both encryptions should be different (different keys)
+        XCTAssertNotEqual(encryptedData1, encryptedData2)
+        
+        // Both should decrypt successfully (backward compatibility)
+        let decrypted1 = try encryptionService.decrypt(encryptedData1)
+        let decrypted2 = try encryptionService.decrypt(encryptedData2)
+        
+        XCTAssertEqual(decrypted1, originalData)
+        XCTAssertEqual(decrypted2, originalData)
+    }
+    
+    func testMultipleKeyVersionsBackwardCompatibility() async throws {
+        let testData = "Multi-version test data".data(using: .utf8)!
+        var encryptedDataSets: [Data] = []
+        var keyVersions: [Int] = []
+        
+        // Create multiple key versions and encrypt data with each
+        for i in 1...3 {
+            let version = try await encryptionService.rotateKey(reason: "Version \(i)")
+            keyVersions.append(version)
+            
+            let encrypted = try encryptionService.encrypt(testData)
+            encryptedDataSets.append(encrypted)
+        }
+        
+        // Verify all encrypted data can still be decrypted
+        for (index, encryptedData) in encryptedDataSets.enumerated() {
+            let decrypted = try encryptionService.decrypt(encryptedData)
+            XCTAssertEqual(decrypted, testData, "Failed to decrypt data from version \(keyVersions[index])")
+        }
+        
+        // Verify active key versions
+        let activeVersions = encryptionService.getActiveKeyVersions()
+        for version in keyVersions {
+            XCTAssertTrue(activeVersions.contains(version), "Version \(version) should be active")
+        }
+    }
+    
+    func testKeyRotationNeeded() async throws {
+        // Initially, no key exists
+        XCTAssertTrue(encryptionService.isKeyRotationNeeded())
+        
+        // After first rotation, should be up to date
+        let _ = try await encryptionService.rotateKey(reason: "Initial key")
+        XCTAssertFalse(encryptionService.isKeyRotationNeeded())
+        
+        // For testing, we'd need to modify the rotation policy or mock time
+        // This is a placeholder for more sophisticated time-based testing
+    }
+    
+    func testComplianceViolationDetection() async throws {
+        // Create initial key
+        let _ = try await encryptionService.rotateKey(reason: "Initial")
+        
+        // Initially should not be overdue
+        XCTAssertFalse(encryptionService.isKeyRotationOverdue())
+        
+        // For full testing, we'd need to mock time or adjust policies
+        // This ensures the API exists and returns boolean values
+    }
+    
+    func testComplianceReporting() async throws {
+        // Create some key rotations
+        let _ = try await encryptionService.rotateKey(reason: "Initial")
+        let _ = try await encryptionService.rotateKey(reason: "Regular rotation")
+        
+        // Generate compliance report
+        let period = DateInterval(start: Date().addingTimeInterval(-86400), end: Date())
+        let report = await encryptionService.generateComplianceReport(period: period)
+        
+        // Verify report structure
+        XCTAssertNotNil(report.reportId)
+        XCTAssertFalse(report.keyVersions.isEmpty)
+        XCTAssertFalse(report.rotationEvents.isEmpty)
+        XCTAssertNotNil(report.complianceStatus)
+    }
+    
+    func testAuditTrail() async throws {
+        // Perform some operations
+        let _ = try await encryptionService.rotateKey(reason: "Audit test")
+        let testData = "Audit trail test".data(using: .utf8)!
+        let _ = try encryptionService.encrypt(testData)
+        
+        // Get audit trail
+        let auditEvents = encryptionService.getAuditTrail(
+            from: Date().addingTimeInterval(-3600),
+            to: Date()
+        )
+        
+        // Verify audit events were recorded
+        XCTAssertFalse(auditEvents.isEmpty)
+        
+        let rotationEvents = auditEvents.filter { $0.event == .keyRotated }
+        let accessEvents = auditEvents.filter { $0.event == .keyAccessed }
+        
+        XCTAssertFalse(rotationEvents.isEmpty)
+        // Note: Access events might be empty depending on implementation details
+    }
+    
+    func testSecurityStatusWithKeyRotation() async throws {
+        // Create initial key
+        let _ = try await encryptionService.rotateKey(reason: "Status test")
+        
+        let status = encryptionService.securityStatus
+        
+        // Verify key rotation status is included
+        XCTAssertNotNil(status.keyRotationStatus)
+        XCTAssertGreaterThan(status.keyRotationStatus.currentVersion, 0)
+        XCTAssertFalse(status.keyRotationStatus.activeVersions.isEmpty)
+        
+        // Verify compliance status
+        XCTAssertNotNil(status.complianceStatus)
+        XCTAssertFalse(status.description.isEmpty)
+    }
+    
+    func testVersionedEncryptionFormat() async throws {
+        let testData = "Versioned encryption test".data(using: .utf8)!
+        
+        // Create first version
+        let version1 = try await encryptionService.rotateKey(reason: "Version 1")
+        let encrypted1 = try encryptionService.encrypt(testData)
+        
+        // Create second version
+        let version2 = try await encryptionService.rotateKey(reason: "Version 2")
+        let encrypted2 = try encryptionService.encrypt(testData)
+        
+        // Encrypted data should be different
+        XCTAssertNotEqual(encrypted1, encrypted2)
+        
+        // Both should have version information embedded
+        // (This tests the versioned data format internally)
+        XCTAssertGreaterThan(encrypted1.count, testData.count + 16) // Extra bytes for version + encryption overhead
+        XCTAssertGreaterThan(encrypted2.count, testData.count + 16)
+        
+        // Both should decrypt correctly
+        let decrypted1 = try encryptionService.decrypt(encrypted1)
+        let decrypted2 = try encryptionService.decrypt(encrypted2)
+        
+        XCTAssertEqual(decrypted1, testData)
+        XCTAssertEqual(decrypted2, testData)
+    }
+    
+    func testKeyRotationPolicyUpdate() throws {
+        let newPolicy = KeyRotationManager.RotationPolicy(
+            interval: 60 * 60 * 24 * 7, // 7 days
+            maxKeyAge: 60 * 60 * 24 * 30, // 30 days
+            minKeyAge: 60 * 60 * 24, // 1 day
+            autoRotationEnabled: true,
+            complianceMode: .standard,
+            reencryptionBatchSize: 50,
+            quietHours: nil
+        )
+        
+        XCTAssertNoThrow(try encryptionService.updateRotationPolicy(newPolicy))
+    }
+    
+    func testEncryptionWithOverdueKey() async throws {
+        // This test would require mocking time or using test policies
+        // For now, we test that the compliance check exists
+        
+        let _ = try await encryptionService.rotateKey(reason: "Test overdue")
+        
+        // Should not throw for fresh key
+        let testData = "Overdue key test".data(using: .utf8)!
+        XCTAssertNoThrow(try encryptionService.encrypt(testData))
     }
     
     func testEncryptDecryptEmptyData() throws {
@@ -150,11 +338,20 @@ final class EncryptionServiceTests: XCTestCase {
         // Clear the key
         try? encryptionService.clearEncryptionKey()
         
-        // Should still return true because key is lazily regenerated
+        // Key should be recreated on next access
         XCTAssertTrue(encryptionService.hasEncryptionKey)
     }
     
     func testKeyRotation() throws {
+        // Skip if Secure Enclave not available
+        guard SecureEnclaveKeyManager.isSecureEnclaveAvailable else {
+            // Test legacy behavior - key rotation should throw
+            XCTAssertThrowsError(try encryptionService.rotateKey()) { error in
+                XCTAssertTrue(error is EncryptionService.EncryptionError)
+            }
+            return
+        }
+        
         let testData = "Key rotation test".data(using: .utf8)!
         
         // Encrypt with original key
@@ -173,8 +370,9 @@ final class EncryptionServiceTests: XCTestCase {
         let decryptedWithNewKey = try encryptionService.decrypt(encryptedWithNewKey)
         XCTAssertEqual(decryptedWithNewKey, testData)
         
-        // Cannot decrypt old data with new key
-        XCTAssertThrowsError(try encryptionService.decrypt(encryptedWithOriginalKey))
+        // Old data should be decryptable due to legacy fallback
+        let decryptedOldData = try encryptionService.decrypt(encryptedWithOriginalKey)
+        XCTAssertEqual(decryptedOldData, testData)
     }
     
     func testClearEncryptionKey() throws {
@@ -320,20 +518,20 @@ final class EncryptionServiceTests: XCTestCase {
     
     // MARK: - Security Tests
     
-    func testDeterministicKeyGeneration() {
+    func testDeterministicKeyGeneration() throws {
         // Keys should be generated consistently but not predictably
         let service1 = EncryptionService(storage: storage)
         let service2 = EncryptionService(storage: storage)
         
         // Both services should use the same key (from storage)
-        let key1 = service1.encryptionKey.withUnsafeBytes { Data($0) }
-        let key2 = service2.encryptionKey.withUnsafeBytes { Data($0) }
+        let key1 = try service1.encryptionKey.withUnsafeBytes { Data($0) }
+        let key2 = try service2.encryptionKey.withUnsafeBytes { Data($0) }
         
         XCTAssertEqual(key1, key2)
         XCTAssertEqual(key1.count, 32) // 256 bits
     }
     
-    func testKeyUniqueness() {
+    func testKeyUniqueness() throws {
         // Different storage services should generate different keys
         let storage1 = KeychainStorageService(service: "test.service1")
         let storage2 = KeychainStorageService(service: "test.service2")
@@ -341,14 +539,162 @@ final class EncryptionServiceTests: XCTestCase {
         let encryption1 = EncryptionService(storage: storage1)
         let encryption2 = EncryptionService(storage: storage2)
         
-        let key1 = encryption1.encryptionKey.withUnsafeBytes { Data($0) }
-        let key2 = encryption2.encryptionKey.withUnsafeBytes { Data($0) }
+        let key1 = try encryption1.encryptionKey.withUnsafeBytes { Data($0) }
+        let key2 = try encryption2.encryptionKey.withUnsafeBytes { Data($0) }
         
         XCTAssertNotEqual(key1, key2)
         
         // Cleanup
+        try? encryption1.clearEncryptionKey()
+        try? encryption2.clearEncryptionKey()
         try? storage1.deleteAll()
         try? storage2.deleteAll()
+    }
+    
+    // MARK: - Secure Enclave & Migration Tests
+    
+    func testSecurityStatus() {
+        let status = encryptionService.securityStatus
+        
+        // Verify status contains expected information
+        XCTAssertNotNil(status.description)
+        XCTAssertFalse(status.description.isEmpty)
+        
+        // Status should reflect current environment capabilities
+        XCTAssertEqual(status.secureEnclaveAvailable, SecureEnclaveKeyManager.isSecureEnclaveAvailable)
+        
+        if SecureEnclaveKeyManager.isSecureEnclaveAvailable {
+            // On Secure Enclave devices, should recommend using it or already be using it
+            if status.hasLegacyKey {
+                XCTAssertTrue(status.recommendsMigration)
+            }
+        } else {
+            // On non-Secure Enclave devices, should not recommend migration
+            XCTAssertFalse(status.recommendsMigration)
+        }
+    }
+    
+    func testMigrationInfo() {
+        let migrationInfo = encryptionService.getMigrationInfo()
+        
+        // Verify migration info structure
+        XCTAssertEqual(migrationInfo.secureEnclaveAvailable, SecureEnclaveKeyManager.isSecureEnclaveAvailable)
+        XCTAssertNotNil(migrationInfo.recommendedAction.description)
+        XCTAssertFalse(migrationInfo.recommendedAction.description.isEmpty)
+    }
+    
+    func testLegacyDataDecryption() throws {
+        // Create a legacy key first
+        let legacyStorage = KeychainStorageService(service: testService)
+        let legacyKey = SymmetricKey(size: .bits256)
+        try legacyStorage.store(legacyKey.withUnsafeBytes { Data($0) }, for: "_encryption_key_v2")
+        
+        // Encrypt some data with the legacy key
+        let testData = "Legacy encrypted data".data(using: .utf8)!
+        let legacyEncrypted = try AES.GCM.seal(testData, using: legacyKey).combined!
+        
+        // Create new encryption service (should auto-detect legacy key)
+        let newEncryptionService = EncryptionService(storage: legacyStorage)
+        
+        // Should be able to decrypt legacy data
+        let decrypted = try newEncryptionService.decrypt(legacyEncrypted)
+        XCTAssertEqual(decrypted, testData)
+        
+        // Cleanup
+        try? newEncryptionService.clearEncryptionKey()
+        try? legacyStorage.deleteAll()
+    }
+    
+    func testMigrationFromLegacyToSecureEnclave() throws {
+        // Skip if Secure Enclave not available
+        guard SecureEnclaveKeyManager.isSecureEnclaveAvailable else {
+            throw XCTSkip("Secure Enclave not available in test environment")
+        }
+        
+        // Create legacy setup
+        let legacyStorage = KeychainStorageService(service: testService + ".migration")
+        let legacyKey = SymmetricKey(size: .bits256)
+        try legacyStorage.store(legacyKey.withUnsafeBytes { Data($0) }, for: "_encryption_key_v2")
+        
+        // Create test data encrypted with legacy key
+        let testData = "Migration test data".data(using: .utf8)!
+        let legacyEncrypted = try AES.GCM.seal(testData, using: legacyKey).combined!
+        
+        // Create encryption service with legacy data
+        let migrationService = EncryptionService(storage: legacyStorage)
+        
+        // Should initially be able to decrypt legacy data
+        let decrypted1 = try migrationService.decrypt(legacyEncrypted)
+        XCTAssertEqual(decrypted1, testData)
+        
+        // Perform manual migration
+        try migrationService.migrateLegacyEncryption()
+        
+        // Should still be able to decrypt legacy data (backward compatibility)
+        let decrypted2 = try migrationService.decrypt(legacyEncrypted)
+        XCTAssertEqual(decrypted2, testData)
+        
+        // New encryptions should use Secure Enclave
+        XCTAssertTrue(migrationService.isUsingSecureEnclave)
+        
+        // Cleanup
+        try? migrationService.clearEncryptionKey()
+        try? legacyStorage.deleteAll()
+    }
+    
+    func testDataMigration() throws {
+        // Skip if Secure Enclave not available
+        guard SecureEnclaveKeyManager.isSecureEnclaveAvailable else {
+            throw XCTSkip("Secure Enclave not available in test environment")
+        }
+        
+        // Create legacy setup
+        let legacyStorage = KeychainStorageService(service: testService + ".datamigration")
+        let legacyKey = SymmetricKey(size: .bits256)
+        try legacyStorage.store(legacyKey.withUnsafeBytes { Data($0) }, for: "_encryption_key_v2")
+        
+        let testData = "Data migration test".data(using: .utf8)!
+        let legacyEncrypted = try AES.GCM.seal(testData, using: legacyKey).combined!
+        
+        let migrationService = EncryptionService(storage: legacyStorage)
+        
+        // Migrate specific data
+        let migratedData = try migrationService.migrateEncryptedData(legacyEncrypted)
+        
+        // New data should be decryptable with current (Secure Enclave) key
+        let decrypted = try migrationService.decrypt(migratedData)
+        XCTAssertEqual(decrypted, testData)
+        
+        // Migrated data should be different from legacy data
+        XCTAssertNotEqual(migratedData, legacyEncrypted)
+        
+        // Cleanup
+        try? migrationService.clearEncryptionKey()
+        try? legacyStorage.deleteAll()
+    }
+    
+    func testSecureEnclaveUnavailableFallback() {
+        // Test behavior when Secure Enclave is not available
+        if !SecureEnclaveKeyManager.isSecureEnclaveAvailable {
+            // Should use legacy encryption without errors
+            XCTAssertFalse(encryptionService.isUsingSecureEnclave)
+            
+            let testData = "Fallback test".data(using: .utf8)!
+            XCTAssertNoThrow(try encryptionService.encrypt(testData))
+            
+            // Key rotation should fail gracefully
+            XCTAssertThrowsError(try encryptionService.rotateKey()) { error in
+                XCTAssertTrue(error is EncryptionService.EncryptionError)
+                if case EncryptionService.EncryptionError.secureEnclaveNotAvailable = error {
+                    // Expected
+                } else {
+                    XCTFail("Wrong error type: \(error)")
+                }
+            }
+        } else {
+            // On devices with Secure Enclave, should use it
+            XCTAssertTrue(encryptionService.isUsingSecureEnclave)
+        }
     }
     
     // MARK: - Error Description Tests
@@ -358,7 +704,9 @@ final class EncryptionServiceTests: XCTestCase {
             .encryptionFailed,
             .decryptionFailed,
             .keyGenerationFailed,
-            .invalidData
+            .invalidData,
+            .migrationFailed,
+            .secureEnclaveNotAvailable
         ]
         
         for error in errors {
