@@ -37,7 +37,7 @@ public final class User {
     public var plantsHarvested: Int = 0 // CloudKit: made optional or with default value
     public var streakDays: Int = 0 // CloudKit: made optional or with default value
     public var achievementPoints: Int = 0 // CloudKit: made optional or with default value
-    @Attribute(.transformable)
+    @Attribute(.transformable(by: "NSSecureUnarchiveFromDataTransformer"))
     public var completedTutorials: [String] = [] // CloudKit: made optional or with default value
     
     // Relationships

@@ -216,6 +216,16 @@ public final class KeychainManager: KeychainStorageProtocol {
                 return .tokenExpired
             case .invalidTokenFormat:
                 return .invalidData
+            case .invalidSignature:
+                return .invalidData
+            case .invalidIssuer:
+                return .invalidData
+            case .invalidAudience:
+                return .invalidData
+            case .notYetValid:
+                return .invalidData
+            case .unsupportedAlgorithm:
+                return .invalidData
             case .encryptionFailed:
                 return .encryptionFailed
             case .decryptionFailed:
@@ -468,20 +478,11 @@ public final class KeychainManager: KeychainStorageProtocol {
         // Validate key to prevent injection
         try validateKey(key)
         
-        // Create authentication context
+        // Create authentication context with localized reason
         let context = LAContext()
+        context.localizedReason = reason
         
-        // Authenticate first
-        let success = try await context.evaluatePolicy(
-            .deviceOwnerAuthenticationWithBiometrics,
-            localizedReason: reason
-        )
-        
-        guard success else {
-            throw KeychainError.unknown(-1)
-        }
-        
-        // Retrieve data
+        // Build query with authentication context - keychain will handle biometric auth atomically
         var query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
             kSecAttrService as String: service,
@@ -499,10 +500,15 @@ public final class KeychainManager: KeychainStorageProtocol {
         let status = SecItemCopyMatching(query as CFDictionary, &item)
         
         guard status == errSecSuccess else {
-            if status == errSecItemNotFound {
+            switch status {
+            case errSecItemNotFound:
                 throw KeychainError.itemNotFound
+            case errSecAuthFailed:
+                // Authentication failed
+                throw KeychainError.unknown(status)
+            default:
+                throw KeychainError.unknown(status)
             }
-            throw KeychainError.unknown(status)
         }
         
         guard let data = item as? Data else {

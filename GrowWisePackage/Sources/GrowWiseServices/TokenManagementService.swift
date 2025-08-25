@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 import GrowWiseModels
 
 /// Service responsible for JWT token management and validation
@@ -9,6 +10,11 @@ public final class TokenManagementService {
     public enum TokenError: LocalizedError {
         case tokenExpired
         case invalidTokenFormat
+        case invalidSignature
+        case invalidIssuer
+        case invalidAudience
+        case notYetValid
+        case unsupportedAlgorithm
         case encryptionFailed
         case decryptionFailed
         case storageError(Error)
@@ -19,6 +25,16 @@ public final class TokenManagementService {
                 return "Authentication token has expired"
             case .invalidTokenFormat:
                 return "Token format is invalid"
+            case .invalidSignature:
+                return "Token signature is invalid"
+            case .invalidIssuer:
+                return "Token issuer is invalid"
+            case .invalidAudience:
+                return "Token audience is invalid"
+            case .notYetValid:
+                return "Token is not yet valid"
+            case .unsupportedAlgorithm:
+                return "Token algorithm is not supported"
             case .encryptionFailed:
                 return "Failed to encrypt token"
             case .decryptionFailed:
@@ -33,27 +49,69 @@ public final class TokenManagementService {
     
     private let encryptionService: EncryptionService
     private let storage: KeychainStorageService
+    private let jwtValidator: JWTValidator
+    
+    // MARK: - Configuration
+    
+    public struct Configuration {
+        public let expectedIssuer: String
+        public let expectedAudience: String
+        public let publicKey: String? // For RS256 verification
+        public let sharedSecret: String? // For HS256 verification
+        
+        public init(
+            expectedIssuer: String,
+            expectedAudience: String,
+            publicKey: String? = nil,
+            sharedSecret: String? = nil
+        ) {
+            self.expectedIssuer = expectedIssuer
+            self.expectedAudience = expectedAudience
+            self.publicKey = publicKey
+            self.sharedSecret = sharedSecret
+        }
+    }
+    
+    private let configuration: Configuration
     
     // MARK: - Initialization
     
-    public init(encryptionService: EncryptionService, storage: KeychainStorageService) {
+    public init(
+        encryptionService: EncryptionService,
+        storage: KeychainStorageService,
+        configuration: Configuration
+    ) {
         self.encryptionService = encryptionService
         self.storage = storage
+        self.configuration = configuration
+        self.jwtValidator = JWTValidator(configuration: configuration)
+    }
+    
+    /// Convenience initializer with default configuration
+    public convenience init(
+        encryptionService: EncryptionService,
+        storage: KeychainStorageService
+    ) {
+        let defaultConfig = Configuration(
+            expectedIssuer: "com.growwiser.app",
+            expectedAudience: "growwiser-api"
+        )
+        self.init(
+            encryptionService: encryptionService,
+            storage: storage,
+            configuration: defaultConfig
+        )
     }
     
     // MARK: - Public Methods
     
-    /// Store secure JWT credentials
+    /// Store secure JWT credentials with cryptographic validation
     public func storeSecureCredentials(_ credentials: SecureCredentials) throws {
-        // Validate token format
-        guard isValidJWTFormat(credentials.accessToken) else {
-            throw TokenError.invalidTokenFormat
-        }
+        // Perform full JWT validation including signature and claims
+        try jwtValidator.validate(credentials.accessToken)
         
         if !credentials.refreshToken.isEmpty {
-            guard isValidJWTFormat(credentials.refreshToken) else {
-                throw TokenError.invalidTokenFormat
-            }
+            try jwtValidator.validate(credentials.refreshToken)
         }
         
         do {
@@ -89,11 +147,10 @@ public final class TokenManagementService {
         }
     }
     
-    /// Store access token only (for quick access)
+    /// Store access token only (for quick access) with validation
     public func storeAccessToken(_ token: String) throws {
-        guard isValidJWTFormat(token) else {
-            throw TokenError.invalidTokenFormat
-        }
+        // Perform full JWT validation
+        try jwtValidator.validate(token)
         
         do {
             guard let tokenData = token.data(using: .utf8) else {
@@ -170,10 +227,15 @@ public final class TokenManagementService {
     
     // MARK: - Private Methods
     
-    /// Validate JWT token format
+    /// Legacy format validation - use JWTValidator for full validation
     private func isValidJWTFormat(_ token: String) -> Bool {
         let parts = token.components(separatedBy: ".")
         return parts.count == 3 && !parts.contains(where: { $0.isEmpty })
+    }
+    
+    /// Validate JWT with full cryptographic verification
+    public func validateJWT(_ token: String) throws {
+        try jwtValidator.validate(token)
     }
     
     /// Create secure encrypted storage for credentials
