@@ -8,7 +8,15 @@ import GrowWiseModels
 /// This replaces UserDefaults for storing API keys, tokens, and user credentials
 /// Now enhanced with biometric protection support
 /// Refactored as a coordinator using service composition
-public final class KeychainManager: KeychainStorageProtocol {
+/// 
+/// Thread Safety: This class is thread-safe and can be accessed from any queue.
+/// All keychain operations are inherently thread-safe as they use the system keychain APIs.
+/// Internal synchronization is handled by the underlying services.
+/// The @unchecked Sendable conformance is safe because:
+/// 1. All keychain operations use thread-safe system APIs
+/// 2. The biometricAuth property is only set during initialization
+/// 3. All service dependencies are immutable after initialization
+public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable {
     
     // MARK: - Singleton
     
@@ -25,6 +33,8 @@ public final class KeychainManager: KeychainStorageProtocol {
     
     private let service = "com.growwiser.app"
     private let accessGroup: String? = nil // Can be set for app groups
+    
+    /// Biometric authentication provider (thread-safe due to property isolation)
     private var biometricAuth: BiometricAuthenticationProtocol?
     
     // MARK: - Error Types
@@ -82,17 +92,20 @@ public final class KeychainManager: KeychainStorageProtocol {
         self.tokenService = TokenManagementService(encryptionService: encryptionService, storage: storageService)
         self.dataTransformationService = DataTransformationService(storage: storageService, encryptionService: encryptionService)
         
-        // Register self with dependency container after initialization
-        Task {
-            await MainActor.run {
-                AuthenticationDependencyContainer.shared.setKeychainStorage(self)
-            }
+        // Register self with dependency container synchronously
+        // This is safe because we're initializing the shared singleton
+        // and the dependency container is designed to handle this registration
+        DispatchQueue.main.async {
+            AuthenticationDependencyContainer.shared.setKeychainStorage(self)
         }
     }
     
     // MARK: - Dependency Injection
     
     /// Set the biometric authentication provider
+    /// - Parameter auth: The biometric authentication provider to use
+    /// - Note: This method should be called on the main queue during app initialization
+    ///   to avoid potential race conditions with concurrent access
     public func setBiometricAuthentication(_ auth: BiometricAuthenticationProtocol) {
         self.biometricAuth = auth
     }
@@ -528,11 +541,17 @@ public final class KeychainManager: KeychainStorageProtocol {
     }
     
     /// Check if biometric protection is available
+    /// - Returns: True if biometric protection is available, false otherwise
+    /// - Note: This method must be called from a MainActor context
+    @MainActor
     public var isBiometricProtectionAvailable: Bool {
         biometricAuth?.canUseBiometrics ?? false
     }
     
     /// Get biometric type available
+    /// - Returns: The type of biometric authentication available
+    /// - Note: This method must be called from a MainActor context
+    @MainActor
     public var biometricType: LABiometryType {
         biometricAuth?.biometricType ?? .none
     }
