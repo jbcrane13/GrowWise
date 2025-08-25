@@ -342,11 +342,14 @@ final class EncryptionServiceTests: XCTestCase {
         XCTAssertTrue(encryptionService.hasEncryptionKey)
     }
     
-    func testKeyRotation() throws {
+    func testKeyRotation() async throws {
         // Skip if Secure Enclave not available
         guard SecureEnclaveKeyManager.isSecureEnclaveAvailable else {
             // Test legacy behavior - key rotation should throw
-            XCTAssertThrowsError(try encryptionService.rotateKey()) { error in
+            do {
+                _ = try await encryptionService.rotateKey()
+                XCTFail("Expected error for unavailable Secure Enclave")
+            } catch {
                 XCTAssertTrue(error is EncryptionService.EncryptionError)
             }
             return
@@ -358,7 +361,7 @@ final class EncryptionServiceTests: XCTestCase {
         let encryptedWithOriginalKey = try encryptionService.encrypt(testData)
         
         // Rotate key
-        XCTAssertNoThrow(try encryptionService.rotateKey())
+        _ = try await encryptionService.rotateKey()
         
         // Encrypt with new key
         let encryptedWithNewKey = try encryptionService.encrypt(testData)
@@ -673,7 +676,7 @@ final class EncryptionServiceTests: XCTestCase {
         try? legacyStorage.deleteAll()
     }
     
-    func testSecureEnclaveUnavailableFallback() {
+    func testSecureEnclaveUnavailableFallback() async {
         // Test behavior when Secure Enclave is not available
         if !SecureEnclaveKeyManager.isSecureEnclaveAvailable {
             // Should use legacy encryption without errors
@@ -683,7 +686,10 @@ final class EncryptionServiceTests: XCTestCase {
             XCTAssertNoThrow(try encryptionService.encrypt(testData))
             
             // Key rotation should fail gracefully
-            XCTAssertThrowsError(try encryptionService.rotateKey()) { error in
+            do {
+                _ = try await encryptionService.rotateKey()
+                XCTFail("Expected error for unavailable Secure Enclave")
+            } catch {
                 XCTAssertTrue(error is EncryptionService.EncryptionError)
                 if case EncryptionService.EncryptionError.secureEnclaveNotAvailable = error {
                     // Expected

@@ -26,11 +26,11 @@ struct PlantTests {
         #expect(plant.spaceRequirement == .small)
         #expect(plant.growthStage == .seedling)
         #expect(plant.healthStatus == .healthy)
-        #expect(plant.notes.isEmpty)
-        #expect(plant.photoURLs.isEmpty)
-        #expect(plant.reminders.isEmpty)
-        #expect(plant.journalEntries.isEmpty)
-        #expect(plant.companionPlants.isEmpty)
+        #expect(plant.notes?.isEmpty ?? true)
+        #expect(plant.photoURLs?.isEmpty ?? true)
+        #expect(plant.reminders?.isEmpty ?? true)
+        #expect(plant.journalEntries?.isEmpty ?? true)
+        #expect(plant.companionPlants?.isEmpty ?? true)
     }
     
     @Test("Plant type display names")

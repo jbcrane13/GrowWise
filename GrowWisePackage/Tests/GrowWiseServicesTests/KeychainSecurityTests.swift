@@ -173,32 +173,28 @@ final class KeychainSecurityTests: XCTestCase {
     // MARK: - Legacy Password Migration Tests
     
     func testLegacyPasswordRemoval() throws {
-        // This test verifies that legacy password storage methods are blocked
+        // This test verifies that legacy password storage methods have been removed
+        // and that the secure alternatives are properly enforced
         
-        // Attempt to use deprecated methods should throw
-        XCTAssertThrowsError(try keychainManager.storeUserCredentials(email: "test@example.com", password: "password123")) { error in
-            if let keychainError = error as? KeychainManager.KeychainError {
-                switch keychainError {
-                case .insecureOperation:
-                    // Expected - method is deprecated
-                    break
-                default:
-                    XCTFail("Expected insecureOperation error")
-                }
-            }
-        }
+        // Test that secure credentials require proper structure
+        let testCredentials = SecureCredentials(
+            accessToken: "access-token-123",
+            refreshToken: "refresh-token-456",
+            expiresIn: 3600,
+            userId: "test-user",
+            tokenType: "Bearer"
+        )
         
-        XCTAssertThrowsError(try keychainManager.retrieveUserCredentials()) { error in
-            if let keychainError = error as? KeychainManager.KeychainError {
-                switch keychainError {
-                case .insecureOperation:
-                    // Expected - method is deprecated
-                    break
-                default:
-                    XCTFail("Expected insecureOperation error")
-                }
-            }
-        }
+        // Verify secure storage works
+        XCTAssertNoThrow(try keychainManager.storeSecureCredentials(testCredentials))
+        
+        // Verify secure retrieval works
+        let retrievedCredentials = try keychainManager.retrieveSecureCredentials()
+        XCTAssertEqual(retrievedCredentials.userId, testCredentials.userId)
+        XCTAssertEqual(retrievedCredentials.accessToken, testCredentials.accessToken)
+        
+        // Clean up
+        keychainManager.clearSensitiveData()
     }
     
     func testPasswordMigrationCompletion() {
@@ -206,7 +202,7 @@ final class KeychainSecurityTests: XCTestCase {
         XCTAssertFalse(keychainManager.isPasswordMigrationComplete())
         
         // Run migration
-        keychainManager.migrateFromUserDefaults()
+        _ = try keychainManager.migrateFromUserDefaults()
         
         // Check if marked as complete (after clearing legacy data)
         // Note: This will be true after migration runs

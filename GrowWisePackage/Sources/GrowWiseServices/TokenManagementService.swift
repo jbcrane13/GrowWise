@@ -51,6 +51,9 @@ public final class TokenManagementService {
     private let storage: KeychainStorageService
     private let jwtValidator: JWTValidator
     
+    /// Audit logger for compliance logging
+    private let auditLogger: AuditLogger = AuditLogger.shared
+    
     // MARK: - Configuration
     
     public struct Configuration {
@@ -107,14 +110,31 @@ public final class TokenManagementService {
     
     /// Store secure JWT credentials with cryptographic validation
     public func storeSecureCredentials(_ credentials: SecureCredentials) throws {
-        // Perform full JWT validation including signature and claims
-        try jwtValidator.validate(credentials.accessToken)
+        let startTime = CFAbsoluteTimeGetCurrent()
         
-        if !credentials.refreshToken.isEmpty {
-            try jwtValidator.validate(credentials.refreshToken)
-        }
+        // Log credential storage attempt
+        auditLogger.logCredentialOperation(
+            type: .credentialCreation,
+            userId: credentials.userId,
+            result: .success, // Will update on failure
+            credentialType: "jwt_credentials",
+            operation: "store_secure",
+            details: [
+                "token_type": credentials.tokenType,
+                "expires_at": credentials.expiresAt.description,
+                "has_refresh_token": credentials.refreshToken.isEmpty ? "false" : "true",
+                "validation_enabled": "true"
+            ]
+        )
         
         do {
+            // Perform full JWT validation including signature and claims
+            try jwtValidator.validate(credentials.accessToken)
+            
+            if !credentials.refreshToken.isEmpty {
+                try jwtValidator.validate(credentials.refreshToken)
+            }
+            
             // Create secure storage with encryption and authentication
             let encryptedData = try createSecureStorage(
                 credentials: credentials,
@@ -125,24 +145,104 @@ public final class TokenManagementService {
             
             // Store metadata separately (non-sensitive)
             try storeTokenMetadata(credentials)
+            
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log successful storage
+            auditLogger.logCredentialOperation(
+                type: .credentialCreation,
+                userId: credentials.userId,
+                result: .success,
+                credentialType: "jwt_credentials",
+                operation: "store_secure",
+                details: [
+                    "token_type": credentials.tokenType,
+                    "validation_passed": "true",
+                    "encryption_applied": "true",
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
+            
         } catch {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log storage failure
+            auditLogger.logCredentialOperation(
+                type: .credentialCreation,
+                userId: credentials.userId,
+                result: .failure,
+                credentialType: "jwt_credentials",
+                operation: "store_secure",
+                details: [
+                    "error_type": String(describing: type(of: error)),
+                    "validation_stage": determineValidationStage(error),
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
+            
             throw TokenError.storageError(error)
         }
     }
     
     /// Retrieve secure JWT credentials
     public func retrieveSecureCredentials() throws -> SecureCredentials {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
         do {
             let encryptedData = try storage.retrieve(for: "secure_jwt_credentials_v2")
             let credentials = try retrieveFromSecureStorage(encryptedData)
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
             
             // Check if token is expired
             if credentials.isExpired {
+                // Log expired token access
+                auditLogger.logCredentialOperation(
+                    type: .credentialAccess,
+                    userId: credentials.userId,
+                    result: .failure,
+                    credentialType: "jwt_credentials",
+                    operation: "retrieve_secure",
+                    details: [
+                        "token_type": credentials.tokenType,
+                        "expiry_status": "expired",
+                        "duration_ms": String(format: "%.2f", duration * 1000)
+                    ]
+                )
                 throw TokenError.tokenExpired
             }
             
+            // Log successful retrieval
+            auditLogger.logCredentialOperation(
+                type: .credentialAccess,
+                userId: credentials.userId,
+                result: .success,
+                credentialType: "jwt_credentials",
+                operation: "retrieve_secure",
+                details: [
+                    "token_type": credentials.tokenType,
+                    "expiry_status": "valid",
+                    "decryption_applied": "true",
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
+            
             return credentials
         } catch let error as KeychainStorageService.StorageError {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log retrieval failure
+            auditLogger.logCredentialOperation(
+                type: .credentialAccess,
+                userId: nil, // Can't get userId if retrieval failed
+                result: .failure,
+                credentialType: "jwt_credentials",
+                operation: "retrieve_secure",
+                details: [
+                    "error_type": String(describing: type(of: error)),
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
+            
             throw TokenError.storageError(error)
         }
     }
@@ -214,15 +314,60 @@ public final class TokenManagementService {
     
     /// Clear all token data
     public func clearAllTokens() {
+        // Log token clearing operation
+        auditLogger.logCredentialOperation(
+            type: .credentialDeletion,
+            userId: getCurrentUserId(),
+            result: .success,
+            credentialType: "jwt_credentials",
+            operation: "clear_all",
+            details: [
+                "keys_cleared": "3",
+                "security_level": "high",
+                "reason": "user_logout_or_cleanup"
+            ]
+        )
+        
         let tokenKeys = [
             "secure_jwt_credentials_v2",
             "encrypted_access_token_v2",
             "jwt_metadata_v2"
         ]
         
+        var clearedCount = 0
         for key in tokenKeys {
-            try? storage.delete(for: key)
+            do {
+                try storage.delete(for: key)
+                clearedCount += 1
+            } catch {
+                // Log individual key deletion failure but continue
+                auditLogger.logCredentialOperation(
+                    type: .credentialDeletion,
+                    userId: getCurrentUserId(),
+                    result: .failure,
+                    credentialType: "jwt_token",
+                    operation: "clear_individual",
+                    details: [
+                        "key": sanitizeKeyForLogging(key),
+                        "error_type": String(describing: type(of: error))
+                    ]
+                )
+            }
         }
+        
+        // Log final results
+        auditLogger.logCredentialOperation(
+            type: .credentialDeletion,
+            userId: getCurrentUserId(),
+            result: clearedCount == tokenKeys.count ? .success : .partial,
+            credentialType: "jwt_credentials",
+            operation: "clear_all_complete",
+            details: [
+                "keys_cleared": "\(clearedCount)",
+                "keys_total": "\(tokenKeys.count)",
+                "completion_status": clearedCount == tokenKeys.count ? "complete" : "partial"
+            ]
+        )
     }
     
     // MARK: - Private Methods
@@ -264,6 +409,41 @@ public final class TokenManagementService {
         
         if let metadataData = try? JSONSerialization.data(withJSONObject: metadata) {
             try? storage.store(metadataData, for: "jwt_metadata_v2")
+        }
+    }
+    
+    // MARK: - Audit Logging Utilities
+    
+    /// Get current user ID for audit logging
+    private func getCurrentUserId() -> String? {
+        if let credentials = try? retrieveSecureCredentials() {
+            return credentials.userId
+        }
+        return nil
+    }
+    
+    /// Sanitize key names for audit logging
+    private func sanitizeKeyForLogging(_ key: String) -> String {
+        let sensitivePatterns = ["token", "secret", "jwt", "credential"]
+        
+        for pattern in sensitivePatterns {
+            if key.lowercased().contains(pattern) {
+                return "hashed_\(key.hash)"
+            }
+        }
+        return key
+    }
+    
+    /// Determine validation stage from error
+    private func determineValidationStage(_ error: Error) -> String {
+        if error is JWTValidator.JWTValidationError {
+            return "jwt_validation"
+        } else if error is KeychainStorageService.StorageError {
+            return "storage"
+        } else if error is EncryptionService.EncryptionError {
+            return "encryption"
+        } else {
+            return "unknown"
         }
     }
 }

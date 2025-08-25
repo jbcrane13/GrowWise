@@ -19,6 +19,11 @@ public final class AuthenticationInitializer {
         AuthenticationDependencyContainer.shared.setBiometricAuthentication(biometricManager)
         
         // Perform any migration if needed
-        keychainManager.migrateFromUserDefaults()
+        do {
+            _ = try keychainManager.migrateFromUserDefaults()
+        } catch {
+            // Log migration error but don't fail initialization
+            print("Warning: Migration failed - \(error.localizedDescription)")
+        }
     }
 }

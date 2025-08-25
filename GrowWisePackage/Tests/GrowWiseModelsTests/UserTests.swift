@@ -23,9 +23,9 @@ struct UserTests {
         #expect(user.subscriptionTier == .free)
         #expect(user.plantsGrown == 0)
         #expect(user.streakDays == 0)
-        #expect(user.gardens.isEmpty)
-        #expect(user.reminders.isEmpty)
-        #expect(user.journalEntries.isEmpty)
+        #expect(user.gardens?.isEmpty ?? true)
+        #expect(user.reminders?.isEmpty ?? true)
+        #expect(user.journalEntries?.isEmpty ?? true)
         #expect(user.completedTutorials.isEmpty)
     }
     

@@ -28,6 +28,7 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
     private let encryptionService: EncryptionService
     private let tokenService: TokenManagementService
     private let dataTransformationService: DataTransformationService
+    private let migrationIntegrityService: MigrationIntegrityService
     
     // MARK: - Properties
     
@@ -36,6 +37,14 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
     
     /// Biometric authentication provider (thread-safe due to property isolation)
     private var biometricAuth: BiometricAuthenticationProtocol?
+    
+    /// Rate limiter for authentication attempts
+    private lazy var rateLimiter: RateLimiter = {
+        RateLimiterFactory.create(with: self)
+    }()
+    
+    /// Audit logger for compliance logging
+    private let auditLogger: AuditLogger = AuditLogger.shared
     
     // MARK: - Error Types
     
@@ -50,8 +59,10 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
         case tokenExpired
         case encryptionFailed
         case decryptionFailed
-        case insecureOperation
         case serviceError(Error)
+        case rateLimitExceeded(retryAfter: TimeInterval)
+        case accountLocked(unlockAt: Date)
+        case operationFailed
         
         public var errorDescription: String? {
             switch self {
@@ -75,10 +86,17 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
                 return "Failed to encrypt sensitive data"
             case .decryptionFailed:
                 return "Failed to decrypt sensitive data"
-            case .insecureOperation:
-                return "Operation not allowed: insecure method deprecated"
             case .serviceError(let error):
                 return "Service error: \(error.localizedDescription)"
+            case .rateLimitExceeded(let retryAfter):
+                return "Too many authentication attempts. Try again in \(Int(retryAfter)) seconds."
+            case .accountLocked(let unlockAt):
+                let formatter = DateFormatter()
+                formatter.dateStyle = .short
+                formatter.timeStyle = .short
+                return "Account locked due to repeated failed attempts. Try again after \(formatter.string(from: unlockAt))."
+            case .operationFailed:
+                return "Keychain operation failed"
             }
         }
     }
@@ -91,6 +109,7 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
         self.encryptionService = EncryptionService(storage: storageService)
         self.tokenService = TokenManagementService(encryptionService: encryptionService, storage: storageService)
         self.dataTransformationService = DataTransformationService(storage: storageService, encryptionService: encryptionService)
+        self.migrationIntegrityService = MigrationIntegrityService(keychainStorage: storageService)
         
         // Register self with dependency container synchronously
         // This is safe because we're initializing the shared singleton
@@ -114,9 +133,40 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
     
     /// Store data securely in the keychain
     public func store(_ data: Data, for key: String) throws {
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             try storageService.store(data, for: key)
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log successful storage
+            auditLogger.logCredentialOperation(
+                type: .credentialCreation,
+                userId: getCurrentUserId(),
+                result: .success,
+                credentialType: "keychain_data",
+                operation: "store",
+                details: [
+                    "key_identifier": sanitizeKeyForLogging(key),
+                    "data_size": "\(data.count)",
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
         } catch {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log failed storage
+            auditLogger.logCredentialOperation(
+                type: .credentialCreation,
+                userId: getCurrentUserId(),
+                result: .failure,
+                credentialType: "keychain_data",
+                operation: "store",
+                details: [
+                    "key_identifier": sanitizeKeyForLogging(key),
+                    "error_type": String(describing: type(of: error)),
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
             throw mapStorageError(error)
         }
     }
@@ -141,9 +191,42 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
     
     /// Retrieve data from the keychain
     public func retrieve(for key: String) throws -> Data {
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
-            return try storageService.retrieve(for: key)
+            let data = try storageService.retrieve(for: key)
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log successful retrieval
+            auditLogger.logCredentialOperation(
+                type: .credentialAccess,
+                userId: getCurrentUserId(),
+                result: .success,
+                credentialType: "keychain_data",
+                operation: "retrieve",
+                details: [
+                    "key_identifier": sanitizeKeyForLogging(key),
+                    "data_size": "\(data.count)",
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
+            
+            return data
         } catch {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log failed retrieval
+            auditLogger.logCredentialOperation(
+                type: .credentialAccess,
+                userId: getCurrentUserId(),
+                result: .failure,
+                credentialType: "keychain_data",
+                operation: "retrieve",
+                details: [
+                    "key_identifier": sanitizeKeyForLogging(key),
+                    "error_type": String(describing: type(of: error)),
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
             throw mapStorageError(error)
         }
     }
@@ -168,9 +251,39 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
     
     /// Delete an item from the keychain
     public func delete(for key: String) throws {
+        let startTime = CFAbsoluteTimeGetCurrent()
         do {
             try storageService.delete(for: key)
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log successful deletion
+            auditLogger.logCredentialOperation(
+                type: .credentialDeletion,
+                userId: getCurrentUserId(),
+                result: .success,
+                credentialType: "keychain_data",
+                operation: "delete",
+                details: [
+                    "key_identifier": sanitizeKeyForLogging(key),
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
         } catch {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log failed deletion
+            auditLogger.logCredentialOperation(
+                type: .credentialDeletion,
+                userId: getCurrentUserId(),
+                result: .failure,
+                credentialType: "keychain_data",
+                operation: "delete",
+                details: [
+                    "key_identifier": sanitizeKeyForLogging(key),
+                    "error_type": String(describing: type(of: error)),
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
             throw mapStorageError(error)
         }
     }
@@ -222,6 +335,10 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
                 return .invalidData
             case .encodingFailed, .decodingFailed, .serializationFailed:
                 return .serviceError(transformationError)
+            case .checksumMismatch(_, _):
+                return .operationFailed
+            case .migrationVerificationFailed(_):
+                return .operationFailed
             }
         } else if let tokenError = error as? TokenManagementService.TokenError {
             switch tokenError {
@@ -250,13 +367,29 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
         return .serviceError(error)
     }
     
-    // MARK: - Migration from UserDefaults
+    /// Map rate limiter errors to KeychainError
+    private func mapRateLimiterError(_ error: RateLimiter.RateLimiterError) -> KeychainError {
+        switch error {
+        case .rateLimitExceeded(let retryAfter):
+            return .rateLimitExceeded(retryAfter: retryAfter)
+        case .accountLocked(let unlockAt):
+            return .accountLocked(unlockAt: unlockAt)
+        case .storageError(let underlyingError):
+            return .serviceError(underlyingError)
+        case .invalidKey(let reason):
+            return .invalidKey(reason)
+        case .configurationError(let reason):
+            return .serviceError(NSError(domain: "RateLimiterConfiguration", code: -1, userInfo: [NSLocalizedDescriptionKey: reason]))
+        }
+    }
     
-    /// Migrate sensitive data from UserDefaults to Keychain
-    public func migrateFromUserDefaults() {
+    // MARK: - Migration from UserDefaults with Data Integrity
+    
+    /// Migrate sensitive data from UserDefaults to Keychain with comprehensive integrity checks
+    public func migrateFromUserDefaults(dryRun: Bool = false) throws -> MigrationIntegrityService.MigrationReport {
         let keysToMigrate = [
             "userGardeningGoals",
-            "userPlantInterests",
+            "userPlantInterests", 
             "userPreferredNotificationTime",
             "hasCompletedOnboarding",
             "default_notification_time",
@@ -268,34 +401,153 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
             "quiet_hours_end"
         ]
         
-        // Use data transformation service for migration
-        dataTransformationService.migrateFromUserDefaults(keys: keysToMigrate)
+        auditLogger.logSecurityEvent(
+            type: .configurationChange,
+            userId: getCurrentUserId(),
+            result: .success,
+            threatLevel: .low,
+            description: "Starting UserDefaults to Keychain migration with integrity checks",
+            details: [
+                "keys_count": "\(keysToMigrate.count)",
+                "dry_run": dryRun ? "true" : "false"
+            ]
+        )
         
-        // Clean up any legacy password data
-        migrateLegacyPasswordData()
+        // Perform secure migration with integrity checks
+        let report = try migrationIntegrityService.performSecureMigration(
+            keys: keysToMigrate,
+            dryRun: dryRun
+        )
+        
+        // Only migrate legacy password data if main migration succeeded and not a dry run
+        if !dryRun && report.status == .completed {
+            try migrateLegacyPasswordData()
+        }
+        
+        return report
     }
     
-    /// Migrate and remove legacy password data
-    private func migrateLegacyPasswordData() {
+    /// Migrate and remove legacy password data with verification
+    private func migrateLegacyPasswordData() throws {
         let legacyPasswordKeys = [
             "user_credentials",
             "user_password",
-            "password",
+            "password", 
             "credentials",
             "user_auth",
             "login_credentials"
         ]
         
+        auditLogger.logSecurityEvent(
+            type: .configurationChange,
+            userId: getCurrentUserId(),
+            result: .success,
+            threatLevel: .medium,
+            description: "Starting legacy password data migration",
+            details: ["keys_count": "\(legacyPasswordKeys.count)"]
+        )
+        
         // Use data transformation service to cleanup legacy data
         dataTransformationService.cleanupLegacyData(keys: legacyPasswordKeys)
         
-        // Mark migration as complete
-        try? storeBool(true, for: "_password_migration_complete_v2")
+        // Verify cleanup was successful
+        for key in legacyPasswordKeys {
+            if storageService.exists(for: key) {
+                auditLogger.logSecurityEvent(
+                    type: .securityViolation,
+                    userId: getCurrentUserId(),
+                    result: .failure,
+                    threatLevel: .high,
+                    description: "Legacy password data cleanup failed",
+                    details: ["failed_key": key]
+                )
+                throw KeychainError.serviceError(NSError(
+                    domain: "MigrationError",
+                    code: -1,
+                    userInfo: [NSLocalizedDescriptionKey: "Failed to cleanup legacy password data for key: \(key)"]
+                ))
+            }
+        }
+        
+        // Mark migration as complete only after verification
+        try storeBool(true, for: "_password_migration_complete_v3")
+        
+        auditLogger.logSecurityEvent(
+            type: .configurationChange,
+            userId: getCurrentUserId(),
+            result: .success,
+            threatLevel: .low,
+            description: "Legacy password data migration completed successfully",
+            details: ["verification": "passed"]
+        )
     }
     
     /// Check if password migration has been completed
     public func isPasswordMigrationComplete() -> Bool {
+        // Check for the new version marker first
+        if let completed = try? retrieveBool(for: "_password_migration_complete_v3") {
+            return completed
+        }
+        
+        // Fall back to legacy marker for backward compatibility
         return (try? retrieveBool(for: "_password_migration_complete_v2")) ?? false
+    }
+    
+    /// Perform dry run migration to test the process
+    public func performDryRunMigration() throws -> MigrationIntegrityService.MigrationReport {
+        return try migrateFromUserDefaults(dryRun: true)
+    }
+    
+    /// Resume a partial migration
+    public func resumeMigration(sessionId: String) throws -> MigrationIntegrityService.MigrationReport {
+        auditLogger.logSecurityEvent(
+            type: .configurationChange,
+            userId: getCurrentUserId(),
+            result: .success,
+            threatLevel: .low,
+            description: "Resuming partial migration",
+            details: ["session_id": sessionId]
+        )
+        
+        return try migrationIntegrityService.resumeMigration(sessionId: sessionId)
+    }
+    
+    /// Rollback migration to original state
+    public func rollbackMigration(sessionId: String) throws {
+        auditLogger.logSecurityEvent(
+            type: .configurationChange,
+            userId: getCurrentUserId(),
+            result: .success,
+            threatLevel: .medium,
+            description: "Rolling back migration",
+            details: ["session_id": sessionId]
+        )
+        
+        try migrationIntegrityService.rollbackMigration(sessionId: sessionId)
+    }
+    
+    /// Get migration status
+    public func getMigrationStatus(sessionId: String) -> MigrationIntegrityService.MigrationProgress? {
+        return migrationIntegrityService.getMigrationStatus(sessionId: sessionId)
+    }
+    
+    /// Verify data integrity for migrated keys
+    public func verifyMigrationIntegrity() throws -> [MigrationIntegrityService.DataChecksum] {
+        let keysToVerify = [
+            "userGardeningGoals",
+            "userPlantInterests",
+            "userPreferredNotificationTime", 
+            "hasCompletedOnboarding",
+            "default_notification_time",
+            "enable_watering_reminders",
+            "enable_fertilizing_reminders",
+            "enable_pest_control_reminders",
+            "enable_weather_adjustments",
+            "quiet_hours_start",
+            "quiet_hours_end"
+        ]
+        
+        return try migrationIntegrityService.verifyDataIntegrity(keys: keysToVerify)
     }
     
     // MARK: - Convenience Methods for Common Keys
@@ -321,11 +573,35 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
         }
     }
     
-    /// Retrieve secure JWT credentials with decryption
-    public func retrieveSecureCredentials() throws -> SecureCredentials {
+    /// Retrieve secure JWT credentials with decryption and rate limiting
+    public func retrieveSecureCredentials(for identifier: String? = nil) throws -> SecureCredentials {
+        // Apply rate limiting if identifier is provided
+        if let identifier = identifier {
+            let result = checkAuthenticationRateLimit(for: identifier, operation: "credential_retrieval")
+            switch result {
+            case .allowed:
+                break
+            case .limited(let retryAfter, _):
+                throw KeychainError.rateLimitExceeded(retryAfter: retryAfter)
+            case .locked(let unlockAt, _):
+                throw KeychainError.accountLocked(unlockAt: unlockAt)
+            }
+        }
+        
         do {
-            return try tokenService.retrieveSecureCredentials()
+            let credentials = try tokenService.retrieveSecureCredentials()
+            
+            // Record successful attempt if identifier provided
+            if let identifier = identifier {
+                try recordAuthenticationAttempt(for: identifier, successful: true, operation: "credential_retrieval")
+            }
+            
+            return credentials
         } catch {
+            // Record failed attempt if identifier provided
+            if let identifier = identifier {
+                try? recordAuthenticationAttempt(for: identifier, successful: false, operation: "credential_retrieval")
+            }
             throw mapServiceError(error)
         }
     }
@@ -362,16 +638,6 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
         return tokenService.credentialsNeedRefresh()
     }
     
-    /// DEPRECATED: These methods are no longer supported for security reasons
-    @available(*, deprecated, message: "Use storeSecureCredentials instead. Direct password storage is insecure.")
-    public func storeUserCredentials(email: String, password: String) throws {
-        throw KeychainError.insecureOperation
-    }
-    
-    @available(*, deprecated, message: "Use retrieveSecureCredentials instead. Direct password retrieval is insecure.")
-    public func retrieveUserCredentials() throws -> (email: String, password: String) {
-        throw KeychainError.insecureOperation
-    }
     
     /// Store authentication token (legacy support - internally uses secure storage)
     public func storeAuthToken(_ token: String) throws {
@@ -408,19 +674,282 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
         }
     }
     
-    /// Retrieve secure credentials with biometric protection
-    public func retrieveSecureCredentialsWithBiometric(reason: String = "Authenticate to access your account") async throws -> SecureCredentials {
-        // Read the JSON-encoded credentials that were stored with biometric protection
-        let encryptedData = try await retrieveWithBiometricProtection(
-            for: "biometric_secure_jwt_credentials_v2",
-            reason: reason
+    // MARK: - Rate Limiting Integration
+    
+    /// Check if authentication attempts are rate limited
+    /// - Parameters:
+    ///   - identifier: Unique identifier (e.g., email, device ID)
+    ///   - operation: Authentication operation type
+    /// - Returns: Rate limit result
+    public func checkAuthenticationRateLimit(
+        for identifier: String,
+        operation: String = "authentication"
+    ) -> RateLimiter.RateLimitResult {
+        return rateLimiter.checkLimit(for: identifier, operation: operation)
+    }
+    
+    /// Record an authentication attempt with rate limiting
+    /// - Parameters:
+    ///   - identifier: Unique identifier (e.g., email, device ID)
+    ///   - successful: Whether the authentication attempt was successful
+    ///   - operation: Authentication operation type
+    /// - Throws: KeychainError if rate limited or account locked
+    public func recordAuthenticationAttempt(
+        for identifier: String,
+        successful: Bool,
+        operation: String = "authentication"
+    ) throws {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Log authentication attempt
+        auditLogger.logAuthentication(
+            type: successful ? .authenticationSuccess : .authenticationFailure,
+            userId: identifier,
+            result: successful ? .success : .failure,
+            method: operation,
+            details: [
+                "rate_limiting_applied": "true",
+                "operation_type": operation
+            ]
         )
+        
+        do {
+            try rateLimiter.recordAttempt(
+                for: identifier,
+                operation: operation,
+                successful: successful
+            )
+            
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log rate limiting success
+            auditLogger.logSecurityEvent(
+                type: .configurationChange,
+                userId: identifier,
+                result: .success,
+                threatLevel: .low,
+                description: "Rate limiting applied successfully",
+                details: [
+                    "operation": operation,
+                    "successful_auth": successful ? "true" : "false",
+                    "duration_ms": String(format: "%.2f", duration * 1000)
+                ]
+            )
+            
+        } catch let error as RateLimiter.RateLimiterError {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Log rate limiting events
+            switch error {
+            case .rateLimitExceeded(let retryAfter):
+                auditLogger.logSecurityEvent(
+                    type: .securityViolation,
+                    userId: identifier,
+                    result: .denied,
+                    threatLevel: .medium,
+                    description: "Authentication rate limit exceeded",
+                    details: [
+                        "operation": operation,
+                        "retry_after": String(format: "%.0f", retryAfter),
+                        "duration_ms": String(format: "%.2f", duration * 1000)
+                    ]
+                )
+            case .accountLocked(let unlockAt):
+                auditLogger.logSecurityEvent(
+                    type: .accountLockout,
+                    userId: identifier,
+                    result: .denied,
+                    threatLevel: .high,
+                    description: "Account locked due to repeated failed attempts",
+                    details: [
+                        "operation": operation,
+                        "unlock_time": unlockAt.iso8601String,
+                        "duration_ms": String(format: "%.2f", duration * 1000)
+                    ]
+                )
+            default:
+                auditLogger.logSecurityEvent(
+                    type: .securityViolation,
+                    userId: identifier,
+                    result: .failure,
+                    threatLevel: .medium,
+                    description: "Rate limiter error",
+                    details: [
+                        "operation": operation,
+                        "error_type": String(describing: type(of: error)),
+                        "duration_ms": String(format: "%.2f", duration * 1000)
+                    ]
+                )
+            }
+            throw mapRateLimiterError(error)
+        } catch {
+            // Log general error
+            auditLogger.logSecurityEvent(
+                type: .securityViolation,
+                userId: identifier,
+                result: .failure,
+                threatLevel: .medium,
+                description: "Authentication attempt recording failed",
+                details: [
+                    "operation": operation,
+                    "error_type": String(describing: type(of: error))
+                ]
+            )
+            throw KeychainError.serviceError(error)
+        }
+    }
+    
+    /// Reset rate limiting for an identifier
+    /// - Parameters:
+    ///   - identifier: Unique identifier
+    ///   - operation: Authentication operation type
+    public func resetAuthenticationRateLimit(
+        for identifier: String,
+        operation: String = "authentication"
+    ) {
+        rateLimiter.reset(for: identifier, operation: operation)
+    }
+    
+    /// Set custom rate limiting policy for an operation
+    /// - Parameters:
+    ///   - policy: Rate limiting policy
+    ///   - operation: Authentication operation type
+    public func setRateLimitPolicy(
+        _ policy: RateLimiter.Policy,
+        for operation: String
+    ) {
+        rateLimiter.setPolicy(policy, for: operation)
+    }
+    
+    /// Enable testing bypass for rate limiting (test environments only)
+    /// - Warning: Only use in test environments
+    public func enableRateLimitTestingBypass() {
+        rateLimiter.enableTestingBypass()
+    }
+    
+    /// Disable testing bypass for rate limiting
+    public func disableRateLimitTestingBypass() {
+        rateLimiter.disableTestingBypass()
+    }
+    
+    /// Perform rate limiter maintenance (cleanup expired data)
+    public func performRateLimitMaintenance() {
+        rateLimiter.performMaintenance()
+    }
+    
+    /// Retrieve secure credentials with biometric protection and rate limiting
+    public func retrieveSecureCredentialsWithBiometric(
+        for identifier: String? = nil,
+        reason: String = "Authenticate to access your account"
+    ) async throws -> SecureCredentials {
+        let startTime = CFAbsoluteTimeGetCurrent()
+        
+        // Log biometric authentication attempt
+        auditLogger.logAuthentication(
+            type: .biometricAuthentication,
+            userId: identifier,
+            result: .success, // Initial attempt logged as success, will update on failure
+            method: "biometric_credentials",
+            details: [
+                "biometric_type": await getBiometricTypeString(),
+                "reason": reason,
+                "rate_limiting_enabled": identifier != nil ? "true" : "false"
+            ]
+        )
+        
+        // Apply rate limiting if identifier is provided
+        if let identifier = identifier {
+            let result = checkAuthenticationRateLimit(for: identifier, operation: "biometric_auth")
+            switch result {
+            case .allowed:
+                break
+            case .limited(let retryAfter, _):
+                auditLogger.logSecurityEvent(
+                    type: .securityViolation,
+                    userId: identifier,
+                    result: .denied,
+                    threatLevel: .medium,
+                    description: "Biometric authentication rate limited",
+                    details: [
+                        "retry_after": String(format: "%.0f", retryAfter),
+                        "biometric_type": await getBiometricTypeString()
+                    ]
+                )
+                throw KeychainError.rateLimitExceeded(retryAfter: retryAfter)
+            case .locked(let unlockAt, _):
+                auditLogger.logSecurityEvent(
+                    type: .accountLockout,
+                    userId: identifier,
+                    result: .denied,
+                    threatLevel: .high,
+                    description: "Account locked - biometric authentication denied",
+                    details: [
+                        "unlock_time": unlockAt.iso8601String,
+                        "biometric_type": await getBiometricTypeString()
+                    ]
+                )
+                throw KeychainError.accountLocked(unlockAt: unlockAt)
+            }
+        }
+        
+        do {
+            // Read the JSON-encoded credentials that were stored with biometric protection
+            let encryptedData = try await retrieveWithBiometricProtection(
+                for: "biometric_secure_jwt_credentials_v2",
+                reason: reason
+            )
 
-        // Decode into SecureCredentials. We intentionally avoid any custom crypto here
-        // because the Keychain item itself is protected by the device's Secure Enclave.
-        let decoder = JSONDecoder()
-        let credentials = try decoder.decode(SecureCredentials.self, from: encryptedData)
-        return credentials
+            // Decode into SecureCredentials. We intentionally avoid any custom crypto here
+            // because the Keychain item itself is protected by the device's Secure Enclave.
+            let decoder = JSONDecoder()
+            let credentials = try decoder.decode(SecureCredentials.self, from: encryptedData)
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Record successful attempt if identifier provided
+            if let identifier = identifier {
+                try recordAuthenticationAttempt(for: identifier, successful: true, operation: "biometric_auth")
+            }
+            
+            // Log successful biometric credential retrieval
+            auditLogger.logCredentialOperation(
+                type: .credentialAccess,
+                userId: identifier,
+                result: .success,
+                credentialType: "jwt_credentials",
+                operation: "biometric_retrieve",
+                details: [
+                    "biometric_type": await getBiometricTypeString(),
+                    "duration_ms": String(format: "%.2f", duration * 1000),
+                    "credential_type": "secure_jwt",
+                    "protection_level": "biometric"
+                ]
+            )
+            
+            return credentials
+        } catch {
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            
+            // Record failed attempt if identifier provided
+            if let identifier = identifier {
+                try? recordAuthenticationAttempt(for: identifier, successful: false, operation: "biometric_auth")
+            }
+            
+            // Log failed biometric authentication
+            auditLogger.logAuthentication(
+                type: .authenticationFailure,
+                userId: identifier,
+                result: .failure,
+                method: "biometric_credentials",
+                details: [
+                    "biometric_type": await getBiometricTypeString(),
+                    "error_type": String(describing: type(of: error)),
+                    "duration_ms": String(format: "%.2f", duration * 1000),
+                    "protection_level": "biometric"
+                ]
+            )
+            
+            throw error
+        }
     }
     /// Store data with biometric protection (Face ID / Touch ID)
     public func storeWithBiometricProtection(_ data: Data, for key: String) throws {
@@ -554,6 +1083,52 @@ public final class KeychainManager: KeychainStorageProtocol, @unchecked Sendable
     @MainActor
     public var biometricType: LABiometryType {
         biometricAuth?.biometricType ?? .none
+    }
+    
+    // MARK: - Audit Logging Utilities
+    
+    /// Get current user ID for audit logging
+    private func getCurrentUserId() -> String? {
+        // Try to get user ID from current credentials
+        if let credentials = try? retrieveSecureCredentials() {
+            return credentials.userId
+        }
+        return nil
+    }
+    
+    /// Sanitize key names for audit logging (remove sensitive data)
+    private func sanitizeKeyForLogging(_ key: String) -> String {
+        // Hash sensitive keys to prevent exposure in logs
+        let sensitivePatterns = [
+            "password", "token", "secret", "key", "credential", 
+            "jwt", "auth", "biometric", "secure"
+        ]
+        
+        for pattern in sensitivePatterns {
+            if key.lowercased().contains(pattern) {
+                // Return hashed version for sensitive keys
+                let hashedKey = SHA256.hash(data: Data(key.utf8))
+                return "hashed_\(hashedKey.compactMap { String(format: "%02x", $0) }.joined().prefix(8))"
+            }
+        }
+        
+        return key
+    }
+    
+    /// Get biometric type as string for audit logging
+    @MainActor
+    private func getBiometricTypeString() -> String {
+        return biometricType.rawValue == 0 ? "none" : 
+               biometricType.rawValue == 1 ? "touchid" :
+               biometricType.rawValue == 2 ? "faceid" : 
+               biometricType.rawValue == 4 ? "opticid" : "unknown"
+    }
+    
+    /// Get biometric type as string (async version)
+    private func getBiometricTypeString() async -> String {
+        return await MainActor.run {
+            getBiometricTypeString()
+        }
     }
 }
 

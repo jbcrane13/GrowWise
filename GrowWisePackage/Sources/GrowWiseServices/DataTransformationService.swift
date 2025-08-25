@@ -1,4 +1,5 @@
 import Foundation
+import CryptoKit
 
 /// Service responsible for data transformation (Codable operations, serialization)
 public final class DataTransformationService {
@@ -10,6 +11,8 @@ public final class DataTransformationService {
         case decodingFailed(Error)
         case invalidData
         case serializationFailed
+        case checksumMismatch(expected: String, actual: String)
+        case migrationVerificationFailed(String)
         
         public var errorDescription: String? {
             switch self {
@@ -21,6 +24,10 @@ public final class DataTransformationService {
                 return "Invalid data format"
             case .serializationFailed:
                 return "JSON serialization failed"
+            case .checksumMismatch(let expected, let actual):
+                return "Data integrity check failed - expected: \(expected), actual: \(actual)"
+            case .migrationVerificationFailed(let reason):
+                return "Migration verification failed: \(reason)"
             }
         }
     }
@@ -140,36 +147,156 @@ public final class DataTransformationService {
         }
     }
     
-    // MARK: - Migration Helpers
+    // MARK: - Migration Helpers with Checksum Validation
     
-    /// Migrate data from UserDefaults
-    public func migrateFromUserDefaults(keys: [String]) {
+    /// Data structure for migration with checksum
+    public struct MigratedData {
+        public let key: String
+        public let originalChecksum: String
+        public let migratedChecksum: String
+        public let timestamp: Date
+        public let verified: Bool
+        
+        public var isValid: Bool {
+            return originalChecksum == migratedChecksum && verified
+        }
+    }
+    
+    /// Migrate data from UserDefaults with checksum validation
+    public func migrateFromUserDefaults(keys: [String]) -> [MigratedData] {
+        var migrationResults: [MigratedData] = []
+        
         for key in keys {
             // Skip if already migrated
             if storage.exists(for: key) {
                 continue
             }
             
+            var originalData: Data?
+            var migrated = false
+            
             // Try different UserDefaults data types
             if let data = UserDefaults.standard.data(forKey: key) {
+                originalData = data
                 try? storage.store(data, for: key)
+                migrated = true
                 UserDefaults.standard.removeObject(forKey: key)
             } else if let string = UserDefaults.standard.string(forKey: key) {
+                originalData = string.data(using: .utf8)
                 try? storeString(string, for: key)
+                migrated = true
                 UserDefaults.standard.removeObject(forKey: key)
             } else if UserDefaults.standard.object(forKey: key) != nil {
                 let boolValue = UserDefaults.standard.bool(forKey: key)
+                originalData = Data([boolValue ? 1 : 0])
                 try? storeBool(boolValue, for: key)
+                migrated = true
                 UserDefaults.standard.removeObject(forKey: key)
             }
             
-            #if DEBUG
-            print("Migrated \(key) to Keychain")
-            #endif
+            if migrated, let originalData = originalData {
+                // Calculate checksums for verification
+                let originalChecksum = calculateChecksum(data: originalData)
+                let migratedChecksum: String
+                let verified: Bool
+                
+                do {
+                    let storedData = try storage.retrieve(for: key)
+                    migratedChecksum = calculateChecksum(data: storedData)
+                    verified = originalChecksum == migratedChecksum
+                } catch {
+                    migratedChecksum = "error"
+                    verified = false
+                }
+                
+                let migrationResult = MigratedData(
+                    key: key,
+                    originalChecksum: originalChecksum,
+                    migratedChecksum: migratedChecksum,
+                    timestamp: Date(),
+                    verified: verified
+                )
+                
+                migrationResults.append(migrationResult)
+                
+                #if DEBUG
+                print("Migrated \(key) to Keychain - Verified: \(verified)")
+                #endif
+            }
         }
+        
+        return migrationResults
     }
     
-    /// Cleanup legacy data
+    /// Migrate single key with checksum validation
+    public func migrateFromUserDefaults(key: String) throws -> MigratedData {
+        // Skip if already migrated
+        if storage.exists(for: key) {
+            throw TransformationError.migrationVerificationFailed("Key already exists in keychain")
+        }
+        
+        var originalData: Data?
+        var migrated = false
+        
+        // Try different UserDefaults data types
+        if let data = UserDefaults.standard.data(forKey: key) {
+            originalData = data
+            try storage.store(data, for: key)
+            migrated = true
+        } else if let string = UserDefaults.standard.string(forKey: key) {
+            originalData = string.data(using: .utf8)
+            try storeString(string, for: key)
+            migrated = true
+        } else if UserDefaults.standard.object(forKey: key) != nil {
+            let boolValue = UserDefaults.standard.bool(forKey: key)
+            originalData = Data([boolValue ? 1 : 0])
+            try storeBool(boolValue, for: key)
+            migrated = true
+        } else {
+            throw TransformationError.invalidData
+        }
+        
+        guard migrated, let originalData = originalData else {
+            throw TransformationError.migrationVerificationFailed("Failed to migrate data")
+        }
+        
+        // Calculate checksums for verification
+        let originalChecksum = calculateChecksum(data: originalData)
+        let storedData = try storage.retrieve(for: key)
+        let migratedChecksum = calculateChecksum(data: storedData)
+        let verified = originalChecksum == migratedChecksum
+        
+        if !verified {
+            // Rollback on checksum mismatch
+            try? storage.delete(for: key)
+            throw TransformationError.checksumMismatch(expected: originalChecksum, actual: migratedChecksum)
+        }
+        
+        // Only remove from UserDefaults after successful verification
+        UserDefaults.standard.removeObject(forKey: key)
+        
+        return MigratedData(
+            key: key,
+            originalChecksum: originalChecksum,
+            migratedChecksum: migratedChecksum,
+            timestamp: Date(),
+            verified: verified
+        )
+    }
+    
+    /// Verify data integrity for a specific key
+    public func verifyDataIntegrity(key: String, originalChecksum: String) throws -> Bool {
+        guard storage.exists(for: key) else {
+            throw TransformationError.migrationVerificationFailed("Key not found in keychain")
+        }
+        
+        let storedData = try storage.retrieve(for: key)
+        let currentChecksum = calculateChecksum(data: storedData)
+        
+        return currentChecksum == originalChecksum
+    }
+    
+    /// Cleanup legacy data with verification
     public func cleanupLegacyData(keys: [String]) {
         for key in keys {
             if storage.exists(for: key) {
@@ -177,7 +304,38 @@ public final class DataTransformationService {
                 print("[Security Migration] Removing legacy data for key: \(key)")
                 #endif
                 try? storage.delete(for: key)
+                
+                // Verify deletion
+                if storage.exists(for: key) {
+                    #if DEBUG
+                    print("[Security Migration] WARNING: Failed to delete key: \(key)")
+                    #endif
+                }
             }
         }
+    }
+    
+    // MARK: - Checksum Utilities
+    
+    /// Calculate SHA-256 checksum for data
+    private func calculateChecksum(data: Data) -> String {
+        let hash = SHA256.hash(data: data)
+        return hash.compactMap { String(format: "%02x", $0) }.joined()
+    }
+    
+    /// Validate checksum against stored data
+    public func validateChecksum(key: String, expectedChecksum: String) throws -> Bool {
+        guard storage.exists(for: key) else {
+            throw TransformationError.migrationVerificationFailed("Key not found in keychain")
+        }
+        
+        let storedData = try storage.retrieve(for: key)
+        let actualChecksum = calculateChecksum(data: storedData)
+        
+        if actualChecksum != expectedChecksum {
+            throw TransformationError.checksumMismatch(expected: expectedChecksum, actual: actualChecksum)
+        }
+        
+        return true
     }
 }
