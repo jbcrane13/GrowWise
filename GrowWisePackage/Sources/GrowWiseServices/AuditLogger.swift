@@ -862,14 +862,24 @@ public final class AuditLogger: @unchecked Sendable {
     private static func generateDeviceId() -> String {
         // Generate consistent device ID based on device characteristics
         #if canImport(UIKit)
-        let identifier = UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+        let identifier: String = {
+            if Thread.isMainThread {
+                return UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
+            } else {
+                var value = UUID().uuidString
+                DispatchQueue.main.sync {
+                    value = UIDevice.current.identifierForVendor?.uuidString ?? value
+                }
+                return value
+            }
+        }()
         #else
         let identifier = UUID().uuidString
         #endif
         return SHA256.hash(data: Data(identifier.utf8)).compactMap { String(format: "%02x", $0) }.joined()
     }
     
-    private func getPlatformInfo() -> String {
+    @MainActor @MainActor private func getPlatformInfo() -> String {
         #if canImport(UIKit)
         return UIDevice.current.systemName + " " + UIDevice.current.model
         #else
@@ -877,7 +887,7 @@ public final class AuditLogger: @unchecked Sendable {
         #endif
     }
     
-    private func getOSVersion() -> String {
+    @MainActor private func getOSVersion() -> String {
         #if canImport(UIKit)
         return UIDevice.current.systemVersion
         #else
@@ -968,9 +978,20 @@ public final class AuditLogger: @unchecked Sendable {
         return Locale.current.region?.identifier
     }
     
-    private func getAppState() -> String {
+    @MainActor private func getAppState() -> String {
         #if canImport(UIKit)
-        switch UIApplication.shared.applicationState {
+        // Always fetch applicationState on the main thread
+        let appState: UIApplication.State
+        if Thread.isMainThread {
+            appState = UIApplication.shared.applicationState
+        } else {
+            var state: UIApplication.State = .inactive
+            DispatchQueue.main.sync {
+                state = UIApplication.shared.applicationState
+            }
+            appState = state
+        }
+        switch appState {
         case .active:
             return "active"
         case .inactive:
@@ -981,10 +1002,9 @@ public final class AuditLogger: @unchecked Sendable {
             return "unknown"
         }
         #else
-        return "active" // macOS doesn't have the same concept
+        return "active" // macOS doesn’t have an app state concept
         #endif
     }
-    
     // MARK: - Utility Methods
     
     private func createMetadata(for eventType: EventType, result: OperationResult) -> [String: String] {
@@ -1068,7 +1088,7 @@ public struct ComplianceReport: Codable {
     public let metadata: [String: String]
     
     private enum CodingKeys: String, CodingKey {
-        case generatedAt, reportPeriod, events, metadata
+        case generatedAt, reportPeriod, events, summary, metadata
     }
     
     public init(
@@ -1095,7 +1115,7 @@ public struct ComplianceReport: Codable {
         // Encode summary as JSON data
         if let summaryData = try? JSONSerialization.data(withJSONObject: summary) {
             let summaryString = String(data: summaryData, encoding: .utf8) ?? "{}"
-            try container.encode(summaryString, forKey: .init(stringValue: "summary")!)
+            try container.encode(summaryString, forKey: .summary)
         }
     }
     
@@ -1107,7 +1127,7 @@ public struct ComplianceReport: Codable {
         metadata = try container.decode([String: String].self, forKey: .metadata)
         
         // Decode summary from JSON string
-        if let summaryString = try? container.decode(String.self, forKey: .init(stringValue: "summary")!),
+        if let summaryString = try? container.decode(String.self, forKey: .summary),
            let summaryData = summaryString.data(using: .utf8),
            let summaryObject = try? JSONSerialization.jsonObject(with: summaryData) as? [String: Any] {
             summary = summaryObject
