@@ -89,3 +89,11 @@ claude-flow
 claude-flow.bat
 claude-flow.ps1
 hive-mind-prompt-*.txt
+
+# Claude Flow metrics - exclude raw JSON metrics
+.claude-flow/metrics/*.json
+.claude-flow/metrics/*.ndjson
+.claude-flow/metrics/archive/
+
+# Keep only compressed metrics archives if needed
+!.claude-flow/metrics/*.ndjson.gz

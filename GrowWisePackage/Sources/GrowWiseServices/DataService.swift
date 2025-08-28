@@ -44,6 +44,34 @@ public final class DataService: ObservableObject {
         self.cloudContainer = CKContainer.default()
     }
     
+    /// Async initialization for improved app startup performance
+    public init(isAsync: Bool) async throws {
+        try await Task {
+            // Configure SwiftData model container without CloudKit for testing
+            let schema = Schema([
+                Plant.self,
+                Garden.self,
+                User.self,
+                PlantReminder.self,
+                JournalEntry.self
+            ])
+            
+            // Use persistent storage for better memory management
+            let modelConfiguration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: false,
+                allowsSave: true
+            )
+            
+            self.modelContainer = try ModelContainer(
+                for: schema,
+                configurations: [modelConfiguration]
+            )
+            
+            self.cloudContainer = CKContainer.default()
+        }.value
+    }
+    
     /// Async initialization for better app startup performance
     public static func createAsync() async throws -> DataService {
         return try await MainActor.run {
@@ -209,19 +237,20 @@ public final class DataService: ObservableObject {
         return plant
     }
     
-    public func fetchPlants(for garden: Garden? = nil) -> [Plant] {
-        let cacheKey = "plants:\(garden?.id?.uuidString ?? "all"):limit:50"
+    public func fetchPlants(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) -> [Plant] {
+        let cacheKey = "plants:\(garden?.id?.uuidString ?? "all"):offset:\(offset):limit:\(limit)"
         
         // Check cache first
         if let cachedPlants = cache.get(cacheKey, as: [Plant].self) {
             return cachedPlants
         }
         
-        // Create basic fetch descriptor
+        // Create paginated fetch descriptor
         var descriptor = FetchDescriptor<Plant>(
             sortBy: [SortDescriptor(\.name)]
         )
-        descriptor.fetchLimit = 50
+        descriptor.fetchLimit = min(limit, 50) // Cap at 50 for memory safety
+        descriptor.fetchOffset = offset
         
         // Apply garden filter if specified
         if let garden = garden {
@@ -420,23 +449,25 @@ public final class DataService: ObservableObject {
         }
     }
     
-    public func fetchJournalEntries(for plant: Plant) -> [JournalEntry] {
+    public func fetchJournalEntries(for plant: Plant, offset: Int = 0, limit: Int = 20) -> [JournalEntry] {
         guard let plantId = plant.id else { return [] }
         
-        let cacheKey = "journal:plant:\(plantId.uuidString):limit:20"
+        let cacheKey = "journal:plant:\(plantId.uuidString):offset:\(offset):limit:\(limit)"
         
         // Check cache first
         if let cachedEntries = cache.get(cacheKey, as: [JournalEntry].self) {
             return cachedEntries
         }
         
-        // Create basic fetch descriptor for plant journal entries
+        // Create paginated fetch descriptor for plant journal entries
         var descriptor = FetchDescriptor<JournalEntry>(
             predicate: #Predicate<JournalEntry> { entry in
                 entry.plant?.id == plantId
             }
         )
         descriptor.sortBy = [SortDescriptor<JournalEntry>(\.entryDate, order: .reverse)]
+        descriptor.fetchLimit = min(limit, 30)
+        descriptor.fetchOffset = offset
         
         let result = (try? modelContext.fetch(descriptor)) ?? []
         
@@ -594,11 +625,15 @@ public final class DataService: ObservableObject {
     // MARK: - Performance Optimization Methods
     
     /// Batch load plant relationships to prevent N+1 queries
+    @MainActor
     public func batchLoadPlantRelationships(
         plantIds: [UUID],
         relationshipType: String = "both"
-    ) -> [Plant] {
+    ) async -> [Plant] {
         let startTime = CFAbsoluteTimeGetCurrent()
+        
+        return await Task.detached(priority: .userInitiated) { [weak self] in
+            guard let self = self else { return [] }
         
         // Create basic fetch descriptor for plant relationships
         var descriptor = FetchDescriptor<Plant>(
@@ -614,9 +649,17 @@ public final class DataService: ObservableObject {
             descriptor.predicate = plantPredicate
         }
         
-        let result = (try? modelContext.fetch(descriptor)) ?? []
-        
-        return result
+            let result = await MainActor.run {
+                (try? self.modelContext.fetch(descriptor)) ?? []
+            }
+            
+            let duration = CFAbsoluteTimeGetCurrent() - startTime
+            if duration > 0.5 {
+                print("⚠️ Slow batch load: \(duration)s for \(plantIds.count) plants")
+            }
+            
+            return result
+        }.value
     }
     
     /// Get performance metrics for monitoring

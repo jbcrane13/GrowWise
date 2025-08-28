@@ -1,0 +1,26 @@
+{
+  "metrics": {
+    "storage": {
+      "format": "ndjson",
+      "compression": "gzip",
+      "archiveDirectory": ".claude-flow/metrics/archive",
+      "rotationInterval": "1h",
+      "retentionDays": 7
+    },
+    "collection": {
+      "interval": 30000,
+      "maxEntriesBeforeArchive": 100,
+      "enableRealTimeMetrics": true
+    },
+    "export": {
+      "enabled": false,
+      "destinations": [
+        {
+          "type": "file",
+          "path": ".claude-flow/metrics/archive",
+          "format": "ndjson.gz"
+        }
+      ]
+    }
+  }
+}

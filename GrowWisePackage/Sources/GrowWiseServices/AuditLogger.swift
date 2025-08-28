@@ -859,37 +859,38 @@ public final class AuditLogger: @unchecked Sendable {
     
     // MARK: - Device Information
     
-    private static func generateDeviceId() -> String {
+    nonisolated private static func generateDeviceId() -> String {
         // Generate consistent device ID based on device characteristics
         #if canImport(UIKit)
-        let identifier: String = {
-            if Thread.isMainThread {
-                return UIDevice.current.identifierForVendor?.uuidString ?? UUID().uuidString
-            } else {
-                var value = UUID().uuidString
-                DispatchQueue.main.sync {
-                    value = UIDevice.current.identifierForVendor?.uuidString ?? value
-                }
-                return value
-            }
-        }()
+        var identifier = UUID().uuidString
+        DispatchQueue.main.sync {
+            identifier = UIDevice.current.identifierForVendor?.uuidString ?? identifier
+        }
         #else
         let identifier = UUID().uuidString
         #endif
         return SHA256.hash(data: Data(identifier.utf8)).compactMap { String(format: "%02x", $0) }.joined()
     }
     
-    @MainActor @MainActor private func getPlatformInfo() -> String {
+    nonisolated private func getPlatformInfo() -> String {
         #if canImport(UIKit)
-        return UIDevice.current.systemName + " " + UIDevice.current.model
+        var platformInfo = ""
+        DispatchQueue.main.sync {
+            platformInfo = UIDevice.current.systemName + " " + UIDevice.current.model
+        }
+        return platformInfo
         #else
         return "macOS Unknown"
         #endif
     }
     
-    @MainActor private func getOSVersion() -> String {
+    nonisolated private func getOSVersion() -> String {
         #if canImport(UIKit)
-        return UIDevice.current.systemVersion
+        var version = ""
+        DispatchQueue.main.sync {
+            version = UIDevice.current.systemVersion
+        }
+        return version
         #else
         let version = ProcessInfo.processInfo.operatingSystemVersion
         return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
@@ -978,18 +979,12 @@ public final class AuditLogger: @unchecked Sendable {
         return Locale.current.region?.identifier
     }
     
-    @MainActor private func getAppState() -> String {
+    nonisolated private func getAppState() -> String {
         #if canImport(UIKit)
         // Always fetch applicationState on the main thread
-        let appState: UIApplication.State
-        if Thread.isMainThread {
+        var appState: UIApplication.State = .inactive
+        DispatchQueue.main.sync {
             appState = UIApplication.shared.applicationState
-        } else {
-            var state: UIApplication.State = .inactive
-            DispatchQueue.main.sync {
-                state = UIApplication.shared.applicationState
-            }
-            appState = state
         }
         switch appState {
         case .active:

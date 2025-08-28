@@ -15,6 +15,13 @@ public final class PhotoService: ObservableObject {
     private let maxImageSize: CGFloat = 2048
     private let compressionQuality: CGFloat = 0.8
     
+    // Image cache for memory management
+    private let imageCache = NSCache<NSString, UIImage>()
+    private let thumbnailCache = NSCache<NSString, UIImage>()
+    
+    // Background processing queue
+    private let processingQueue = DispatchQueue(label: "com.growwise.photo.processing", qos: .userInitiated)
+    
     // Photo storage paths
     private let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     private var photosPath: URL {
@@ -24,6 +31,27 @@ public final class PhotoService: ObservableObject {
     public init(dataService: DataService) {
         self.dataService = dataService
         createPhotosDirectoryIfNeeded()
+        
+        // Configure caches for memory pressure handling
+        imageCache.countLimit = 30  // Max 30 full images
+        imageCache.totalCostLimit = 50 * 1024 * 1024  // 50MB max
+        
+        thumbnailCache.countLimit = 100  // Max 100 thumbnails
+        thumbnailCache.totalCostLimit = 10 * 1024 * 1024  // 10MB max
+        
+        // Listen for memory warnings
+        NotificationCenter.default.addObserver(
+            self,
+            selector: #selector(handleMemoryPressure),
+            name: UIApplication.didReceiveMemoryWarningNotification,
+            object: nil
+        )
+    }
+    
+    @objc private func handleMemoryPressure() {
+        imageCache.removeAllObjects()
+        thumbnailCache.removeAllObjects()
+        print("📸 Cleared photo caches due to memory pressure")
     }
     
     // MARK: - Directory Management
@@ -55,10 +83,14 @@ public final class PhotoService: ObservableObject {
         guard let plantId = plant.id else {
             throw PhotoError.invalidPlantID
         }
+        
+        // Create directory if needed
         createPlantDirectoryIfNeeded(for: plantId)
         
-        // Process and compress image
-        let processedImage = await processImage(image)
+        // Process and compress image in background
+        let processedImage = try await Task.detached(priority: .userInitiated) {
+            await self.processImage(image)
+        }.value
         
         // Generate unique filename
         let timestamp = Date()
@@ -68,12 +100,14 @@ public final class PhotoService: ObservableObject {
         
         let filePath = plantPhotoPath(for: plantId).appendingPathComponent(filename)
         
-        // Save image to disk
+        // Save image to disk in background
         guard let imageData = processedImage.jpegData(compressionQuality: compressionQuality) else {
             throw PhotoError.compressionFailed
         }
         
-        try imageData.write(to: filePath)
+        try await Task.detached(priority: .background) {
+            try imageData.write(to: filePath)
+        }.value
         
         // Create and save photo metadata
         let photoMetadata = PlantPhoto(
@@ -108,34 +142,66 @@ public final class PhotoService: ObservableObject {
     // MARK: - Photo Loading
     
     public func loadPhoto(from metadata: PlantPhoto) async -> UIImage? {
-        let filePath = URL(fileURLWithPath: metadata.filePath)
+        let cacheKey = NSString(string: metadata.id.uuidString)
         
-        guard FileManager.default.fileExists(atPath: metadata.filePath),
-              let imageData = try? Data(contentsOf: filePath),
-              let image = UIImage(data: imageData) else {
-            return nil
+        // Check cache first
+        if let cachedImage = imageCache.object(forKey: cacheKey) {
+            return cachedImage
         }
         
-        return image
+        // Load from disk in background
+        return await Task.detached(priority: .userInitiated) { [weak self] in
+            let filePath = URL(fileURLWithPath: metadata.filePath)
+            
+            guard FileManager.default.fileExists(atPath: metadata.filePath),
+                  let imageData = try? Data(contentsOf: filePath),
+                  let image = UIImage(data: imageData) else {
+                return nil
+            }
+            
+            // Cache the image
+            await MainActor.run {
+                self?.imageCache.setObject(image, forKey: cacheKey, cost: imageData.count)
+            }
+            
+            return image
+        }.value
     }
     
     public func loadThumbnail(from metadata: PlantPhoto, size: CGSize = CGSize(width: 150, height: 150)) async -> UIImage? {
+        let cacheKey = NSString(string: "thumb_\(metadata.id.uuidString)_\(Int(size.width))x\(Int(size.height))")
+        
+        // Check thumbnail cache first
+        if let cachedThumbnail = thumbnailCache.object(forKey: cacheKey) {
+            return cachedThumbnail
+        }
+        
         guard let fullImage = await loadPhoto(from: metadata) else {
             return nil
         }
         
-        return await createThumbnail(from: fullImage, size: size)
+        let thumbnail = await createThumbnail(from: fullImage, size: size)
+        
+        // Cache the thumbnail
+        thumbnailCache.setObject(thumbnail, forKey: cacheKey)
+        
+        return thumbnail
     }
     
-    public func getPhotos(for plant: Plant, type: PhotoType? = nil) async -> [PlantPhoto] {
+    public func getPhotos(for plant: Plant, type: PhotoType? = nil, limit: Int = 50) async -> [PlantPhoto] {
         guard let plantId = plant.id else { return [] }
+        
+        // Load metadata progressively
         let allPhotos = await getAllPhotosMetadata(for: plantId)
         
+        var filtered = allPhotos
         if let type = type {
-            return allPhotos.filter { $0.photoType == type }
+            filtered = allPhotos.filter { $0.photoType == type }
         }
         
-        return allPhotos.sorted { $0.dateTaken > $1.dateTaken }
+        // Apply limit for memory management
+        let sorted = filtered.sorted { $0.dateTaken > $1.dateTaken }
+        return Array(sorted.prefix(limit))
     }
     
     public func getRecentPhotos(for plant: Plant, limit: Int = 5) async -> [PlantPhoto] {
@@ -232,13 +298,18 @@ public final class PhotoService: ObservableObject {
     // MARK: - Metadata Management
     
     private func savePhotoMetadata(_ photo: PlantPhoto) async {
-        var existingPhotos = await getAllPhotosMetadata(for: photo.plantId)
-        existingPhotos.append(photo)
-        
-        let key = "plant_photos_\(photo.plantId.uuidString)"
-        if let encodedData = try? JSONEncoder().encode(existingPhotos) {
-            try? KeychainManager.shared.store(encodedData, for: key)
-        }
+        // Batch metadata updates
+        await Task.detached(priority: .background) { [weak self] in
+            var existingPhotos = await self?.getAllPhotosMetadata(for: photo.plantId) ?? []
+            existingPhotos.append(photo)
+            
+            let key = "plant_photos_\(photo.plantId.uuidString)"
+            if let encodedData = try? JSONEncoder().encode(existingPhotos) {
+                await MainActor.run {
+                    try? KeychainManager.shared.store(encodedData, for: key)
+                }
+            }
+        }.value
     }
     
     private func getAllPhotosMetadata(for plantId: UUID) async -> [PlantPhoto] {

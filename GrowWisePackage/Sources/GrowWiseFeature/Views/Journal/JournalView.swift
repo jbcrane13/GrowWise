@@ -11,11 +11,16 @@ public struct JournalView: View {
     @StateObject private var photoService = PhotoService(dataService: try! DataService())
     
     @State private var searchText = ""
+    @State private var debouncedSearchText = ""
     @State private var selectedPlant: Plant?
     @State private var selectedEntryType: JournalEntryType?
     @State private var showingAddEntry = false
     @State private var selectedEntry: JournalEntry?
     @State private var sortOrder = SortOrder.dateDescending
+    @State private var isLoadingMore = false
+    @State private var visibleEntryCount = 20
+    @State private var searchDebounceTask: Task<Void, Never>?
+    @State private var filteredCache: [JournalEntry]?
     
     public init() {}
     
@@ -31,6 +36,19 @@ public struct JournalView: View {
                         
                         TextField("Search journal entries...", text: $searchText)
                             .textFieldStyle(RoundedBorderTextFieldStyle())
+                            .onChange(of: searchText) { _, newValue in
+                                // Debounce search input
+                                searchDebounceTask?.cancel()
+                                searchDebounceTask = Task {
+                                    try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
+                                    if !Task.isCancelled {
+                                        await MainActor.run {
+                                            debouncedSearchText = newValue
+                                            filteredCache = nil // Clear cache on search change
+                                        }
+                                    }
+                                }
+                            }
                     }
                     .padding(.horizontal)
                     
@@ -90,14 +108,14 @@ public struct JournalView: View {
                 .padding(.horizontal)
                 .padding(.top, 8)
                 
-                // Journal entries list
-                if filteredEntries.isEmpty {
+                // Journal entries list with pagination
+                if paginatedEntries.isEmpty {
                     EmptyJournalView(hasEntries: !journalEntries.isEmpty)
                 } else {
                     List {
-                        ForEach(groupedEntries.keys.sorted(by: sortGroupsByDate), id: \.self) { date in
+                        ForEach(paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate), id: \.self) { date in
                             Section {
-                                ForEach(groupedEntries[date] ?? []) { entry in
+                                ForEach(paginatedGroupedEntries[date] ?? [], id: \.id) { entry in
                                     JournalEntryRow(
                                         entry: entry,
                                         photoService: photoService
@@ -107,13 +125,33 @@ public struct JournalView: View {
                                     }
                                 }
                                 .onDelete { indexSet in
-                                    deleteEntries(at: indexSet, in: groupedEntries[date] ?? [])
+                                    deleteEntries(at: indexSet, in: paginatedGroupedEntries[date] ?? [])
                                 }
                             } header: {
                                 Text(formatSectionDate(date))
                                     .font(.headline)
                                     .foregroundColor(.primary)
                             }
+                        }
+                        
+                        // Load more button
+                        if hasMoreEntries {
+                            HStack {
+                                Spacer()
+                                if isLoadingMore {
+                                    ProgressView()
+                                        .padding()
+                                } else {
+                                    Button("Load More") {
+                                        loadMoreEntries()
+                                    }
+                                    .padding()
+                                    .foregroundColor(.accentColor)
+                                }
+                                Spacer()
+                            }
+                            .listRowBackground(Color.clear)
+                            .listRowInsets(EdgeInsets())
                         }
                     }
                     .listStyle(InsetGroupedListStyle())
@@ -145,15 +183,22 @@ public struct JournalView: View {
     // MARK: - Computed Properties
     
     private var filteredEntries: [JournalEntry] {
+        // Return cached results if available
+        if let cached = filteredCache {
+            return cached
+        }
+        
+        // Background filtering for large datasets
         var entries = journalEntries
         
-        // Filter by search text
-        if !searchText.isEmpty {
+        // Filter by debounced search text
+        if !debouncedSearchText.isEmpty {
+            let searchQuery = debouncedSearchText.lowercased()
             entries = entries.filter { entry in
-                entry.title.localizedCaseInsensitiveContains(searchText) ||
-                entry.content.localizedCaseInsensitiveContains(searchText) ||
-                (entry.plant?.name?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                entry.tags.contains { $0.localizedCaseInsensitiveContains(searchText) }
+                entry.title.localizedCaseInsensitiveContains(searchQuery) ||
+                entry.content.localizedCaseInsensitiveContains(searchQuery) ||
+                (entry.plant?.name?.localizedCaseInsensitiveContains(searchQuery) ?? false) ||
+                entry.tags.contains { $0.localizedCaseInsensitiveContains(searchQuery) }
             }
         }
         
@@ -179,11 +224,21 @@ public struct JournalView: View {
             entries.sort { $0.entryType.displayName < $1.entryType.displayName }
         }
         
+        // Cache the filtered results
+        filteredCache = entries
         return entries
     }
     
-    private var groupedEntries: [String: [JournalEntry]] {
-        Dictionary(grouping: filteredEntries) { entry in
+    private var paginatedEntries: [JournalEntry] {
+        Array(filteredEntries.prefix(visibleEntryCount))
+    }
+    
+    private var hasMoreEntries: Bool {
+        filteredEntries.count > visibleEntryCount
+    }
+    
+    private var paginatedGroupedEntries: [String: [JournalEntry]] {
+        Dictionary(grouping: paginatedEntries) { entry in
             formatDateForGrouping(entry.entryDate)
         }
     }
@@ -229,6 +284,19 @@ public struct JournalView: View {
             return lhs > rhs
         default:
             return lhs > rhs // Default to newest first
+        }
+    }
+    
+    private func loadMoreEntries() {
+        isLoadingMore = true
+        
+        // Simulate async loading
+        Task {
+            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
+            await MainActor.run {
+                visibleEntryCount += 20
+                isLoadingMore = false
+            }
         }
     }
 }

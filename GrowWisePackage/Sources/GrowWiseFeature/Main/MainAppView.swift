@@ -4,35 +4,61 @@ import GrowWiseModels
 import GrowWiseServices
 
 public struct MainAppView: View {
-    @StateObject private var dataService: DataService = {
-        do {
-            return try DataService()
-        } catch {
-            print("Failed to create DataService: \(error)")
-            print("Using fallback DataService to prevent crashes")
-            return DataService.createFallback()
-        }
-    }()
+    @State private var dataService: DataService? = nil
     @StateObject private var locationService = LocationService.shared
     @StateObject private var notificationService = NotificationService.shared
     @State private var showingOnboarding = false
     @State private var selectedTab: TabSelection = .home
+    @State private var isInitializing = true
+    @State private var initializationError: Error?
+    @State private var cachedOnboardingStatus: Bool?
     
     public init() {
-        // Using real DataService with graceful fallback handling
+        // Cache onboarding status to avoid repeated UserDefaults reads
+        self.cachedOnboardingStatus = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
     }
     
     public var body: some View {
         Group {
-            if shouldShowOnboarding {
+            if isInitializing {
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.5)
+                    Text("Loading GrowWise...")
+                        .font(.headline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
+                .background(Color(UIColor.systemBackground))
+                .task {
+                    await initializeDataService()
+                }
+            } else if let error = initializationError {
+                ErrorView(error: error) {
+                    Task {
+                        await initializeDataService()
+                    }
+                }
+            } else if shouldShowOnboarding {
                 OnboardingView()
-            } else {
+            } else if let ds = dataService {
                 mainTabView
+                    .environmentObject(ds)
+                    .environmentObject(locationService)
+                    .environmentObject(notificationService)
+            } else {
+                VStack(spacing: 16) {
+                    ProgressView()
+                        .scaleEffect(1.2)
+                    Text("Preparing services...")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                }
+                .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
         .onAppear {
             checkOnboardingStatus()
-            seedDatabaseIfNeeded()
         }
     }
     
@@ -59,12 +85,14 @@ public struct MainAppView: View {
                 }
                 .tag(TabSelection.plantGuide)
             
-            JournalView()
-                .tabItem {
-                    Image(systemName: "book.pages.fill")
-                    Text("Journal")
-                }
-                .tag(TabSelection.journal)
+            if let ds = dataService {
+                JournalView(photoService: PhotoService(dataService: ds))
+                    .tabItem {
+                        Image(systemName: "book.pages.fill")
+                        Text("Journal")
+                    }
+                    .tag(TabSelection.journal)
+            }
             
             TutorialsView()
                 .tabItem {
@@ -73,22 +101,46 @@ public struct MainAppView: View {
                 }
                 .tag(TabSelection.tutorials)
         }
-        .environmentObject(dataService)
-        .environmentObject(locationService)
-        .environmentObject(notificationService)
     }
     
     private var shouldShowOnboarding: Bool {
-        !UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        !(cachedOnboardingStatus ?? false)
     }
     
     private func checkOnboardingStatus() {
+        // Use cached status to avoid UserDefaults read
         showingOnboarding = shouldShowOnboarding
     }
     
-    private func seedDatabaseIfNeeded() {
-        // Database seeding with real DataService
-        print("Database seeding available - using real DataService")
+    @MainActor
+    private func initializeDataService() async {
+        isInitializing = true
+        initializationError = nil
+        
+        do {
+            self.dataService = try await DataService()
+            
+            // Defer non-critical initialization
+            Task.detached(priority: .background) {
+                await seedDatabaseIfNeeded()
+            }
+        } catch {
+            print("Failed to create DataService: \(error)")
+            initializationError = error
+            // Use fallback
+            self.dataService = DataService.createFallback
+        }
+        
+        isInitializing = false
+    }
+    
+    @MainActor
+    private func seedDatabaseIfNeeded() async {
+        // Database seeding in background to avoid blocking UI
+        await Task.detached(priority: .background) {
+            print("Database seeding available - using real DataService")
+            // Actual seeding logic would go here
+        }.value
     }
 }
 
