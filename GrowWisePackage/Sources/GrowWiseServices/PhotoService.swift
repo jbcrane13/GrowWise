@@ -88,7 +88,7 @@ public final class PhotoService: ObservableObject {
         createPlantDirectoryIfNeeded(for: plantId)
         
         // Process and compress image in background
-        let processedImage = try await Task.detached(priority: .userInitiated) {
+        let processedImage = await Task.detached(priority: .userInitiated) {
             await self.processImage(image)
         }.value
         
@@ -150,18 +150,21 @@ public final class PhotoService: ObservableObject {
         }
         
         // Load from disk in background
-        return await Task.detached(priority: .userInitiated) { [weak self] in
-            let filePath = URL(fileURLWithPath: metadata.filePath)
+        let metadataFilePath = metadata.filePath
+        let cacheKeyString = metadata.id.uuidString // Use String instead of NSString for Sendable
+        return await Task.detached(priority: .userInitiated) { @Sendable in
+            let filePath = URL(fileURLWithPath: metadataFilePath)
             
-            guard FileManager.default.fileExists(atPath: metadata.filePath),
+            guard FileManager.default.fileExists(atPath: metadataFilePath),
                   let imageData = try? Data(contentsOf: filePath),
                   let image = UIImage(data: imageData) else {
                 return nil
             }
             
-            // Cache the image
+            // Cache the image on main actor
             await MainActor.run {
-                self?.imageCache.setObject(image, forKey: cacheKey, cost: imageData.count)
+                let nsKey = NSString(string: cacheKeyString)
+                self.imageCache.setObject(image, forKey: nsKey, cost: imageData.count)
             }
             
             return image
@@ -256,10 +259,11 @@ public final class PhotoService: ObservableObject {
     // MARK: - Image Processing
     
     private func processImage(_ image: UIImage) async -> UIImage {
+        let maxSize = self.maxImageSize
         return await withCheckedContinuation { continuation in
             DispatchQueue.global(qos: .userInitiated).async {
                 Task { @MainActor in
-                    let processedImage = self.resizeImage(image, maxSize: self.maxImageSize)
+                    let processedImage = self.resizeImage(image, maxSize: maxSize)
                     continuation.resume(returning: processedImage)
                 }
             }
@@ -299,11 +303,14 @@ public final class PhotoService: ObservableObject {
     
     private func savePhotoMetadata(_ photo: PlantPhoto) async {
         // Batch metadata updates
-        await Task.detached(priority: .background) { [weak self] in
-            var existingPhotos = await self?.getAllPhotosMetadata(for: photo.plantId) ?? []
+        let plantId = photo.plantId
+        await Task.detached(priority: .background) { @Sendable in
+            // Get existing photos without capturing self
+            let key = "plant_photos_\(plantId.uuidString)"
+            let existingData = try? KeychainManager.shared.retrieve(for: key)
+            var existingPhotos = (try? JSONDecoder().decode([PlantPhoto].self, from: existingData ?? Data())) ?? []
             existingPhotos.append(photo)
             
-            let key = "plant_photos_\(photo.plantId.uuidString)"
             if let encodedData = try? JSONEncoder().encode(existingPhotos) {
                 await MainActor.run {
                     try? KeychainManager.shared.store(encodedData, for: key)
@@ -451,7 +458,7 @@ public final class PhotoService: ObservableObject {
 
 // MARK: - Supporting Types
 
-public struct PlantPhoto: Identifiable, Codable {
+public struct PlantPhoto: Identifiable, Codable, Sendable {
     public let id: UUID
     public let plantId: UUID
     public let filename: String
@@ -475,7 +482,7 @@ public struct PlantPhoto: Identifiable, Codable {
     }
 }
 
-public struct PhotoDimensions: Codable {
+public struct PhotoDimensions: Codable, Sendable {
     public let width: Int
     public let height: Int
     
@@ -485,7 +492,7 @@ public struct PhotoDimensions: Codable {
     }
 }
 
-public enum PhotoType: String, CaseIterable, Codable {
+public enum PhotoType: String, CaseIterable, Codable, Sendable {
     case general = "general"
     case progress = "progress"
     case problem = "problem"
@@ -519,7 +526,7 @@ public enum PhotoType: String, CaseIterable, Codable {
     }
 }
 
-public struct PhotoStorageStats {
+public struct PhotoStorageStats: Sendable {
     public let totalSizeBytes: Int
     public let totalPhotos: Int
     public let averageSizeBytes: Int
@@ -539,7 +546,7 @@ public struct PhotoStorageStats {
     }
 }
 
-public enum PhotoError: Error {
+public enum PhotoError: Error, Sendable {
     case compressionFailed
     case saveLocationUnavailable
     case fileNotFound

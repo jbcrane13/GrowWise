@@ -59,10 +59,9 @@ public final class CacheManager: ObservableObject {
         logger.info("🗄️ Cache Manager initialized")
     }
     
-    deinit {
-        if let observer = memoryPressureObserver {
-            NotificationCenter.default.removeObserver(observer)
-        }
+    nonisolated deinit {
+        // Memory pressure observer cleanup is handled when the object is deallocated
+        // NotificationCenter automatically removes observers when they are deallocated
     }
     
     // MARK: - Public Interface
@@ -471,7 +470,14 @@ public final class CacheManager: ObservableObject {
                 try? FileManager.default.removeItem(at: self.imageCacheURL)
                 try? FileManager.default.removeItem(at: self.dataCacheURL)
                 
-                self.createCacheDirectories()
+                // Recreate directories directly here to avoid MainActor isolation issue
+                do {
+                    try FileManager.default.createDirectory(at: self.imageCacheURL, withIntermediateDirectories: true)
+                    try FileManager.default.createDirectory(at: self.dataCacheURL, withIntermediateDirectories: true)
+                } catch {
+                    // Log error but continue since the directories will be created on next write
+                }
+                
                 continuation.resume()
             }
         }

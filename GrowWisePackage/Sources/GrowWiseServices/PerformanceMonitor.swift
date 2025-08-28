@@ -304,7 +304,7 @@ public final class PerformanceMonitor: ObservableObject {
 
 // MARK: - Supporting Types
 
-public struct PerformanceBudgets {
+public struct PerformanceBudgets: Sendable {
     public let appLaunchTimeLimit: TimeInterval = 2.0 // 2 seconds
     public let queryTimeLimit: TimeInterval = 0.5 // 500ms
     public let photoOperationTimeLimit: TimeInterval = 1.0 // 1 second
@@ -313,7 +313,7 @@ public struct PerformanceBudgets {
     public let minimumFrameRate: Double = 50.0 // 50 FPS minimum
 }
 
-public struct QueryMetric {
+public struct QueryMetric: Sendable {
     public let identifier: String
     public let duration: TimeInterval
     public let resultCount: Int
@@ -321,7 +321,7 @@ public struct QueryMetric {
     public let timestamp: Date
 }
 
-public struct PhotoOperationMetric {
+public struct PhotoOperationMetric: Sendable {
     public let type: PhotoOperationType
     public let duration: TimeInterval
     public let fileSize: Int?
@@ -329,7 +329,7 @@ public struct PhotoOperationMetric {
     public let timestamp: Date
 }
 
-public enum PhotoOperationType: String {
+public enum PhotoOperationType: String, Sendable {
     case save = "Save"
     case load = "Load"
     case process = "Process"
@@ -337,7 +337,7 @@ public enum PhotoOperationType: String {
     case delete = "Delete"
 }
 
-public struct PerformanceReport {
+public struct PerformanceReport: Sendable {
     public let timestamp: Date
     public let appLaunchTime: TimeInterval
     public let averageMemoryUsage: Double
@@ -352,7 +352,8 @@ public struct PerformanceReport {
 
 // MARK: - Tracker Classes
 
-public class QueryTracker {
+@MainActor
+public class QueryTracker: Sendable {
     private let identifier: String
     private let monitor: PerformanceMonitor
     private let startTime: CFAbsoluteTime
@@ -383,13 +384,12 @@ public class QueryTracker {
             timestamp: Date()
         )
         
-        Task { @MainActor in
-            monitor.recordQueryMetric(metric)
-        }
+        monitor.recordQueryMetric(metric)
     }
 }
 
-public class PhotoOperationTracker {
+@MainActor
+public class PhotoOperationTracker: Sendable {
     private let type: PhotoOperationType
     private let monitor: PerformanceMonitor
     private let startTime: CFAbsoluteTime
@@ -415,8 +415,6 @@ public class PhotoOperationTracker {
             timestamp: Date()
         )
         
-        Task { @MainActor in
-            monitor.recordPhotoOperationMetric(metric)
-        }
+        monitor.recordPhotoOperationMetric(metric)
     }
 }

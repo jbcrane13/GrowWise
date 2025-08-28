@@ -80,10 +80,8 @@ public final class BiometricAuthenticationManager: ObservableObject, BiometricAu
         // Register self with dependency container after initialization
         Task { @MainActor in
             AuthenticationDependencyContainer.shared.setBiometricAuthentication(self)
-            // Get keychain storage from container if available
-            if let storage = try? AuthenticationDependencyContainer.shared.keychainStorage {
-                self.keychainStorage = storage
-            }
+            // Get keychain storage from container
+            self.keychainStorage = AuthenticationDependencyContainer.shared.keychainStorage
         }
     }
     
