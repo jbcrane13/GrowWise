@@ -1,5 +1,10 @@
 import Foundation
+#if canImport(Combine)
+import Combine
+#endif
+#if canImport(SwiftUI)
 import SwiftUI
+#endif
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -443,7 +448,7 @@ public final class PhotoService: ObservableObject {
 #else
 // Placeholder for non-iOS platforms  
 @MainActor
-public final class PhotoService: ObservableObject {
+public final class PhotoService {
     public init() {}
     
     public func requestPhotoLibraryPermission() async -> Bool {
@@ -568,3 +573,4 @@ public enum PhotoError: Error, Sendable {
         }
     }
 }
+

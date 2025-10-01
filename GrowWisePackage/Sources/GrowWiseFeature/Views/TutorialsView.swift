@@ -60,24 +60,23 @@ public struct TutorialsView: View {
     private func loadDataService() async {
         isLoading = true
         loadError = nil
-        
-        // Try async initialization in background
-        await Task.detached(priority: .userInitiated) {
-            do {
-                let service = try await DataService(isAsync: true)
-                await MainActor.run {
-                    self.dataService = service
-                    self.isLoading = false
-                }
-            } catch {
-                await MainActor.run {
-                    self.loadError = error
-                    self.isLoading = false
-                    // Use fallback as last resort
-                    self.dataService = DataService.createFallback()
-                }
+
+        do {
+            let service = try await MainActor.run {
+                try DataService()
             }
-        }.value
+            await MainActor.run {
+                self.dataService = service
+                self.isLoading = false
+            }
+        } catch {
+            await MainActor.run {
+                self.loadError = error
+                self.isLoading = false
+                // Use fallback as last resort
+                self.dataService = DataService.createFallback()
+            }
+        }
     }
     
     private func preloadTutorialData() async {

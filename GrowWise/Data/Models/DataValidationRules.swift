@@ -1,6 +1,7 @@
 import Foundation
 import SwiftData
 import GrowWiseModels
+import GrowWiseServices
 
 /// Comprehensive data validation rules for GrowWise entities
 struct DataValidationRules {
@@ -400,40 +401,168 @@ struct DataValidationRules {
     }
     
     // MARK: - Batch Validation
-    
+
+    /// Validates a sample of all entities with memory-safe limits
+    /// Validation queries are limited to prevent memory exhaustion. For full validation, use paginated approach.
     static func validateAllEntities(in context: ModelContext) -> [String: [ValidationResult]] {
+        let validationLimit = 100 // Limit validation to prevent memory issues
         var results: [String: [ValidationResult]] = [:]
-        
+
         do {
-            // Validate all users
-            let userDescriptor = FetchDescriptor<User>()
+            // Validate users (limited sample)
+            print("Validating users (limit: \(validationLimit))...")
+            var userDescriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.createdDate, order: .reverse)])
+            userDescriptor.fetchLimit = validationLimit
             let users = try context.fetch(userDescriptor)
             results["User"] = users.map { validateUser($0) }
-            
-            // Validate all plants
-            let plantDescriptor = FetchDescriptor<Plant>()
+            if users.count == validationLimit {
+                print("⚠️ User validation limited to \(validationLimit) records. Some users not validated.")
+            }
+
+            // Validate plants (limited sample)
+            print("Validating plants (limit: \(validationLimit))...")
+            var plantDescriptor = FetchDescriptor<Plant>(sortBy: [SortDescriptor(\.name)])
+            plantDescriptor.fetchLimit = validationLimit
             let plants = try context.fetch(plantDescriptor)
             results["Plant"] = plants.map { validatePlant($0) }
-            
-            // Validate all gardens
-            let gardenDescriptor = FetchDescriptor<Garden>()
+            if plants.count == validationLimit {
+                print("⚠️ Plant validation limited to \(validationLimit) records. Some plants not validated.")
+            }
+
+            // Validate gardens (limited sample)
+            print("Validating gardens (limit: \(validationLimit))...")
+            var gardenDescriptor = FetchDescriptor<Garden>(sortBy: [SortDescriptor(\.name)])
+            gardenDescriptor.fetchLimit = validationLimit
             let gardens = try context.fetch(gardenDescriptor)
             results["Garden"] = gardens.map { validateGarden($0) }
-            
-            // Validate all plant reminders
-            let reminderDescriptor = FetchDescriptor<PlantReminder>()
+            if gardens.count == validationLimit {
+                print("⚠️ Garden validation limited to \(validationLimit) records. Some gardens not validated.")
+            }
+
+            // Validate plant reminders (limited sample)
+            print("Validating reminders (limit: \(validationLimit))...")
+            var reminderDescriptor = FetchDescriptor<PlantReminder>(sortBy: [SortDescriptor(\.nextDueDate)])
+            reminderDescriptor.fetchLimit = validationLimit
             let reminders = try context.fetch(reminderDescriptor)
             results["PlantReminder"] = reminders.map { validateReminder($0) }
-            
-            // Validate all journal entries
-            let entryDescriptor = FetchDescriptor<JournalEntry>()
+            if reminders.count == validationLimit {
+                print("⚠️ Reminder validation limited to \(validationLimit) records. Some reminders not validated.")
+            }
+
+            // Validate journal entries (limited sample)
+            print("Validating journal entries (limit: \(validationLimit))...")
+            var entryDescriptor = FetchDescriptor<JournalEntry>(sortBy: [SortDescriptor(\.entryDate, order: .reverse)])
+            entryDescriptor.fetchLimit = validationLimit
             let entries = try context.fetch(entryDescriptor)
             results["JournalEntry"] = entries.map { validateJournalEntry($0) }
-            
+            if entries.count == validationLimit {
+                print("⚠️ Journal entry validation limited to \(validationLimit) records. Some entries not validated.")
+            }
+
         } catch {
             print("Error fetching entities for validation: \(error)")
         }
-        
+
         return results
+    }
+
+    /// Validates all entities in batches using autoreleasepool for memory efficiency
+    /// This is the preferred method for production use with large datasets
+    @MainActor
+    static func validateAllEntitiesPaginated(in context: ModelContext, batchSize: Int = 50) async -> [String: [ValidationResult]] {
+        var results: [String: [ValidationResult]] = [:]
+        let performanceMonitor = PerformanceMonitor()
+        let memoryBefore = performanceMonitor.currentMemoryUsage
+        print("Starting paginated validation - Memory: \(memoryBefore)MB")
+
+        do {
+            // Validate users in batches
+            results["User"] = try await validateEntityBatch(
+                context: context,
+                entityType: User.self,
+                batchSize: batchSize,
+                validator: validateUser
+            )
+
+            // Validate plants in batches
+            results["Plant"] = try await validateEntityBatch(
+                context: context,
+                entityType: Plant.self,
+                batchSize: batchSize,
+                validator: validatePlant
+            )
+
+            // Validate gardens in batches
+            results["Garden"] = try await validateEntityBatch(
+                context: context,
+                entityType: Garden.self,
+                batchSize: batchSize,
+                validator: validateGarden
+            )
+
+            // Validate reminders in batches
+            results["PlantReminder"] = try await validateEntityBatch(
+                context: context,
+                entityType: PlantReminder.self,
+                batchSize: batchSize,
+                validator: validateReminder
+            )
+
+            // Validate journal entries in batches
+            results["JournalEntry"] = try await validateEntityBatch(
+                context: context,
+                entityType: JournalEntry.self,
+                batchSize: batchSize,
+                validator: validateJournalEntry
+            )
+
+        } catch {
+            print("Error in paginated validation: \(error)")
+        }
+
+        let memoryAfter = performanceMonitor.currentMemoryUsage
+        let memoryDelta = memoryAfter - memoryBefore
+        print("Validation memory usage: \(memoryDelta)MB")
+
+        if memoryDelta > 10 {
+            print("⚠️ High memory usage during validation: \(memoryDelta)MB")
+        }
+
+        return results
+    }
+
+    /// Helper method to validate entities in batches with autoreleasepool
+    @MainActor
+    private static func validateEntityBatch<T: PersistentModel>(
+        context: ModelContext,
+        entityType: T.Type,
+        batchSize: Int,
+        validator: @escaping (T) -> ValidationResult
+    ) async throws -> [ValidationResult] {
+        var allResults: [ValidationResult] = []
+        var offset = 0
+        var hasMore = true
+
+        while hasMore {
+            // Wrap batch processing in autoreleasepool
+            let batchResults = try await autoreleasepool { () -> [ValidationResult] in
+                var descriptor = FetchDescriptor<T>()
+                descriptor.fetchLimit = batchSize
+                descriptor.fetchOffset = offset
+
+                let entities = try context.fetch(descriptor)
+                hasMore = entities.count == batchSize
+                offset += batchSize
+
+                return entities.map(validator)
+            }
+
+            allResults.append(contentsOf: batchResults)
+
+            // Yield control to keep UI responsive
+            await Task.yield()
+        }
+
+        return allResults
     }
 }

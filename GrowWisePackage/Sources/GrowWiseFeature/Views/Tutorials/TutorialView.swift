@@ -142,10 +142,11 @@ public struct TutorialView: View {
             return categoryTutorials
         }
         
+        let lowercasedSearch = searchText.lowercased()
         return categoryTutorials.filter { tutorial in
-            tutorial.title.localizedCaseInsensitiveContains(searchText) ||
-            tutorial.description.localizedCaseInsensitiveContains(searchText) ||
-            tutorial.subtitle.localizedCaseInsensitiveContains(searchText)
+            tutorial.title.lowercased().contains(lowercasedSearch) ||
+            tutorial.description.lowercased().contains(lowercasedSearch) ||
+            tutorial.subtitle.lowercased().contains(lowercasedSearch)
         }
     }
 }

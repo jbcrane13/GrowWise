@@ -3,21 +3,23 @@ import CoreLocation
 import WeatherKit
 import GrowWiseModels
 
+/// Location and weather service using @Observable pattern
+/// Access via @Environment(LocationService.self) in views
+/// Singleton pattern removed - injected via environment
 @MainActor
-public final class LocationService: NSObject, ObservableObject, Sendable {
-    public static let shared = LocationService()
+@Observable public final class LocationService: NSObject, Sendable {
     
-    @Published public var authorizationStatus: CLAuthorizationStatus = .notDetermined
-    @Published public var currentLocation: CLLocation?
-    @Published public var hardinessZone: String?
-    @Published public var weatherData: WeatherData?
-    @Published public var isLoading: Bool = false
-    @Published public var error: LocationError?
+    public var authorizationStatus: CLAuthorizationStatus = .notDetermined
+    public var currentLocation: CLLocation?
+    public var hardinessZone: String?
+    public var weatherData: WeatherData?
+    public var isLoading: Bool = false
+    public var error: LocationError?
     
     private let locationManager = CLLocationManager()
     private let weatherService = WeatherService.shared
     
-    override init() {
+    public override init() {
         super.init()
         locationManager.delegate = self
         locationManager.desiredAccuracy = kCLLocationAccuracyBest

@@ -2,13 +2,15 @@ import Foundation
 import UserNotifications
 import GrowWiseModels
 
+/// Notification management service using @Observable pattern
+/// Access via @Environment(NotificationService.self) in views
+/// Singleton pattern removed - injected via environment
 @MainActor
-public final class NotificationService: NSObject, ObservableObject {
-    public static let shared = NotificationService()
+@Observable public final class NotificationService: NSObject {
     
-    @Published public var isAuthorized = false
-    @Published public var badgeCount = 0
-    @Published public var authorizationStatus: UNAuthorizationStatus = .notDetermined
+    public var isAuthorized = false
+    public var badgeCount = 0
+    public var authorizationStatus: UNAuthorizationStatus = .notDetermined
     
     private let notificationCenter: UNUserNotificationCenter
     
@@ -17,7 +19,7 @@ public final class NotificationService: NSObject, ObservableObject {
         return isAuthorized
     }
     
-    override init() {
+    public override init() {
         self.notificationCenter = UNUserNotificationCenter.current()
         super.init()
         

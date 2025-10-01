@@ -1,7 +1,15 @@
 import Foundation
+#if canImport(UIKit)
 import UIKit
+import MobileCoreServices
+#elseif canImport(AppKit)
+import AppKit
+import CoreServices
+#endif
 import os.log
-import BackgroundTasks
+#if canImport(BackgroundTasks)
+@preconcurrency import BackgroundTasks
+#endif
 
 /// Background task management system for heavy operations
 @MainActor
@@ -36,10 +44,12 @@ public final class BackgroundTaskManager: ObservableObject {
         configureOperationQueues()
         restorePersistedTasks()
         startResourceMonitoring()
-        
+
         // Register for background tasks
+        #if canImport(BackgroundTasks)
         registerBackgroundTasks()
-        
+        #endif
+
         logger.info("📋 Background Task Manager initialized")
     }
     
@@ -91,9 +101,9 @@ public final class BackgroundTaskManager: ObservableObject {
     
     /// Submit an image processing task
     public func submitImageProcessingTask(
-        image: UIImage,
+        image: PlatformImage,
         operations: [ImageOperation],
-        completion: @escaping (Result<UIImage, Error>) -> Void
+        completion: @escaping (Result<PlatformImage, Error>) -> Void
     ) {
         let operation = ImageProcessingOperation(
             image: image,
@@ -388,59 +398,78 @@ public final class BackgroundTaskManager: ObservableObject {
     }
     
     // MARK: - Background Task Registration
-    
+
+    #if canImport(BackgroundTasks)
     private func registerBackgroundTasks() {
         // Register background tasks with iOS
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: "com.growwise.refresh",
             using: nil
         ) { task in
-            self.handleAppRefresh(task: task as! BGAppRefreshTask)
+            guard let refreshTask = task as? BGAppRefreshTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleAppRefresh(task: refreshTask)
         }
-        
+
         BGTaskScheduler.shared.register(
             forTaskWithIdentifier: "com.growwise.processing",
             using: nil
         ) { task in
-            self.handleProcessing(task: task as! BGProcessingTask)
+            guard let processingTask = task as? BGProcessingTask else {
+                task.setTaskCompleted(success: false)
+                return
+            }
+            self.handleProcessing(task: processingTask)
         }
     }
-    
-    private func handleAppRefresh(task: BGAppRefreshTask) {
+
+    nonisolated private func handleAppRefresh(task: BGAppRefreshTask) {
         // Handle app refresh in background
         task.expirationHandler = {
             task.setTaskCompleted(success: false)
         }
-        
-        Task {
-            // Perform refresh operations
-            await performBackgroundRefresh()
+
+        Task.detached { [weak self] in
+            // Perform refresh operations off main thread
+            await self?.performBackgroundRefresh()
             task.setTaskCompleted(success: true)
         }
     }
-    
-    private func handleProcessing(task: BGProcessingTask) {
+
+    nonisolated private func handleProcessing(task: BGProcessingTask) {
         // Handle background processing
         task.expirationHandler = {
             task.setTaskCompleted(success: false)
         }
-        
-        Task {
-            // Perform processing operations
-            await performBackgroundProcessing()
+
+        Task.detached { [weak self] in
+            // Perform processing operations off main thread
+            await self?.performBackgroundProcessing()
             task.setTaskCompleted(success: true)
         }
     }
-    
-    private func performBackgroundRefresh() async {
+
+    nonisolated private func performBackgroundRefresh() async {
         // Implementation for background refresh
-        logger.info("🔄 Performing background refresh")
+        await MainActor.run {
+            logger.info("🔄 Performing background refresh")
+        }
     }
-    
-    private func performBackgroundProcessing() async {
+
+    nonisolated private func performBackgroundProcessing() async {
         // Implementation for background processing
-        logger.info("⚙️ Performing background processing")
+        await MainActor.run {
+            logger.info("⚙️ Performing background processing")
+        }
     }
+    #else
+    // macOS stub - background tasks not supported
+    private func registerBackgroundTasks() {
+        logger.info("📋 Background tasks not available on macOS")
+    }
+    #endif
 }
 
 // MARK: - Supporting Types
@@ -508,12 +537,12 @@ public enum MemoryPressure {
 
 // MARK: - Custom Operations
 
-class ImageProcessingOperation: Operation {
-    private let image: UIImage
+class ImageProcessingOperation: Operation, @unchecked Sendable {
+    private let image: PlatformImage
     private let operations: [ImageOperation]
-    private let completion: (Result<UIImage, Error>) -> Void
+    private let completion: (Result<PlatformImage, Error>) -> Void
     
-    init(image: UIImage, operations: [ImageOperation], completion: @escaping (Result<UIImage, Error>) -> Void) {
+    init(image: PlatformImage, operations: [ImageOperation], completion: @escaping (Result<PlatformImage, Error>) -> Void) {
         self.image = image
         self.operations = operations
         self.completion = completion
@@ -551,36 +580,125 @@ class ImageProcessingOperation: Operation {
         completion(.success(processedImage))
     }
     
-    private func resize(image: UIImage, to size: CGSize) -> UIImage {
-        let renderer = UIGraphicsImageRenderer(size: size)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: size))
+    private func resize(image: PlatformImage, to size: CGSize) -> PlatformImage {
+        // Thread-safe implementation using Core Graphics
+        #if canImport(UIKit)
+        guard let cgImage = image.cgImage else { return image }
+        #else
+        guard let cgImage = image.cgImage else { return image }
+        #endif
+
+        let colorSpace = CGColorSpaceCreateDeviceRGB()
+        let bitmapInfo = CGBitmapInfo(rawValue: CGImageAlphaInfo.premultipliedLast.rawValue)
+
+        guard let context = CGContext(
+            data: nil,
+            width: Int(size.width),
+            height: Int(size.height),
+            bitsPerComponent: 8,
+            bytesPerRow: 0,
+            space: colorSpace,
+            bitmapInfo: bitmapInfo.rawValue
+        ) else {
+            return image
         }
+
+        context.interpolationQuality = .high
+        context.draw(cgImage, in: CGRect(origin: .zero, size: size))
+
+        guard let resizedCGImage = context.makeImage() else {
+            return image
+        }
+
+        #if canImport(UIKit)
+        return UIImage(cgImage: resizedCGImage, scale: image.scale, orientation: image.imageOrientation)
+        #else
+        return NSImage(cgImage: resizedCGImage, size: size)
+        #endif
     }
     
-    private func compress(image: UIImage, quality: CGFloat) -> UIImage {
-        guard let data = image.jpegData(compressionQuality: quality),
-              let compressedImage = UIImage(data: data) else {
+    private func compress(image: PlatformImage, quality: CGFloat) -> PlatformImage {
+        // Thread-safe compression using Core Graphics
+        #if canImport(UIKit)
+        guard let cgImage = image.cgImage else { return image }
+        #else
+        guard let cgImage = image.cgImage else { return image }
+        #endif
+
+        // Create mutable data for JPEG output
+        guard let mutableData = CFDataCreateMutable(nil, 0),
+              let destination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) else {
+            return image
+        }
+
+        let options: [CFString: Any] = [
+            kCGImageDestinationLossyCompressionQuality: quality
+        ]
+
+        CGImageDestinationAddImage(destination, cgImage, options as CFDictionary)
+
+        guard CGImageDestinationFinalize(destination) else {
+            return image
+        }
+
+        let compressedData = mutableData as Data
+
+        #if canImport(UIKit)
+        guard let compressedImage = UIImage(data: compressedData) else {
             return image
         }
         return compressedImage
+        #else
+        guard let compressedImage = NSImage(data: compressedData) else {
+            return image
+        }
+        return compressedImage
+        #endif
     }
     
-    private func crop(image: UIImage, to rect: CGRect) -> UIImage {
+    private func crop(image: PlatformImage, to rect: CGRect) -> PlatformImage {
+        #if canImport(UIKit)
         guard let cgImage = image.cgImage,
               let croppedCGImage = cgImage.cropping(to: rect) else {
             return image
         }
         return UIImage(cgImage: croppedCGImage)
+        #else
+        // macOS: Safe unwrapping for NSImage cgImage
+        guard let cgImage = image.cgImage else {
+            // Fallback: Use Core Image if cgImage is unavailable
+            guard let ciImage = CIImage(data: image.tiffRepresentation ?? Data()) else {
+                return image
+            }
+            let context = CIContext()
+            let croppedCI = ciImage.cropped(to: rect)
+            guard let cgImageResult = context.createCGImage(croppedCI, from: croppedCI.extent) else {
+                return image
+            }
+            return NSImage(cgImage: cgImageResult, size: rect.size)
+        }
+
+        guard let croppedCGImage = cgImage.cropping(to: rect) else {
+            return image
+        }
+        return NSImage(cgImage: croppedCGImage, size: rect.size)
+        #endif
     }
     
-    private func rotate(image: UIImage, degrees: CGFloat) -> UIImage {
+    private func rotate(image: PlatformImage, degrees: CGFloat) -> PlatformImage {
         let radians = degrees * .pi / 180
         let rotatedSize = CGRect(origin: .zero, size: image.size)
             .applying(CGAffineTransform(rotationAngle: radians))
             .integral.size
-        
-        let renderer = UIGraphicsImageRenderer(size: rotatedSize)
+
+        #if canImport(UIKit)
+        // Account for image scale on iOS
+        let scale = image.scale
+        let scaledSize = CGSize(width: rotatedSize.width * scale, height: rotatedSize.height * scale)
+        let format = UIGraphicsImageRendererFormat()
+        format.scale = scale
+        let renderer = UIGraphicsImageRenderer(size: rotatedSize, format: format)
+
         return renderer.image { context in
             let origin = CGPoint(
                 x: rotatedSize.width / 2,
@@ -595,16 +713,61 @@ class ImageProcessingOperation: Operation {
                 height: image.size.height
             ))
         }
+        #else
+        // macOS: Use Core Image for rotation to maintain fidelity
+        guard let ciImage = CIImage(data: image.tiffRepresentation ?? Data()) else {
+            // Fallback to NSImage drawing if Core Image unavailable
+            let newImage = NSImage(size: rotatedSize)
+            newImage.lockFocus()
+            let transform = NSAffineTransform()
+            transform.translateX(by: rotatedSize.width / 2, yBy: rotatedSize.height / 2)
+            transform.rotate(byRadians: radians)
+            transform.concat()
+            image.draw(in: CGRect(
+                x: -image.size.width / 2,
+                y: -image.size.height / 2,
+                width: image.size.width,
+                height: image.size.height
+            ))
+            newImage.unlockFocus()
+            return newImage
+        }
+
+        let filter = CIFilter(name: "CIAffineTransform")
+        filter?.setValue(ciImage, forKey: kCIInputImageKey)
+        let transform = CGAffineTransform(rotationAngle: radians)
+        filter?.setValue(NSValue(cgAffineTransform: transform), forKey: kCIInputTransformKey)
+
+        guard let outputImage = filter?.outputImage else {
+            return image
+        }
+
+        let context = CIContext()
+        guard let cgImage = context.createCGImage(outputImage, from: outputImage.extent) else {
+            return image
+        }
+
+        return NSImage(cgImage: cgImage, size: rotatedSize)
+        #endif
     }
     
-    private func applyFilter(to image: UIImage, name: String) -> UIImage {
+    private func applyFilter(to image: PlatformImage, name: String) -> PlatformImage {
         // Simplified filter application
         // In production, you'd use Core Image filters
         return image
     }
 }
 
-class DataSyncOperation: Operation {
+#if canImport(AppKit)
+extension NSImage {
+    var cgImage: CGImage? {
+        var rect = CGRect(origin: .zero, size: size)
+        return cgImage(forProposedRect: &rect, context: nil, hints: nil)
+    }
+}
+#endif
+
+class DataSyncOperation: Operation, @unchecked Sendable {
     private let syncType: DataSyncType
     private let completion: (Result<Void, Error>) -> Void
     

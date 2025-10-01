@@ -1,5 +1,4 @@
 import SwiftUI
-import UIKit
 
 struct CompletionView: View {
     @Binding var userProfile: UserProfile

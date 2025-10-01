@@ -5,7 +5,7 @@ import GrowWiseModels
 import GrowWiseServices
 
 public struct MyGardenView: View {
-    @EnvironmentObject private var dataService: DataService
+    @Environment(DataService.self) private var dataService
     @State private var plants: [Plant] = []
     @State private var gardens: [Garden] = []
     @State private var selectedGarden: Garden?
@@ -22,14 +22,11 @@ public struct MyGardenView: View {
     public var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Search and Filter Bar
-                searchAndFilterSection
-                
                 // Garden Selector (if multiple gardens)
                 if gardens.count > 1 {
                     gardenSelectorSection
                 }
-                
+
                 // Plants Grid/List
                 plantsSection
             }
@@ -37,6 +34,7 @@ public struct MyGardenView: View {
             .toolbar {
                 ToolbarItemGroup(placement: .navigationBarTrailing) {
                     sortMenuButton
+                    filterButton
                     addPlantButton
                 }
             }
@@ -52,12 +50,12 @@ public struct MyGardenView: View {
             .refreshable {
                 await loadData()
             }
-            .onAppear {
-                Task {
-                    await loadData()
-                }
+            // Using .task for automatic cancellation when view disappears
+            .task {
+                await loadData()
             }
         }
+        // Native SwiftUI search with built-in debouncing
         .searchable(text: $searchText, prompt: "Search your plants...")
         .onChange(of: searchText) { _, _ in
             filterPlants()
@@ -74,20 +72,6 @@ public struct MyGardenView: View {
         .onChange(of: selectedSortOption) { _, _ in
             sortPlants()
         }
-    }
-    
-    private var searchAndFilterSection: some View {
-        HStack {
-            SearchBarView(text: $searchText)
-            
-            Button(action: { showingFilters = true }) {
-                Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
-                    .foregroundColor(hasActiveFilters ? .blue : .gray)
-            }
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color(.systemBackground))
     }
     
     private var gardenSelectorSection: some View {
@@ -195,6 +179,13 @@ public struct MyGardenView: View {
         }
     }
     
+    private var filterButton: some View {
+        Button(action: { showingFilters = true }) {
+            Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
+                .foregroundColor(hasActiveFilters ? .blue : .gray)
+        }
+    }
+
     private var addPlantButton: some View {
         Button(action: { showingAddPlant = true }) {
             Image(systemName: "plus")
@@ -213,12 +204,13 @@ public struct MyGardenView: View {
             filtered = filtered.filter { $0.garden?.id == selectedGarden.id }
         }
         
-        // Filter by search text
+        // Filter by search text (using lowercased for in-memory filtering)
         if !searchText.isEmpty {
+            let lowercasedSearch = searchText.lowercased()
             filtered = filtered.filter { plant in
-                (plant.name ?? "").localizedCaseInsensitiveContains(searchText) ||
-                (plant.scientificName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                (plant.notes ?? "").localizedCaseInsensitiveContains(searchText)
+                (plant.name ?? "").lowercased().contains(lowercasedSearch) ||
+                (plant.scientificName?.lowercased().contains(lowercasedSearch) ?? false) ||
+                (plant.notes ?? "").lowercased().contains(lowercasedSearch)
             }
         }
         
@@ -403,7 +395,7 @@ struct FilterChip: View {
 struct AddPlantToGardenSheet: View {
     let selectedGarden: Garden?
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var dataService: DataService
+    @Environment(DataService.self) private var dataService
     
     // Tab Selection
     @State private var selectedTab: PlantAdditionTab = .newPlant
@@ -645,8 +637,8 @@ struct AddPlantToGardenSheet: View {
                 }
             }
         }
-        .onAppear {
-            loadDatabasePlants()
+        .task {
+            await loadDatabasePlants()
         }
         .onChange(of: searchText) { _, _ in
             filterPlants()
@@ -733,21 +725,18 @@ struct AddPlantToGardenSheet: View {
         plantDatabaseService = PlantDatabaseService(dataService: dataService)
     }
     
-    private func loadDatabasePlants() {
+    @MainActor
+    private func loadDatabasePlants() async {
         isLoading = true
-        
-        Task {
-            // Ensure database is seeded
-            if let service = plantDatabaseService {
-                try? await service.seedPlantDatabase()
-            }
-            
-            await MainActor.run {
-                databasePlants = dataService.fetchPlantDatabase()
-                filteredPlants = databasePlants
-                isLoading = false
-            }
+
+        // Ensure database is seeded
+        if let service = plantDatabaseService {
+            try? await service.seedPlantDatabase()
         }
+
+        databasePlants = dataService.fetchPlantDatabase()
+        filteredPlants = databasePlants
+        isLoading = false
     }
     
     private func filterPlants() {
@@ -1109,13 +1098,14 @@ struct PlantDetailView: View {
     let plant: Plant
     
     @Environment(\.dismiss) private var dismiss
+    @Environment(DataService.self) private var dataService
+    @Environment(NotificationService.self) private var notificationService
     @State private var showingEditPlant = false
     @State private var showingDeleteConfirmation = false
     @State private var showingJournalEntry = false
     @State private var showingReminderView = false
     @State private var selectedPhoto: String?
     @State private var showingPhotoViewer = false
-    @State private var dataService: DataService?
     @State private var photoService: PhotoService?
     @State private var reminderService: ReminderService?
     
@@ -1160,7 +1150,7 @@ struct PlantDetailView: View {
             }
         }
         .sheet(isPresented: $showingReminderView) {
-            if let reminderService = reminderService, let dataService = dataService {
+            if let reminderService = reminderService {
                 AddReminderView(reminderService: reminderService, dataService: dataService)
             } else {
                 Text("Services not available")
@@ -1601,16 +1591,9 @@ struct PlantDetailView: View {
     // MARK: - Helper Functions
     
     private func setupServices() {
-        do {
-            dataService = try DataService()
-            if let dataService = dataService {
-                photoService = PhotoService(dataService: dataService)
-                let notificationService = NotificationService.shared
-                reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
-            }
-        } catch {
-            print("Failed to setup services: \(error)")
-        }
+        // Use environment-injected services instead of creating new instances
+        photoService = PhotoService(dataService: dataService)
+        reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     }
     
     private func performCareAction(_ type: JournalEntryType) {
@@ -1643,7 +1626,7 @@ struct PlantDetailView: View {
                 )
                 
                 // Save to data service
-                try dataService?.addJournalEntry(journalEntry)
+                try dataService.addJournalEntry(journalEntry)
                 
                 await MainActor.run {
                     isPerformingCareAction = false
@@ -1664,7 +1647,7 @@ struct PlantDetailView: View {
     private func deletePlant() {
         Task {
             do {
-                try dataService?.deletePlant(plant)
+                try dataService.deletePlant(plant)
                 await MainActor.run {
                     dismiss()
                 }
@@ -1769,5 +1752,5 @@ enum SortOption: CaseIterable {
 
 #Preview {
     MyGardenView()
-        .environmentObject(try! DataService())
+        .environment(try! DataService())
 }

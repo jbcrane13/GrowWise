@@ -5,13 +5,13 @@ import GrowWiseServices
 
 public struct JournalView: View {
     @Environment(\.modelContext) private var modelContext
+    @Environment(DataService.self) private var dataService
     @Query private var journalEntries: [JournalEntry]
     @Query private var plants: [Plant]
-    
-    @StateObject private var photoService = PhotoService(dataService: try! DataService())
+
+    @State private var photoService: PhotoService?
     
     @State private var searchText = ""
-    @State private var debouncedSearchText = ""
     @State private var selectedPlant: Plant?
     @State private var selectedEntryType: JournalEntryType?
     @State private var showingAddEntry = false
@@ -19,7 +19,6 @@ public struct JournalView: View {
     @State private var sortOrder = SortOrder.dateDescending
     @State private var isLoadingMore = false
     @State private var visibleEntryCount = 20
-    @State private var searchDebounceTask: Task<Void, Never>?
     @State private var filteredCache: [JournalEntry]?
     
     public init() {}
@@ -29,29 +28,6 @@ public struct JournalView: View {
             VStack(spacing: 0) {
                 // Search and filter section
                 VStack(spacing: 12) {
-                    // Search bar
-                    HStack {
-                        Image(systemName: "magnifyingglass")
-                            .foregroundColor(.secondary)
-                        
-                        TextField("Search journal entries...", text: $searchText)
-                            .textFieldStyle(RoundedBorderTextFieldStyle())
-                            .onChange(of: searchText) { _, newValue in
-                                // Debounce search input
-                                searchDebounceTask?.cancel()
-                                searchDebounceTask = Task {
-                                    try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
-                                    if !Task.isCancelled {
-                                        await MainActor.run {
-                                            debouncedSearchText = newValue
-                                            filteredCache = nil // Clear cache on search change
-                                        }
-                                    }
-                                }
-                            }
-                    }
-                    .padding(.horizontal)
-                    
                     // Filter chips
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
@@ -116,12 +92,14 @@ public struct JournalView: View {
                         ForEach(paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate), id: \.self) { date in
                             Section {
                                 ForEach(paginatedGroupedEntries[date] ?? [], id: \.id) { entry in
-                                    JournalEntryRow(
-                                        entry: entry,
-                                        photoService: photoService
-                                    )
-                                    .onTapGesture {
-                                        selectedEntry = entry
+                                    if let photoService = photoService {
+                                        JournalEntryRow(
+                                            entry: entry,
+                                            photoService: photoService
+                                        )
+                                        .onTapGesture {
+                                            selectedEntry = entry
+                                        }
                                     }
                                 }
                                 .onDelete { indexSet in
@@ -169,13 +147,27 @@ public struct JournalView: View {
                 }
             }
             .sheet(isPresented: $showingAddEntry) {
-                AddJournalEntryView(photoService: photoService)
+                if let photoService = photoService {
+                    AddJournalEntryView(photoService: photoService)
+                }
             }
             .sheet(item: $selectedEntry) { entry in
-                JournalEntryDetailView(
-                    entry: entry,
-                    photoService: photoService
-                )
+                if let photoService = photoService {
+                    JournalEntryDetailView(
+                        entry: entry,
+                        photoService: photoService
+                    )
+                }
+            }
+            .onAppear {
+                if photoService == nil {
+                    photoService = PhotoService(dataService: dataService)
+                }
+            }
+            // Native SwiftUI search with built-in debouncing - no manual Task management needed
+            .searchable(text: $searchText, prompt: "Search journal entries...")
+            .onChange(of: searchText) { _, _ in
+                filteredCache = nil
             }
         }
     }
@@ -190,15 +182,15 @@ public struct JournalView: View {
         
         // Background filtering for large datasets
         var entries = journalEntries
-        
-        // Filter by debounced search text
-        if !debouncedSearchText.isEmpty {
-            let searchQuery = debouncedSearchText.lowercased()
+
+        // Filter by search text
+        if !searchText.isEmpty {
+            let searchQuery = searchText.lowercased()
             entries = entries.filter { entry in
-                entry.title.localizedCaseInsensitiveContains(searchQuery) ||
-                entry.content.localizedCaseInsensitiveContains(searchQuery) ||
-                (entry.plant?.name?.localizedCaseInsensitiveContains(searchQuery) ?? false) ||
-                entry.tags.contains { $0.localizedCaseInsensitiveContains(searchQuery) }
+                entry.title.lowercased().contains(searchQuery) ||
+                entry.content.lowercased().contains(searchQuery) ||
+                (entry.plant?.name?.lowercased().contains(searchQuery) ?? false) ||
+                entry.tags.contains { $0.lowercased().contains(searchQuery) }
             }
         }
         

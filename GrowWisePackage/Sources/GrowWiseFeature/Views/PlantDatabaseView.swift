@@ -4,7 +4,7 @@ import GrowWiseModels
 import GrowWiseServices
 
 public struct PlantDatabaseView: View {
-    @EnvironmentObject private var dataService: DataService
+    @Environment(DataService.self) private var dataService
     @State private var databasePlants: [Plant] = []
     @State private var searchText = ""
     @State private var selectedPlantType: PlantType?
@@ -20,14 +20,11 @@ public struct PlantDatabaseView: View {
     public var body: some View {
         NavigationView {
             VStack(spacing: 0) {
-                // Search and Filter Section
-                searchAndFilterSection
-                
                 // Filter Tags (when active)
                 if hasActiveFilters {
                     activeFiltersSection
                 }
-                
+
                 // Plant Database Content
                 plantDatabaseContent
             }
@@ -51,12 +48,12 @@ public struct PlantDatabaseView: View {
             .refreshable {
                 await loadDatabasePlants()
             }
-            .onAppear {
-                Task {
-                    await loadDatabasePlants()
-                }
+            // Using .task for automatic cancellation when view disappears
+            .task {
+                await loadDatabasePlants()
             }
         }
+        // Native SwiftUI search bar with built-in debouncing
         .searchable(text: $searchText, prompt: "Search plants...")
         .onChange(of: searchText) { _, _ in
             filterAndSortPlants()
@@ -73,16 +70,6 @@ public struct PlantDatabaseView: View {
         .onChange(of: selectedSortOption) { _, _ in
             filterAndSortPlants()
         }
-    }
-    
-    private var searchAndFilterSection: some View {
-        HStack {
-            SearchBarView(text: $searchText)
-            filterButton
-        }
-        .padding(.horizontal)
-        .padding(.vertical, 8)
-        .background(Color(.systemBackground))
     }
     
     private var activeFiltersSection: some View {
@@ -212,32 +199,32 @@ public struct PlantDatabaseView: View {
     }
     
     private var filteredPlants: [Plant] {
-        var filtered = databasePlants
-        
-        // Filter by search text
+        var filtered: [Plant]
+
+        // Use DataService.searchPlants for search queries (with caching)
         if !searchText.isEmpty {
-            filtered = filtered.filter { plant in
-                (plant.name ?? "").localizedCaseInsensitiveContains(searchText) ||
-                (plant.scientificName?.localizedCaseInsensitiveContains(searchText) ?? false) ||
-                (plant.notes ?? "").localizedCaseInsensitiveContains(searchText)
-            }
+            filtered = dataService.searchPlants(query: searchText)
+        } else {
+            // No search query - use all database plants
+            filtered = databasePlants
         }
-        
+
+        // Layer additional filter criteria on top of search results
         // Filter by plant type
         if let selectedType = selectedPlantType {
             filtered = filtered.filter { $0.plantType == selectedType }
         }
-        
+
         // Filter by difficulty
         if let selectedDifficulty = selectedDifficulty {
             filtered = filtered.filter { $0.difficultyLevel == selectedDifficulty }
         }
-        
+
         // Filter by sunlight requirement
         if let selectedSunlight = selectedSunlight {
             filtered = filtered.filter { $0.sunlightRequirement == selectedSunlight }
         }
-        
+
         // Sort filtered results
         return sortPlants(filtered)
     }
@@ -536,7 +523,7 @@ struct DatabaseFiltersSheet: View {
 struct PlantDatabaseDetailView: View {
     let plant: Plant
     @Environment(\.dismiss) private var dismiss
-    @EnvironmentObject private var dataService: DataService
+    @Environment(DataService.self) private var dataService
     @State private var showingAddToGarden = false
     
     var body: some View {
@@ -1077,5 +1064,5 @@ enum DatabaseSortOption: CaseIterable {
 
 #Preview {
     PlantDatabaseView()
-        .environmentObject(try! DataService())
+        .environment(try! DataService())
 }

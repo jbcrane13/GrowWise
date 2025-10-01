@@ -2,36 +2,41 @@ import Foundation
 import os.log
 import QuartzCore
 
-/// Comprehensive performance monitoring service for the GrowWise app
+/// Performance monitoring service using @Observable pattern
+/// Access via @Environment(PerformanceMonitor.self) in views
+/// Singleton pattern removed - injected via environment
 @MainActor
-public final class PerformanceMonitor: ObservableObject {
-    public static let shared = PerformanceMonitor()
+@Observable public final class PerformanceMonitor {
     
     // Performance logger
     private let logger = Logger(subsystem: "com.growwise", category: "Performance")
     
     // Metrics storage
-    @Published public private(set) var appLaunchTime: TimeInterval = 0
-    @Published public private(set) var currentMemoryUsage: Double = 0
-    @Published public private(set) var peakMemoryUsage: Double = 0
-    @Published public private(set) var averageFrameRate: Double = 60
-    @Published public private(set) var queryMetrics: [QueryMetric] = []
-    @Published public private(set) var photoOperationMetrics: [PhotoOperationMetric] = []
-    
+    public private(set) var appLaunchTime: TimeInterval = 0
+    public private(set) var currentMemoryUsage: Double = 0
+    public private(set) var peakMemoryUsage: Double = 0
+    public private(set) var peakMemoryTimestamp: Date? = nil
+    public private(set) var averageFrameRate: Double = 60
+    public private(set) var queryMetrics: [QueryMetric] = []
+    public private(set) var photoOperationMetrics: [PhotoOperationMetric] = []
+    public private(set) var memoryPressureLevel: MemoryPressureLevel = .normal
+    public private(set) var memoryPressureEvents: [MemoryPressureEvent] = []
+
     // Performance budgets
     private let performanceBudgets = PerformanceBudgets()
-    
+
     // Monitoring state
     private var isMonitoring = false
     private var appStartTime: CFAbsoluteTime?
     private var frameRateTimer: Timer?
     private var memoryTimer: Timer?
+    private var memoryPressureSource: DispatchSourceMemoryPressure?
     
     // Metrics aggregation
     private var queryTimes: [String: [TimeInterval]] = [:]
     private var operationTimes: [String: [TimeInterval]] = [:]
     
-    private init() {
+    public init() {
         startMonitoring()
     }
     
@@ -41,25 +46,29 @@ public final class PerformanceMonitor: ObservableObject {
     public func startMonitoring() {
         guard !isMonitoring else { return }
         isMonitoring = true
-        
+
         // Start memory monitoring
         memoryTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.updateMemoryMetrics()
             }
         }
-        
+
         // Start frame rate monitoring
         startFrameRateMonitoring()
-        
-        logger.info("🎯 Performance monitoring started")
+
+        // Start memory pressure monitoring
+        startMemoryPressureMonitoring()
+
+        logger.info("🎯 Performance monitoring started (including memory pressure)")
     }
-    
+
     /// Stop monitoring
     public func stopMonitoring() {
         isMonitoring = false
         memoryTimer?.invalidate()
         frameRateTimer?.invalidate()
+        stopMemoryPressureMonitoring()
         logger.info("🛑 Performance monitoring stopped")
     }
     
@@ -114,7 +123,8 @@ public final class PerformanceMonitor: ObservableObject {
     public func generatePerformanceReport() -> PerformanceReport {
         let avgQueryTime = calculateAverageQueryTime()
         let avgPhotoOpTime = calculateAveragePhotoOperationTime()
-        
+        let availableMB = getAvailableMemory()
+
         return PerformanceReport(
             timestamp: Date(),
             appLaunchTime: appLaunchTime,
@@ -125,7 +135,41 @@ public final class PerformanceMonitor: ObservableObject {
             averagePhotoOperationTime: avgPhotoOpTime,
             slowQueries: getSlowQueries(),
             memoryWarnings: getMemoryWarnings(),
-            performanceScore: calculatePerformanceScore()
+            performanceScore: calculatePerformanceScore(),
+            memoryPressureLevel: memoryPressureLevel,
+            memoryPressureEventCount: memoryPressureEvents.count,
+            availableMemoryMB: availableMB
+        )
+    }
+
+    /// Get detailed memory report with recommendations
+    public func getDetailedMemoryReport() -> DetailedMemoryReport {
+        let availableMB = getAvailableMemory()
+        let usagePercentage = getMemoryUsagePercentage()
+        let efficiency = calculateMemoryEfficiency()
+        let recentEvents = Array(memoryPressureEvents.suffix(10))
+
+        var recommendations: [String] = []
+        if currentMemoryUsage > performanceBudgets.memoryUsageLimit {
+            recommendations.append("Current memory usage exceeds budget - consider clearing caches")
+        }
+        if memoryPressureLevel != .normal {
+            recommendations.append("Memory pressure detected - reduce memory-intensive operations")
+        }
+        if memoryPressureEvents.count > 10 {
+            recommendations.append("Frequent memory pressure events - review memory management")
+        }
+
+        return DetailedMemoryReport(
+            currentUsageMB: currentMemoryUsage,
+            peakUsageMB: peakMemoryUsage,
+            peakTimestamp: peakMemoryTimestamp,
+            availableMemoryMB: availableMB,
+            usagePercentage: usagePercentage,
+            pressureLevel: memoryPressureLevel,
+            recentPressureEvents: recentEvents,
+            memoryEfficiencyScore: efficiency,
+            recommendations: recommendations
         )
     }
     
@@ -180,16 +224,31 @@ public final class PerformanceMonitor: ObservableObject {
         let info = ProcessInfo.processInfo
         let physicalMemory = Double(info.physicalMemory)
         let memoryUsed = Double(getMemoryUsage())
-        
+
         currentMemoryUsage = memoryUsed / 1024 / 1024 // Convert to MB
-        
+
         if currentMemoryUsage > peakMemoryUsage {
             peakMemoryUsage = currentMemoryUsage
+            peakMemoryTimestamp = Date()
         }
-        
+
+        let availableMB = getAvailableMemory()
+        let usagePercentage = getMemoryUsagePercentage()
+
+        // Detailed logging every 5 seconds
+        if Int(Date().timeIntervalSince1970) % 5 == 0 {
+            logger.debug("Memory: \(String(format: "%.1fMB", self.currentMemoryUsage)) used, \(String(format: "%.1fMB", availableMB)) available (\(String(format: "%.1f%%", usagePercentage)))")
+        }
+
         // Check memory budget
         if currentMemoryUsage > performanceBudgets.memoryUsageLimit {
             logger.warning("⚠️ Memory usage exceeded budget: \(self.currentMemoryUsage)MB > \(self.performanceBudgets.memoryUsageLimit)MB")
+        }
+
+        // Critical memory warning
+        if usagePercentage > 80 {
+            logger.error("🚨 CRITICAL: Memory usage at \(String(format: "%.1f%%", usagePercentage)) - triggering cleanup")
+            triggerMemoryCleanup()
         }
     }
     
@@ -278,27 +337,130 @@ public final class PerformanceMonitor: ObservableObject {
     
     private func calculatePerformanceScore() -> Double {
         var score = 100.0
-        
+
         // Deduct for slow app launch
         if appLaunchTime > performanceBudgets.appLaunchTimeLimit {
             score -= 10
         }
-        
+
         // Deduct for memory issues
         if currentMemoryUsage > performanceBudgets.memoryUsageLimit {
             score -= 15
         }
-        
+
+        // Deduct for memory pressure
+        switch memoryPressureLevel {
+        case .normal:
+            break
+        case .warning:
+            score -= 10
+        case .critical:
+            score -= 20
+        case .urgent:
+            score -= 30
+        }
+
         // Deduct for frame rate issues
         if averageFrameRate < performanceBudgets.minimumFrameRate {
             score -= 20
         }
-        
+
         // Deduct for slow queries
         let slowQueryRatio = Double(getSlowQueries().count) / Double(max(queryMetrics.count, 1))
         score -= slowQueryRatio * 20
-        
+
         return max(score, 0)
+    }
+
+    // MARK: - Memory Pressure Monitoring
+
+    private func startMemoryPressureMonitoring() {
+        let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
+
+        source.setEventHandler { [weak self] in
+            guard let self = self else { return }
+
+            let event = source.data
+            var level: MemoryPressureLevel = .normal
+
+            if event.contains(.critical) {
+                level = .urgent
+            } else if event.contains(.warning) {
+                level = .critical
+            }
+
+            Task { @MainActor in
+                self.memoryPressureLevel = level
+
+                let pressureEvent = MemoryPressureEvent(
+                    level: level,
+                    timestamp: Date(),
+                    memoryUsageMB: self.currentMemoryUsage,
+                    availableMemoryMB: self.getAvailableMemory()
+                )
+
+                self.memoryPressureEvents.append(pressureEvent)
+
+                // Keep only recent events
+                if self.memoryPressureEvents.count > 100 {
+                    self.memoryPressureEvents.removeFirst(self.memoryPressureEvents.count - 100)
+                }
+
+                self.logger.warning("⚠️ Memory pressure: \(level.description) at \(String(format: "%.1fMB", self.currentMemoryUsage))")
+
+                // Trigger cleanup for critical pressure
+                if level == .critical || level == .urgent {
+                    self.triggerMemoryCleanup()
+                }
+            }
+        }
+
+        source.resume()
+        self.memoryPressureSource = source
+        logger.info("Memory pressure monitoring activated")
+    }
+
+    private func stopMemoryPressureMonitoring() {
+        memoryPressureSource?.cancel()
+        memoryPressureSource = nil
+        logger.info("Memory pressure monitoring stopped")
+    }
+
+    private func triggerMemoryCleanup() {
+        logger.info("🧹 Triggering memory cleanup")
+
+        // Clear old metrics
+        if queryMetrics.count > 100 {
+            queryMetrics.removeFirst(queryMetrics.count - 100)
+        }
+        if photoOperationMetrics.count > 100 {
+            photoOperationMetrics.removeFirst(photoOperationMetrics.count - 100)
+        }
+        if memoryPressureEvents.count > 50 {
+            memoryPressureEvents.removeFirst(memoryPressureEvents.count - 50)
+        }
+
+        logger.info("Memory cleanup complete - metrics trimmed")
+    }
+
+    private func getAvailableMemory() -> Double {
+        let info = ProcessInfo.processInfo
+        let physicalMemory = Double(info.physicalMemory) / 1024 / 1024 // Convert to MB
+        return physicalMemory - currentMemoryUsage
+    }
+
+    private func getMemoryUsagePercentage() -> Double {
+        let info = ProcessInfo.processInfo
+        let physicalMemory = Double(info.physicalMemory) / 1024 / 1024
+        guard physicalMemory > 0 else { return 0 }
+        return (currentMemoryUsage / physicalMemory) * 100
+    }
+
+    private func calculateMemoryEfficiency() -> Double {
+        let budgetUsageRatio = currentMemoryUsage / performanceBudgets.memoryUsageLimit
+        let pressurePenalty = Double(memoryPressureEvents.count) * 2.0
+        let efficiency = max(0, 100 - (budgetUsageRatio * 50) - pressurePenalty)
+        return efficiency
     }
 }
 
@@ -348,6 +510,49 @@ public struct PerformanceReport: Sendable {
     public let slowQueries: [QueryMetric]
     public let memoryWarnings: [String]
     public let performanceScore: Double
+    public let memoryPressureLevel: MemoryPressureLevel
+    public let memoryPressureEventCount: Int
+    public let availableMemoryMB: Double
+}
+
+public enum MemoryPressureLevel: Int, Sendable, Comparable, CustomStringConvertible {
+    case normal = 0
+    case warning = 1
+    case critical = 2
+    case urgent = 3
+
+    public static func < (lhs: MemoryPressureLevel, rhs: MemoryPressureLevel) -> Bool {
+        return lhs.rawValue < rhs.rawValue
+    }
+
+    public var description: String {
+        switch self {
+        case .normal: return "Normal"
+        case .warning: return "Warning"
+        case .critical: return "Critical"
+        case .urgent: return "Urgent"
+        }
+    }
+}
+
+public struct MemoryPressureEvent: Sendable, Identifiable {
+    public let id = UUID()
+    public let level: MemoryPressureLevel
+    public let timestamp: Date
+    public let memoryUsageMB: Double
+    public let availableMemoryMB: Double
+}
+
+public struct DetailedMemoryReport: Sendable {
+    public let currentUsageMB: Double
+    public let peakUsageMB: Double
+    public let peakTimestamp: Date?
+    public let availableMemoryMB: Double
+    public let usagePercentage: Double
+    public let pressureLevel: MemoryPressureLevel
+    public let recentPressureEvents: [MemoryPressureEvent]
+    public let memoryEfficiencyScore: Double
+    public let recommendations: [String]
 }
 
 // MARK: - Tracker Classes

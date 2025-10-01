@@ -1,4 +1,5 @@
 import LocalAuthentication
+import Combine
 import Foundation
 import Security
 #if canImport(UIKit)

@@ -3,7 +3,7 @@ import GrowWiseServices
 
 struct NotificationPermissionView: View {
     @Binding var userProfile: UserProfile
-    @StateObject private var notificationService = NotificationService.shared
+    @Environment(NotificationService.self) private var notificationService
     @State private var isRequesting = false
     
     var body: some View {

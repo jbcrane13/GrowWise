@@ -2,16 +2,17 @@ import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
 
+/// Custom search bar component for views that need specialized search UI
+/// For standard search, prefer SwiftUI's native .searchable modifier which includes built-in debouncing
+/// This component is useful when you need custom styling or behavior beyond .searchable
 public struct SearchBarView: View {
     @Binding var text: String
     var placeholder: String = "Search..."
     var onSearchButtonClicked: (() -> Void)? = nil
     var onCancelButtonClicked: (() -> Void)? = nil
-    
+
     @FocusState private var isSearchFieldFocused: Bool
     @State private var isEditing = false
-    @State private var searchDebounceTask: Task<Void, Never>?
-    @State private var debouncedText = ""
     
     public init(
         text: Binding<String>,
@@ -52,9 +53,6 @@ public struct SearchBarView: View {
                 .focused($isSearchFieldFocused)
                 .textFieldStyle(PlainTextFieldStyle())
                 .onSubmit {
-                    // Cancel any pending debounce
-                    searchDebounceTask?.cancel()
-                    
                     // Validate search query before submission
                     let validation = ValidationService.shared.validateSearchQuery(text)
                     if validation.isValid {
@@ -66,21 +64,6 @@ public struct SearchBarView: View {
                     let sanitized = ValidationService.shared.sanitizeInput(newValue)
                     if sanitized != newValue {
                         text = sanitized
-                    }
-                    
-                    // Debounce search to prevent excessive operations
-                    searchDebounceTask?.cancel()
-                    searchDebounceTask = Task {
-                        try? await Task.sleep(nanoseconds: 300_000_000) // 300ms
-                        if !Task.isCancelled {
-                            await MainActor.run {
-                                debouncedText = newValue
-                                // Trigger search with debounced text
-                                if !newValue.isEmpty {
-                                    onSearchButtonClicked?()
-                                }
-                            }
-                        }
                     }
                 }
             
@@ -107,12 +90,8 @@ public struct SearchBarView: View {
     
     private var cancelButton: some View {
         Button("Cancel") {
-            // Cancel any pending debounce
-            searchDebounceTask?.cancel()
-            
             withAnimation(.easeInOut(duration: 0.2)) {
                 text = ""
-                debouncedText = ""
                 isSearchFieldFocused = false
                 isEditing = false
             }

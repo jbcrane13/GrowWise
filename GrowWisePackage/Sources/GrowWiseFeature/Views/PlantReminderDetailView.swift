@@ -628,7 +628,7 @@ struct EditReminderView: View {
     )
     
     let dataService = try! DataService()
-    let notificationService = NotificationService.shared
+    let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     
     PlantReminderDetailView(plant: plant, reminderService: reminderService, dataService: dataService)

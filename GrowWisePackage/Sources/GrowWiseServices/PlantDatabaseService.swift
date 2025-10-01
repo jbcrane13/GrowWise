@@ -1,13 +1,16 @@
 import Foundation
+import Combine
 import SwiftData
 import GrowWiseModels
 
 @MainActor
 public final class PlantDatabaseService: ObservableObject {
     private let dataService: DataService
+    private let seedingWorker: PlantSeedingWorker
     
     public init(dataService: DataService) {
         self.dataService = dataService
+        self.seedingWorker = PlantSeedingWorker(modelContainer: dataService.container)
     }
     
     // MARK: - Database Seeding
@@ -18,61 +21,35 @@ public final class PlantDatabaseService: ObservableObject {
         if !existingPlants.isEmpty {
             return // Already seeded
         }
-        
-        print("🌱 Starting optimized plant database seeding...")
+
+        print("🌱 Starting plant database seeding")
         let startTime = CFAbsoluteTimeGetCurrent()
-        
-        // Seed in parallel batches for better performance
-        await withTaskGroup(of: Void.self) { group in
-            group.addTask { [weak self] in
-                do {
-                    try await self?.seedVegetables()
-                } catch {
-                    print("❌ Error seeding vegetables: \(error)")
-                }
-            }
-            
-            group.addTask { [weak self] in
-                do {
-                    try await self?.seedHerbs()
-                } catch {
-                    print("❌ Error seeding herbs: \(error)")
-                }
-            }
-            
-            group.addTask { [weak self] in
-                do {
-                    try await self?.seedFlowers()
-                } catch {
-                    print("❌ Error seeding flowers: \(error)")
-                }
-            }
-            
-            group.addTask { [weak self] in
-                do {
-                    try await self?.seedHouseplants()
-                } catch {
-                    print("❌ Error seeding houseplants: \(error)")
-                }
-            }
-            
-            group.addTask { [weak self] in
-                do {
-                    try await self?.seedFruits()
-                } catch {
-                    print("❌ Error seeding fruits: \(error)")
-                }
-            }
-            
-            group.addTask { [weak self] in
-                do {
-                    try await self?.seedSucculents()
-                } catch {
-                    print("❌ Error seeding succulents: \(error)")
-                }
+
+        var failures: [PlantDatabaseSeedingError.Failure] = []
+
+        let seedOperations: [(label: SeedCategory, operation: () async throws -> Void)] = [
+            (.vegetables, seedVegetables),
+            (.herbs, seedHerbs),
+            (.flowers, seedFlowers),
+            (.houseplants, seedHouseplants),
+            (.fruits, seedFruits),
+            (.succulents, seedSucculents)
+        ]
+
+        for entry in seedOperations {
+            do {
+                try await entry.operation()
+            } catch {
+                let failure = PlantDatabaseSeedingError.Failure(category: entry.label.rawValue, underlyingError: error)
+                failures.append(failure)
+                print("❌ Error seeding \(entry.label.rawValue): \(error)")
             }
         }
-        
+
+        if !failures.isEmpty {
+            throw PlantDatabaseSeedingError(failures: failures)
+        }
+
         let totalTime = CFAbsoluteTimeGetCurrent() - startTime
         let totalPlants = dataService.fetchPlantDatabase().count
         print("🚀 Seeded \(totalPlants) plants in \(String(format: "%.2f", totalTime))s")
@@ -143,7 +120,7 @@ public final class PlantDatabaseService: ObservableObject {
         ]
         
         // Batch create plants with yielding for better performance
-        try await createPlantsInBatches(vegetables, batchSize: 2, category: "vegetables")
+        try await createPlantsInBatches(vegetables, batchSize: 5, category: .vegetables)
     }
     
     private func seedHerbs() async throws {
@@ -223,7 +200,7 @@ public final class PlantDatabaseService: ObservableObject {
         ]
         
         // Batch create plants with yielding for better performance
-        try await createPlantsInBatches(herbs, batchSize: 3, category: "herbs")
+        try await createPlantsInBatches(herbs, batchSize: 5, category: .herbs)
     }
     
     private func seedFlowers() async throws {
@@ -291,7 +268,7 @@ public final class PlantDatabaseService: ObservableObject {
         ]
         
         // Batch create plants with yielding for better performance
-        try await createPlantsInBatches(flowers, batchSize: 3, category: "flowers")
+        try await createPlantsInBatches(flowers, batchSize: 5, category: .flowers)
     }
     
     private func seedHouseplants() async throws {
@@ -359,7 +336,7 @@ public final class PlantDatabaseService: ObservableObject {
         ]
         
         // Batch create plants with yielding for better performance
-        try await createPlantsInBatches(houseplants, batchSize: 3, category: "houseplants")
+        try await createPlantsInBatches(houseplants, batchSize: 5, category: .houseplants)
     }
     
     private func seedFruits() async throws {
@@ -379,7 +356,7 @@ public final class PlantDatabaseService: ObservableObject {
         ]
         
         // Batch create plants with yielding for better performance
-        try await createPlantsInBatches(fruits, batchSize: 1, category: "fruits")
+        try await createPlantsInBatches(fruits, batchSize: 5, category: .fruits)
     }
     
     private func seedSucculents() async throws {
@@ -423,7 +400,7 @@ public final class PlantDatabaseService: ObservableObject {
         ]
         
         // Batch create plants with yielding for better performance
-        try await createPlantsInBatches(succulents, batchSize: 2, category: "succulents")
+        try await createPlantsInBatches(succulents, batchSize: 5, category: .succulents)
     }
     
     // MARK: - Search and Filter
@@ -575,46 +552,40 @@ public final class PlantDatabaseService: ObservableObject {
     
     // MARK: - Helper Methods
     
-    /// Optimized batch plant creation with async yielding
+    /// Optimized batch plant creation with autoreleasepool for aggressive garbage collection
     private func createPlantsInBatches(
         _ plantDataArray: [PlantData],
-        batchSize: Int,
-        category: String
+        batchSize: Int = 5,
+        category: SeedCategory
     ) async throws {
+        print("   📦 Batching \(plantDataArray.count) \(category.rawValue) (batch size: \(batchSize))")
         let startTime = CFAbsoluteTimeGetCurrent()
-        
-        // Process in batches to prevent blocking the main actor
-        for (index, plantData) in plantDataArray.enumerated() {
-            try await createPlantFromData(plantData)
-            
-            // Yield control every batch to keep UI responsive
-            if (index + 1) % batchSize == 0 {
-                await Task.yield()
+
+        for batchIndex in stride(from: 0, to: plantDataArray.count, by: batchSize) {
+            let batchEnd = min(batchIndex + batchSize, plantDataArray.count)
+            let batch = Array(plantDataArray[batchIndex..<batchEnd])
+
+            // Perform async plant creation outside autoreleasepool
+            for plantData in batch {
+                try await createPlantFromData(plantData)
             }
+
+            // Wrap synchronous logging in autoreleasepool for garbage collection
+            autoreleasepool {
+                // Log batch completion
+                print("      ✓ Batch \(batchIndex/batchSize + 1): \(batch.count) plants")
+            }
+
+            // Yield control to keep UI responsive
+            await Task.yield()
         }
-        
+
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        print("   ✅ Seeded \(plantDataArray.count) \(category) in \(String(format: "%.3f", duration))s")
+        print("   ✅ Seeded \(plantDataArray.count) \(category.rawValue) in \(String(format: "%.3f", duration))s")
     }
     
     private func createPlantFromData(_ plantData: PlantData) async throws {
-        let plant = try dataService.createPlant(
-            name: plantData.name,
-            type: plantData.type,
-            difficultyLevel: plantData.difficulty,
-            garden: nil
-        )
-        
-        // Set additional properties efficiently
-        plant.scientificName = plantData.scientificName
-        plant.sunlightRequirement = plantData.sunlight
-        plant.wateringFrequency = plantData.watering
-        plant.spaceRequirement = plantData.space
-        plant.isUserPlant = false // Database plants
-        plant.notes = plantData.description + "\n\nCare Instructions:\n" + plantData.careInstructions.joined(separator: "\n• ")
-        // Note: companionPlants property needs to be added to Plant model or removed from PlantData
-        
-        try dataService.updatePlant(plant)
+        try await seedingWorker.insertPlant(from: plantData)
     }
     
     private func calculateCompatibilityScore(plant: Plant, userProfile: UserGardenProfile) -> Double {
@@ -771,7 +742,78 @@ public final class PlantDatabaseService: ObservableObject {
     }
 }
 
+// MARK: - Seeding Infrastructure
+
+public struct PlantDatabaseSeedingError: Error, LocalizedError {
+    public struct Failure {
+        public let category: String
+        public let underlyingError: Error
+    }
+
+    public let failures: [Failure]
+
+    public init(failures: [Failure]) {
+        self.failures = failures
+    }
+
+    public var errorDescription: String? {
+        let categories = failures.map { $0.category }.joined(separator: ", ")
+        return "Failed to seed plant categories: \(categories)"
+    }
+
+    public var failureReason: String? {
+        failures
+            .map { "\($0.category): \($0.underlyingError.localizedDescription)" }
+            .joined(separator: " | ")
+    }
+}
+
+private actor PlantSeedingWorker {
+    private let modelContainer: ModelContainer
+
+    init(modelContainer: ModelContainer) {
+        self.modelContainer = modelContainer
+    }
+
+    func insertPlant(from plantData: PlantData) async throws {
+        // Create background ModelContext for safe concurrent insertions
+        let context = ModelContext(modelContainer)
+
+        // Create plant directly without @MainActor
+        let plant = Plant(
+            name: plantData.name,
+            plantType: plantData.type,
+            difficultyLevel: plantData.difficulty
+        )
+
+        // Set additional properties
+        plant.scientificName = plantData.scientificName
+        plant.sunlightRequirement = plantData.sunlight
+        plant.wateringFrequency = plantData.watering
+        plant.spaceRequirement = plantData.space
+        plant.isUserPlant = false
+        plant.notes = plantData.description + "\n\nCare Instructions:\n" + plantData.careInstructions.joined(separator: "\n• ")
+
+        // Insert and save on background context
+        context.insert(plant)
+        try context.save()
+    }
+}
+
 // MARK: - Supporting Types
+
+public enum SeedCategory: String, CaseIterable, Sendable {
+    case vegetables
+    case herbs
+    case flowers
+    case houseplants
+    case fruits
+    case succulents
+
+    public var displayName: String {
+        rawValue.capitalized
+    }
+}
 
 struct PlantData {
     let name: String
@@ -840,3 +882,4 @@ public enum PlantingSeason: String, CaseIterable, Codable {
         }
     }
 }
+

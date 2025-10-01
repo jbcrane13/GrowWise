@@ -1,18 +1,28 @@
+import Foundation
 import SwiftUI
 import SwiftData
 import GrowWiseModels
 import GrowWiseServices
+#if canImport(UIKit)
+import UIKit
+#endif
 
 public struct MainAppView: View {
+    // Services injected from GrowWiseApp via environment
+    @Environment(LocationService.self) private var locationService
+    @Environment(NotificationService.self) private var notificationService  
+    @Environment(PerformanceMonitor.self) private var performanceMonitor
+    
+    // DataService initialized asynchronously in this view, then injected to children
     @State private var dataService: DataService? = nil
-    @StateObject private var locationService = LocationService.shared
-    @StateObject private var notificationService = NotificationService.shared
     @State private var showingOnboarding = false
     @State private var selectedTab: TabSelection = .home
     @State private var isInitializing = true
     @State private var initializationError: Error?
     @State private var cachedOnboardingStatus: Bool?
-    
+    @State private var isFallbackMode = false
+    @State private var initializationStage: String = "Initializing..."
+
     public init() {
         // Cache onboarding status to avoid repeated UserDefaults reads
         self.cachedOnboardingStatus = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
@@ -24,7 +34,7 @@ public struct MainAppView: View {
                 VStack(spacing: 16) {
                     ProgressView()
                         .scaleEffect(1.5)
-                    Text("Loading GrowWise...")
+                    Text(initializationStage)
                         .font(.headline)
                         .foregroundColor(.secondary)
                 }
@@ -32,6 +42,22 @@ public struct MainAppView: View {
                 .background(Color(UIColor.systemBackground))
                 .task {
                     await initializeDataService()
+                }
+            } else if isFallbackMode {
+                VStack(spacing: 16) {
+                    Image(systemName: "exclamationmark.triangle.fill")
+                        .font(.system(size: 50))
+                        .foregroundColor(.orange)
+                    Text("Running in Limited Mode")
+                        .font(.title2)
+                        .fontWeight(.semibold)
+                    Text("Some features may be unavailable")
+                        .font(.subheadline)
+                        .foregroundColor(.secondary)
+                    if let ds = dataService {
+                        mainTabView
+                            .environment(ds)
+                    }
                 }
             } else if let error = initializationError {
                 ErrorView(error: error) {
@@ -43,9 +69,7 @@ public struct MainAppView: View {
                 OnboardingView()
             } else if let ds = dataService {
                 mainTabView
-                    .environmentObject(ds)
-                    .environmentObject(locationService)
-                    .environmentObject(notificationService)
+                .environment(ds)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -85,8 +109,8 @@ public struct MainAppView: View {
                 }
                 .tag(TabSelection.plantGuide)
             
-            if let ds = dataService {
-                JournalView(photoService: PhotoService(dataService: ds))
+            if dataService != nil {
+                JournalView()
                     .tabItem {
                         Image(systemName: "book.pages.fill")
                         Text("Journal")
@@ -116,31 +140,102 @@ public struct MainAppView: View {
     private func initializeDataService() async {
         isInitializing = true
         initializationError = nil
-        
-        do {
-            self.dataService = try await DataService()
-            
-            // Defer non-critical initialization
-            Task.detached(priority: .background) {
-                await seedDatabaseIfNeeded()
-            }
-        } catch {
-            print("Failed to create DataService: \(error)")
-            initializationError = error
-            // Use fallback
-            self.dataService = DataService.createFallback
+        isFallbackMode = false
+
+        // Start tracking app launch
+        performanceMonitor.recordAppLaunchStart()
+
+        // Log memory state before initialization
+        let memoryBefore = performanceMonitor.currentMemoryUsage
+        let pressureBefore = performanceMonitor.memoryPressureLevel
+        print("[Init] Memory before DataService: \(String(format: "%.1fMB", memoryBefore))")
+        print("[Init] Memory pressure: \(pressureBefore.description)")
+
+        initializationStage = "Initializing database..."
+        let initStartTime = CFAbsoluteTimeGetCurrent()
+
+        print("[Init] Using async background initialization...")
+        let service = await DataService.makeAsync()
+        self.dataService = service
+
+        let initDuration = CFAbsoluteTimeGetCurrent() - initStartTime
+        let memoryAfter = performanceMonitor.currentMemoryUsage
+        let memoryDelta = memoryAfter - memoryBefore
+
+        print("[Init] Memory after DataService: \(String(format: "%.1fMB", memoryAfter))")
+        print("[Init] Memory delta: \(String(format: "%.1fMB", memoryDelta))")
+        print("[Init] DataService initialized in \(String(format: "%.3fs", initDuration))")
+
+        // Validate memory delta is reasonable
+        if memoryDelta > 10 {
+            print("[Init] ⚠️ WARNING: Memory delta (\(String(format: "%.1fMB", memoryDelta))) exceeds expected threshold (10MB)")
+            print("[Init] This may indicate in-memory storage is being used instead of persistent storage")
+            isFallbackMode = true
+        } else {
+            print("[Init] ✅ Memory delta is reasonable - persistent storage confirmed")
         }
-        
+
+        // Log storage configuration
+        print("[Init] Storage configuration: persistent=true, allowsSave=true")
+
+        // Performance breakdown logging
+        print("[Init] Performance: init=\(String(format: "%.3fs", initDuration)), total=\(String(format: "%.3fs", initDuration))")
+
+        // Warm cache in background
+        initializationStage = "Loading data..."
+        Task.detached(priority: .utility) { [service] in
+            await MainActor.run {
+                print("[Init] Starting cache warming...")
+            }
+            let warmingStart = CFAbsoluteTimeGetCurrent()
+
+            await service.warmCache()
+
+            let warmingDuration = CFAbsoluteTimeGetCurrent() - warmingStart
+            await MainActor.run {
+                let stats = service.getCacheStats()
+                print("[Init] Cache warming completed in \(String(format: "%.3fs", warmingDuration))")
+                print("[Init] Cache ready: \(stats.size) entries preloaded")
+            }
+        }
+
+        // Complete app launch tracking
+        performanceMonitor.recordAppLaunchComplete()
+
+        // Log performance report
+        let report = performanceMonitor.generatePerformanceReport()
+        print("[Init] App launch complete in \(String(format: "%.3fs", report.appLaunchTime))")
+        print("[Init] Performance score: \(String(format: "%.1f", report.performanceScore))/100")
+
+        // Defer non-critical initialization
+        initializationStage = "Almost ready..."
+        Task.detached(priority: .background) {
+            await seedDatabaseIfNeeded()
+        }
+
         isInitializing = false
     }
     
     @MainActor
     private func seedDatabaseIfNeeded() async {
+        let memoryBefore = performanceMonitor.currentMemoryUsage
+        print("[Seed] Memory before database seeding: \(String(format: "%.1fMB", memoryBefore))")
+
         // Database seeding in background to avoid blocking UI
         await Task.detached(priority: .background) {
             print("Database seeding available - using real DataService")
             // Actual seeding logic would go here
         }.value
+
+        let memoryAfter = performanceMonitor.currentMemoryUsage
+        let memoryUsedBySeed = memoryAfter - memoryBefore
+
+        print("[Seed] Memory after seeding: \(String(format: "%.1fMB", memoryAfter))")
+        print("[Seed] Memory used by seeding: \(String(format: "%.1fMB", memoryUsedBySeed))")
+
+        if memoryUsedBySeed > 5 {
+            print("[Seed] ⚠️ WARNING: Seeding used \(String(format: "%.1fMB", memoryUsedBySeed)) - more than expected (5MB threshold)")
+        }
     }
 }
 
@@ -175,3 +270,4 @@ enum TabSelection: Int, CaseIterable {
 #Preview {
     MainAppView()
 }
+

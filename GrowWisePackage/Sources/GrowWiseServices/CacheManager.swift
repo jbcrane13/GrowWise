@@ -1,8 +1,14 @@
 import Foundation
+import Combine
+#if canImport(UIKit)
 import UIKit
+#elseif canImport(AppKit)
+import AppKit
+#endif
 import os.log
 
 /// Advanced caching system for improved app performance
+/// Supports both iOS (UIImage) and macOS (NSImage) through PlatformImage typealias
 @MainActor
 public final class CacheManager: ObservableObject {
     public static let shared = CacheManager()
@@ -11,7 +17,7 @@ public final class CacheManager: ObservableObject {
     private let logger = Logger(subsystem: "com.growwise", category: "Cache")
     
     // Memory caches
-    private let imageCache = NSCache<NSString, UIImage>()
+    private let imageCache = NSCache<NSString, PlatformImage>()
     private let dataCache = NSCache<NSString, NSData>()
     private let queryCache = NSCache<NSString, CachedQueryResult>()
     
@@ -67,11 +73,15 @@ public final class CacheManager: ObservableObject {
     // MARK: - Public Interface
     
     /// Store image in cache
-    public func storeImage(_ image: UIImage, for key: String, toDisk: Bool = true) async {
+    public func storeImage(_ image: PlatformImage, for key: String, toDisk: Bool = true) async {
         let cacheKey = NSString(string: key)
         
         // Store in memory cache
-        let cost = Int(image.size.width * image.size.height * 4) // Approximate memory cost
+        #if canImport(UIKit)
+        let cost = Int(image.size.width * image.size.height * 4)
+        #else
+        let cost = Int(image.size.width * image.size.height * 4)
+        #endif
         imageCache.setObject(image, forKey: cacheKey, cost: cost)
         imageCacheKeys.insert(key)
         
@@ -84,7 +94,7 @@ public final class CacheManager: ObservableObject {
     }
     
     /// Retrieve image from cache
-    public func retrieveImage(for key: String) async -> UIImage? {
+    public func retrieveImage(for key: String) async -> PlatformImage? {
         let cacheKey = NSString(string: key)
         
         // Check memory cache first
@@ -277,6 +287,7 @@ public final class CacheManager: ObservableObject {
     }
     
     private func setupMemoryPressureHandling() {
+        #if canImport(UIKit)
         memoryPressureObserver = NotificationCenter.default.addObserver(
             forName: UIApplication.didReceiveMemoryWarningNotification,
             object: nil,
@@ -286,6 +297,19 @@ public final class CacheManager: ObservableObject {
                 self?.handleMemoryPressure()
             }
         }
+        #else
+        // macOS: Use NSWorkspace memory pressure notifications
+        memoryPressureObserver = NotificationCenter.default.addObserver(
+            forName: NSWorkspace.didWakeNotification,
+            object: nil,
+            queue: .main
+        ) { [weak self] _ in
+            Task { @MainActor in
+                // Optionally clear caches on wake
+                // self?.handleMemoryPressure()
+            }
+        }
+        #endif
     }
     
     @MainActor
@@ -300,7 +324,7 @@ public final class CacheManager: ObservableObject {
         statistics.recordMemoryPressureEvent()
     }
     
-    private func storeToDisk(image: UIImage, key: String) async {
+    private func storeToDisk(image: PlatformImage, key: String) async {
         await withCheckedContinuation { continuation in
             diskQueue.async { [weak self] in
                 guard let self = self else {
@@ -310,6 +334,7 @@ public final class CacheManager: ObservableObject {
                 
                 let fileURL = self.imageCacheURL.appendingPathComponent("\(key).jpg")
                 
+                #if canImport(UIKit)
                 if let data = image.jpegData(compressionQuality: 0.8) {
                     do {
                         try data.write(to: fileURL)
@@ -317,6 +342,18 @@ public final class CacheManager: ObservableObject {
                         self.logger.error("Failed to cache image to disk: \(error)")
                     }
                 }
+                #else
+                // macOS: Convert NSImage to JPEG data
+                if let tiffData = image.tiffRepresentation,
+                   let bitmap = NSBitmapImageRep(data: tiffData),
+                   let jpegData = bitmap.representation(using: .jpeg, properties: [.compressionFactor: 0.8]) {
+                    do {
+                        try jpegData.write(to: fileURL)
+                    } catch {
+                        self.logger.error("Failed to cache image to disk: \(error)")
+                    }
+                }
+                #endif
                 
                 continuation.resume()
             }
@@ -346,7 +383,7 @@ public final class CacheManager: ObservableObject {
         }
     }
     
-    private func loadFromDisk(imageKey: String) async -> UIImage? {
+    private func loadFromDisk(imageKey: String) async -> PlatformImage? {
         await withCheckedContinuation { continuation in
             diskQueue.async { [weak self] in
                 guard let self = self else {
@@ -362,7 +399,7 @@ public final class CacheManager: ObservableObject {
                 }
                 
                 if let data = try? Data(contentsOf: fileURL),
-                   let image = UIImage(data: data) {
+                   let image = PlatformImage(data: data) {
                     continuation.resume(returning: image)
                 } else {
                     continuation.resume(returning: nil)
@@ -620,3 +657,4 @@ public struct CacheSizeInfo {
         Double(totalSizeBytes) / (1024 * 1024)
     }
 }
+

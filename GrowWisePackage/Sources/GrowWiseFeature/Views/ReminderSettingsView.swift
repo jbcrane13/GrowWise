@@ -5,9 +5,9 @@ import UserNotifications
 public struct ReminderSettingsView: View {
     let reminderService: ReminderService
     @Binding var reminderSettings: ReminderSettings
-    
+
     @Environment(\.dismiss) private var dismiss
-    @StateObject private var notificationService = NotificationService.shared
+    @Environment(NotificationService.self) private var notificationService
     
     @State private var showingQuietHoursStart = false
     @State private var showingQuietHoursEnd = false
@@ -61,9 +61,10 @@ public struct ReminderSettingsView: View {
             }
             .onAppear {
                 setupTempValues()
-                Task {
-                    await notificationService.checkAuthorizationStatus()
-                }
+            }
+            // Using .task for automatic cancellation of async authorization check
+            .task {
+                await notificationService.checkAuthorizationStatus()
             }
         }
     }
@@ -372,7 +373,7 @@ struct TimePickerSheet: View {
 // MARK: - Pending Notifications View
 
 struct PendingNotificationsView: View {
-    @StateObject private var notificationService = NotificationService.shared
+    @Environment(NotificationService.self) private var notificationService
     @State private var pendingNotifications: [UNNotificationRequest] = []
     
     var body: some View {
@@ -417,32 +418,30 @@ struct PendingNotificationsView: View {
         }
         .navigationTitle("Pending Notifications")
         .navigationBarTitleDisplayMode(.inline)
-        .onAppear {
-            loadPendingNotifications()
+        .task {
+            await loadPendingNotifications()
         }
         .refreshable {
-            loadPendingNotifications()
+            await loadPendingNotifications()
         }
     }
     
-    private func loadPendingNotifications() {
-        Task {
-            let requests = await notificationService.getPendingNotifications()
-            await MainActor.run {
-                pendingNotifications = requests
-            }
-        }
+    @MainActor
+    private func loadPendingNotifications() async {
+        let requests = await notificationService.getPendingNotifications()
+        pendingNotifications = requests
     }
 }
 
 #Preview {
     let dataService = try! DataService()
-    let notificationService = NotificationService.shared
+    let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     let settings = ReminderSettings()
-    
+
     ReminderSettingsView(
         reminderService: reminderService,
         reminderSettings: .constant(settings)
     )
+    .environment(notificationService)
 }

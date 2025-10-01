@@ -474,7 +474,7 @@ struct PlantPickerView: View {
 
 #Preview {
     let dataService = try! DataService()
-    let notificationService = NotificationService.shared
+    let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     
     AddReminderView(reminderService: reminderService, dataService: dataService)

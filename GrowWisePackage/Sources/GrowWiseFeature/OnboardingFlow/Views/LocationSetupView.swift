@@ -3,7 +3,7 @@ import GrowWiseServices
 
 struct LocationSetupView: View {
     @Binding var userProfile: UserProfile
-    @StateObject private var locationService = LocationService.shared
+    @Environment(LocationService.self) private var locationService
     @State private var isRequesting = false
     
     var body: some View {

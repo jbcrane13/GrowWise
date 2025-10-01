@@ -4,7 +4,7 @@ import UserNotifications
 import GrowWiseModels
 
 public struct NotificationSettingsView: View {
-    @StateObject private var notificationService = NotificationService.shared
+    @Environment(NotificationService.self) private var notificationService
     @State private var reminderSettings = ReminderSettings()
     @State private var defaultNotificationTime = Calendar.current.date(from: DateComponents(hour: 9, minute: 0)) ?? Date()
     @State private var showingPermissionAlert = false

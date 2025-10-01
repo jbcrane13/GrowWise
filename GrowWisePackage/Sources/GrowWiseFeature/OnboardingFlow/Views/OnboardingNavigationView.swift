@@ -6,6 +6,8 @@ struct OnboardingNavigationView: View {
     @Binding var currentStep: OnboardingStep
     @Binding var userProfile: UserProfile
     @Binding var isCompleted: Bool
+
+    @Environment(NotificationService.self) private var notificationService
     
     private var isFirstStep: Bool {
         currentStep == OnboardingStep.allCases.first
@@ -155,7 +157,6 @@ struct OnboardingNavigationView: View {
         
         // Set up notifications if permission granted
         if userProfile.hasNotificationPermission {
-            let notificationService = NotificationService.shared
             notificationService.setupNotificationCategories()
         }
     }

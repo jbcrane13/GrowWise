@@ -245,7 +245,7 @@ public struct ReminderRowView: View {
     )
     
     let dataService = try! DataService()
-    let notificationService = NotificationService.shared
+    let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     
     VStack(spacing: 16) {
