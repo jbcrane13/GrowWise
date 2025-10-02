@@ -747,7 +747,7 @@ struct RequirementDetail: View {
 struct AddPlantToGardenFromDatabaseSheet: View {
     let plant: Plant
     @Environment(\.dismiss) private var dismiss
-    @State private var dataService: DataService?
+    @Environment(DataService.self) private var dataService
     
     // Customization fields
     @State private var selectedGarden: Garden?
@@ -919,17 +919,9 @@ struct AddPlantToGardenFromDatabaseSheet: View {
     }
     
     private func loadData() {
-        do {
-            dataService = try DataService()
-            availableGardens = dataService?.fetchGardens() ?? []
-            
-            // Auto-select first garden if only one exists
-            if availableGardens.count == 1 {
-                selectedGarden = availableGardens.first
-            }
-        } catch {
-            errorMessage = "Failed to load data: \(error.localizedDescription)"
-            showingError = true
+        availableGardens = dataService.fetchGardens()
+        if availableGardens.count == 1 {
+            selectedGarden = availableGardens.first
         }
     }
     
@@ -938,10 +930,6 @@ struct AddPlantToGardenFromDatabaseSheet: View {
         isLoading = true
         
         do {
-            guard let dataService = dataService else {
-                throw GrowWiseError.dataServiceError
-            }
-            
             // Create a user instance of the database plant
             let userPlant = try dataService.createPlant(
                 name: plant.name ?? "Unknown Plant",

@@ -160,7 +160,7 @@ import os
         }
 
         // Return to MainActor for final DataService creation
-        return try await MainActor.run {
+        return await MainActor.run {
             let service = DataService.__allocating_init_minimal(container: container, performanceMonitor: performanceMonitor)
             service.validateStorageConfiguration()
             logger.info("[DataService] Async initialization complete - service created on MainActor")
@@ -742,8 +742,24 @@ import os
             return cachedPlants
         }
         
-        // Fetch plants and filter in-memory (localizedCaseInsensitiveContains not supported in #Predicate)
-        // Limit initial fetch for performance
+        // Try to use a supported case-insensitive contains in #Predicate on newer OS versions
+        if #available(iOS 18.0, macOS 15.0, *), #available(tvOS 18.0, watchOS 11.0, *) {
+            var descriptor = FetchDescriptor<Plant>(
+                sortBy: [SortDescriptor(\.name)]
+            )
+            descriptor.fetchLimit = 20
+            // Use localizedStandardContains for improved search relevance
+            descriptor.predicate = #Predicate<Plant> { plant in
+                (plant.name?.localizedStandardContains(query) ?? false) ||
+                (plant.scientificName?.localizedStandardContains(query) ?? false)
+            }
+
+            let result = (try? modelContext.fetch(descriptor)) ?? []
+            cache.set(cacheKey, value: result, policy: .short)
+            return result
+        }
+
+        // Fallback for older OS versions: fetch and filter in-memory (case-insensitive)
         var descriptor = FetchDescriptor<Plant>(
             sortBy: [SortDescriptor(\.name)]
         )
@@ -1216,3 +1232,4 @@ public struct UserDataExport: Codable {
         self.totalJournalEntries = totalJournalEntries
     }
 }
+

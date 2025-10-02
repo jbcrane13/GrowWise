@@ -16,6 +16,7 @@ public struct MyGardenView: View {
     @State private var showingAddPlant = false
     @State private var isLoading = true
     @State private var selectedSortOption: SortOption = .name
+    @State private var showingCreateGarden = false // Added per instruction
     
     public init() {}
     
@@ -36,6 +37,10 @@ public struct MyGardenView: View {
                     sortMenuButton
                     filterButton
                     addPlantButton
+                    Button(action: { showingCreateGarden = true }) {
+                        Image(systemName: "leaf.fill")
+                    }
+                    .accessibilityLabel("Create Garden")
                 }
             }
             .sheet(isPresented: $showingFilters) {
@@ -47,6 +52,9 @@ public struct MyGardenView: View {
             .sheet(isPresented: $showingAddPlant) {
                 AddPlantToGardenSheet(selectedGarden: selectedGarden)
             }
+            .sheet(isPresented: $showingCreateGarden) {
+                CreateGardenSheet()
+            }
             .refreshable {
                 await loadData()
             }
@@ -54,23 +62,27 @@ public struct MyGardenView: View {
             .task {
                 await loadData()
             }
-        }
-        // Native SwiftUI search with built-in debouncing
-        .searchable(text: $searchText, prompt: "Search your plants...")
-        .onChange(of: searchText) { _, _ in
-            filterPlants()
-        }
-        .onChange(of: selectedPlantType) { _, _ in
-            filterPlants()
-        }
-        .onChange(of: selectedDifficulty) { _, _ in
-            filterPlants()
-        }
-        .onChange(of: selectedGarden) { _, _ in
-            filterPlants()
-        }
-        .onChange(of: selectedSortOption) { _, _ in
-            sortPlants()
+            // Native SwiftUI search with built-in debouncing
+            .searchable(text: $searchText, prompt: "Search your plants...")
+            .onChange(of: searchText) { _, _ in
+                filterPlants()
+            }
+            .onChange(of: selectedPlantType) { _, _ in
+                filterPlants()
+            }
+            .onChange(of: selectedDifficulty) { _, _ in
+                filterPlants()
+            }
+            .onChange(of: selectedGarden) { _, _ in
+                filterPlants()
+            }
+            .onChange(of: selectedSortOption) { _, _ in
+                sortPlants()
+            }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowCreateGardenFromAddPlant"))) { _ in
+                showingAddPlant = false
+                showingCreateGarden = true
+            }
         }
     }
     
@@ -155,6 +167,11 @@ public struct MyGardenView: View {
                 showingAddPlant = true
             }
             .buttonStyle(.borderedProminent)
+            
+            Button("Create Garden") {
+                showingCreateGarden = true
+            }
+            .buttonStyle(.bordered)
         }
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
@@ -524,6 +541,21 @@ struct AddPlantToGardenSheet: View {
     
     private var newPlantTab: some View {
         Form {
+            if availableGardens.isEmpty {
+                Section {
+                    VStack(alignment: .leading, spacing: 8) {
+                        Text("No gardens yet")
+                            .font(.subheadline)
+                            .foregroundColor(.secondary)
+                        Button("Create a Garden") {
+                            // Dismiss this sheet and trigger create garden flow via notification
+                            NotificationCenter.default.post(name: Notification.Name("ShowCreateGardenFromAddPlant"), object: nil)
+                        }
+                        .buttonStyle(.bordered)
+                    }
+                }
+            }
+            
             // Target Garden Section
             if !availableGardens.isEmpty {
                 Section("Target Garden") {
@@ -713,7 +745,7 @@ struct AddPlantToGardenSheet: View {
     private var canSave: Bool {
         switch selectedTab {
         case .newPlant:
-            return !plantName.isEmpty && (selectedGarden != nil || targetGarden != nil)
+            return !plantName.isEmpty
         case .fromDatabase:
             return false // Saving happens through customization sheet
         }
@@ -1108,6 +1140,7 @@ struct PlantDetailView: View {
     @State private var showingPhotoViewer = false
     @State private var photoService: PhotoService?
     @State private var reminderService: ReminderService?
+    @State private var showingAssignGarden = false // Added per instruction
     
     // Care action states
     @State private var isPerformingCareAction = false
@@ -1156,6 +1189,9 @@ struct PlantDetailView: View {
                 Text("Services not available")
             }
         }
+        .sheet(isPresented: $showingAssignGarden) {
+            AssignGardenSheet(plant: plant)
+        }
         .onAppear {
             setupServices()
         }
@@ -1167,6 +1203,8 @@ struct PlantDetailView: View {
                 Button("Edit Plant") {
                     showingEditPlant = true
                 }
+                
+                Button("Assign to Garden") { showingAssignGarden = true }
                 
                 Divider()
                 
@@ -1750,7 +1788,127 @@ enum SortOption: CaseIterable {
     }
 }
 
+// MARK: - Create Garden Sheet
+
+struct CreateGardenSheet: View {
+    @Environment(\.dismiss) private var dismiss
+    @Environment(DataService.self) private var dataService
+    @State private var name: String = ""
+    @State private var type: GardenType = .outdoor
+    @State private var isIndoor: Bool = false
+    @State private var isSaving = false
+    @State private var errorMessage: String = ""
+    @State private var showingError = false
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Garden Details") {
+                    TextField("Name", text: $name)
+                    Picker("Type", selection: $type) {
+                        ForEach(GardenType.allCases, id: \.self) { t in
+                            Text(t.displayName).tag(t)
+                        }
+                    }
+                    Toggle("Indoor Garden", isOn: $isIndoor)
+                }
+            }
+            .navigationTitle("Create Garden")
+            .navigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                        .disabled(isSaving)
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") { Task { await saveGarden() } }
+                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
+                }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
+            }
+        }
+    }
+
+    @MainActor
+    private func saveGarden() async {
+        isSaving = true
+        do {
+            _ = try dataService.createGarden(name: name.trimmingCharacters(in: .whitespacesAndNewlines), type: type, isIndoor: isIndoor)
+            NotificationCenter.default.post(name: Notification.Name("GardenCreated"), object: nil)
+            dismiss()
+        } catch {
+            errorMessage = "Failed to create garden: \(error.localizedDescription)"
+            showingError = true
+        }
+        isSaving = false
+    }
+}
+
+// MARK: - Assign Garden Sheet
+
+struct AssignGardenSheet: View {
+    let plant: Plant
+    @Environment(\.dismiss) private var dismiss
+    @Environment(DataService.self) private var dataService
+    @State private var gardens: [Garden] = []
+    @State private var selectedGarden: Garden?
+    @State private var isSaving = false
+
+    var body: some View {
+        NavigationView {
+            Form {
+                Section("Select Garden") {
+                    Picker("Garden", selection: $selectedGarden) {
+                        Text("None").tag(nil as Garden?)
+                        ForEach(gardens, id: \.id) { garden in
+                            Text(garden.name ?? "Unnamed").tag(garden as Garden?)
+                        }
+                    }
+                }
+            }
+            .navigationTitle("Assign Garden")
+            .toolbar {
+                ToolbarItem(placement: .navigationBarLeading) {
+                    Button("Cancel") { dismiss() }
+                }
+                ToolbarItem(placement: .navigationBarTrailing) {
+                    Button("Save") { Task { await save() } }
+                        .disabled(isSaving)
+                }
+            }
+            .task { load() }
+        }
+    }
+
+    private func load() {
+        gardens = dataService.fetchGardens()
+        selectedGarden = plant.garden
+    }
+
+    @MainActor
+    private func save() async {
+        isSaving = true
+        plant.garden = selectedGarden
+        if let selectedGarden = selectedGarden {
+            selectedGarden.plants = (selectedGarden.plants ?? []) + [plant]
+        }
+        do {
+            try dataService.updatePlant(plant)
+            dismiss()
+        } catch {
+            // Silent failure handler - could show alert if desired
+            dismiss()
+        }
+        isSaving = false
+    }
+}
+
 #Preview {
     MyGardenView()
         .environment(try! DataService())
 }
+

@@ -21,6 +21,8 @@ public struct HomeView: View {
     @State private var currentWeather: WeatherInfo?
     @State private var showingAddPlant = false
     @State private var photoService: PhotoService?
+    @State private var showingCreateGarden = false
+    @State private var showGardenCreatedToast = false
     
     public init() {}
     
@@ -30,6 +32,29 @@ public struct HomeView: View {
                 LazyVStack(spacing: 20) {
                     // Welcome Header
                     WelcomeSection()
+                    
+                    if dataService.getGardenCount() == 0 {
+                        VStack(spacing: 12) {
+                            HStack(spacing: 8) {
+                                Image(systemName: "leaf.fill").foregroundColor(.green)
+                                Text("No gardens yet")
+                                    .font(.headline)
+                            }
+                            Text("Create your first garden to start organizing your plants")
+                                .font(.subheadline)
+                                .foregroundColor(.secondary)
+                                .multilineTextAlignment(.center)
+                            Button("Create Garden") {
+                                showingCreateGarden = true
+                            }
+                            .buttonStyle(.borderedProminent)
+                            .accessibilityLabel("Create your first garden")
+                        }
+                        .padding()
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemGray6))
+                        .cornerRadius(12)
+                    }
 
                     // Quick Stats
                     StatsSection(stats: gardeningStats)
@@ -61,6 +86,9 @@ public struct HomeView: View {
             .sheet(isPresented: $showingAddPlant) {
                 AddPlantSheet()
             }
+            .sheet(isPresented: $showingCreateGarden) {
+                CreateGardenSheet()
+            }
             .refreshable {
                 await refreshData()
             }
@@ -68,6 +96,33 @@ public struct HomeView: View {
                 await loadData()
                 // Initialize PhotoService after DataService is available
                 self.photoService = PhotoService(dataService: dataService)
+            }
+        }
+        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
+            showGardenCreatedToast = true
+        }
+        .overlay(alignment: .bottom) {
+            if showGardenCreatedToast {
+                HStack(spacing: 12) {
+                    Image(systemName: "checkmark.circle.fill").foregroundColor(.green)
+                    Text("Garden created! Add your first plant.")
+                    Spacer()
+                    Button("Add Plant") {
+                        showGardenCreatedToast = false
+                        showingAddPlant = true
+                    }
+                    .buttonStyle(.bordered)
+                }
+                .padding()
+                .background(.ultraThinMaterial)
+                .cornerRadius(12)
+                .padding()
+                .transition(.move(edge: .bottom).combined(with: .opacity))
+                .onAppear {
+                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
+                        withAnimation { showGardenCreatedToast = false }
+                    }
+                }
             }
         }
     }

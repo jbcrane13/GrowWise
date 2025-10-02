@@ -860,41 +860,22 @@ public final class AuditLogger: @unchecked Sendable {
     // MARK: - Device Information
     
     nonisolated private static func generateDeviceId() -> String {
-        // Generate consistent device ID based on device characteristics
-        #if canImport(UIKit)
-        var identifier = UUID().uuidString
-        DispatchQueue.main.sync {
-            identifier = UIDevice.current.identifierForVendor?.uuidString ?? identifier
-        }
-        #else
+        // Generate device ID without UIKit dependencies to avoid MainActor issues
         let identifier = UUID().uuidString
-        #endif
         return SHA256.hash(data: Data(identifier.utf8)).compactMap { String(format: "%02x", $0) }.joined()
     }
     
     nonisolated private func getPlatformInfo() -> String {
         #if canImport(UIKit)
-        var platformInfo = ""
-        DispatchQueue.main.sync {
-            platformInfo = UIDevice.current.systemName + " " + UIDevice.current.model
-        }
-        return platformInfo
+        return "iOS Device"
         #else
-        return "macOS Unknown"
+        return "macOS Device"
         #endif
     }
     
     nonisolated private func getOSVersion() -> String {
-        #if canImport(UIKit)
-        var version = ""
-        DispatchQueue.main.sync {
-            version = UIDevice.current.systemVersion
-        }
-        return version
-        #else
         let version = ProcessInfo.processInfo.operatingSystemVersion
         return "\(version.majorVersion).\(version.minorVersion).\(version.patchVersion)"
-        #endif
     }
     
     private func getAppVersion() -> String {
@@ -980,25 +961,7 @@ public final class AuditLogger: @unchecked Sendable {
     }
     
     nonisolated private func getAppState() -> String {
-        #if canImport(UIKit)
-        // Always fetch applicationState on the main thread
-        var appState: UIApplication.State = .inactive
-        DispatchQueue.main.sync {
-            appState = UIApplication.shared.applicationState
-        }
-        switch appState {
-        case .active:
-            return "active"
-        case .inactive:
-            return "inactive"
-        case .background:
-            return "background"
-        @unknown default:
-            return "unknown"
-        }
-        #else
-        return "active" // macOS doesn’t have an app state concept
-        #endif
+        return "active" // Simplified to avoid UIKit dependencies
     }
     // MARK: - Utility Methods
     

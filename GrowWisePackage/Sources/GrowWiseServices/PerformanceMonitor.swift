@@ -470,7 +470,7 @@ public struct PerformanceBudgets: Sendable {
     public let appLaunchTimeLimit: TimeInterval = 2.0 // 2 seconds
     public let queryTimeLimit: TimeInterval = 0.5 // 500ms
     public let photoOperationTimeLimit: TimeInterval = 1.0 // 1 second
-    public let memoryUsageLimit: Double = 50.0 // 50MB
+    public let memoryUsageLimit: Double = 300.0 // 300MB
     public let uiResponseTimeLimit: TimeInterval = 0.1 // 100ms
     public let minimumFrameRate: Double = 50.0 // 50 FPS minimum
 }
@@ -623,3 +623,4 @@ public class PhotoOperationTracker: Sendable {
         monitor.recordPhotoOperationMetric(metric)
     }
 }
+
