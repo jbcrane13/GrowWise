@@ -7,4 +7,7 @@
    <FileRef
       location = "container:GrowWise.xcodeproj">
    </FileRef>
+   <FileRef
+      location = "group:SecurityBootstrap.swift">
+   </FileRef>
 </Workspace>

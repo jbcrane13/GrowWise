@@ -123,6 +123,9 @@ struct OnboardingNavigationView: View {
                 // Save additional preferences
                 await saveUserPreferences(user: user)
                 
+                // Mark onboarding as completed (persist for presentation logic)
+                UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+                
                 // Mark onboarding as completed
                 try? KeychainManager.shared.storeBool(true, for: "hasCompletedOnboarding")
                 
