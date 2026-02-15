@@ -97,3 +97,7 @@ hive-mind-prompt-*.txt
 
 # Keep only compressed metrics archives if needed
 !.claude-flow/metrics/*.ndjson.gz
+**/build/
+.DS_Store
+*.xcarchive
+.omc/

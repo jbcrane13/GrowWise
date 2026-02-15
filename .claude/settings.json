@@ -100,15 +100,41 @@
     ],
     "Stop": [
       {
+        "matcher": "",
         "hooks": [
           {
             "type": "command",
-            "command": "npx claude-flow@alpha hooks session-end --generate-summary true --persist-state true --export-metrics true"
+            "command": ".claude/hooks/supervisor/on-stop.sh"
+          }
+        ]
+      }
+    ],
+    "PostToolUseFailure": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/supervisor/on-error.sh"
+          }
+        ]
+      }
+    ],
+    "Notification": [
+      {
+        "matcher": "",
+        "hooks": [
+          {
+            "type": "command",
+            "command": ".claude/hooks/supervisor/on-notify.sh"
           }
         ]
       }
     ]
   },
   "includeCoAuthoredBy": true,
-  "enabledMcpjsonServers": ["claude-flow", "ruv-swarm"]
+  "enabledMcpjsonServers": [
+    "claude-flow",
+    "ruv-swarm"
+  ]
 }
