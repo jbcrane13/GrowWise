@@ -101,3 +101,11 @@ hive-mind-prompt-*.txt
 .DS_Store
 *.xcarchive
 .omc/
+# macOS
+.DS_Store
+build/.DS_Store
+build/Build/.DS_Store
+build/Index.noindex/.DS_Store
+build/Index.noindex/DataStore/.DS_Store
+build/Index.noindex/DataStore/v5/.DS_Store
+.DS_Store

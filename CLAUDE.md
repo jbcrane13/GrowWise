@@ -50,177 +50,134 @@
 - `/config` - Configuration files
 - `/scripts` - Utility scripts
 - `/examples` - Example code
+# GrowWise - iOS Gardening App
 
 ## Project Overview
 
-This project uses SPARC (Specification, Pseudocode, Architecture, Refinement, Completion) methodology with Claude-Flow orchestration for systematic Test-Driven Development.
+GrowWise is a SwiftUI-based iOS gardening application that helps users manage their gardens, track plant care, and monitor growth progress.
 
-## SPARC Commands
+## Technology Stack
 
-### Core Commands
-- `npx claude-flow sparc modes` - List available modes
-- `npx claude-flow sparc run <mode> "<task>"` - Execute specific mode
-- `npx claude-flow sparc tdd "<feature>"` - Run complete TDD workflow
-- `npx claude-flow sparc info <mode>` - Get mode details
+- **Platform**: iOS 18+
+- **Language**: Swift 5.9+
+- **UI Framework**: SwiftUI
+- **Data Persistence**: SwiftData
+- **Concurrency**: Swift Async/Await
+- **Testing**: XCTest, XCUITest
 
-### Batchtools Commands
-- `npx claude-flow sparc batch <modes> "<task>"` - Parallel execution
-- `npx claude-flow sparc pipeline "<task>"` - Full pipeline processing
-- `npx claude-flow sparc concurrent <mode> "<tasks-file>"` - Multi-task processing
+## Project Structure
 
-### Build Commands
-- `npm run build` - Build project
-- `npm run test` - Run tests
-- `npm run lint` - Linting
-- `npm run typecheck` - Type checking
+```
+GrowWise/
+├── GrowWise/              # Main app target
+│   ├── Views/            # SwiftUI views
+│   ├── Models/           # SwiftData models
+│   ├── ViewModels/       # View models and business logic
+│   └── Services/         # API and data services
+├── GrowWisePackage/       # Swift Package with shared code
+├── GrowWiseUITests/       # UI tests
+├── tests/                 # Unit tests
+├── docs/                  # Documentation
+└── scripts/               # Build and utility scripts
+```
 
-## SPARC Workflow Phases
+## File Organization Rules
 
-1. **Specification** - Requirements analysis (`sparc run spec-pseudocode`)
-2. **Pseudocode** - Algorithm design (`sparc run spec-pseudocode`)
-3. **Architecture** - System design (`sparc run architect`)
-4. **Refinement** - TDD implementation (`sparc tdd`)
-5. **Completion** - Integration (`sparc run integration`)
+**NEVER save working files to the root folder. Use these directories:**
+- `/GrowWise/` - Swift source code files
+- `/tests/` - Test files
+- `/docs/` - Documentation and markdown files
+- `/scripts/` - Utility scripts
+- `/config/` - Configuration files
 
 ## Code Style & Best Practices
 
-- **Modular Design**: Files under 500 lines
-- **Environment Safety**: Never hardcode secrets
-- **Test-First**: Write tests before implementation
-- **Clean Architecture**: Separate concerns
-- **Documentation**: Keep updated
+### Swift/SwiftUI Standards
+- Use `@Observable` instead of `ObservableObject`
+- Use SwiftData for persistence (not CoreData)
+- Use async/await for concurrency (not DispatchQueue)
+- All interactive UI elements must have `.accessibilityIdentifier()`
+- Follow modern iOS 18+ patterns
 
-## 🚀 Available Agents (54 Total)
+### Architecture
+- **Modular Design**: Keep files focused and under 500 lines
+- **Clean Architecture**: Separate views, view models, models, and services
+- **Environment Safety**: Never hardcode secrets or API keys
+- **Test-First**: Write tests before implementation (TDD)
 
-### Core Development
-`coder`, `reviewer`, `tester`, `planner`, `researcher`
+### Accessibility Requirements
 
-### Swarm Coordination
-`hierarchical-coordinator`, `mesh-coordinator`, `adaptive-coordinator`, `collective-intelligence-coordinator`, `swarm-memory-manager`
+Every interactive element MUST have an accessibility identifier following this pattern:
+```swift
+// Pattern: {screen}_{element}_{descriptor}
+Button("Save") { }
+    .accessibilityIdentifier("settings_button_save")
 
-### Consensus & Distributed
-`byzantine-coordinator`, `raft-manager`, `gossip-coordinator`, `consensus-builder`, `crdt-synchronizer`, `quorum-manager`, `security-manager`
+TextField("Name", text: $name)
+    .accessibilityIdentifier("profile_textfield_name")
 
-### Performance & Optimization
-`perf-analyzer`, `performance-benchmarker`, `task-orchestrator`, `memory-coordinator`, `smart-agent`
+Toggle("Notifications", isOn: $enabled)
+    .accessibilityIdentifier("settings_toggle_notifications")
 
-### GitHub & Repository
-`github-modes`, `pr-manager`, `code-review-swarm`, `issue-tracker`, `release-manager`, `workflow-automation`, `project-board-sync`, `repo-architect`, `multi-repo-swarm`
+// List items include unique ID
+ForEach(plants) { plant in
+    PlantRow(plant: plant)
+        .accessibilityIdentifier("garden_cell_plant_\(plant.id)")
+}
+```
 
-### SPARC Methodology
-`sparc-coord`, `sparc-coder`, `specification`, `pseudocode`, `architecture`, `refinement`
+## Development Workflow
 
-### Specialized Development
-`backend-dev`, `mobile-dev`, `ml-developer`, `cicd-engineer`, `api-docs`, `system-architect`, `code-analyzer`, `base-template-generator`
+### Starting New Features
+1. Review requirements and user stories
+2. Plan the implementation approach
+3. Write failing tests first (TDD)
+4. Implement minimal code to pass tests
+5. Refactor while keeping tests green
+6. Request code review before completion
 
-### Testing & Validation
-`tdd-london-swarm`, `production-validator`
+### Quality Gates (Before Commit)
+- [ ] All tests passing
+- [ ] No legacy Swift patterns (`ObservableObject`, `@Published`, `CoreData`, etc.)
+- [ ] All interactive UI has accessibility identifiers
+- [ ] Build succeeds with zero warnings
+- [ ] Code reviewed and approved
 
-### Migration & Planning
-`migration-planner`, `swarm-init`
+## Common Commands
 
-## 🎯 Claude Code vs MCP Tools
-
-### Claude Code Handles ALL EXECUTION:
-- **Task tool**: Spawn and run agents concurrently for actual work
-- File operations (Read, Write, Edit, MultiEdit, Glob, Grep)
-- Code generation and programming
-- Bash commands and system operations
-- Implementation work
-- Project navigation and analysis
-- TodoWrite and task management
-- Git operations
-- Package management
-- Testing and debugging
-
-### MCP Tools ONLY COORDINATE:
-- Swarm initialization (topology setup)
-- Agent type definitions (coordination patterns)
-- Task orchestration (high-level planning)
-- Memory management
-- Neural features
-- Performance tracking
-- GitHub integration
-
-**KEY**: MCP coordinates the strategy, Claude Code's Task tool executes with real agents.
-
-## 🚀 Quick Setup
-
+### Build & Test
 ```bash
-# Add Claude Flow MCP server
-claude mcp add claude-flow npx claude-flow@alpha mcp start
+# Build the app
+xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -configuration Debug build
+
+# Run unit tests
+xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -destination 'platform=iOS Simulator,name=iPhone 15' test
+
+# Run UI tests
+xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWiseUITests -destination 'platform=iOS Simulator,name=iPhone 15' test
 ```
 
-## MCP Tool Categories
-
-### Coordination
-`swarm_init`, `agent_spawn`, `task_orchestrate`
-
-### Monitoring
-`swarm_status`, `agent_list`, `agent_metrics`, `task_status`, `task_results`
-
-### Memory & Neural
-`memory_usage`, `neural_status`, `neural_train`, `neural_patterns`
-
-### GitHub Integration
-`github_swarm`, `repo_analyze`, `pr_enhance`, `issue_triage`, `code_review`
-
-### System
-`benchmark_run`, `features_detect`, `swarm_monitor`
-
-## 🚀 Agent Execution Flow with Claude Code
-
-### The Correct Pattern:
-
-1. **Optional**: Use MCP tools to set up coordination topology
-2. **REQUIRED**: Use Claude Code's Task tool to spawn agents that do actual work
-3. **REQUIRED**: Each agent runs hooks for coordination
-4. **REQUIRED**: Batch all operations in single messages
-
-### Example Full-Stack Development:
-
-```javascript
-// Single message with all agent spawning via Claude Code's Task tool
-[Parallel Agent Execution]:
-  Task("Backend Developer", "Build REST API with Express. Use hooks for coordination.", "backend-dev")
-  Task("Frontend Developer", "Create React UI. Coordinate with backend via memory.", "coder")
-  Task("Database Architect", "Design PostgreSQL schema. Store schema in memory.", "code-analyzer")
-  Task("Test Engineer", "Write Jest tests. Check memory for API contracts.", "tester")
-  Task("DevOps Engineer", "Setup Docker and CI/CD. Document in memory.", "cicd-engineer")
-  Task("Security Auditor", "Review authentication. Report findings via hooks.", "reviewer")
-  
-  // All todos batched together
-  TodoWrite { todos: [...8-10 todos...] }
-  
-  // All file operations together
-  Write "backend/server.js"
-  Write "frontend/App.jsx"
-  Write "database/schema.sql"
-```
-
-## 📋 Agent Coordination Protocol
-
-### Every Agent Spawned via Task Tool MUST:
-
-**1️⃣ BEFORE Work:**
+### Simulator Management
 ```bash
-npx claude-flow@alpha hooks pre-task --description "[task]"
-npx claude-flow@alpha hooks session-restore --session-id "swarm-[id]"
+# List available simulators
+xcrun simctl list devices
+
+# Boot a simulator
+xcrun simctl boot "iPhone 15"
+
+# Install app on simulator
+xcrun simctl install booted /path/to/GrowWise.app
 ```
 
-**2️⃣ DURING Work:**
-```bash
-npx claude-flow@alpha hooks post-edit --file "[file]" --memory-key "swarm/[agent]/[step]"
-npx claude-flow@alpha hooks notify --message "[what was done]"
-```
+## Important Reminders
 
-**3️⃣ AFTER Work:**
-```bash
-npx claude-flow@alpha hooks post-task --task-id "[task]"
-npx claude-flow@alpha hooks session-end --export-metrics true
-```
+- **File Creation**: NEVER create files unless absolutely necessary
+- **Editing First**: ALWAYS prefer editing existing files to creating new ones
+- **No Documentation Sprawl**: NEVER proactively create documentation files (*.md) or README files unless explicitly requested
+- **Organized Files**: Never save working files, text/mds and tests to the root folder
+- **Do What's Asked**: Nothing more, nothing less
 
-## 🎯 Concurrent Execution Examples
+## Resources
 
 ### ✅ CORRECT WORKFLOW: MCP Coordinates, Claude Code Executes
 
@@ -349,3 +306,7 @@ Run `bd prime` for workflow context, or install hooks (`bd hooks install`) for a
 - `bd sync` - Sync with git (run at session end)
 
 For full workflow details: `bd prime`
+- [Swift Documentation](https://swift.org/documentation/)
+- [SwiftUI Documentation](https://developer.apple.com/documentation/swiftui)
+- [SwiftData Documentation](https://developer.apple.com/documentation/swiftdata)
+- [iOS Human Interface Guidelines](https://developer.apple.com/design/human-interface-guidelines/ios)
