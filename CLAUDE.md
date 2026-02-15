@@ -1,5 +1,11 @@
 # Claude Code Configuration - SPARC Development Environment
 
+## Key Documents
+
+- **`docs/ADR.md`** — Architecture Decision Records. Read before making structural changes. Append when making new decisions.
+- **`docs/SECURITY_AUDIT_FINAL.md`** — Security audit results.
+- **`docs/JWT_Implementation_Guide.md`** — JWT auth implementation details.
+
 ## 🚨 CRITICAL: CONCURRENT EXECUTION & FILE MANAGEMENT
 
 **ABSOLUTE RULES**:
@@ -330,3 +336,16 @@ NEVER create files unless they're absolutely necessary for achieving your goal.
 ALWAYS prefer editing an existing file to creating a new one.
 NEVER proactively create documentation files (*.md) or README files. Only create documentation files if explicitly requested by the User.
 Never save working files, text/mds and tests to the root folder.
+
+## Issue Tracking
+
+This project uses **bd (beads)** for issue tracking.
+Run `bd prime` for workflow context, or install hooks (`bd hooks install`) for auto-injection.
+
+**Quick reference:**
+- `bd ready` - Find unblocked work
+- `bd create "Title" --type task --priority 2` - Create issue
+- `bd close <id>` - Complete work
+- `bd sync` - Sync with git (run at session end)
+
+For full workflow details: `bd prime`
