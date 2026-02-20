@@ -1,125 +1,94 @@
-# GrowWise - Agent Instructions
+# AGENTS.md — GrowWise
 
-## Project Overview
+## Architecture: Strict MV (Model-View)
 
-GrowWise is an iOS/macOS gardening companion app built with **Swift 6.1**, **SwiftUI**, and **SwiftData**. It helps users track plants, manage gardens, set care reminders, keep a plant journal, and learn through tutorials. The app targets **iOS 17+ / macOS 14+** and uses **CloudKit** for sync.
+**No ViewModels.** This is a strict MV architecture per ADR-002. Views consume `@Observable` services directly via `@Environment`. Business logic lives in service/manager classes, not ViewModel wrappers.
 
-## Architecture
+### Pattern
+```swift
+// ✅ Correct — view uses service directly
+struct MyView: View {
+    @Environment(DataService.self) private var dataService
+    @State private var localState = ""
+    // ...
+}
 
-The codebase follows a **modular Swift Package** architecture:
+// ❌ Wrong — no ViewModel layer
+class MyViewModel: ObservableObject { ... }
+```
+
+### State Management
+- `@State` for view-local state
+- `@Environment` for injected `@Observable` services (DataService, LocationService, etc.)
+- `@Observable` macro on service classes (not `ObservableObject`)
+- Complex business logic → service/manager objects, never in views directly
+
+## Project Structure
 
 ```
 GrowWise/                    # App shell (entry point, assets, entitlements)
-GrowWisePackage/             # Core Swift Package with 3 library targets
+GrowWisePackage/             # Core Swift Package
   Sources/
-    GrowWiseModels/          # SwiftData @Model classes + enums (no dependencies)
-    GrowWiseServices/        # Service layer (depends on GrowWiseModels)
-    GrowWiseFeature/         # SwiftUI views (depends on Models + Services)
+    GrowWiseModels/          # SwiftData @Model classes + enums
+    GrowWiseServices/        # Service layer (@Observable, actors)
+    GrowWiseFeature/         # SwiftUI views (strict MV — no ViewModels)
   Tests/
-    GrowWiseModelsTests/     # Model unit tests
-    GrowWiseServicesTests/   # Service unit tests (extensive security tests)
-    GrowWiseFeatureTests/    # Feature/integration tests
+    GrowWiseModelsTests/
+    GrowWiseServicesTests/
+    GrowWiseFeatureTests/
 GrowWiseUITests/             # Xcode UI tests
+docs/                        # ADR.md, PRD, guides
 ```
 
-**Dependency graph**: `GrowWiseFeature` -> `GrowWiseServices` -> `GrowWiseModels`
+**Dependency graph:** `GrowWiseFeature` → `GrowWiseServices` → `GrowWiseModels`
 
 ## Key Technical Decisions
 
-- **SwiftData** for persistence (not Core Data) with persistent on-disk storage
-- **CloudKit** sync via `CKContainer` (schema in `GrowWise/Data/CloudKit/`)
-- **@Observable** macro (not ObservableObject) for services
-- **@Environment** injection for services (DataService, LocationService, NotificationService, PerformanceMonitor)
-- **Swift 6 strict concurrency** with `@MainActor` isolation on DataService and views
-- **SwiftDataCache** with TTL policies (short/medium/long) for query optimization
-- **Multi-level fallback** initialization in DataService to prevent crashes
-- **CryptoKit AES-256-GCM** for credential encryption; Secure Enclave for key management
-- All model properties are **optional** for CloudKit compatibility
-
-## Data Models (SwiftData @Model)
-
-| Model | Purpose | Key Relationships |
-|-------|---------|-------------------|
-| `Plant` | Plant with care tracking, growth stages, health | -> Garden, -> [PlantReminder], -> [JournalEntry], -> [Plant] (companions) |
-| `Garden` | Garden space with location, soil, exposure | -> [Plant], -> User |
-| `User` | User profile, skill level, subscription, achievements | -> [Garden], -> [PlantReminder], -> [JournalEntry] |
-| `PlantReminder` | Scheduled care reminders with snooze/recurrence | -> Plant, -> User |
-| `JournalEntry` | Plant observations with measurements and media | -> Plant, -> User |
-| `ReminderSettings` | Notification preferences per user | -> User |
-| `SecureCredentials` | JWT token pair (Codable struct, not @Model) | standalone |
-| `GardeningStats` | Aggregated dashboard metrics (Sendable struct) | standalone |
-
-## Services Layer
-
-| Service | Responsibility |
-|---------|---------------|
-| `DataService` | SwiftData CRUD, caching, CloudKit sync status, batch operations |
-| `EncryptionService` | AES-256-GCM encryption, key rotation, compliance enforcement |
-| `KeychainStorageService` | Keychain read/write with access groups |
-| `KeychainManager` | High-level keychain operations |
-| `KeyRotationManager` | Automatic key rotation policies |
-| `SecureEnclaveKeyManager` | Hardware-backed key storage |
-| `JWTValidator` | JWT token validation and parsing |
-| `TokenManagementService` | Token lifecycle (refresh, revoke) |
-| `BiometricAuthenticationManager` | Face ID / Touch ID authentication |
-| `AuthenticationInitializer` | Auth bootstrap at app launch |
-| `AuditLogger` | Security event audit trail |
-| `LocationService` | CoreLocation with authorization handling |
-| `NotificationService` | Local/remote notification scheduling |
-| `ReminderService` | Smart reminder logic with weather adjustment |
-| `PhotoService` | Photo capture and storage |
-| `PlantDatabaseService` | Reference plant database queries |
-| `TutorialService` | Tutorial progression tracking |
-| `CacheManager` / `SwiftDataCache` | In-memory cache with TTL policies |
-| `PerformanceMonitor` | App launch timing, memory tracking |
-| `BackgroundTaskManager` | Background refresh tasks |
-| `ValidationService` | Input validation rules |
-| `DataTransformationService` | Data format conversions |
-| `RateLimiter` | API/operation rate limiting |
-| `MigrationIntegrityService` | Data migration verification |
-| `LegacyEncryptionMigrationService` | Legacy encryption format migration |
+- **SwiftData** (not CoreData) with CloudKit sync
+- **Swift 6 strict concurrency** — `@MainActor`, actors, Sendable
+- **Swift Testing** (`@Test`, `#expect`) preferred over XCTest for new tests (ADR-004)
+- **All @Model properties optional** for CloudKit compatibility
+- **iOS 17+ / macOS 14+** deployment targets
+- Open `GrowWise.xcworkspace` (not `.xcodeproj`)
 
 ## Build & Test
 
 ```bash
-# Build via Xcode
+# Build
 xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator build
 
-# Run package tests
+# Package tests (fast, no simulator)
 cd GrowWisePackage && swift test
 
-# Run specific test target
+# Specific test target
 swift test --filter GrowWiseServicesTests
+```
+
+## Issue Tracking (Beads)
+
+```bash
+bd ready              # Find unblocked work
+bd show <id>          # View details
+bd create "Title" --type task --priority 2
+bd update <id> --status in_progress
+bd close <id>
+bd sync               # Sync with git
 ```
 
 ## Conventions
 
-- **Concurrency**: Use `@MainActor` for UI-bound services. Use `Task.detached` for background work. Use `nonisolated` for thread-safe accessors.
-- **Error handling**: Multi-level fallback pattern (see `DataService.createFallback()`). Never crash on initialization failure.
-- **Caching**: Use `SwiftDataCache` with `.short` (2min), `.medium` (5min), `.long` (15min) TTL policies. Invalidate relevant caches on writes.
-- **Logging**: Use `os.Logger` with privacy annotations (`.private` for user data).
-- **Models**: All `@Model` properties must be optional or have defaults for CloudKit compatibility.
-- **File organization**: Views in `GrowWiseFeature/Views/`, components in `Components/`, onboarding in `OnboardingFlow/`.
-- **No hardcoded secrets**: All credentials flow through Keychain/SecureEnclave.
+- **No ViewModels** — strict MV, services via @Environment
+- **Concurrency**: `@MainActor` for UI-bound services, actors for concurrent state
+- **Error handling**: Multi-level fallback pattern (see DataService)
+- **Caching**: SwiftDataCache with TTL policies (.short/.medium/.long)
+- **Logging**: `os.Logger` with `.private` for user data
+- **Accessibility**: Every interactive element needs `.accessibilityIdentifier()`
+- **Files**: Views in `GrowWiseFeature/Views/`, components in `Components/`
 
-## Issue Tracking
+## ADR
 
-This project uses **bd** (beads) for issue tracking.
+All architecture decisions in `docs/ADR.md`. Read before structural changes, append when making new decisions.
 
-```bash
-bd ready              # Find available work
-bd show <id>          # View issue details
-bd update <id> --status in_progress  # Claim work
-bd close <id>         # Complete work
-bd sync               # Sync with git
-```
+## Current Status
 
-## Session Completion Checklist
-
-1. Create issues for remaining work (`bd create`)
-2. Run quality gates if code changed
-3. Close finished issues (`bd close <id>`)
-4. Push to remote:
-   ```bash
-   git pull --rebase && bd sync && git push && git status
-   ```
+~70% complete demo app with known issues. Core features (gardens, plants, reminders, journal, tutorials, onboarding) are implemented. Security services (JWT, Keychain, encryption) are overbuilt for current needs — may simplify later.
