@@ -1,5 +1,4 @@
 import LocalAuthentication
-import Combine
 import Foundation
 import Security
 #if canImport(UIKit)
@@ -8,7 +7,7 @@ import UIKit
 
 /// BiometricAuthenticationManager handles Face ID/Touch ID authentication
 @MainActor
-public final class BiometricAuthenticationManager: ObservableObject, BiometricAuthenticationProtocol {
+@Observable public final class BiometricAuthenticationManager: BiometricAuthenticationProtocol {
     
     // MARK: - Singleton
     
@@ -16,10 +15,10 @@ public final class BiometricAuthenticationManager: ObservableObject, BiometricAu
     
     // MARK: - Published Properties
     
-    @Published public private(set) var isAuthenticated = false
-    @Published public private(set) var biometricType: LABiometryType = .none
-    @Published public private(set) var canUseBiometrics = false
-    @Published public private(set) var isAuthenticating = false
+    public private(set) var isAuthenticated = false
+    public private(set) var biometricType: LABiometryType = .none
+    public private(set) var canUseBiometrics = false
+    public private(set) var isAuthenticating = false
     
     // MARK: - Properties
     
@@ -413,7 +412,7 @@ public final class BiometricAuthenticationManager: ObservableObject, BiometricAu
 import SwiftUI
 
 public struct BiometricAuthenticationView: View {
-    @StateObject private var authManager = BiometricAuthenticationManager.shared
+    @State private var authManager = BiometricAuthenticationManager.shared
     @State private var showError = false
     @State private var errorMessage = ""
     
@@ -539,7 +538,7 @@ public struct BiometricAuthenticationView: View {
 // MARK: - View Modifier for Protected Content
 
 public struct BiometricProtectionModifier: ViewModifier {
-    @StateObject private var authManager = BiometricAuthenticationManager.shared
+    @State private var authManager = BiometricAuthenticationManager.shared
     @State private var showAuthView = false
     
     let requireAuthentication: Bool

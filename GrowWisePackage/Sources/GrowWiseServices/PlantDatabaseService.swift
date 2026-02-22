@@ -1,10 +1,9 @@
 import Foundation
-import Combine
 import SwiftData
 import GrowWiseModels
 
 @MainActor
-public final class PlantDatabaseService: ObservableObject {
+@Observable public final class PlantDatabaseService {
     private let dataService: DataService
     private let seedingWorker: PlantSeedingWorker
     
@@ -744,10 +743,15 @@ public final class PlantDatabaseService: ObservableObject {
 
 // MARK: - Seeding Infrastructure
 
-public struct PlantDatabaseSeedingError: Error, LocalizedError {
-    public struct Failure {
+public struct PlantDatabaseSeedingError: Error, LocalizedError, Sendable {
+    public struct Failure: Sendable {
         public let category: String
-        public let underlyingError: Error
+        public let underlyingErrorDescription: String
+
+        public init(category: String, underlyingError: any Error) {
+            self.category = category
+            self.underlyingErrorDescription = underlyingError.localizedDescription
+        }
     }
 
     public let failures: [Failure]
@@ -763,7 +767,7 @@ public struct PlantDatabaseSeedingError: Error, LocalizedError {
 
     public var failureReason: String? {
         failures
-            .map { "\($0.category): \($0.underlyingError.localizedDescription)" }
+            .map { "\($0.category): \($0.underlyingErrorDescription)" }
             .joined(separator: " | ")
     }
 }
@@ -882,4 +886,3 @@ public enum PlantingSeason: String, CaseIterable, Codable {
         }
     }
 }
-

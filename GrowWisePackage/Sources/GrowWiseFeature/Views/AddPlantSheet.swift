@@ -28,11 +28,12 @@ public struct AddPlantSheet: View {
     @State private var showingError = false
     @State private var errorMessage = ""
     @State private var isSaving = false
+    @State private var saveTask: Task<Void, Never>?
 
     public init() {}
 
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 Section("Basic Information") {
                     TextField("Plant Name", text: $plantName)
@@ -96,7 +97,7 @@ public struct AddPlantSheet: View {
                 }
             }
             .navigationTitle("Add New Plant")
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
@@ -106,7 +107,7 @@ public struct AddPlantSheet: View {
 
                 ToolbarItem(placement: .confirmationAction) {
                     Button("Save") {
-                        Task {
+                        saveTask = Task {
                             await savePlant()
                         }
                     }
@@ -123,6 +124,9 @@ public struct AddPlantSheet: View {
                 loadGardens()
             }
             .accessibilityIdentifier("addPlantSheet")
+            .onDisappear {
+                saveTask?.cancel()
+            }
         }
     }
 

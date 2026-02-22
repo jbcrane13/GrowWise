@@ -1,4 +1,7 @@
 import SwiftUI
+#if canImport(UIKit)
+import UIKit
+#endif
 
 extension Color {
     
@@ -17,15 +20,16 @@ extension Color {
     
     /// Background colors that work in both modes
     static var adaptiveCardBackground: Color {
-        Color(UIColor.secondarySystemBackground)
+        Color(.secondarySystemBackground)
     }
     
     static var adaptiveTertiaryBackground: Color {
-        Color(UIColor.tertiarySystemBackground)
+        Color(.tertiarySystemBackground)
     }
     
     /// Initialize a color that adapts to light/dark mode
     init(light: Color, dark: Color) {
+        #if canImport(UIKit)
         self.init(UIColor { traitCollection in
             switch traitCollection.userInterfaceStyle {
             case .dark:
@@ -34,5 +38,8 @@ extension Color {
                 return UIColor(light)
             }
         })
+        #else
+        self = light
+        #endif
     }
 }

@@ -27,7 +27,7 @@ public struct RemindersListView: View {
             }
         }
         .navigationTitle("Reminders")
-        .navigationBarTitleDisplayMode(.large)
+        .gwNavigationBarTitleDisplayMode(.large)
         .refreshable {
             await loadReminders()
         }
@@ -126,13 +126,7 @@ public struct RemindersListView: View {
     @MainActor
     private func loadReminders() async {
         isLoading = true
-
-        do {
-            reminders = dataService.fetchActiveReminders()
-        } catch {
-            print("Failed to load reminders: \(error)")
-            reminders = []
-        }
+        reminders = dataService.fetchActiveReminders()
 
         isLoading = false
     }

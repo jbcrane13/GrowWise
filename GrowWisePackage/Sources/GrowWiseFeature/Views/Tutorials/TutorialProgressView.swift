@@ -15,7 +15,7 @@ public struct TutorialProgressView: View {
     }
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(alignment: .leading, spacing: 20) {
                     // Overall Progress Card
@@ -33,9 +33,9 @@ public struct TutorialProgressView: View {
                 .padding()
             }
             .navigationTitle("Learning Progress")
-            .navigationBarTitleDisplayMode(.large)
+            .gwNavigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         dismiss()
                     }

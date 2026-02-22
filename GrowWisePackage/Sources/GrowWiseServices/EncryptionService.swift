@@ -4,7 +4,7 @@ import Security
 
 /// Service responsible for all encryption/decryption operations with key rotation support
 /// Now uses Secure Enclave for enhanced security and supports PCI DSS/SOC2 compliance
-public final class EncryptionService {
+public final class EncryptionService: @unchecked Sendable {
     
     // MARK: - Error Types
     
@@ -175,7 +175,7 @@ public final class EncryptionService {
         let newVersion = try await keyRotationManager.rotateKey(reason: reason)
         
         // Clear cached keys to force re-derivation
-        keyQueue.async(flags: .barrier) {
+        keyQueue.sync(flags: .barrier) {
             self._cachedKeys.removeAll()
         }
         
@@ -220,7 +220,7 @@ public final class EncryptionService {
         }
         
         // Clear cached keys
-        keyQueue.async(flags: .barrier) {
+        keyQueue.sync(flags: .barrier) {
             self._cachedKeys.removeAll()
         }
     }
@@ -275,7 +275,7 @@ public final class EncryptionService {
         let _ = try secureEnclaveKeyManager.getSymmetricKey()
         
         // Clear cached keys to force re-derivation
-        keyQueue.async(flags: .barrier) {
+        keyQueue.sync(flags: .barrier) {
             self._cachedKeys.removeAll()
         }
         

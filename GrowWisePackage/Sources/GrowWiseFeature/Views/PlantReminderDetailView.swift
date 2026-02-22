@@ -20,9 +20,13 @@ public struct PlantReminderDetailView: View {
         self.reminderService = reminderService
         self.dataService = dataService
     }
+
+    private var plantDisplayName: String {
+        plant.name ?? "Unknown Plant"
+    }
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     // Plant header
@@ -44,16 +48,16 @@ public struct PlantReminderDetailView: View {
                 }
                 .padding()
             }
-            .navigationTitle("\(plant.name) Care")
-            .navigationBarTitleDisplayMode(.large)
+            .navigationTitle(plantDisplayName + " Care")
+            .gwNavigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Done") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Add Reminder", systemImage: "plus") {
                         showingAddReminder = true
                     }
@@ -212,7 +216,7 @@ public struct PlantReminderDetailView: View {
                 .font(.headline)
                 .foregroundColor(.secondary)
             
-            Text("Add a reminder to help you remember to care for \(plant.name)")
+            Text(verbatim: "Add a reminder to help you remember to care for \(plantDisplayName)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
@@ -390,7 +394,7 @@ public struct PlantReminderDetailView: View {
     
     private func addFertilizingReminder() {
         Task {
-            try? await reminderService.createSmartReminder(
+            _ = try? await reminderService.createSmartReminder(
                 for: plant,
                 type: .fertilizing,
                 baseFrequencyDays: 28,
@@ -405,7 +409,7 @@ public struct PlantReminderDetailView: View {
     
     private func addInspectionReminder() {
         Task {
-            try? await reminderService.createSmartReminder(
+            _ = try? await reminderService.createSmartReminder(
                 for: plant,
                 type: .inspection,
                 baseFrequencyDays: 7,
@@ -420,7 +424,7 @@ public struct PlantReminderDetailView: View {
     
     private func acceptSuggestion(_ suggestion: ReminderSuggestion) {
         Task {
-            try? await reminderService.createSmartReminder(
+            _ = try? await reminderService.createSmartReminder(
                 for: suggestion.plant,
                 type: suggestion.type,
                 baseFrequencyDays: suggestion.suggestedFrequencyDays,
@@ -449,10 +453,13 @@ struct ReminderDetailCard: View {
     var body: some View {
         HStack(spacing: 12) {
             // Toggle switch
-            Toggle("", isOn: .constant(reminder.isEnabled))
-                .onChange(of: reminder.isEnabled) { _ in
-                    onToggle()
-                }
+            Toggle(
+                "",
+                isOn: Binding(
+                    get: { reminder.isEnabled },
+                    set: { _ in onToggle() }
+                )
+            )
             
             // Reminder info
             VStack(alignment: .leading, spacing: 4) {
@@ -602,14 +609,14 @@ struct EditReminderView: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             Text("Edit Reminder - Coming Soon")
                 .navigationTitle("Edit Reminder")
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
                     }
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .primaryAction) {
                         Button("Save") { 
                             onSave()
                             dismiss() 

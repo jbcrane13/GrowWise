@@ -237,7 +237,7 @@ struct PlantFilterSheet: View {
     @Environment(\.dismiss) private var dismiss
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List {
                 Section("Plant Type") {
                     ForEach(PlantType.allCases, id: \.self) { type in
@@ -270,9 +270,9 @@ struct PlantFilterSheet: View {
                 }
             }
             .navigationTitle("Filters")
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Clear") {
                         selectedFilter = nil
                         onFilterSelected(nil)
@@ -280,7 +280,7 @@ struct PlantFilterSheet: View {
                     .disabled(selectedFilter == nil)
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         dismiss()
                     }

@@ -22,7 +22,7 @@ public struct ReminderSettingsView: View {
     }
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Notification permissions
                 notificationPermissionsSection
@@ -43,15 +43,15 @@ public struct ReminderSettingsView: View {
                 notificationManagementSection
             }
             .navigationTitle("Reminder Settings")
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         saveSettings()
                         dismiss()
@@ -341,27 +341,27 @@ struct TimePickerSheet: View {
     let onCancel: () -> Void
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack {
                 DatePicker(
                     "Time",
                     selection: $selectedTime,
                     displayedComponents: .hourAndMinute
                 )
-                .datePickerStyle(.wheel)
+                .gwWheelDatePickerStyle()
                 .labelsHidden()
                 
                 Spacer()
             }
             .padding()
             .navigationTitle(title)
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Save", action: onSave)
                         .fontWeight(.semibold)
                 }
@@ -417,7 +417,7 @@ struct PendingNotificationsView: View {
             }
         }
         .navigationTitle("Pending Notifications")
-        .navigationBarTitleDisplayMode(.inline)
+        .gwNavigationBarTitleDisplayMode(.inline)
         .task {
             await loadPendingNotifications()
         }

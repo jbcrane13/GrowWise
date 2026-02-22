@@ -41,7 +41,7 @@ public struct TutorialDetailView: View {
             .padding()
         }
         .navigationTitle(tutorial.title)
-        .navigationBarTitleDisplayMode(.large)
+        .gwNavigationBarTitleDisplayMode(.large)
         .onAppear {
             refreshProgress()
             // Start at first incomplete step
@@ -250,9 +250,12 @@ public struct TutorialDetailView: View {
         
         // Auto-advance to next step if not on last step
         if stepIndex == currentStepIndex && currentStepIndex < tutorial.steps.count - 1 {
-            DispatchQueue.main.asyncAfter(deadline: .now() + 0.5) {
-                withAnimation {
-                    currentStepIndex += 1
+            Task { @MainActor in
+                try? await Task.sleep(nanoseconds: 500_000_000)
+                if !Task.isCancelled {
+                    withAnimation {
+                        currentStepIndex += 1
+                    }
                 }
             }
         }
@@ -398,7 +401,7 @@ struct TutorialStepCard: View {
         let tutorialService = TutorialService(dataService: dataService)
         let tutorial = tutorialService.getAllTutorials().first!
         
-        return NavigationView {
+        return NavigationStack {
             TutorialDetailView(tutorial: tutorial, tutorialService: tutorialService)
         }
     } catch {
@@ -406,7 +409,7 @@ struct TutorialStepCard: View {
         let tutorialService = TutorialService(dataService: fallbackService)
         let tutorial = tutorialService.getAllTutorials().first!
         
-        return NavigationView {
+        return NavigationStack {
             TutorialDetailView(tutorial: tutorial, tutorialService: tutorialService)
         }
     }

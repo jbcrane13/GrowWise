@@ -9,7 +9,7 @@ struct OnboardingProgressView: View {
             HStack(spacing: 4) {
                 ForEach(OnboardingStep.allCases, id: \.self) { step in
                     Rectangle()
-                        .fill(step.stepNumber <= currentStep.stepNumber ? Color.adaptiveGreen : Color(UIColor.quaternaryLabel))
+                        .fill(step.stepNumber <= currentStep.stepNumber ? Color.adaptiveGreen : Color(.quaternaryLabel))
                         .frame(height: 4)
                         .animation(.easeInOut, value: currentStep)
                 }

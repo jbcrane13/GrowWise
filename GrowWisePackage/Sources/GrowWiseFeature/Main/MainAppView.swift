@@ -15,6 +15,7 @@ public struct MainAppView: View {
     
     // DataService initialized asynchronously in this view, then injected to children
     @State private var dataService: DataService? = nil
+    @State private var featureServices: FeatureServices?
     @State private var showingOnboarding = false
     @State private var selectedTab: TabSelection = .home
     @State private var isInitializing = true
@@ -26,6 +27,13 @@ public struct MainAppView: View {
     public init() {
         // Cache onboarding status to avoid repeated UserDefaults reads
         self.cachedOnboardingStatus = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+    }
+
+    private struct FeatureServices {
+        let reminderService: ReminderService
+        let photoService: PhotoService
+        let plantDatabaseService: PlantDatabaseService
+        let tutorialService: TutorialService
     }
     
     public var body: some View {
@@ -39,7 +47,7 @@ public struct MainAppView: View {
                         .foregroundColor(.secondary)
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
-                .background(Color(UIColor.systemBackground))
+                .background(Color(.systemBackground))
                 .task {
                     await initializeDataService()
                 }
@@ -54,9 +62,13 @@ public struct MainAppView: View {
                     Text("Some features may be unavailable")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
-                    if let ds = dataService {
+                    if let ds = dataService, let services = featureServices {
                         mainTabView
                             .environment(ds)
+                            .environment(services.reminderService)
+                            .environment(services.photoService)
+                            .environment(services.plantDatabaseService)
+                            .environment(services.tutorialService)
                     }
                 }
             } else if let error = initializationError {
@@ -67,9 +79,13 @@ public struct MainAppView: View {
                 }
             } else if shouldShowOnboarding {
                 OnboardingView()
-            } else if let ds = dataService {
+            } else if let ds = dataService, let services = featureServices {
                 mainTabView
-                .environment(ds)
+                    .environment(ds)
+                    .environment(services.reminderService)
+                    .environment(services.photoService)
+                    .environment(services.plantDatabaseService)
+                    .environment(services.tutorialService)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -157,6 +173,12 @@ public struct MainAppView: View {
         print("[Init] Using async background initialization...")
         let service = await DataService.makeAsync()
         self.dataService = service
+        self.featureServices = FeatureServices(
+            reminderService: ReminderService(dataService: service, notificationService: notificationService),
+            photoService: PhotoService(dataService: service),
+            plantDatabaseService: PlantDatabaseService(dataService: service),
+            tutorialService: TutorialService(dataService: service)
+        )
 
         let initDuration = CFAbsoluteTimeGetCurrent() - initStartTime
         let memoryAfter = performanceMonitor.currentMemoryUsage
@@ -270,4 +292,3 @@ enum TabSelection: Int, CaseIterable {
 #Preview {
     MainAppView()
 }
-

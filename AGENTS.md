@@ -1,94 +1,62 @@
-# AGENTS.md — GrowWise
+# PROJECT KNOWLEDGE BASE
 
-## Architecture: Strict MV (Model-View)
+**Generated:** 2026-02-21
+**Commit:** $(git rev-parse --short HEAD 2026-02-21 2>/dev/null || echo "Unknown")
+**Branch:** $(git rev-parse --abbrev-ref HEAD 2026-02-21 2>/dev/null || echo "Unknown")
 
-**No ViewModels.** This is a strict MV architecture per ADR-002. Views consume `@Observable` services directly via `@Environment`. Business logic lives in service/manager classes, not ViewModel wrappers.
+## OVERVIEW
+GrowWise is an iOS gardening companion app using Swift 6 strict concurrency, SwiftData with CloudKit sync, and SwiftUI. It tracks plants, sets care reminders, and manages plant journals.
 
-### Pattern
-```swift
-// ✅ Correct — view uses service directly
-struct MyView: View {
-    @Environment(DataService.self) private var dataService
-    @State private var localState = ""
-    // ...
-}
-
-// ❌ Wrong — no ViewModel layer
-class MyViewModel: ObservableObject { ... }
+## STRUCTURE
 ```
-
-### State Management
-- `@State` for view-local state
-- `@Environment` for injected `@Observable` services (DataService, LocationService, etc.)
-- `@Observable` macro on service classes (not `ObservableObject`)
-- Complex business logic → service/manager objects, never in views directly
-
-## Project Structure
-
-```
-GrowWise/                    # App shell (entry point, assets, entitlements)
-GrowWisePackage/             # Core Swift Package
+GrowWise/                    # App shell (entry point, assets, info.plist, CloudKit schemas)
+GrowWisePackage/             # Core Swift Package (All logic)
   Sources/
-    GrowWiseModels/          # SwiftData @Model classes + enums
-    GrowWiseServices/        # Service layer (@Observable, actors)
-    GrowWiseFeature/         # SwiftUI views (strict MV — no ViewModels)
+    GrowWiseModels/          # @Model classes, Enums (No dependencies)
+    GrowWiseServices/        # Business logic, Security, CloudKit (@Observable, Actors)
+    GrowWiseFeature/         # SwiftUI views (Strict MV architecture)
   Tests/
-    GrowWiseModelsTests/
-    GrowWiseServicesTests/
-    GrowWiseFeatureTests/
+    GrowWiseModelsTests/     # Model generation & defaults tests
+    GrowWiseServicesTests/   # Heavy security & logic testing (Keychain, Encryption)
+    GrowWiseFeatureTests/    # View and integration tests
 GrowWiseUITests/             # Xcode UI tests
-docs/                        # ADR.md, PRD, guides
+docs/                        # ADRs, Product requirements
 ```
 
-**Dependency graph:** `GrowWiseFeature` → `GrowWiseServices` → `GrowWiseModels`
+## WHERE TO LOOK
+| Task | Location | Notes |
+|------|----------|-------|
+| UI / Screens | `GrowWisePackage/Sources/GrowWiseFeature/Views/` | Tab-based navigation, strict MV |
+| Data / Persistence | `GrowWisePackage/Sources/GrowWiseModels/` | SwiftData models, all properties optional |
+| Business Logic / Auth | `GrowWisePackage/Sources/GrowWiseServices/` | Services injected via `@Environment` |
+| App Entry Point | `GrowWise/` | MainAppView initialization, CloudKit schemas |
+| Test Suites | `GrowWisePackage/Tests/` | Mostly Swift Testing (`@Test`) with XCTest |
 
-## Key Technical Decisions
+## CONVENTIONS
+- **Architecture:** Strict MV (Model-View). NO ViewModels.
+- **State:** Views use `@Environment(Service.self)` and `@State` for local state.
+- **Concurrency:** `@MainActor` for UI-bound services; Actors for concurrent state; `async/await`.
+- **Persistence:** SwiftData. All `@Model` properties optional or have defaults for CloudKit compatibility.
+- **Error Handling:** Multi-level fallback pattern (see DataService).
+- **Issue Tracking:** Use `bd` (beads) for issue tracking (`bd ready`, `bd show`, `bd close`, `bd sync`).
 
-- **SwiftData** (not CoreData) with CloudKit sync
-- **Swift 6 strict concurrency** — `@MainActor`, actors, Sendable
-- **Swift Testing** (`@Test`, `#expect`) preferred over XCTest for new tests (ADR-004)
-- **All @Model properties optional** for CloudKit compatibility
-- **iOS 17+ / macOS 14+** deployment targets
-- Open `GrowWise.xcworkspace` (not `.xcodeproj`)
+## ANTI-PATTERNS (THIS PROJECT)
+- **DO NOT** create `ObservableObject` ViewModels.
+- **NEVER** use `as any`, `@ts-ignore` (or Swift equivalent forced casts like `as!`).
+- **NEVER** crash on init failure. Follow multi-level fallback.
+- **NEVER** hardcode keys/secrets. Use `KeychainStorageService` or `SecureEnclaveKeyManager`.
+- **DO NOT** save files to the root folder. Place inside appropriate package target.
 
-## Build & Test
+## UNIQUE STYLES
+- Uses `@Observable` instead of `ObservableObject`.
+- Explicit `#expect` instead of XCTAssert where Swift Testing is used.
+- Accessibility is mandatory: `.accessibilityIdentifier()` on all interactive elements.
 
+## COMMANDS
 ```bash
 # Build
 xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator build
-
-# Package tests (fast, no simulator)
+# Tests
 cd GrowWisePackage && swift test
-
-# Specific test target
 swift test --filter GrowWiseServicesTests
 ```
-
-## Issue Tracking (Beads)
-
-```bash
-bd ready              # Find unblocked work
-bd show <id>          # View details
-bd create "Title" --type task --priority 2
-bd update <id> --status in_progress
-bd close <id>
-bd sync               # Sync with git
-```
-
-## Conventions
-
-- **No ViewModels** — strict MV, services via @Environment
-- **Concurrency**: `@MainActor` for UI-bound services, actors for concurrent state
-- **Error handling**: Multi-level fallback pattern (see DataService)
-- **Caching**: SwiftDataCache with TTL policies (.short/.medium/.long)
-- **Logging**: `os.Logger` with `.private` for user data
-- **Accessibility**: Every interactive element needs `.accessibilityIdentifier()`
-- **Files**: Views in `GrowWiseFeature/Views/`, components in `Components/`
-
-## ADR
-
-All architecture decisions in `docs/ADR.md`. Read before structural changes, append when making new decisions.
-
-## Current Status
-
-~70% complete demo app with known issues. Core features (gardens, plants, reminders, journal, tutorials, onboarding) are implemented. Security services (JWT, Keychain, encryption) are overbuilt for current needs — may simplify later.

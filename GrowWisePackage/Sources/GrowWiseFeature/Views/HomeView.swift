@@ -12,7 +12,7 @@ import GrowWiseServices
 public struct HomeView: View {
     @Environment(DataService.self) private var dataService
     @Environment(LocationService.self) private var locationService
-    @Environment(NotificationService.self) private var notificationService
+    @Environment(PhotoService.self) private var photoService
     
     @State private var gardeningStats = GardeningStats(totalPlants: 0, healthyPlants: 0, activeReminders: 0, totalJournalEntries: 0)
     @State private var upcomingReminders: [PlantReminder] = []
@@ -20,14 +20,13 @@ public struct HomeView: View {
     @State private var isLoading = true
     @State private var currentWeather: WeatherInfo?
     @State private var showingAddPlant = false
-    @State private var photoService: PhotoService?
     @State private var showingCreateGarden = false
     @State private var showGardenCreatedToast = false
     
     public init() {}
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
                     // Welcome Header
@@ -77,7 +76,7 @@ public struct HomeView: View {
             }
             .navigationTitle("Home")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Add Plant") {
                         showingAddPlant = true
                     }
@@ -94,8 +93,6 @@ public struct HomeView: View {
             }
             .task {
                 await loadData()
-                // Initialize PhotoService after DataService is available
-                self.photoService = PhotoService(dataService: dataService)
             }
         }
         .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
@@ -118,10 +115,9 @@ public struct HomeView: View {
                 .cornerRadius(12)
                 .padding()
                 .transition(.move(edge: .bottom).combined(with: .opacity))
-                .onAppear {
-                    DispatchQueue.main.asyncAfter(deadline: .now() + 3) {
-                        withAnimation { showGardenCreatedToast = false }
-                    }
+                .task {
+                    try? await Task.sleep(nanoseconds: 3_000_000_000)
+                    withAnimation { showGardenCreatedToast = false }
                 }
             }
         }
@@ -182,9 +178,7 @@ public struct HomeView: View {
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(Array(recentJournalEntries.prefix(3)), id: \.id) { entry in
-                        if let photoService = photoService {
-                            JournalEntryRow(entry: entry, photoService: photoService)
-                        }
+                        JournalEntryRow(entry: entry, photoService: photoService)
                     }
                 }
             }
@@ -223,7 +217,7 @@ public struct HomeView: View {
         recentJournalEntries = dataService.fetchRecentJournalEntries(limit: 5)
         
         // Load weather if location available
-        if locationService.authorizationStatus == .authorizedWhenInUse || locationService.authorizationStatus == .authorizedAlways,
+        if locationService.hasLocationPermission,
            let _ = locationService.currentLocation {
             // In a real app, you'd call a weather API here
             currentWeather = WeatherInfo.sample
@@ -241,10 +235,10 @@ public struct HomeView: View {
 #Preview {
     let dataService = try! DataService()
     let locationService = LocationService()
-    let notificationService = NotificationService()
+    let photoService = PhotoService(dataService: dataService)
 
     HomeView()
         .environment(dataService)
         .environment(locationService)
-        .environment(notificationService)
+        .environment(photoService)
 }

@@ -31,6 +31,9 @@ import QuartzCore
     private var frameRateTimer: Timer?
     private var memoryTimer: Timer?
     private var memoryPressureSource: DispatchSourceMemoryPressure?
+    private var frameRateSampleStart: CFTimeInterval = CACurrentMediaTime()
+    private var frameRateFrameCount = 0
+    private var frameRateSamples: [Double] = []
     
     // Metrics aggregation
     private var queryTimes: [String: [TimeInterval]] = [:]
@@ -221,8 +224,6 @@ import QuartzCore
     // MARK: - Private Methods
     
     private func updateMemoryMetrics() {
-        let info = ProcessInfo.processInfo
-        let physicalMemory = Double(info.physicalMemory)
         let memoryUsed = Double(getMemoryUsage())
 
         currentMemoryUsage = memoryUsed / 1024 / 1024 // Convert to MB
@@ -269,37 +270,37 @@ import QuartzCore
     }
     
     private func startFrameRateMonitoring() {
-        // This is a simplified frame rate monitor
-        // In production, you'd use CADisplayLink for accurate frame timing
-        var lastFrameTime = CACurrentMediaTime()
-        var frameCount = 0
-        var frameTimes: [Double] = []
-        
+        frameRateSampleStart = CACurrentMediaTime()
+        frameRateFrameCount = 0
+        frameRateSamples.removeAll(keepingCapacity: true)
+
         frameRateTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
-            let currentTime = CACurrentMediaTime()
-            let deltaTime = currentTime - lastFrameTime
-            lastFrameTime = currentTime
-            
-            frameCount += 1
-            frameTimes.append(deltaTime)
-            
-            // Calculate average every second
-            if frameCount >= 60 {
-                let averageFrameTime = frameTimes.reduce(0, +) / Double(frameTimes.count)
-                let fps = 1.0 / averageFrameTime
-                
-                Task { @MainActor in
-                    self?.averageFrameRate = min(fps, 60) // Cap at 60 FPS
-                    
-                    if fps < self?.performanceBudgets.minimumFrameRate ?? 60 {
-                        self?.logger.warning("⚠️ Low frame rate detected: \(fps) FPS")
-                    }
-                }
-                
-                frameCount = 0
-                frameTimes.removeAll()
+            Task { @MainActor in
+                self?.recordFrameSample()
             }
         }
+    }
+
+    private func recordFrameSample() {
+        let currentTime = CACurrentMediaTime()
+        let deltaTime = currentTime - frameRateSampleStart
+        frameRateSampleStart = currentTime
+
+        frameRateFrameCount += 1
+        frameRateSamples.append(deltaTime)
+
+        guard frameRateFrameCount >= 60 else { return }
+
+        let averageFrameTime = frameRateSamples.reduce(0, +) / Double(frameRateSamples.count)
+        let fps = 1.0 / averageFrameTime
+        averageFrameRate = min(fps, 60)
+
+        if fps < performanceBudgets.minimumFrameRate {
+            logger.warning("⚠️ Low frame rate detected: \(fps) FPS")
+        }
+
+        frameRateFrameCount = 0
+        frameRateSamples.removeAll(keepingCapacity: true)
     }
     
     private func calculateAverageQueryTime() -> TimeInterval {
@@ -623,4 +624,3 @@ public class PhotoOperationTracker: Sendable {
         monitor.recordPhotoOperationMetric(metric)
     }
 }
-

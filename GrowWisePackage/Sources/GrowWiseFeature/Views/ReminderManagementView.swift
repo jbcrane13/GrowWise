@@ -5,8 +5,8 @@ import GrowWiseServices
 public struct ReminderManagementView: View {
     @Environment(DataService.self) private var dataService
     @Environment(NotificationService.self) private var notificationService
-    
-    @State private var reminderService: ReminderService?
+    @Environment(ReminderService.self) private var reminderService
+
     @State private var reminderSettings: GrowWiseServices.ReminderSettings?
     @State private var selectedPlant: Plant?
     @State private var showingAddReminder = false
@@ -16,44 +16,40 @@ public struct ReminderManagementView: View {
     public init() {}
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Header with settings button
                 headerView
                 
                 // Quick stats
-                if let service = reminderService {
-                    statsCardView(service: service)
-                }
+                statsCardView(service: reminderService)
                 
                 // Search bar
                 SearchBarView(text: $searchText, placeholder: "Search reminders...")
                     .padding(.horizontal)
                 
                 // Reminder sections
-                if let service = reminderService {
-                    ScrollView {
-                        LazyVStack(spacing: 16) {
-                            // Today's reminders
-                            todaysRemindersSection(service: service)
-                            
-                            // Overdue reminders
-                            overdueRemindersSection(service: service)
-                            
-                            // Upcoming reminders
-                            upcomingRemindersSection(service: service)
-                            
-                            // All plants with reminders
-                            allPlantsSection(service: service)
-                        }
-                        .padding()
+                ScrollView {
+                    LazyVStack(spacing: 16) {
+                        // Today's reminders
+                        todaysRemindersSection(service: reminderService)
+
+                        // Overdue reminders
+                        overdueRemindersSection(service: reminderService)
+
+                        // Upcoming reminders
+                        upcomingRemindersSection(service: reminderService)
+
+                        // All plants with reminders
+                        allPlantsSection(service: reminderService)
                     }
+                    .padding()
                 }
             }
             .navigationTitle("Plant Reminders")
-            .navigationBarTitleDisplayMode(.large)
+            .gwNavigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         Button("Add Reminder", systemImage: "plus") {
                             showingAddReminder = true
@@ -74,14 +70,12 @@ public struct ReminderManagementView: View {
                 }
             }
             .sheet(isPresented: $showingAddReminder) {
-                if let service = reminderService {
-                    AddReminderView(reminderService: service, dataService: dataService)
-                }
+                AddReminderView(reminderService: reminderService, dataService: dataService)
             }
             .sheet(isPresented: $showingReminderSettings) {
-                if let service = reminderService, let settings = reminderSettings {
+                if let settings = reminderSettings {
                     ReminderSettingsView(
-                        reminderService: service,
+                        reminderService: reminderService,
                         reminderSettings: Binding(
                             get: { settings },
                             set: { reminderSettings = $0 }
@@ -90,11 +84,8 @@ public struct ReminderManagementView: View {
                 }
             }
             .onAppear {
-                // Initialize ReminderService with environment services
-                if reminderService == nil {
-                    let service = ReminderService(dataService: dataService, notificationService: notificationService)
-                    reminderService = service
-                    reminderSettings = service.getReminderSettings()
+                if reminderSettings == nil {
+                    reminderSettings = reminderService.getReminderSettings()
                 }
             }
         }
@@ -248,9 +239,7 @@ public struct ReminderManagementView: View {
     
     private func refreshReminders() async {
         await notificationService.checkAuthorizationStatus()
-        if let service = reminderService {
-            reminderSettings = service.getReminderSettings()
-        }
+        reminderSettings = reminderService.getReminderSettings()
     }
 }
 
@@ -406,7 +395,12 @@ struct PlantReminderGridView: View {
 }
 
 #Preview {
+    let dataService = try! DataService()
+    let notificationService = NotificationService()
+    let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
+
     ReminderManagementView()
-        .environment(try! DataService())
-        .environment(NotificationService())
+        .environment(dataService)
+        .environment(notificationService)
+        .environment(reminderService)
 }

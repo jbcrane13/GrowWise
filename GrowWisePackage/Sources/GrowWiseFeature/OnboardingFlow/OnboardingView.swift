@@ -49,7 +49,7 @@ public struct OnboardingView: View {
                         CompletionView(userProfile: $userProfile)
                             .tag(OnboardingStep.completion)
                     }
-                    .tabViewStyle(.page(indexDisplayMode: .never))
+                    .gwPagingTabStyle(indexDisplayMode: .never)
                     .animation(.easeInOut, value: currentStep)
                     
                     // Navigation buttons
@@ -62,7 +62,7 @@ public struct OnboardingView: View {
                 }
             }
         }
-        .navigationBarHidden(true)
+        .gwNavigationBarHidden(true)
         .onChange(of: isCompleted) { _, completed in
             if completed {
                 dismiss()

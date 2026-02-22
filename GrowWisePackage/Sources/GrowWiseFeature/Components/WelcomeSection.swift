@@ -16,7 +16,7 @@ public struct WelcomeSection: View {
                 .fontWeight(.semibold)
 
             if let currentUser = dataService.getCurrentUser() {
-                Text("Welcome back, \(currentUser.displayName)!")
+                Text(verbatim: "Welcome back, \(currentUser.displayName ?? "Gardener")!")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
@@ -43,7 +43,7 @@ public struct WelcomeSection: View {
     private var accessibilityLabel: String {
         var label = welcomeMessage
         if let currentUser = dataService.getCurrentUser() {
-            label += ", Welcome back, \(currentUser.displayName)"
+            label += ", Welcome back, \(currentUser.displayName ?? "Gardener")"
         }
         return label
     }

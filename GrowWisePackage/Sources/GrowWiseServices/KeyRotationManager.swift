@@ -4,7 +4,7 @@ import Security
 
 /// Comprehensive key rotation manager with PCI DSS and SOC2 compliance
 /// Supports versioned key storage, automatic rotation policies, and audit trails
-public final class KeyRotationManager {
+public final class KeyRotationManager: @unchecked Sendable {
     
     // MARK: - Error Types
     
@@ -45,7 +45,7 @@ public final class KeyRotationManager {
     
     // MARK: - Key Metadata Types
     
-    public struct KeyMetadata: Codable {
+    public struct KeyMetadata: Codable, Sendable {
         public let version: Int
         public let keyId: String
         public let creationDate: Date
@@ -56,20 +56,20 @@ public final class KeyRotationManager {
         public let keyDerivationInfo: KeyDerivationInfo
         public let complianceInfo: ComplianceInfo
         
-        public enum KeyStatus: String, Codable, CaseIterable {
+        public enum KeyStatus: String, Codable, CaseIterable, Sendable {
             case active = "active"
             case retired = "retired"
             case compromised = "compromised"
             case pending = "pending"
         }
         
-        public struct KeyDerivationInfo: Codable {
+        public struct KeyDerivationInfo: Codable, Sendable {
             public let salt: Data
             public let iterations: Int
             public let algorithm: String
         }
         
-        public struct ComplianceInfo: Codable {
+        public struct ComplianceInfo: Codable, Sendable {
             public let pciDssCompliant: Bool
             public let soc2Compliant: Bool
             public let lastAuditDate: Date
@@ -77,7 +77,7 @@ public final class KeyRotationManager {
         }
     }
     
-    public struct AuditEvent: Codable {
+    public struct AuditEvent: Codable, Sendable {
         public let id: String
         public let timestamp: Date
         public let event: EventType
@@ -85,7 +85,7 @@ public final class KeyRotationManager {
         public let userId: String?
         public let details: [String: String]
         
-        public enum EventType: String, Codable, CaseIterable {
+        public enum EventType: String, Codable, CaseIterable, Sendable {
             case keyGenerated = "key_generated"
             case keyRotated = "key_rotated"
             case keyAccessed = "key_accessed"
@@ -97,7 +97,7 @@ public final class KeyRotationManager {
         }
     }
     
-    public struct RotationPolicy: Codable {
+    public struct RotationPolicy: Codable, Sendable {
         public let interval: TimeInterval
         public let maxKeyAge: TimeInterval
         public let minKeyAge: TimeInterval
@@ -106,13 +106,13 @@ public final class KeyRotationManager {
         public let reencryptionBatchSize: Int
         public let quietHours: QuietHours?
         
-        public enum ComplianceMode: String, Codable, CaseIterable {
+        public enum ComplianceMode: String, Codable, CaseIterable, Sendable {
             case strict = "strict"     // PCI DSS Level 1
             case standard = "standard" // SOC2 Type II
             case basic = "basic"       // Basic security
         }
         
-        public struct QuietHours: Codable {
+        public struct QuietHours: Codable, Sendable {
             public let startHour: Int // 0-23
             public let endHour: Int   // 0-23
             public let timezone: String
@@ -131,7 +131,7 @@ public final class KeyRotationManager {
         }
     }
     
-    public struct ComplianceReport: Codable {
+    public struct ComplianceReport: Codable, Sendable {
         public let reportId: String
         public let generationDate: Date
         public let reportPeriod: DateInterval
@@ -140,14 +140,14 @@ public final class KeyRotationManager {
         public let complianceStatus: ComplianceStatus
         public let recommendations: [String]
         
-        public struct KeyVersionReport: Codable {
+        public struct KeyVersionReport: Codable, Sendable {
             public let version: Int
             public let age: TimeInterval
             public let status: KeyMetadata.KeyStatus
             public let usage: KeyUsageStats
         }
         
-        public struct RotationEventReport: Codable {
+        public struct RotationEventReport: Codable, Sendable {
             public let date: Date
             public let fromVersion: Int
             public let toVersion: Int
@@ -155,23 +155,23 @@ public final class KeyRotationManager {
             public let dataVolume: Int
         }
         
-        public struct KeyUsageStats: Codable {
+        public struct KeyUsageStats: Codable, Sendable {
             public let encryptionOperations: Int
             public let decryptionOperations: Int
             public let lastAccessed: Date
         }
         
-        public struct ComplianceStatus: Codable {
+        public struct ComplianceStatus: Codable, Sendable {
             public let pciDssCompliant: Bool
             public let soc2Compliant: Bool
             public let issues: [ComplianceIssue]
             
-            public struct ComplianceIssue: Codable {
+            public struct ComplianceIssue: Codable, Sendable {
                 public let severity: Severity
                 public let description: String
                 public let recommendation: String
                 
-                public enum Severity: String, Codable, CaseIterable {
+                public enum Severity: String, Codable, CaseIterable, Sendable {
                     case critical = "critical"
                     case high = "high"
                     case medium = "medium"
@@ -401,25 +401,13 @@ public final class KeyRotationManager {
     /// Perform gradual re-encryption of data in background
     private func performGradualReencryption(fromVersion: Int, toVersion: Int) async {
         let batchSize = rotationPolicy.reencryptionBatchSize
-        
-        do {
-            // This is a placeholder for actual data re-encryption
-            // In a real implementation, this would iterate through encrypted data
-            // and re-encrypt it in batches using the new key version
-            
-            logAuditEvent(.dataReencrypted, keyVersion: toVersion, details: [
-                "from_version": String(fromVersion),
-                "batch_size": String(batchSize),
-                "status": "completed"
-            ])
-            
-        } catch {
-            logAuditEvent(.dataReencrypted, keyVersion: toVersion, details: [
-                "from_version": String(fromVersion),
-                "error": error.localizedDescription,
-                "status": "failed"
-            ])
-        }
+
+        // Placeholder implementation until data re-encryption pipeline is wired.
+        logAuditEvent(.dataReencrypted, keyVersion: toVersion, details: [
+            "from_version": String(fromVersion),
+            "batch_size": String(batchSize),
+            "status": "completed"
+        ])
     }
     
     // MARK: - Private Implementation Methods
@@ -430,7 +418,7 @@ public final class KeyRotationManager {
         let _ = try secureEnclaveKeyManager.getPublicKeyData()
         
         // Create key derivation info
-        let salt = Data.random(length: 32)
+        let salt = try Data.random(length: 32)
         let derivationInfo = KeyMetadata.KeyDerivationInfo(
             salt: salt,
             iterations: 10000,
@@ -541,17 +529,19 @@ public final class KeyRotationManager {
     }
     
     private func scheduleAutomaticRotation() {
-        // In a real implementation, this would use background tasks or timer
-        // For now, we'll check rotation needs when the app becomes active
-        DispatchQueue.global(qos: .utility).async { [weak self] in
-            Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { _ in
-                Task { [weak self] in
-                    guard let self = self else { return }
-                    if self.isRotationNeeded() && !self.isRotationInProgress {
-                        _ = try? await self.rotateKey(reason: "Automatic rotation")
-                    }
+        guard rotationPolicy.autoRotationEnabled else { return }
+
+        // Schedule periodic checks without capturing mutable local references in sendable closures.
+        DispatchQueue.global(qos: .utility).asyncAfter(deadline: .now() + 3600) { [weak self] in
+            guard let manager = self else { return }
+
+            Task { [manager] in
+                if manager.isRotationNeeded() && !manager.isRotationInProgress {
+                    _ = try? await manager.rotateKey(reason: "Automatic rotation")
                 }
             }
+
+            manager.scheduleAutomaticRotation()
         }
     }
     
@@ -564,7 +554,7 @@ public final class KeyRotationManager {
     }
     
     private func setKeyMetadata(_ metadata: KeyMetadata) {
-        metadataQueue.async(flags: .barrier) {
+        metadataQueue.sync(flags: .barrier) {
             self._keyMetadata[String(metadata.version)] = metadata
         }
     }
@@ -594,7 +584,7 @@ public final class KeyRotationManager {
         // Load key metadata from keychain
         if let data = try? keychainStorage.retrieve(for: "key-rotation-metadata"),
            let metadata = try? JSONDecoder().decode([String: KeyMetadata].self, from: data) {
-            metadataQueue.async(flags: .barrier) {
+            metadataQueue.sync(flags: .barrier) {
                 self._keyMetadata = metadata
                 // Find current key version
                 let activeVersions = metadata.values
@@ -608,7 +598,7 @@ public final class KeyRotationManager {
         // Load audit trail from keychain
         if let data = try? keychainStorage.retrieve(for: "key-rotation-audit"),
            let auditTrail = try? JSONDecoder().decode([AuditEvent].self, from: data) {
-            auditQueue.async(flags: .barrier) {
+            auditQueue.sync(flags: .barrier) {
                 self._auditTrail = auditTrail
             }
         }
@@ -723,13 +713,17 @@ public final class KeyRotationManager {
 // MARK: - Supporting Extensions
 
 extension Data {
-    static func random(length: Int) -> Data {
+    enum RandomError: Error {
+        case generationFailed
+    }
+    
+    static func random(length: Int) throws -> Data {
         var data = Data(count: length)
         let result = data.withUnsafeMutableBytes {
             SecRandomCopyBytes(kSecRandomDefault, length, $0.baseAddress!)
         }
         guard result == errSecSuccess else {
-            fatalError("Failed to generate random data")
+            throw RandomError.generationFailed
         }
         return data
     }

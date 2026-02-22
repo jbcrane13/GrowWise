@@ -1,13 +1,20 @@
+#if canImport(UIKit)
 import SwiftUI
 import SwiftData
 import PhotosUI
 import GrowWiseModels
 import GrowWiseServices
+#if canImport(UIKit)
+import UIKit
+#elseif canImport(AppKit)
+import AppKit
+typealias UIImage = NSImage
+#endif
 
 public struct AddJournalEntryView: View {
-    @Environment(\.modelContext) private var modelContext
+    @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
-    @Query private var plants: [Plant]
+    @State private var plants: [Plant] = []
     
     let photoService: PhotoService
     
@@ -40,6 +47,8 @@ public struct AddJournalEntryView: View {
     @State private var capturedImages: [UIImage] = []
     @State private var showingCamera = false
     @State private var isProcessingPhotos = false
+    @State private var saveTask: Task<Void, Never>?
+    @State private var photoTask: Task<Void, Never>?
     
     // UI state
     @State private var showingAdvancedFields = false
@@ -265,18 +274,25 @@ public struct AddJournalEntryView: View {
                 }
             }
             .navigationTitle("New Journal Entry")
-            .navigationBarTitleDisplayMode(.inline)
+            .task {
+                plants = dataService.fetchPlants().filter { $0.isUserPlant ?? false }
+            }
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
-                    .disabled(isSaving)
+                    .onDisappear {
+                saveTask?.cancel()
+                photoTask?.cancel()
+            }
+            .disabled(isSaving)
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
-                        Task {
+                        saveTask = Task {
                             await saveEntry()
                         }
                     }
@@ -289,9 +305,13 @@ public struct AddJournalEntryView: View {
                 }
             }
             .onChange(of: selectedPhotos) { _, newValue in
-                Task {
+                photoTask = Task {
                     await processSelectedPhotos(newValue)
                 }
+            }
+            .onDisappear {
+                saveTask?.cancel()
+                photoTask?.cancel()
             }
             .disabled(isSaving)
             .overlay {
@@ -354,9 +374,8 @@ public struct AddJournalEntryView: View {
                 }
             }
             
-            // Save to model context
-            modelContext.insert(entry)
-            try modelContext.save()
+            // Save using DataService
+            try dataService.saveJournalEntry(entry)
             
             dismiss()
         } catch {
@@ -421,22 +440,29 @@ private struct PhotosSection: View {
                     HStack(spacing: 8) {
                         ForEach(Array(capturedImages.enumerated()), id: \.offset) { index, image in
                             VStack {
+                                ZStack(alignment: .topTrailing) {
+                                #if canImport(UIKit)
                                 Image(uiImage: image)
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
                                     .frame(width: 60, height: 60)
                                     .clipShape(RoundedRectangle(cornerRadius: 8))
-                                    .overlay(
-                                        Button {
-                                            capturedImages.remove(at: index)
-                                        } label: {
-                                            Image(systemName: "xmark.circle.fill")
-                                                .foregroundColor(.red)
-                                                .background(Color.white, in: Circle())
-                                        }
-                                        .offset(x: 8, y: -8),
-                                        alignment: .topTrailing
-                                    )
+                                #elseif canImport(AppKit)
+                                Image(nsImage: image)
+                                    .resizable()
+                                    .aspectRatio(contentMode: .fill)
+                                    .frame(width: 60, height: 60)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                #endif
+                                    Button {
+                                        capturedImages.remove(at: index)
+                                    } label: {
+                                        Image(systemName: "xmark.circle.fill")
+                                            .foregroundColor(.red)
+                                            .background(Color.white, in: Circle())
+                                    }
+                                    .offset(x: 8, y: -8)
+                                }
                             }
                         }
                     }
@@ -504,7 +530,21 @@ private struct TagsSection: View {
     }
 }
 
-private struct CameraView: UIViewControllerRepresentable {
+private struct CameraView: View {
+    let onImageCaptured: (UIImage) -> Void
+
+    var body: some View {
+        #if canImport(UIKit)
+        CameraPickerView(onImageCaptured: onImageCaptured)
+        #else
+        Text("Camera capture is unavailable on macOS.")
+            .padding()
+        #endif
+    }
+}
+
+#if canImport(UIKit)
+private struct CameraPickerView: UIViewControllerRepresentable {
     let onImageCaptured: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss
     
@@ -522,9 +562,9 @@ private struct CameraView: UIViewControllerRepresentable {
     }
     
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
-        let parent: CameraView
+        let parent: CameraPickerView
         
-        init(_ parent: CameraView) {
+        init(_ parent: CameraPickerView) {
             self.parent = parent
         }
         
@@ -540,8 +580,32 @@ private struct CameraView: UIViewControllerRepresentable {
         }
     }
 }
+#endif
 
 #Preview {
-    AddJournalEntryView(photoService: PhotoService(dataService: try! DataService()))
-        .modelContainer(for: [Plant.self, JournalEntry.self], inMemory: true)
+    Text("AddJournalEntryView Preview")
+        .padding()
 }
+#else
+import SwiftUI
+import GrowWiseServices
+
+public struct AddJournalEntryView: View {
+    let photoService: PhotoService
+
+    public init(photoService: PhotoService) {
+        self.photoService = photoService
+    }
+
+    public var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "square.and.pencil")
+                .font(.largeTitle)
+            Text("Journal entry creation is available on iOS.")
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .navigationTitle("New Journal Entry")
+    }
+}
+#endif

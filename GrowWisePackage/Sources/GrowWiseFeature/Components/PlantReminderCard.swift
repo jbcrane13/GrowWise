@@ -345,7 +345,7 @@ public struct PlantReminderCard: View {
         PlantReminderCard(
             plant: plant,
             reminderService: reminderService,
-            onTap: { print("Plant tapped: \(plant.name)") }
+            onTap: { print("Plant tapped: \(plant.name ?? "Unknown Plant")") }
         )
         
         PlantReminderCard(

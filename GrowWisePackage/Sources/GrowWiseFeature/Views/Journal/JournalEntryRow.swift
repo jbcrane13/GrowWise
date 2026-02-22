@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
@@ -234,25 +235,32 @@ private struct MeasurementBadge: View {
 }
 
 #Preview {
-    let sampleEntry = JournalEntry(
-        title: "Morning watering",
-        content: "Plants are looking healthy this morning. Added some fertilizer to the tomatoes.",
-        entryType: .watering
-    )
-    sampleEntry.tags = ["morning", "fertilizer"]
-    sampleEntry.heightMeasurement = 12.5
-    sampleEntry.temperature = 72.0
-    sampleEntry.soilMoisture = .moist
-    sampleEntry.mood = .happy
-    
-    let plant = Plant(name: "Tomato Plant", plantType: .vegetable)
-    sampleEntry.plant = plant
-    
-    return List {
-        JournalEntryRow(
-            entry: sampleEntry,
-            photoService: PhotoService(dataService: try! DataService())
-        )
-    }
-    .listStyle(InsetGroupedListStyle())
+    Text("JournalEntryRow Preview")
+        .padding()
 }
+#else
+import SwiftUI
+import GrowWiseModels
+import GrowWiseServices
+
+public struct JournalEntryRow: View {
+    let entry: JournalEntry
+    let photoService: PhotoService
+
+    public init(entry: JournalEntry, photoService: PhotoService) {
+        self.entry = entry
+        self.photoService = photoService
+    }
+
+    public var body: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text(entry.title)
+                .font(.headline)
+            Text("Journal thumbnails are available on iOS.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding(.vertical, 4)
+    }
+}
+#endif

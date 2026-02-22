@@ -5,7 +5,7 @@ import CoreLocation
 import GrowWiseModels
 
 @MainActor
-public final class ReminderService: ObservableObject {
+@Observable public final class ReminderService {
     public let dataService: DataService
     public let notificationService: NotificationService
     private let weatherService = WeatherService.shared
@@ -354,6 +354,8 @@ public final class ReminderService: ObservableObject {
     private func isTaskRelevant(_ task: SeasonalTask, for plant: Plant) -> Bool {
         // Customize tasks based on plant characteristics
         switch plant.plantType {
+        case .none:
+            return true
         case .houseplant:
             // Indoor plants don't need seasonal pruning or pest checks as frequently
             return task.type != .pruning || task.season != .fall
@@ -401,7 +403,7 @@ public final class ReminderService: ObservableObject {
                 )
                 reminders.append(reminder)
             } catch {
-                print("Failed to create reminder for plant \(plant.name): \(error)")
+                print("Failed to create reminder for plant \(displayName(for: plant)): \(error)")
             }
         }
         
@@ -540,57 +542,65 @@ public final class ReminderService: ObservableObject {
     // MARK: - Helper Methods
     
     private func generateReminderTitle(type: ReminderType, plant: Plant) -> String {
+        let plantName = displayName(for: plant)
+
         switch type {
         case .watering:
-            return "Water \(plant.name)"
+            return "Water \(plantName)"
         case .fertilizing:
-            return "Fertilize \(plant.name)"
+            return "Fertilize \(plantName)"
         case .pruning:
-            return "Prune \(plant.name)"
+            return "Prune \(plantName)"
         case .pestControl:
-            return "Check \(plant.name) for pests"
+            return "Check \(plantName) for pests"
         case .harvest:
-            return "Harvest \(plant.name)"
+            return "Harvest \(plantName)"
         case .repotting:
-            return "Repot \(plant.name)"
+            return "Repot \(plantName)"
         case .planting:
-            return "Plant \(plant.name)"
+            return "Plant \(plantName)"
         case .inspection:
-            return "Inspect \(plant.name)"
+            return "Inspect \(plantName)"
         case .soilTest:
-            return "Test soil for \(plant.name)"
+            return "Test soil for \(plantName)"
         case .mulching:
-            return "Mulch around \(plant.name)"
+            return "Mulch around \(plantName)"
         case .custom:
-            return "Care for \(plant.name)"
+            return "Care for \(plantName)"
         }
     }
     
     private func generateReminderMessage(type: ReminderType, plant: Plant) -> String {
+        let plantName = displayName(for: plant)
+
         switch type {
         case .watering:
-            return "Check soil moisture and water \(plant.name) if needed. Water slowly at soil level."
+            return "Check soil moisture and water \(plantName) if needed. Water slowly at soil level."
         case .fertilizing:
-            return "Apply appropriate fertilizer to \(plant.name) according to plant needs."
+            return "Apply appropriate fertilizer to \(plantName) according to plant needs."
         case .pruning:
-            return "Inspect \(plant.name) and prune dead, damaged, or overgrown parts."
+            return "Inspect \(plantName) and prune dead, damaged, or overgrown parts."
         case .pestControl:
-            return "Examine \(plant.name) leaves and stems for signs of pests or disease."
+            return "Examine \(plantName) leaves and stems for signs of pests or disease."
         case .harvest:
-            return "Check \(plant.name) for ripe fruits, vegetables, or herbs ready to harvest."
+            return "Check \(plantName) for ripe fruits, vegetables, or herbs ready to harvest."
         case .repotting:
-            return "Check if \(plant.name) needs repotting - look for roots growing through drainage holes."
+            return "Check if \(plantName) needs repotting - look for roots growing through drainage holes."
         case .planting:
-            return "Plant \(plant.name) in prepared soil with proper spacing."
+            return "Plant \(plantName) in prepared soil with proper spacing."
         case .inspection:
-            return "Perform general health inspection of \(plant.name) for any issues."
+            return "Perform general health inspection of \(plantName) for any issues."
         case .soilTest:
-            return "Test soil pH and nutrients for \(plant.name)'s growing area."
+            return "Test soil pH and nutrients for \(plantName)'s growing area."
         case .mulching:
-            return "Apply or refresh mulch around \(plant.name) to retain moisture."
+            return "Apply or refresh mulch around \(plantName) to retain moisture."
         case .custom:
-            return "Perform scheduled care task for \(plant.name)."
+            return "Perform scheduled care task for \(plantName)."
         }
+    }
+
+    private func displayName(for plant: Plant) -> String {
+        plant.name ?? "your plant"
     }
     
     private func getRecommendedFrequency(for type: ReminderType, plant: Plant) -> Int {
@@ -903,5 +913,3 @@ extension ReminderService {
 }
 
 // MARK: - Supporting Types
-
-

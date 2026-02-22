@@ -30,18 +30,21 @@ let package = Package(
         // Core feature module - main app views and navigation
         .target(
             name: "GrowWiseFeature",
-            dependencies: ["GrowWiseModels", "GrowWiseServices"]
+            dependencies: ["GrowWiseModels", "GrowWiseServices"],
+            exclude: ["AGENTS.md"]
         ),
         
         // Data models and SwiftData persistence
         .target(
-            name: "GrowWiseModels"
+            name: "GrowWiseModels",
+            exclude: ["AGENTS.md"]
         ),
         
         // Services for external integrations
         .target(
             name: "GrowWiseServices",
-            dependencies: ["GrowWiseModels"]
+            dependencies: ["GrowWiseModels"],
+            exclude: ["AGENTS.md"]
         ),
         
         // Tests

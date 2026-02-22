@@ -1,15 +1,16 @@
+#if canImport(UIKit)
 import SwiftUI
 import SwiftData
 import GrowWiseModels
 import GrowWiseServices
 
 public struct JournalView: View {
-    @Environment(\.modelContext) private var modelContext
     @Environment(DataService.self) private var dataService
-    @Query private var journalEntries: [JournalEntry]
-    @Query private var plants: [Plant]
-
-    @State private var photoService: PhotoService?
+    @Environment(PhotoService.self) private var photoService
+    @State private var journalEntries: [JournalEntry] = []
+    @State private var plants: [Plant] = []
+    @State private var hasMoreData = true
+    @State private var currentOffset = 0
     
     @State private var searchText = ""
     @State private var selectedPlant: Plant?
@@ -85,21 +86,19 @@ public struct JournalView: View {
                 .padding(.top, 8)
                 
                 // Journal entries list with pagination
-                if paginatedEntries.isEmpty {
+                if journalEntries.isEmpty {
                     EmptyJournalView(hasEntries: !journalEntries.isEmpty)
                 } else {
                     List {
                         ForEach(paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate), id: \.self) { date in
                             Section {
                                 ForEach(paginatedGroupedEntries[date] ?? [], id: \.id) { entry in
-                                    if let photoService = photoService {
-                                        JournalEntryRow(
-                                            entry: entry,
-                                            photoService: photoService
-                                        )
-                                        .onTapGesture {
-                                            selectedEntry = entry
-                                        }
+                                    JournalEntryRow(
+                                        entry: entry,
+                                        photoService: photoService
+                                    )
+                                    .onTapGesture {
+                                        selectedEntry = entry
                                     }
                                 }
                                 .onDelete { indexSet in
@@ -113,7 +112,7 @@ public struct JournalView: View {
                         }
                         
                         // Load more button
-                        if hasMoreEntries {
+                        if hasMoreData {
                             HStack {
                                 Spacer()
                                 if isLoadingMore {
@@ -136,9 +135,9 @@ public struct JournalView: View {
                 }
             }
             .navigationTitle("Plant Journal")
-            .navigationBarTitleDisplayMode(.large)
+            .gwNavigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showingAddEntry = true
                     } label: {
@@ -147,24 +146,32 @@ public struct JournalView: View {
                 }
             }
             .sheet(isPresented: $showingAddEntry) {
-                if let photoService = photoService {
-                    AddJournalEntryView(photoService: photoService)
-                }
+                AddJournalEntryView(photoService: photoService)
             }
             .sheet(item: $selectedEntry) { entry in
-                if let photoService = photoService {
-                    JournalEntryDetailView(
-                        entry: entry,
-                        photoService: photoService
-                    )
-                }
-            }
-            .onAppear {
-                if photoService == nil {
-                    photoService = PhotoService(dataService: dataService)
-                }
+                JournalEntryDetailView(
+                    entry: entry,
+                    photoService: photoService
+                )
             }
             // Native SwiftUI search with built-in debouncing - no manual Task management needed
+            
+            .task {
+                loadInitialData()
+            }
+            .onChange(of: searchText) { _, _ in
+                loadFilteredData(reset: true)
+            }
+            .onChange(of: selectedPlant) { _, _ in
+                loadFilteredData(reset: true)
+            }
+            .onChange(of: selectedEntryType) { _, _ in
+                loadFilteredData(reset: true)
+            }
+            .onChange(of: sortOrder) { _, _ in
+                loadFilteredData(reset: true)
+            }
+
             .searchable(text: $searchText, prompt: "Search journal entries...")
             .onChange(of: searchText) { _, _ in
                 filteredCache = nil
@@ -174,73 +181,83 @@ public struct JournalView: View {
     
     // MARK: - Computed Properties
     
-    private var filteredEntries: [JournalEntry] {
-        // Return cached results if available
-        if let cached = filteredCache {
-            return cached
-        }
-        
-        // Background filtering for large datasets
-        var entries = journalEntries
-
-        // Filter by search text
-        if !searchText.isEmpty {
-            let searchQuery = searchText.lowercased()
-            entries = entries.filter { entry in
-                entry.title.lowercased().contains(searchQuery) ||
-                entry.content.lowercased().contains(searchQuery) ||
-                (entry.plant?.name?.lowercased().contains(searchQuery) ?? false) ||
-                entry.tags.contains { $0.lowercased().contains(searchQuery) }
-            }
-        }
-        
-        // Filter by plant
-        if let selectedPlant = selectedPlant {
-            entries = entries.filter { $0.plant?.id == selectedPlant.id }
-        }
-        
-        // Filter by entry type
-        if let selectedEntryType = selectedEntryType {
-            entries = entries.filter { $0.entryType == selectedEntryType }
-        }
-        
-        // Sort entries
-        switch sortOrder {
-        case .dateAscending:
-            entries.sort { $0.entryDate < $1.entryDate }
-        case .dateDescending:
-            entries.sort { $0.entryDate > $1.entryDate }
-        case .plantName:
-            entries.sort { ($0.plant?.name ?? "") < ($1.plant?.name ?? "") }
-        case .entryType:
-            entries.sort { $0.entryType.displayName < $1.entryType.displayName }
-        }
-        
-        // Cache the filtered results
-        filteredCache = entries
-        return entries
-    }
     
-    private var paginatedEntries: [JournalEntry] {
-        Array(filteredEntries.prefix(visibleEntryCount))
-    }
     
-    private var hasMoreEntries: Bool {
-        filteredEntries.count > visibleEntryCount
-    }
+    
     
     private var paginatedGroupedEntries: [String: [JournalEntry]] {
-        Dictionary(grouping: paginatedEntries) { entry in
+        Dictionary(grouping: journalEntries) { entry in
             formatDateForGrouping(entry.entryDate)
         }
     }
     
+    
+    // MARK: - Data Loading
+    
+    private func loadInitialData() {
+        plants = dataService.fetchPlants()
+        loadFilteredData(reset: true)
+    }
+    
+    private func loadFilteredData(reset: Bool = false) {
+        if reset {
+            currentOffset = 0
+            journalEntries.removeAll()
+            hasMoreData = true
+        }
+        
+        guard hasMoreData else { return }
+        
+        isLoadingMore = true
+        
+        var sortDescriptors: [SortDescriptor<JournalEntry>] = []
+        switch sortOrder {
+        case .dateAscending:
+            sortDescriptors = [SortDescriptor(\.entryDate, order: .forward)]
+        case .dateDescending:
+            sortDescriptors = [SortDescriptor(\.entryDate, order: .reverse)]
+        case .plantName:
+            sortDescriptors = [SortDescriptor(\.plant?.name, order: .forward)]
+        case .entryType:
+            // Custom sort not directly supported by descriptor, we'll let service handle basic sort
+            sortDescriptors = [SortDescriptor(\.entryDate, order: .reverse)]
+        }
+        
+        let fetched = dataService.fetchJournalEntries(
+            plant: selectedPlant,
+            type: selectedEntryType,
+            searchText: searchText,
+            sortBy: sortDescriptors,
+            offset: currentOffset,
+            limit: visibleEntryCount
+        )
+        
+        if fetched.count < visibleEntryCount {
+            hasMoreData = false
+        }
+        
+        // Final in-memory sort if needed
+        var finalEntries = fetched
+        if sortOrder == .entryType {
+            finalEntries.sort { $0.entryType.displayName < $1.entryType.displayName }
+        }
+        
+        journalEntries.append(contentsOf: finalEntries)
+        currentOffset += finalEntries.count
+        isLoadingMore = false
+    }
+    
+    private func loadMoreEntries() {
+        loadFilteredData(reset: false)
+    }
+
     // MARK: - Helper Methods
     
-    private func deleteEntries(at offsets: IndexSet, in entries: [JournalEntry]) {
+        private func deleteEntries(at offsets: IndexSet, in entries: [JournalEntry]) {
         for index in offsets {
             let entry = entries[index]
-            modelContext.delete(entry)
+            dataService.deleteJournalEntry(entry)
+            journalEntries.removeAll { $0.id == entry.id }
         }
     }
     
@@ -276,19 +293,6 @@ public struct JournalView: View {
             return lhs > rhs
         default:
             return lhs > rhs // Default to newest first
-        }
-    }
-    
-    private func loadMoreEntries() {
-        isLoadingMore = true
-        
-        // Simulate async loading
-        Task {
-            try? await Task.sleep(nanoseconds: 100_000_000) // 100ms
-            await MainActor.run {
-                visibleEntryCount += 20
-                isLoadingMore = false
-            }
         }
     }
 }
@@ -372,6 +376,28 @@ private enum SortOrder: String, CaseIterable {
 }
 
 #Preview {
+    let dataService = DataService.createFallback()
+    let photoService = PhotoService(dataService: dataService)
+
     JournalView()
+        .environment(photoService)
         .modelContainer(for: [JournalEntry.self, Plant.self], inMemory: true)
 }
+#else
+import SwiftUI
+
+public struct JournalView: View {
+    public init() {}
+
+    public var body: some View {
+        VStack(spacing: 10) {
+            Image(systemName: "book.closed")
+                .font(.largeTitle)
+            Text("Journal is available on iOS.")
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+        .navigationTitle("Journal")
+    }
+}
+#endif

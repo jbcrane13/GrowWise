@@ -15,6 +15,15 @@ import GrowWiseModels
     public var weatherData: WeatherData?
     public var isLoading: Bool = false
     public var error: LocationError?
+    public var hasLocationPermission: Bool {
+        #if os(iOS)
+        authorizationStatus == .authorizedWhenInUse || authorizationStatus == .authorizedAlways
+        #elseif os(macOS)
+        authorizationStatus == .authorizedAlways
+        #else
+        false
+        #endif
+    }
     
     private let locationManager = CLLocationManager()
     private let weatherService = WeatherService.shared

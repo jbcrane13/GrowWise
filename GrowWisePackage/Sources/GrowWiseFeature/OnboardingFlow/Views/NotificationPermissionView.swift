@@ -76,14 +76,14 @@ struct NotificationPermissionView: View {
                         selection: $userProfile.preferredNotificationTime,
                         displayedComponents: .hourAndMinute
                     )
-                    .datePickerStyle(.wheel)
+                    .gwWheelDatePickerStyle()
                     .labelsHidden()
                     .frame(maxHeight: 120)
                 }
                 .padding()
                 .background(
                     RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(UIColor.secondarySystemBackground))
+                        .fill(Color(.secondarySystemBackground))
                 )
                 .padding(.horizontal)
             }

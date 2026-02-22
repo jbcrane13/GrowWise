@@ -58,8 +58,7 @@ struct LocationSetupView: View {
                 
                 // Current location status
                 VStack(spacing: 16) {
-                    if locationService.authorizationStatus == .authorizedWhenInUse || 
-                       locationService.authorizationStatus == .authorizedAlways {
+                    if locationService.hasLocationPermission {
                         VStack(spacing: 8) {
                             HStack {
                                 Image(systemName: "checkmark.circle.fill")
@@ -140,11 +139,16 @@ struct LocationSetupView: View {
             .padding()
         }
         .onAppear {
-            userProfile.hasLocationPermission = locationService.authorizationStatus == .authorizedWhenInUse || 
-                                              locationService.authorizationStatus == .authorizedAlways
+            userProfile.hasLocationPermission = locationService.hasLocationPermission
         }
         .onChange(of: locationService.authorizationStatus) { _, status in
+            #if os(iOS)
             userProfile.hasLocationPermission = status == .authorizedWhenInUse || status == .authorizedAlways
+            #elseif os(macOS)
+            userProfile.hasLocationPermission = status == .authorizedAlways
+            #else
+            userProfile.hasLocationPermission = false
+            #endif
             isRequesting = false
         }
     }

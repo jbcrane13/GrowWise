@@ -1,19 +1,18 @@
 import Foundation
+import UniformTypeIdentifiers
 #if canImport(UIKit)
 import UIKit
-import MobileCoreServices
 #elseif canImport(AppKit)
 import AppKit
-import CoreServices
 #endif
 import os.log
-#if canImport(BackgroundTasks)
+#if canImport(BackgroundTasks) && (os(iOS) || os(tvOS))
 @preconcurrency import BackgroundTasks
 #endif
 
 /// Background task management system for heavy operations
 @MainActor
-public final class BackgroundTaskManager: ObservableObject {
+@Observable public final class BackgroundTaskManager {
     public static let shared = BackgroundTaskManager()
     
     // Task logger
@@ -29,9 +28,9 @@ public final class BackgroundTaskManager: ObservableObject {
     private let dataOperationQueue = OperationQueue()
     
     // Task tracking
-    @Published public private(set) var activeTasks: [BackgroundTask] = []
-    @Published public private(set) var completedTasks: [BackgroundTask] = []
-    @Published public private(set) var taskProgress: [UUID: Double] = [:]
+    public private(set) var activeTasks: [BackgroundTask] = []
+    public private(set) var completedTasks: [BackgroundTask] = []
+    public private(set) var taskProgress: [UUID: Double] = [:]
     
     // Task persistence
     private let taskPersistenceKey = "com.growwise.background.tasks"
@@ -39,6 +38,7 @@ public final class BackgroundTaskManager: ObservableObject {
     // Resource monitoring
     private var cpuUsageTimer: Timer?
     private var memoryUsageTimer: Timer?
+    private var isLowPriorityQueueSuspended = false
     
     private init() {
         configureOperationQueues()
@@ -46,7 +46,7 @@ public final class BackgroundTaskManager: ObservableObject {
         startResourceMonitoring()
 
         // Register for background tasks
-        #if canImport(BackgroundTasks)
+        #if canImport(BackgroundTasks) && (os(iOS) || os(tvOS))
         registerBackgroundTasks()
         #endif
 
@@ -82,14 +82,14 @@ public final class BackgroundTaskManager: ObservableObject {
         
         // Create and return the task
         let task = Task(priority: priority.taskPriority) {
-            await self.updateTaskStatus(taskId, status: .running)
+            self.updateTaskStatus(taskId, status: .running)
             
             do {
                 let result = try await operation()
-                await self.completeTask(taskId, success: true)
+                self.completeTask(taskId, success: true)
                 return result
             } catch {
-                await self.completeTask(taskId, success: false, error: error)
+                self.completeTask(taskId, success: false, error: error)
                 throw error
             }
         }
@@ -224,13 +224,13 @@ public final class BackgroundTaskManager: ObservableObject {
         } else if resourceUsage.memoryPressure == .critical {
             // Critical memory pressure - pause non-essential tasks
             photoOperationQueue.isSuspended = true
-            lowPriorityQueue.suspend()
+            suspendLowPriorityQueueIfNeeded()
         } else {
             // Normal conditions
             photoOperationQueue.maxConcurrentOperationCount = 2
             dataOperationQueue.maxConcurrentOperationCount = 3
             photoOperationQueue.isSuspended = false
-            lowPriorityQueue.resume()
+            resumeLowPriorityQueueIfNeeded()
         }
     }
     
@@ -323,12 +323,12 @@ public final class BackgroundTaskManager: ObservableObject {
             logger.warning("⚠️ High CPU usage detected: \(String(format: "%.1f%%", usage * 100))")
             
             // Automatically pause low priority tasks
-            lowPriorityQueue.suspend()
+            suspendLowPriorityQueueIfNeeded()
             
             // Resume after a delay
             Task {
                 try? await Task.sleep(nanoseconds: 5_000_000_000) // 5 seconds
-                lowPriorityQueue.resume()
+                self.resumeLowPriorityQueueIfNeeded()
             }
         }
     }
@@ -399,7 +399,7 @@ public final class BackgroundTaskManager: ObservableObject {
     
     // MARK: - Background Task Registration
 
-    #if canImport(BackgroundTasks)
+    #if canImport(BackgroundTasks) && (os(iOS) || os(tvOS))
     private func registerBackgroundTasks() {
         // Register background tasks with iOS
         BGTaskScheduler.shared.register(
@@ -470,6 +470,18 @@ public final class BackgroundTaskManager: ObservableObject {
         logger.info("📋 Background tasks not available on macOS")
     }
     #endif
+
+    private func suspendLowPriorityQueueIfNeeded() {
+        guard !isLowPriorityQueueSuspended else { return }
+        lowPriorityQueue.suspend()
+        isLowPriorityQueueSuspended = true
+    }
+
+    private func resumeLowPriorityQueueIfNeeded() {
+        guard isLowPriorityQueueSuspended else { return }
+        lowPriorityQueue.resume()
+        isLowPriorityQueueSuspended = false
+    }
 }
 
 // MARK: - Supporting Types
@@ -627,7 +639,7 @@ class ImageProcessingOperation: Operation, @unchecked Sendable {
 
         // Create mutable data for JPEG output
         guard let mutableData = CFDataCreateMutable(nil, 0),
-              let destination = CGImageDestinationCreateWithData(mutableData, kUTTypeJPEG, 1, nil) else {
+              let destination = CGImageDestinationCreateWithData(mutableData, UTType.jpeg.identifier as CFString, 1, nil) else {
             return image
         }
 
@@ -694,7 +706,6 @@ class ImageProcessingOperation: Operation, @unchecked Sendable {
         #if canImport(UIKit)
         // Account for image scale on iOS
         let scale = image.scale
-        let scaledSize = CGSize(width: rotatedSize.width * scale, height: rotatedSize.height * scale)
         let format = UIGraphicsImageRendererFormat()
         format.scale = scale
         let renderer = UIGraphicsImageRenderer(size: rotatedSize, format: format)
@@ -736,7 +747,7 @@ class ImageProcessingOperation: Operation, @unchecked Sendable {
         let filter = CIFilter(name: "CIAffineTransform")
         filter?.setValue(ciImage, forKey: kCIInputImageKey)
         let transform = CGAffineTransform(rotationAngle: radians)
-        filter?.setValue(NSValue(cgAffineTransform: transform), forKey: kCIInputTransformKey)
+        filter?.setValue(transform, forKey: kCIInputTransformKey)
 
         guard let outputImage = filter?.outputImage else {
             return image

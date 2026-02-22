@@ -736,11 +736,13 @@ public final class AuditLogger: @unchecked Sendable {
     private func scheduleMaintenanceTasks() {
         // Schedule daily maintenance at 2 AM
         Timer.scheduledTimer(withTimeInterval: 86400, repeats: true) { [weak self] _ in
-            self?.auditQueue.async {
+            guard let logger = self else { return }
+
+            logger.auditQueue.async {
                 do {
-                    try self?.performDailyMaintenance()
+                    try logger.performDailyMaintenance()
                 } catch {
-                    self?.handleAuditFailure(error)
+                    logger.handleAuditFailure(error)
                 }
             }
         }

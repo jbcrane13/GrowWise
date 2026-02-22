@@ -226,8 +226,6 @@ public final class RateLimiter: @unchecked Sendable {
                     $0.timestamp >= cutoff && !$0.successful 
                 }
                 
-                let attemptsRemaining = max(0, effectivePolicy.maxAttempts - recentAttempts.count)
-                
                 // Check if rate limit exceeded
                 if recentAttempts.count >= effectivePolicy.maxAttempts {
                     return .limited(

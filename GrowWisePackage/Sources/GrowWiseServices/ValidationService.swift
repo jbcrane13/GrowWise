@@ -41,7 +41,6 @@ public final class ValidationService: Sendable {
         }
         
         // Check for common typos
-        let commonDomains = ["gmail.com", "yahoo.com", "outlook.com", "icloud.com", "hotmail.com"]
         let emailParts = trimmedEmail.split(separator: "@")
         if emailParts.count == 2 {
             let domain = String(emailParts[1])

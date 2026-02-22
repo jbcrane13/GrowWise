@@ -1,5 +1,4 @@
 import Foundation
-import Combine
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
@@ -10,7 +9,7 @@ import os.log
 /// Advanced caching system for improved app performance
 /// Supports both iOS (UIImage) and macOS (NSImage) through PlatformImage typealias
 @MainActor
-public final class CacheManager: ObservableObject {
+@Observable public final class CacheManager {
     public static let shared = CacheManager()
     
     // Cache logger
@@ -35,7 +34,7 @@ public final class CacheManager: ObservableObject {
     private let config = CacheConfiguration()
     
     // Statistics tracking
-    @Published public private(set) var statistics = CacheStatistics()
+    public private(set) var statistics = CacheStatistics()
     
     // Memory pressure handling
     private var memoryPressureObserver: NSObjectProtocol?
@@ -657,4 +656,3 @@ public struct CacheSizeInfo {
         Double(totalSizeBytes) / (1024 * 1024)
     }
 }
-

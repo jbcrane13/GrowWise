@@ -25,7 +25,7 @@ public final class PhotoService: ObservableObject {
     private let thumbnailCache = NSCache<NSString, UIImage>()
     
     // Background processing queue
-    private let processingQueue = DispatchQueue(label: "com.growwise.photo.processing", qos: .userInitiated)
+    
     
     // Photo storage paths
     private let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
@@ -265,43 +265,36 @@ public final class PhotoService: ObservableObject {
     
     private func processImage(_ image: UIImage) async -> UIImage {
         let maxSize = self.maxImageSize
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                Task { @MainActor in
-                    let processedImage = self.resizeImage(image, maxSize: maxSize)
-                    continuation.resume(returning: processedImage)
+        return await Task.detached(priority: .userInitiated) { @Sendable in
+            return await MainActor.run {
+                let size = image.size
+                let aspectRatio = size.width / size.height
+                
+                var newSize: CGSize
+                if size.width > size.height {
+                    newSize = CGSize(width: min(maxSize, size.width), height: min(maxSize, size.width) / aspectRatio)
+                } else {
+                    newSize = CGSize(width: min(maxSize, size.height) * aspectRatio, height: min(maxSize, size.height))
+                }
+                
+                let renderer = UIGraphicsImageRenderer(size: newSize)
+                return renderer.image { _ in
+                    image.draw(in: CGRect(origin: .zero, size: newSize))
                 }
             }
-        }
+        }.value
     }
     
-    private func resizeImage(_ image: UIImage, maxSize: CGFloat) -> UIImage {
-        let size = image.size
-        let aspectRatio = size.width / size.height
-        
-        var newSize: CGSize
-        if size.width > size.height {
-            newSize = CGSize(width: min(maxSize, size.width), height: min(maxSize, size.width) / aspectRatio)
-        } else {
-            newSize = CGSize(width: min(maxSize, size.height) * aspectRatio, height: min(maxSize, size.height))
-        }
-        
-        let renderer = UIGraphicsImageRenderer(size: newSize)
-        return renderer.image { _ in
-            image.draw(in: CGRect(origin: .zero, size: newSize))
-        }
-    }
     
     private func createThumbnail(from image: UIImage, size: CGSize) async -> UIImage {
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
+        return await Task.detached(priority: .userInitiated) { @Sendable in
+            return await MainActor.run {
                 let renderer = UIGraphicsImageRenderer(size: size)
-                let thumbnail = renderer.image { _ in
+                return renderer.image { _ in
                     image.draw(in: CGRect(origin: .zero, size: size))
                 }
-                continuation.resume(returning: thumbnail)
             }
-        }
+        }.value
     }
     
     // MARK: - Metadata Management
@@ -385,23 +378,20 @@ public final class PhotoService: ObservableObject {
     
     private func calculateTotalPhotoCount() async -> Int {
         let photosDirectory = photosPath
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                guard let contents = try? FileManager.default.contentsOfDirectory(at: photosDirectory, includingPropertiesForKeys: nil) else {
-                    continuation.resume(returning: 0)
-                    return
-                }
-                
-                var count = 0
-                for plantDirectory in contents {
-                    if let plantContents = try? FileManager.default.contentsOfDirectory(at: plantDirectory, includingPropertiesForKeys: nil) {
-                        count += plantContents.count
-                    }
-                }
-                
-                continuation.resume(returning: count)
+        return await Task.detached(priority: .userInitiated) { @Sendable in
+            guard let contents = try? FileManager.default.contentsOfDirectory(at: photosDirectory, includingPropertiesForKeys: nil) else {
+                return 0
             }
-        }
+            
+            var count = 0
+            for plantDirectory in contents {
+                if let plantContents = try? FileManager.default.contentsOfDirectory(at: plantDirectory, includingPropertiesForKeys: nil) {
+                    count += plantContents.count
+                }
+            }
+            
+            return count
+        }.value
     }
     
     // MARK: - Cleanup

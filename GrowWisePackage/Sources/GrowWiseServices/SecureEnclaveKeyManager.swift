@@ -4,7 +4,7 @@ import Security
 
 /// Manager for Secure Enclave-backed encryption keys
 /// Eliminates circular dependency by storing private keys in Secure Enclave instead of keychain
-public final class SecureEnclaveKeyManager {
+public final class SecureEnclaveKeyManager: @unchecked Sendable {
     
     // MARK: - Error Types
     
@@ -65,24 +65,22 @@ public final class SecureEnclaveKeyManager {
     
     /// Generate or retrieve the symmetric key for encryption/decryption
     public func getSymmetricKey() throws -> SymmetricKey {
-        return try cacheQueue.sync {
-            // Return cached key if available
-            if let cachedKey = _cachedSymmetricKey {
-                return cachedKey
-            }
-            
-            // Try to derive from existing Secure Enclave key
-            if hasSecureEnclaveKey() {
-                let derivedKey = try deriveSymmetricKeyFromExistingKey()
-                _cachedSymmetricKey = derivedKey
-                return derivedKey
-            }
-            
-            // Generate new Secure Enclave key and derive symmetric key
-            let derivedKey = try generateNewKeyAndDeriveSymmetric()
-            _cachedSymmetricKey = derivedKey
-            return derivedKey
+        if let cachedKey = cacheQueue.sync(execute: { _cachedSymmetricKey }) {
+            return cachedKey
         }
+
+        let derivedKey: SymmetricKey
+        if hasSecureEnclaveKey() {
+            derivedKey = try deriveSymmetricKeyFromExistingKey()
+        } else {
+            derivedKey = try generateNewKeyAndDeriveSymmetric()
+        }
+
+        cacheQueue.sync(flags: .barrier) {
+            _cachedSymmetricKey = derivedKey
+        }
+
+        return derivedKey
     }
     
     /// Check if a Secure Enclave key exists by looking for stored public key reference
@@ -119,7 +117,7 @@ public final class SecureEnclaveKeyManager {
             try storePublicKeyReference(publicKeyData)
             
             // Cache the key
-            cacheQueue.async(flags: .barrier) {
+            cacheQueue.sync(flags: .barrier) {
                 self._cachedPrivateKey = privateKey
             }
             
@@ -159,7 +157,7 @@ public final class SecureEnclaveKeyManager {
         }
         
         // Clear cached keys
-        cacheQueue.async(flags: .barrier) {
+        cacheQueue.sync(flags: .barrier) {
             self._cachedSymmetricKey = nil
             self._cachedPrivateKey = nil
         }
@@ -170,7 +168,7 @@ public final class SecureEnclaveKeyManager {
         try generateSecureEnclaveKey()
         
         // Clear cached keys to force re-derivation
-        cacheQueue.async(flags: .barrier) {
+        cacheQueue.sync(flags: .barrier) {
             self._cachedSymmetricKey = nil
             self._cachedPrivateKey = nil
         }

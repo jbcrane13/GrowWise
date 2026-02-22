@@ -1,3 +1,4 @@
+#if canImport(UIKit)
 import SwiftUI
 import SwiftData
 import PhotosUI
@@ -152,15 +153,15 @@ public struct JournalEntryDetailView: View {
                 .padding()
             }
             .navigationTitle("Journal Entry")
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Close") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Menu {
                         if isEditing {
                             Button("Save Changes") {
@@ -690,9 +691,9 @@ private struct PhotoDetailView: View {
         NavigationStack {
             ZoomableImageView(image: image)
                 .background(Color.black)
-                .navigationBarTitleDisplayMode(.inline)
+                .gwNavigationBarTitleDisplayMode(.inline)
                 .toolbar {
-                    ToolbarItem(placement: .navigationBarTrailing) {
+                    ToolbarItem(placement: .primaryAction) {
                         Button("Done") {
                             dismiss()
                         }
@@ -772,9 +773,9 @@ private struct ShareSheet: View {
                     .foregroundColor(.secondary)
             }
             .navigationTitle("Share Entry")
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         dismiss()
                     }
@@ -792,26 +793,32 @@ private struct PhotoIndex: Identifiable {
 }
 
 #Preview {
-    let sampleEntry = JournalEntry(
-        title: "First flowering!",
-        content: "My tomato plant is finally flowering! The first blossoms appeared today and they look healthy. I'm excited to see the first tomatoes soon.",
-        entryType: .milestone
-    )
-    
-    sampleEntry.heightMeasurement = 24.5
-    sampleEntry.temperature = 75.0
-    sampleEntry.humidity = 65.0
-    sampleEntry.soilMoisture = .moist
-    sampleEntry.weatherConditions = .sunny
-    sampleEntry.mood = .thriving
-    sampleEntry.tags = ["flowering", "milestone", "tomatoes"]
-    
-    let plant = Plant(name: "Cherokee Purple Tomato", plantType: .vegetable)
-    sampleEntry.plant = plant
-    
-    return JournalEntryDetailView(
-        entry: sampleEntry,
-        photoService: PhotoService(dataService: try! DataService())
-    )
-    .modelContainer(for: [JournalEntry.self, Plant.self], inMemory: true)
+    Text("JournalEntryDetailView Preview")
+        .padding()
 }
+#else
+import SwiftUI
+import GrowWiseModels
+import GrowWiseServices
+
+public struct JournalEntryDetailView: View {
+    let entry: JournalEntry
+    let photoService: PhotoService
+
+    public init(entry: JournalEntry, photoService: PhotoService) {
+        self.entry = entry
+        self.photoService = photoService
+    }
+
+    public var body: some View {
+        VStack(spacing: 10) {
+            Text(entry.title)
+                .font(.headline)
+            Text("Detailed journal editing is available on iOS.")
+                .font(.caption)
+                .foregroundStyle(.secondary)
+        }
+        .padding()
+    }
+}
+#endif

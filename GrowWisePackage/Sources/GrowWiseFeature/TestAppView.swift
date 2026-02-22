@@ -75,7 +75,7 @@ public struct TestAppView: View {
             .tag(1)
             
             // Plant Guide Tab
-            NavigationView {
+            NavigationStack {
                 List(mockPlantDatabase, id: \.name) { plant in
                     HStack {
                         VStack(alignment: .leading) {

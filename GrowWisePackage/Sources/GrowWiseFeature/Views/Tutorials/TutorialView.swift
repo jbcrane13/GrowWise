@@ -3,17 +3,15 @@ import GrowWiseModels
 import GrowWiseServices
 
 public struct TutorialView: View {
-    @State private var tutorialService: TutorialService
+    @Environment(TutorialService.self) private var tutorialService
     @State private var selectedCategory: TutorialCategory = .planning
     @State private var searchText = ""
     @State private var showProgressView = false
-    
-    public init(dataService: DataService) {
-        _tutorialService = State(initialValue: TutorialService(dataService: dataService))
-    }
+
+    public init() {}
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             VStack(spacing: 0) {
                 // Category Selector
                 categorySelector
@@ -37,7 +35,7 @@ public struct TutorialView: View {
             }
             .navigationTitle("Learn & Grow")
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button {
                         showProgressView = true
                     } label: {
@@ -126,7 +124,7 @@ public struct TutorialView: View {
             
             LazyVStack(spacing: 12) {
                 ForEach(filteredTutorials, id: \.id) { tutorial in
-                    NavigationLink(destination: TutorialDetailView(tutorial: tutorial, tutorialService: tutorialService)) {
+                    NavigationLink(value: tutorial) {
                         TutorialRowView(tutorial: tutorial, tutorialService: tutorialService)
                     }
                     .buttonStyle(PlainButtonStyle())
@@ -194,7 +192,7 @@ struct FeaturedTutorialCard: View {
     let tutorialService: TutorialService
     
     var body: some View {
-        NavigationLink(destination: TutorialDetailView(tutorial: tutorial, tutorialService: tutorialService)) {
+        NavigationLink(value: tutorial) {
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     VStack(alignment: .leading, spacing: 4) {
@@ -389,11 +387,9 @@ struct CircularProgressView: View {
 }
 
 #Preview {
-    do {
-        let dataService = try DataService()
-        return TutorialView(dataService: dataService)
-    } catch {
-        let fallbackService = DataService.createFallback()
-        return TutorialView(dataService: fallbackService)
-    }
+    let dataService = DataService.createFallback()
+    let tutorialService = TutorialService(dataService: dataService)
+
+    TutorialView()
+        .environment(tutorialService)
 }

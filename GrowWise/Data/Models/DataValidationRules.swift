@@ -545,7 +545,7 @@ struct DataValidationRules {
 
         while hasMore {
             // Wrap batch processing in autoreleasepool
-            let batchResults = try await autoreleasepool { () -> [ValidationResult] in
+            let batchResults = try autoreleasepool { () -> [ValidationResult] in
                 var descriptor = FetchDescriptor<T>()
                 descriptor.fetchLimit = batchSize
                 descriptor.fetchOffset = offset

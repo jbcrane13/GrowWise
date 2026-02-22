@@ -20,6 +20,7 @@ public struct AddReminderView: View {
     @State private var showingPlantPicker = false
     
     @State private var isCreating = false
+    @State private var saveTask: Task<Void, Never>?
     @State private var errorMessage: String?
     
     private var plants: [Plant] {
@@ -32,7 +33,7 @@ public struct AddReminderView: View {
     }
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Plant selection
                 plantSelectionSection
@@ -53,15 +54,18 @@ public struct AddReminderView: View {
                 customContentSection
             }
             .navigationTitle("Add Reminder")
-            .navigationBarTitleDisplayMode(.large)
+            .onDisappear {
+                saveTask?.cancel()
+            }
+            .gwNavigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarLeading) {
+                ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
                 }
                 
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Create") {
                         createReminder()
                     }
@@ -191,7 +195,6 @@ public struct AddReminderView: View {
                     TextField("Days", value: $customDays, format: .number)
                         .textFieldStyle(.roundedBorder)
                         .frame(width: 80)
-                        .keyboardType(.numberPad)
                     
                     Text("days")
                 }
@@ -353,7 +356,7 @@ public struct AddReminderView: View {
         
         isCreating = true
         
-        Task {
+        saveTask = Task {
             do {
                 let actualFrequency = frequency == .custom ? frequency : frequency
                 
@@ -402,7 +405,7 @@ struct PlantPickerView: View {
     let onDismiss: () -> Void
     
     var body: some View {
-        NavigationView {
+        NavigationStack {
             List(plants, id: \.id) { plant in
                 Button(action: {
                     selectedPlant = plant
@@ -434,9 +437,9 @@ struct PlantPickerView: View {
                 .buttonStyle(.plain)
             }
             .navigationTitle("Select Plant")
-            .navigationBarTitleDisplayMode(.inline)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Cancel") {
                         onDismiss()
                     }

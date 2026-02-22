@@ -16,7 +16,7 @@ public struct NotificationSettingsView: View {
     public init() {}
     
     public var body: some View {
-        NavigationView {
+        NavigationStack {
             Form {
                 // Current Status
                 notificationStatusSection
@@ -36,9 +36,9 @@ public struct NotificationSettingsView: View {
                 badgeSection
             }
             .navigationTitle("Notification Settings")
-            .navigationBarTitleDisplayMode(.large)
+            .gwNavigationBarTitleDisplayMode(.large)
             .toolbar {
-                ToolbarItem(placement: .navigationBarTrailing) {
+                ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         dismiss()
                     }

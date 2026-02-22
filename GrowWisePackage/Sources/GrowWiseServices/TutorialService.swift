@@ -3,7 +3,7 @@ import SwiftData
 import GrowWiseModels
 
 @MainActor
-public final class TutorialService: ObservableObject {
+@Observable public final class TutorialService {
     private let dataService: DataService
     
     public init(dataService: DataService) {
@@ -504,7 +504,7 @@ public struct TutorialContent {
 
 // MARK: - Supporting Types
 
-public struct TutorialTopic: Identifiable, Codable, Sendable {
+public struct TutorialTopic: Identifiable, Codable, Sendable, Hashable {
     public let id: String
     public let title: String
     public let subtitle: String
@@ -530,7 +530,7 @@ public struct TutorialTopic: Identifiable, Codable, Sendable {
     }
 }
 
-public struct TutorialStep: Identifiable, Codable, Sendable {
+public struct TutorialStep: Identifiable, Codable, Sendable, Hashable {
     public let id: UUID
     public let title: String
     public let content: String
