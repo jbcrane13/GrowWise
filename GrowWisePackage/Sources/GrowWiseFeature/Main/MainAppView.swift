@@ -12,6 +12,7 @@ public struct MainAppView: View {
     @Environment(LocationService.self) private var locationService
     @Environment(NotificationService.self) private var notificationService  
     @Environment(PerformanceMonitor.self) private var performanceMonitor
+    @Environment(CloudSyncService.self) private var cloudSyncService
     
     // DataService initialized asynchronously in this view, then injected to children
     @State private var dataService: DataService? = nil
@@ -25,8 +26,16 @@ public struct MainAppView: View {
     @State private var initializationStage: String = "Initializing..."
 
     public init() {
-        // Cache onboarding status to avoid repeated UserDefaults reads
-        self.cachedOnboardingStatus = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        let launchArgs = ProcessInfo.processInfo.arguments
+        let launchEnv = ProcessInfo.processInfo.environment
+        let initialOnboardingStatus: Bool
+        if launchArgs.contains("--skip-onboarding") || launchEnv["UITEST_SKIP_ONBOARDING"] == "1" {
+            initialOnboardingStatus = true
+        } else {
+            initialOnboardingStatus = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+        }
+
+        _cachedOnboardingStatus = State(initialValue: initialOnboardingStatus)
     }
 
     private struct FeatureServices {
@@ -140,6 +149,13 @@ public struct MainAppView: View {
                     Text("Learn")
                 }
                 .tag(TabSelection.tutorials)
+
+            PlantScannerView()
+                .tabItem {
+                    Image(systemName: "camera.macro")
+                    Text("Scanner")
+                }
+                .tag(TabSelection.scanner)
         }
     }
     
@@ -179,6 +195,11 @@ public struct MainAppView: View {
             plantDatabaseService: PlantDatabaseService(dataService: service),
             tutorialService: TutorialService(dataService: service)
         )
+        cloudSyncService.attach(dataService: service)
+
+        Task {
+            await featureServices?.reminderService.synchronizePendingNotifications()
+        }
 
         let initDuration = CFAbsoluteTimeGetCurrent() - initStartTime
         let memoryAfter = performanceMonitor.currentMemoryUsage
@@ -267,6 +288,7 @@ enum TabSelection: Int, CaseIterable {
     case plantGuide = 2
     case journal = 3
     case tutorials = 4
+    case scanner = 5
     
     var title: String {
         switch self {
@@ -275,6 +297,7 @@ enum TabSelection: Int, CaseIterable {
         case .plantGuide: return "Plant Guide"
         case .journal: return "Journal"
         case .tutorials: return "Learn"
+        case .scanner: return "Scanner"
         }
     }
     
@@ -285,6 +308,7 @@ enum TabSelection: Int, CaseIterable {
         case .plantGuide: return "books.vertical.fill"
         case .journal: return "book.pages.fill"
         case .tutorials: return "graduationcap.fill"
+        case .scanner: return "camera.macro"
         }
     }
 }

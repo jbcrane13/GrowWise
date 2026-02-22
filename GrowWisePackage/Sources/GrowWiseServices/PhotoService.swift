@@ -1,4 +1,5 @@
 import Foundation
+import Observation
 #if canImport(Combine)
 import Combine
 #endif
@@ -15,7 +16,7 @@ import GrowWiseModels
 
 #if canImport(UIKit)
 @MainActor
-public final class PhotoService: ObservableObject {
+@Observable public final class PhotoService {
     private let dataService: DataService
     private let maxImageSize: CGFloat = 2048
     private let compressionQuality: CGFloat = 0.8
@@ -438,8 +439,8 @@ public final class PhotoService: ObservableObject {
 #else
 // Placeholder for non-iOS platforms  
 @MainActor
-public final class PhotoService {
-    public init() {}
+@Observable public final class PhotoService {
+    public init(dataService: DataService) {}
     
     public func requestPhotoLibraryPermission() async -> Bool {
         return false
@@ -563,4 +564,3 @@ public enum PhotoError: Error, Sendable {
         }
     }
 }
-

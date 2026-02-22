@@ -338,8 +338,8 @@ final class JWTValidatorTests: XCTestCase {
         let headerData = try! JSONSerialization.data(withJSONObject: header)
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
         
-        let headerEncoded = headerData.base64URLEncodedString()
-        let payloadEncoded = payloadData.base64URLEncodedString()
+        let headerEncoded = headerData.jwtValidatorBase64URLEncodedString()
+        let payloadEncoded = payloadData.jwtValidatorBase64URLEncodedString()
         
         let signingInput = "\\(headerEncoded).\\(payloadEncoded)"
         
@@ -361,7 +361,7 @@ final class JWTValidatorTests: XCTestCase {
         ] as [String: Any]
         
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
-        return payloadData.base64URLEncodedString()
+        return payloadData.jwtValidatorBase64URLEncodedString()
     }
     
     private func createHMACSignature(for input: String) -> String {
@@ -372,14 +372,14 @@ final class JWTValidatorTests: XCTestCase {
         
         let key = SymmetricKey(data: secretData)
         let signature = HMAC<SHA256>.authenticationCode(for: inputData, using: key)
-        return Data(signature).base64URLEncodedString()
+        return Data(signature).jwtValidatorBase64URLEncodedString()
     }
 }
 
 // MARK: - Data Extension for Base64URL
 
 private extension Data {
-    func base64URLEncodedString() -> String {
+    func jwtValidatorBase64URLEncodedString() -> String {
         return base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")

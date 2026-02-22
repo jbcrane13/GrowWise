@@ -69,9 +69,7 @@ import os
             configurations: [modelConfiguration]
         )
 
-        // Use default CloudKit container for now to avoid crashes
-        // In production, this would be configured with proper CloudKit setup
-        self.cloudContainer = CKContainer.default()
+        self.cloudContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
 
         // Validate storage configuration
         validateStorageConfiguration()
@@ -676,6 +674,23 @@ import os
             cache.invalidate("journal:plant:\(plantId.uuidString)")
         }
     }
+
+    @discardableResult
+    public func saveJournalEntry(_ entry: JournalEntry) throws -> JournalEntry {
+        try addJournalEntry(entry)
+        return entry
+    }
+
+    public func deleteJournalEntry(_ entry: JournalEntry) {
+        modelContext.delete(entry)
+        try? modelContext.save()
+
+        cache.invalidate("journal:recent")
+        if let plant = entry.plant, let plantId = plant.id {
+            cache.invalidate("journal:plant:\(plantId.uuidString)")
+            cache.invalidate("plants:\(plantId.uuidString)")
+        }
+    }
     
     public func fetchJournalEntries(for plant: Plant, offset: Int = 0, limit: Int = 20) -> [JournalEntry] {
         guard let plantId = plant.id else { return [] }
@@ -1232,4 +1247,3 @@ public struct UserDataExport: Codable {
         self.totalJournalEntries = totalJournalEntries
     }
 }
-

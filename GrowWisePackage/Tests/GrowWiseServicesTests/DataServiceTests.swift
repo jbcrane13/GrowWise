@@ -315,14 +315,12 @@ struct DataServiceTests {
         // Assert
         #expect(stats.totalPlants == 3)
         #expect(stats.healthyPlants == 1)
-        #expect(stats.healthPercentage ≈ 33.33, .ulpOfOne.magnitude * 100)
+        #expect(isApproximatelyEqual(stats.healthPercentage, 33.33, tolerance: .ulpOfOne.magnitude * 100))
     }
 }
 
 // MARK: - Helper Extensions
 
-fileprivate extension Double {
-    static func ≈(lhs: Double, rhs: Double, tolerance: Double) -> Bool {
-        return abs(lhs - rhs) < tolerance
-    }
+private func isApproximatelyEqual(_ lhs: Double, _ rhs: Double, tolerance: Double) -> Bool {
+    abs(lhs - rhs) < tolerance
 }

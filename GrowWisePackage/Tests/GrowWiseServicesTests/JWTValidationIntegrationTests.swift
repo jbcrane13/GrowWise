@@ -142,8 +142,8 @@ final class JWTValidationIntegrationTests: XCTestCase {
         let headerData = try! JSONSerialization.data(withJSONObject: header)
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
         
-        let headerEncoded = headerData.base64URLEncodedString()
-        let payloadEncoded = payloadData.base64URLEncodedString()
+        let headerEncoded = headerData.jwtIntegrationBase64URLEncodedString()
+        let payloadEncoded = payloadData.jwtIntegrationBase64URLEncodedString()
         
         let signingInput = "\\(headerEncoded).\\(payloadEncoded)"
         let signature = createHMACSignature(for: signingInput)
@@ -159,12 +159,12 @@ final class JWTValidationIntegrationTests: XCTestCase {
         
         let key = SymmetricKey(data: secretData)
         let signature = HMAC<SHA256>.authenticationCode(for: inputData, using: key)
-        return Data(signature).base64URLEncodedString()
+        return Data(signature).jwtIntegrationBase64URLEncodedString()
     }
 }
 
 extension Data {
-    func base64URLEncodedString() -> String {
+    func jwtIntegrationBase64URLEncodedString() -> String {
         return base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")

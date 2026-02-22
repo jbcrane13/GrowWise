@@ -267,7 +267,7 @@ final class DataTransformationServiceTests: XCTestCase {
         // Objects that can't be serialized to JSON
         let invalidObjects: [Any] = [
             Date(), // Date is not JSON serializable without custom encoding
-            UIView(), // UIKit objects are not JSON serializable
+            NSObject(),
         ]
         
         for (index, invalidObject) in invalidObjects.enumerated() {

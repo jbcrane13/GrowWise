@@ -210,37 +210,47 @@ public struct JournalView: View {
         
         isLoadingMore = true
         
-        var sortDescriptors: [SortDescriptor<JournalEntry>] = []
+        let baseEntries: [JournalEntry]
+        if let selectedPlant {
+            baseEntries = dataService.fetchJournalEntries(for: selectedPlant, offset: 0, limit: 200)
+        } else {
+            baseEntries = dataService.fetchRecentJournalEntries(limit: 200)
+        }
+
+        var fetched = baseEntries
+        if let selectedEntryType {
+            fetched = fetched.filter { $0.entryType == selectedEntryType }
+        }
+        if !searchText.isEmpty {
+            let query = searchText.lowercased()
+            fetched = fetched.filter {
+                $0.title.lowercased().contains(query) ||
+                $0.content.lowercased().contains(query) ||
+                ($0.plant?.name?.lowercased().contains(query) ?? false)
+            }
+        }
+
         switch sortOrder {
         case .dateAscending:
-            sortDescriptors = [SortDescriptor(\.entryDate, order: .forward)]
+            fetched.sort { $0.entryDate < $1.entryDate }
         case .dateDescending:
-            sortDescriptors = [SortDescriptor(\.entryDate, order: .reverse)]
+            fetched.sort { $0.entryDate > $1.entryDate }
         case .plantName:
-            sortDescriptors = [SortDescriptor(\.plant?.name, order: .forward)]
+            fetched.sort { ($0.plant?.name ?? "") < ($1.plant?.name ?? "") }
         case .entryType:
-            // Custom sort not directly supported by descriptor, we'll let service handle basic sort
-            sortDescriptors = [SortDescriptor(\.entryDate, order: .reverse)]
+            fetched.sort { $0.entryType.displayName < $1.entryType.displayName }
         }
+
+        let start = min(currentOffset, fetched.count)
+        let end = min(start + visibleEntryCount, fetched.count)
+        let page = start < end ? Array(fetched[start..<end]) : []
         
-        let fetched = dataService.fetchJournalEntries(
-            plant: selectedPlant,
-            type: selectedEntryType,
-            searchText: searchText,
-            sortBy: sortDescriptors,
-            offset: currentOffset,
-            limit: visibleEntryCount
-        )
-        
-        if fetched.count < visibleEntryCount {
+        if page.count < visibleEntryCount {
             hasMoreData = false
         }
         
         // Final in-memory sort if needed
-        var finalEntries = fetched
-        if sortOrder == .entryType {
-            finalEntries.sort { $0.entryType.displayName < $1.entryType.displayName }
-        }
+        let finalEntries = page
         
         journalEntries.append(contentsOf: finalEntries)
         currentOffset += finalEntries.count
@@ -253,7 +263,7 @@ public struct JournalView: View {
 
     // MARK: - Helper Methods
     
-        private func deleteEntries(at offsets: IndexSet, in entries: [JournalEntry]) {
+    private func deleteEntries(at offsets: IndexSet, in entries: [JournalEntry]) {
         for index in offsets {
             let entry = entries[index]
             dataService.deleteJournalEntry(entry)

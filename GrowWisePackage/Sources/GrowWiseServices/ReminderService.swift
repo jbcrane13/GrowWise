@@ -4,15 +4,65 @@ import WeatherKit
 import CoreLocation
 import GrowWiseModels
 
+public struct WeatherAdjustmentSnapshot: Sendable, Equatable {
+    public let maxTemperatureF: Double
+    public let maxPrecipitationChance: Double
+    public let totalPrecipitationInches: Double
+
+    public init(maxTemperatureF: Double, maxPrecipitationChance: Double, totalPrecipitationInches: Double) {
+        self.maxTemperatureF = maxTemperatureF
+        self.maxPrecipitationChance = maxPrecipitationChance
+        self.totalPrecipitationInches = totalPrecipitationInches
+    }
+}
+
+public protocol WeatherAdjustmentProviding: Sendable {
+    func snapshot(for location: CLLocation) async throws -> WeatherAdjustmentSnapshot
+}
+
+public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
+    private let weatherService = WeatherService.shared
+
+    public init() {}
+
+    public func snapshot(for location: CLLocation) async throws -> WeatherAdjustmentSnapshot {
+        let weather = try await weatherService.weather(for: location)
+        let next24h = Array(weather.hourlyForecast.prefix(24))
+
+        let maxTempF = next24h
+            .map { $0.temperature.converted(to: .fahrenheit).value }
+            .max() ?? weather.currentWeather.temperature.converted(to: .fahrenheit).value
+
+        let maxChance = next24h.map { $0.precipitationChance }.max() ?? 0
+        let totalPrecipInches = next24h
+            .map { $0.precipitationAmount.converted(to: .inches).value }
+            .reduce(0, +)
+
+        return WeatherAdjustmentSnapshot(
+            maxTemperatureF: maxTempF,
+            maxPrecipitationChance: maxChance,
+            totalPrecipitationInches: totalPrecipInches
+        )
+    }
+}
+
 @MainActor
 @Observable public final class ReminderService {
     public let dataService: DataService
     public let notificationService: NotificationService
-    private let weatherService = WeatherService.shared
+    private let weatherProvider: any WeatherAdjustmentProviding
+    private let shouldScheduleNotifications: Bool
     
-    public init(dataService: DataService, notificationService: NotificationService) {
+    public init(
+        dataService: DataService,
+        notificationService: NotificationService,
+        weatherProvider: any WeatherAdjustmentProviding = WeatherKitAdjustmentProvider(),
+        shouldScheduleNotifications: Bool = true
+    ) {
         self.dataService = dataService
         self.notificationService = notificationService
+        self.weatherProvider = weatherProvider
+        self.shouldScheduleNotifications = shouldScheduleNotifications
     }
     
     // MARK: - Smart Reminder Scheduling
@@ -53,7 +103,9 @@ import GrowWiseModels
             reminder.preferredNotificationTime = preferredTime
         }
         
-        try await notificationService.scheduleReminderNotification(for: reminder)
+        if shouldScheduleNotifications {
+            try await notificationService.scheduleReminderNotification(for: reminder)
+        }
         
         return reminder
     }
@@ -107,7 +159,9 @@ import GrowWiseModels
         }
         
         // Update notification
-        try await notificationService.scheduleReminderNotification(for: reminder)
+        if shouldScheduleNotifications {
+            try await notificationService.scheduleReminderNotification(for: reminder)
+        }
     }
     
     public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
@@ -132,6 +186,14 @@ import GrowWiseModels
         
         return wateringReminders.filter { reminder in
             calendar.isDate(reminder.nextDueDate, inSameDayAs: Date()) && reminder.isEnabled
+        }
+    }
+
+    public func synchronizePendingNotifications() async {
+        guard shouldScheduleNotifications else { return }
+        let reminders = dataService.fetchActiveReminders()
+        for reminder in reminders where reminder.isEnabled {
+            try? await notificationService.scheduleReminderNotification(for: reminder)
         }
     }
     
@@ -214,15 +276,32 @@ import GrowWiseModels
     }
     
     private func adjustWateringForWeather(baseDate: Date, plant: Plant) async -> Date {
-        // Simulate weather-based watering adjustment
-        let random = Double.random(in: 0...1)
-        
-        if random < 0.3 { // 30% chance of rain delay
+        guard
+            let user = dataService.getCurrentUser(),
+            let latitude = user.latitude,
+            let longitude = user.longitude
+        else {
+            return baseDate
+        }
+
+        do {
+            let location = CLLocation(latitude: latitude, longitude: longitude)
+            let snapshot = try await weatherProvider.snapshot(for: location)
+            return Self.adjustedWateringDate(baseDate: baseDate, snapshot: snapshot)
+        } catch {
+            return baseDate
+        }
+    }
+
+    public static func adjustedWateringDate(baseDate: Date, snapshot: WeatherAdjustmentSnapshot) -> Date {
+        if snapshot.maxPrecipitationChance >= 0.6 || snapshot.totalPrecipitationInches >= 0.5 {
             return Calendar.current.date(byAdding: .day, value: 1, to: baseDate) ?? baseDate
-        } else if random > 0.8 { // 20% chance of hot weather advancement
+        }
+
+        if snapshot.maxTemperatureF >= 90 {
             return Calendar.current.date(byAdding: .day, value: -1, to: baseDate) ?? baseDate
         }
-        
+
         return baseDate
     }
     

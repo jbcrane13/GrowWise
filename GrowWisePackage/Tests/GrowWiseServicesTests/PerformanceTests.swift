@@ -3,6 +3,7 @@ import XCTest
 @testable import GrowWiseModels
 import SwiftData
 
+@MainActor
 final class PerformanceTests: XCTestCase {
     var dataService: DataService!
     var performanceMonitor: PerformanceMonitor!
@@ -13,10 +14,10 @@ final class PerformanceTests: XCTestCase {
         try await super.setUp()
         
         // Initialize services
-        dataService = try await DataService(isAsync: true)
-        performanceMonitor = await PerformanceMonitor.shared
-        cacheManager = await CacheManager.shared
-        backgroundTaskManager = await BackgroundTaskManager.shared
+        dataService = try DataService()
+        performanceMonitor = PerformanceMonitor()
+        cacheManager = CacheManager.shared
+        backgroundTaskManager = BackgroundTaskManager.shared
     }
     
     override func tearDown() async throws {
@@ -38,7 +39,7 @@ final class PerformanceTests: XCTestCase {
         await performanceMonitor.recordAppLaunchStart()
         
         // Simulate app initialization
-        _ = try await DataService(isAsync: true)
+        _ = try DataService()
         
         await performanceMonitor.recordAppLaunchComplete()
         
@@ -246,7 +247,7 @@ final class PerformanceTests: XCTestCase {
         XCTAssertLessThan(cacheDuration, 0.01, "Cache not effective: \(cacheDuration)s")
         
         // Check cache statistics
-        let stats = await cacheManager.statistics
+        let stats = cacheManager.statistics
         XCTAssertGreaterThan(stats.hitRate, 0.5, "Cache hit rate too low: \(stats.hitRate)")
     }
     
@@ -411,7 +412,7 @@ extension XCTestCase {
         print("⏱️ Execution time: \(String(format: "%.3f", duration))s")
     }
     
-    func withTimeout<T>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
+    func withTimeout<T: Sendable>(seconds: TimeInterval, operation: @escaping () async throws -> T) async throws -> T {
         try await withThrowingTaskGroup(of: T.self) { group in
             group.addTask {
                 try await operation()

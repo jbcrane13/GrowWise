@@ -9,8 +9,18 @@ struct GrowWiseApp: App {
     @State private var locationService = LocationService()
     @State private var notificationService = NotificationService()
     @State private var performanceMonitor = PerformanceMonitor()
+    @State private var cloudSyncService = CloudSyncService()
     
     init() {
+        let launchArgs = ProcessInfo.processInfo.arguments
+        let launchEnv = ProcessInfo.processInfo.environment
+        if launchArgs.contains("--skip-onboarding") || launchEnv["UITEST_SKIP_ONBOARDING"] == "1" {
+            UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
+        }
+        if launchArgs.contains("--reset-onboarding") {
+            UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
+        }
+
         // Initialize security/encryption early to avoid compliance blocks
         GrowWiseApp.ensureEncryptionReady()
 
@@ -26,6 +36,7 @@ struct GrowWiseApp: App {
                 .environment(locationService)
                 .environment(notificationService)
                 .environment(performanceMonitor)
+                .environment(cloudSyncService)
         }
     }
 

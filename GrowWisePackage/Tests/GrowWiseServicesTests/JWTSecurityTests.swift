@@ -53,7 +53,7 @@ final class JWTSecurityTests: XCTestCase {
         
         // Test signature tampering
         let parts = validJWT.components(separatedBy: ".")
-        let tamperedSignature = Data(repeating: 0x41, count: 32).base64URLEncodedString()
+        let tamperedSignature = Data(repeating: 0x41, count: 32).jwtSecurityBase64URLEncodedString()
         let tamperedJWT = "\(parts[0]).\(parts[1]).\(tamperedSignature)"
         
         XCTAssertThrowsError(try validator.validate(tamperedJWT)) { error in
@@ -174,7 +174,7 @@ final class JWTSecurityTests: XCTestCase {
         ]
         
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
-        let manipulatedPayload = payloadData.base64URLEncodedString()
+        let manipulatedPayload = payloadData.jwtSecurityBase64URLEncodedString()
         let manipulatedJWT = "\(parts[0]).\(manipulatedPayload).\(parts[2])"
         
         // Should fail signature verification
@@ -204,7 +204,7 @@ final class JWTSecurityTests: XCTestCase {
         ]
         
         let headerData = try! JSONSerialization.data(withJSONObject: maliciousHeader)
-        let manipulatedHeader = headerData.base64URLEncodedString()
+        let manipulatedHeader = headerData.jwtSecurityBase64URLEncodedString()
         let manipulatedJWT = "\(manipulatedHeader).\(parts[1]).\(parts[2])"
         
         XCTAssertThrowsError(try validator.validate(manipulatedJWT)) { error in
@@ -349,7 +349,7 @@ final class JWTSecurityTests: XCTestCase {
         ]
         
         let headerData = try! JSONSerialization.data(withJSONObject: criticalHeader)
-        let headerBase64 = headerData.base64URLEncodedString()
+        let headerBase64 = headerData.jwtSecurityBase64URLEncodedString()
         let payload = createTestPayload()
         let signingInput = "\(headerBase64).\(payload)"
         let signature = createHMACSignature(for: signingInput)
@@ -431,8 +431,8 @@ final class JWTSecurityTests: XCTestCase {
         let headerData = try! JSONSerialization.data(withJSONObject: header)
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
         
-        let headerEncoded = headerData.base64URLEncodedString()
-        let payloadEncoded = payloadData.base64URLEncodedString()
+        let headerEncoded = headerData.jwtSecurityBase64URLEncodedString()
+        let payloadEncoded = payloadData.jwtSecurityBase64URLEncodedString()
         
         let signingInput = "\(headerEncoded).\(payloadEncoded)"
         
@@ -464,8 +464,8 @@ final class JWTSecurityTests: XCTestCase {
         let headerData = try! JSONSerialization.data(withJSONObject: header)
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
         
-        let headerEncoded = headerData.base64URLEncodedString()
-        let payloadEncoded = payloadData.base64URLEncodedString()
+        let headerEncoded = headerData.jwtSecurityBase64URLEncodedString()
+        let payloadEncoded = payloadData.jwtSecurityBase64URLEncodedString()
         
         return "\(headerEncoded).\(payloadEncoded)."
     }
@@ -479,7 +479,7 @@ final class JWTSecurityTests: XCTestCase {
         ] as [String: Any]
         
         let payloadData = try! JSONSerialization.data(withJSONObject: payload)
-        return payloadData.base64URLEncodedString()
+        return payloadData.jwtSecurityBase64URLEncodedString()
     }
     
     private func createHMACSignature(for input: String) -> String {
@@ -490,7 +490,7 @@ final class JWTSecurityTests: XCTestCase {
         
         let key = SymmetricKey(data: secretData)
         let signature = HMAC<SHA256>.authenticationCode(for: inputData, using: key)
-        return Data(signature).base64URLEncodedString()
+        return Data(signature).jwtSecurityBase64URLEncodedString()
     }
     
     private func getMemoryUsage() -> Int {
@@ -510,7 +510,7 @@ final class JWTSecurityTests: XCTestCase {
 // MARK: - Data Extension for Base64URL
 
 private extension Data {
-    func base64URLEncodedString() -> String {
+    func jwtSecurityBase64URLEncodedString() -> String {
         return base64EncodedString()
             .replacingOccurrences(of: "+", with: "-")
             .replacingOccurrences(of: "/", with: "_")

@@ -13,6 +13,7 @@ public struct HomeView: View {
     @Environment(DataService.self) private var dataService
     @Environment(LocationService.self) private var locationService
     @Environment(PhotoService.self) private var photoService
+    @Environment(CloudSyncService.self) private var cloudSyncService
     
     @State private var gardeningStats = GardeningStats(totalPlants: 0, healthyPlants: 0, activeReminders: 0, totalJournalEntries: 0)
     @State private var upcomingReminders: [PlantReminder] = []
@@ -62,6 +63,8 @@ public struct HomeView: View {
                     if let weather = currentWeather {
                         WeatherSection(weather: weather)
                     }
+
+                    syncStatusSection
 
                     // Active Reminders
                     remindersSection
@@ -121,6 +124,35 @@ public struct HomeView: View {
                 }
             }
         }
+    }
+
+    private var syncStatusSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            HStack {
+                Image(systemName: cloudSyncService.isSyncing ? "arrow.triangle.2.circlepath" : "icloud")
+                Text("iCloud Sync")
+                    .font(.headline)
+                Spacer()
+                if cloudSyncService.isSyncing {
+                    Text("Syncing...")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            if let error = cloudSyncService.lastErrorMessage {
+                Text(error)
+                    .font(.caption)
+                    .foregroundColor(.red)
+            } else if let lastSyncDate = cloudSyncService.lastSyncDate {
+                Text("Last synced: \(lastSyncDate.formatted(date: .abbreviated, time: .shortened))")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+            }
+        }
+        .padding()
+        .background(Color(.systemGray6))
+        .cornerRadius(8)
+        .accessibilityIdentifier("homeCloudSyncSection")
     }
 
     private var remindersSection: some View {
@@ -216,12 +248,19 @@ public struct HomeView: View {
         // Load recent journal entries
         recentJournalEntries = dataService.fetchRecentJournalEntries(limit: 5)
         
-        // Load weather if location available
-        if locationService.hasLocationPermission,
-           let _ = locationService.currentLocation {
-            // In a real app, you'd call a weather API here
+        if ProcessInfo.processInfo.arguments.contains("--uitesting-mock-weather") {
             currentWeather = WeatherInfo.sample
+        } else if locationService.hasLocationPermission {
+            if locationService.currentLocation == nil {
+                locationService.requestLocation()
+            }
+            await locationService.fetchWeatherData()
+            if let weatherData = locationService.weatherData {
+                currentWeather = mapWeatherData(weatherData)
+            }
         }
+
+        await cloudSyncService.refreshStatus()
         
         isLoading = false
     }
@@ -230,15 +269,35 @@ public struct HomeView: View {
     private func refreshData() async {
         await loadData()
     }
+
+    private func mapWeatherData(_ weatherData: WeatherData) -> WeatherInfo {
+        let temperatureF = weatherData.current.temperature.converted(to: .fahrenheit).value
+        let humidityPercent = weatherData.current.humidity * 100
+        let uvValue = Int(weatherData.current.uvIndex.value)
+        let description = String(describing: weatherData.current.condition)
+        let iconName = weatherData.current.symbolName
+        let gardeningFriendly = temperatureF >= 45 && temperatureF <= 90 && uvValue <= 8
+
+        return WeatherInfo(
+            temperature: temperatureF,
+            humidity: humidityPercent,
+            uvIndex: uvValue,
+            description: description,
+            iconName: iconName,
+            isGoodForGardening: gardeningFriendly
+        )
+    }
 }
 
 #Preview {
     let dataService = try! DataService()
     let locationService = LocationService()
     let photoService = PhotoService(dataService: dataService)
+    let cloudSyncService = CloudSyncService()
 
     HomeView()
         .environment(dataService)
         .environment(locationService)
         .environment(photoService)
+        .environment(cloudSyncService)
 }

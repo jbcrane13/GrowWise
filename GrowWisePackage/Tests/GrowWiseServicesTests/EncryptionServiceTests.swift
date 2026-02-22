@@ -53,7 +53,7 @@ final class EncryptionServiceTests: XCTestCase {
     
     // MARK: - Key Rotation Tests
     
-    func testKeyRotation() async throws {
+    func testKeyRotationWithSecureEnclaveFallbackBehavior() async throws {
         let originalData = "Test data for key rotation".data(using: .utf8)!
         
         // Encrypt with initial key
@@ -342,7 +342,7 @@ final class EncryptionServiceTests: XCTestCase {
         XCTAssertTrue(encryptionService.hasEncryptionKey)
     }
     
-    func testKeyRotation() async throws {
+    func testKeyRotationSecureEnclaveFlow() async throws {
         // Skip if Secure Enclave not available
         guard SecureEnclaveKeyManager.isSecureEnclaveAvailable else {
             // Test legacy behavior - key rotation should throw
