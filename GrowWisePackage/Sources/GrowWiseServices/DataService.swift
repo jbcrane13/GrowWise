@@ -51,7 +51,8 @@ import os
             Garden.self,
             User.self,
             PlantReminder.self,
-            JournalEntry.self
+            JournalEntry.self,
+            SoilLog.self
         ])
 
         // EMERGENCY MEMORY FIX: Use persistent storage instead of in-memory
@@ -115,7 +116,8 @@ import os
                         Garden.self,
                         User.self,
                         PlantReminder.self,
-                        JournalEntry.self
+                        JournalEntry.self,
+                        SoilLog.self
                     ])
 
                     // Create configuration with persistent storage
