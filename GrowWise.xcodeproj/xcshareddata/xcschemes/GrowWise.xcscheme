@@ -30,9 +30,6 @@
       shouldUseLaunchSchemeArgsEnv = "YES">
       <TestPlans>
          <TestPlanReference
-            reference = "container:GrowWise.xctestplan">
-         </TestPlanReference>
-         <TestPlanReference
             reference = "container:GrowWise/GrowWise.xctestplan"
             default = "YES">
          </TestPlanReference>
