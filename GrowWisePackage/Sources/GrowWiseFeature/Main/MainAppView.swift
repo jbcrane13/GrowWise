@@ -17,7 +17,6 @@ public struct MainAppView: View {
     // DataService initialized asynchronously in this view, then injected to children
     @State private var dataService: DataService? = nil
     @State private var featureServices: FeatureServices?
-    @State private var showingOnboarding = false
     @State private var selectedTab: TabSelection = .home
     @State private var isInitializing = true
     @State private var initializationError: Error?
@@ -61,17 +60,24 @@ public struct MainAppView: View {
                     await initializeDataService()
                 }
             } else if isFallbackMode {
-                VStack(spacing: 16) {
-                    Image(systemName: "exclamationmark.triangle.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.orange)
-                    Text("Running in Limited Mode")
-                        .font(.title2)
-                        .fontWeight(.semibold)
-                    Text("Some features may be unavailable")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                    if let ds = dataService, let services = featureServices {
+                if shouldShowOnboarding {
+                    OnboardingView {
+                        cachedOnboardingStatus = true
+                    }
+                } else if let ds = dataService, let services = featureServices {
+                    VStack(spacing: 0) {
+                        // Subtle banner so Blake knows limited mode is active
+                        HStack {
+                            Image(systemName: "exclamationmark.triangle.fill")
+                                .foregroundColor(.orange)
+                            Text("Running in Limited Mode")
+                                .font(.caption)
+                                .foregroundColor(.secondary)
+                        }
+                        .padding(.vertical, 4)
+                        .frame(maxWidth: .infinity)
+                        .background(Color(.systemBackground))
+
                         mainTabView
                             .environment(ds)
                             .environment(services.reminderService)
@@ -87,7 +93,9 @@ public struct MainAppView: View {
                     }
                 }
             } else if shouldShowOnboarding {
-                OnboardingView()
+                OnboardingView {
+                    cachedOnboardingStatus = true
+                }
             } else if let ds = dataService, let services = featureServices {
                 mainTabView
                     .environment(ds)
@@ -105,9 +113,6 @@ public struct MainAppView: View {
                 }
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
-        }
-        .onAppear {
-            checkOnboardingStatus()
         }
     }
     
@@ -162,12 +167,7 @@ public struct MainAppView: View {
     private var shouldShowOnboarding: Bool {
         !(cachedOnboardingStatus ?? false)
     }
-    
-    private func checkOnboardingStatus() {
-        // Use cached status to avoid UserDefaults read
-        showingOnboarding = shouldShowOnboarding
-    }
-    
+
     @MainActor
     private func initializeDataService() async {
         isInitializing = true

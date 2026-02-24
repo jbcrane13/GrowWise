@@ -7,8 +7,14 @@ public struct OnboardingView: View {
     @State private var userProfile = UserProfile()
     @State private var isCompleted = false
     @Environment(\.dismiss) private var dismiss
-    
-    public init() {}
+
+    /// Called when the user finishes onboarding. Used when OnboardingView is
+    /// embedded in an if/else branch (not a sheet) so dismiss() has no effect.
+    var onCompleted: (() -> Void)? = nil
+
+    public init(onCompleted: (() -> Void)? = nil) {
+        self.onCompleted = onCompleted
+    }
     
     public var body: some View {
         NavigationStack {
@@ -65,7 +71,8 @@ public struct OnboardingView: View {
         .gwNavigationBarHidden(true)
         .onChange(of: isCompleted) { _, completed in
             if completed {
-                dismiss()
+                onCompleted?()  // Update parent state when embedded in a branch
+                dismiss()       // Also works when presented as a sheet
             }
         }
     }

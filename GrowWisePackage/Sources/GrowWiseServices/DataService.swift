@@ -97,7 +97,11 @@ import os
     public static func createAsync(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) async throws -> DataService {
         let logger = Logger(subsystem: "com.growwise.dataservice", category: "Initialization")
 
-        logger.info("[DataService] Starting async initialization on background thread")
+        // Use in-memory store during UI test runs to avoid schema migration crashes
+        // and ensure a clean state for every test launch.
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
+
+        logger.info("[DataService] Starting async initialization on background thread (inMemory=\(isUITesting, privacy: .public))")
 
         // Capture main-actor values before detaching
         let memoryBefore = await MainActor.run { performanceMonitor.currentMemoryUsage }
@@ -120,14 +124,15 @@ import os
                         SoilLog.self
                     ])
 
-                    // Create configuration with persistent storage
+                    // In-memory for UI tests (no migration risk, clean state every run).
+                    // Persistent on disk for production.
                     let modelConfiguration = ModelConfiguration(
                         schema: schema,
-                        isStoredInMemoryOnly: false,
+                        isStoredInMemoryOnly: isUITesting,
                         allowsSave: true
                     )
 
-                    logger.info("[DataService] Creating ModelContainer on background thread (persistent storage)")
+                    logger.info("[DataService] Creating ModelContainer on background thread (\(isUITesting ? "in-memory" : "persistent", privacy: .public) storage)")
 
                     // Create ModelContainer - this is the heavy work
                     let container = try ModelContainer(

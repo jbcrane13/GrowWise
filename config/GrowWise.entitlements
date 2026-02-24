@@ -2,48 +2,47 @@
 <!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
 <plist version="1.0">
 <dict>
-	<!-- GrowWise App Entitlements -->
-	
-	<!-- CloudKit for data sync -->
+	<!--
+	GROWWISE ENTITLEMENTS — ADD CAPABILITIES HERE AS THEY ARE ENABLED IN THE APP ID
+
+	App ID: com.growwiser.app | Team: 32XZRDTGK3
+
+	To enable a capability:
+	1. Go to developer.apple.com → Certificates, Identifiers & Profiles → Identifiers
+	2. Find com.growwiser.app and enable the capability
+	3. Uncomment the corresponding block below
+	4. Xcode automatic signing will regenerate the provisioning profile
+
+	Push Notifications (aps-environment):
+	<key>aps-environment</key>
+	<string>development</string>
+
+	CloudKit (requires container iCloud.com.growwiser.app to be created first):
 	<key>com.apple.developer.icloud-services</key>
 	<array>
 		<string>CloudKit</string>
 	</array>
-	
 	<key>com.apple.developer.icloud-container-identifiers</key>
 	<array>
-		<string>iCloud.com.growwise.app</string>
+		<string>iCloud.com.growwiser.app</string>
 	</array>
-	
-	<!-- Push Notifications for plant care reminders -->
-	<key>aps-environment</key>
-	<string>development</string>
-	
-	<!-- Background App Refresh for reminder processing -->
+
+	App Groups (requires group.com.growwiser.app to be created first):
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.growwiser.app</string>
+	</array>
+
+	Background Modes (background-processing, background-fetch):
 	<key>com.apple.developer.background-modes</key>
 	<array>
 		<string>background-processing</string>
 		<string>background-fetch</string>
 	</array>
-	
-	<!-- App Groups for data sharing and widgets -->
-	<key>com.apple.security.application-groups</key>
-	<array>
-		<string>group.com.growwise.app</string>
-	</array>
-	
-	<!-- Keychain Sharing for secure data -->
-	<key>keychain-access-groups</key>
-	<array>
-		<string>$(AppIdentifierPrefix)com.growwise.app</string>
-	</array>
-	
-	<!-- Location Services for hardiness zone detection -->
+
+	Location Background (requires background location mode in Info.plist too):
 	<key>com.apple.developer.location.corelocation.background</key>
 	<true/>
-	
-	<!-- Camera access for plant photos and AI diagnostics -->
-	<key>com.apple.developer.camera</key>
-	<true/>
+	-->
 </dict>
 </plist>

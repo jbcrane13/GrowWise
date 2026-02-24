@@ -14,6 +14,14 @@ struct GrowWiseApp: App {
     init() {
         let launchArgs = ProcessInfo.processInfo.arguments
         let launchEnv = ProcessInfo.processInfo.environment
+        // --reset-data must run FIRST so subsequent flags can re-apply on a clean slate.
+        // DataService automatically uses in-memory store when --uitesting is present,
+        // so persistent store migration is never triggered during UI test runs.
+        if launchArgs.contains("--reset-data") {
+            if let domain = Bundle.main.bundleIdentifier {
+                UserDefaults.standard.removePersistentDomain(forName: domain)
+            }
+        }
         if launchArgs.contains("--skip-onboarding") || launchEnv["UITEST_SKIP_ONBOARDING"] == "1" {
             UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
         }
