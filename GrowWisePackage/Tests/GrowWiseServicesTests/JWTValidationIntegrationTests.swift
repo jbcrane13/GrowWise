@@ -8,7 +8,12 @@ final class JWTValidationIntegrationTests: XCTestCase {
     private var encryptionService: EncryptionService!
     private var keychain: KeychainStorageService!
     
-    override func setUp() {
+    override func setUp() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
+
         super.setUp()
         
         // Create test services

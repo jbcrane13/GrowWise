@@ -8,8 +8,12 @@ final class KeychainStorageServiceTests: XCTestCase {
     var service: KeychainStorageService!
     private let testService = "com.growwiser.test"
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
         service = KeychainStorageService(service: testService)
         
         // Clean up any existing test data

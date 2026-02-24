@@ -11,7 +11,12 @@ final class DataTransformationServiceTests: XCTestCase {
     var encryptedDataTransformationService: DataTransformationService!
     private let testService = "com.growwiser.transformation.test"
     
-    override func setUp() {
+    override func setUp() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
+
         super.setUp()
         storage = KeychainStorageService(service: testService)
         encryptionService = EncryptionService(storage: storage)

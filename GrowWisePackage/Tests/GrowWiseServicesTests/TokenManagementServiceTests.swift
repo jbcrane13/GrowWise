@@ -14,7 +14,12 @@ final class TokenManagementServiceTests: XCTestCase {
     private let validJWT = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.SflKxwRJSMeKKF2QT4fwpMeJf36POk6yJV_adQssw5c"
     private let validRefreshToken = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJzdWIiOiIxMjM0NTY3ODkwIiwibmFtZSI6IkpvaG4gRG9lIiwiaWF0IjoxNTE2MjM5MDIyfQ.refresh_token_signature"
     
-    override func setUp() {
+    override func setUp() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
+
         super.setUp()
         storage = KeychainStorageService(service: testService)
         encryptionService = EncryptionService(storage: storage)

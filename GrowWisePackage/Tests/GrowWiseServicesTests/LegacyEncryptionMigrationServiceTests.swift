@@ -9,7 +9,12 @@ final class LegacyEncryptionMigrationServiceTests: XCTestCase {
     private let testService = "com.growwise.migration.test"
     private let legacyKeyIdentifier = "_encryption_key_v2"
     
-    override func setUp() {
+    override func setUp() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
+
         super.setUp()
         storage = KeychainStorageService(service: testService)
         migrationService = LegacyEncryptionMigrationService(keychainStorage: storage)

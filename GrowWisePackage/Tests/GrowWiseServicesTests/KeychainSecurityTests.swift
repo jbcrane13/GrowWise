@@ -12,6 +12,10 @@ final class KeychainSecurityTests: XCTestCase {
     
     override func setUp() async throws {
         try await super.setUp()
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
         keychainManager = KeychainManager.shared
         
         // Clean up any existing test data

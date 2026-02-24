@@ -14,7 +14,12 @@ final class MigrationSecurityTests: XCTestCase {
     private var auditLogger: AuditLogger!
     private var mockLegacyStorage: MockLegacyStorage!
     
-    override func setUp() {
+    override func setUp() throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
+
         super.setUp()
         keychainStorage = KeychainStorageService(service: "com.growwise.migration-test", accessGroup: nil)
         auditLogger = AuditLogger.shared

@@ -8,8 +8,12 @@ final class KeyRotationManagerTests: XCTestCase {
     var secureEnclaveKeyManager: SecureEnclaveKeyManager!
     var keychainStorage: KeychainStorageService!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
         secureEnclaveKeyManager = SecureEnclaveKeyManager(keyIdentifier: "test-key-rotation")
         keychainStorage = KeychainStorageService(serviceIdentifier: "test-key-rotation-service")
         keyRotationManager = KeyRotationManager(

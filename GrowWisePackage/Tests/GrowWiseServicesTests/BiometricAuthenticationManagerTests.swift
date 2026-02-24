@@ -7,6 +7,10 @@ final class BiometricAuthenticationManagerTests: XCTestCase {
     var authManager: BiometricAuthenticationManager!
     
     override func setUp() async throws {
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
         try await super.setUp()
         authManager = BiometricAuthenticationManager.shared
     }

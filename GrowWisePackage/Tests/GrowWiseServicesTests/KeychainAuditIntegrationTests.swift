@@ -9,8 +9,12 @@ final class KeychainAuditIntegrationTests: XCTestCase {
     var keychainManager: KeychainManager!
     var testUserId: String!
     
-    override func setUp() {
-        super.setUp()
+    override func setUp() async throws {
+        try await super.setUp()
+        try XCTSkipIf(
+            ProcessInfo.processInfo.environment["KEYCHAIN_TESTS_ENABLED"] != "1",
+            "Requires real Keychain access — triggers macOS permission dialog; set KEYCHAIN_TESTS_ENABLED=1 to run"
+        )
         keychainManager = KeychainManager.shared
         testUserId = "audit_test_user_\(UUID().uuidString)"
         
