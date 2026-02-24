@@ -553,7 +553,9 @@ public final class AuditLogger: @unchecked Sendable {
             if let index = try JSONSerialization.jsonObject(with: indexData) as? [[String: Any]] {
                 return index
             }
-        } catch {}
+        } catch {
+            handleAuditFailure(error)
+        }
         return []
     }
     
