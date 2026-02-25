@@ -12,24 +12,37 @@ import GrowWiseModels
     public var badgeCount = 0
     public var authorizationStatus: UNAuthorizationStatus = .notDetermined
     
-    private let notificationCenter: UNUserNotificationCenter
-    
+    private let notificationCenter: UNUserNotificationCenter?
+
     /// Alias for isAuthorized to maintain backward compatibility
     public var isEnabled: Bool {
         return isAuthorized
     }
-    
+
     public override init() {
         self.notificationCenter = UNUserNotificationCenter.current()
         super.init()
-        
-        notificationCenter.delegate = self
-        checkNotificationPermissions()
+
+        notificationCenter?.delegate = self
+        if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            checkNotificationPermissions()
+        }
+    }
+
+    /// Internal initializer for unit and integration testing.
+    /// Passing `notificationCenter: nil` prevents the service from touching
+    /// `UNUserNotificationCenter.current()`, which requires app entitlements and
+    /// crashes in the swift test runner.
+    init(notificationCenter: UNUserNotificationCenter?) {
+        self.notificationCenter = notificationCenter
+        super.init()
+        // Do not set delegate or check permissions in test mode.
     }
     
     // MARK: - Permission Management
     
     public func requestNotificationPermissions() async -> Bool {
+        guard let notificationCenter else { return false }
         do {
             let granted = try await notificationCenter.requestAuthorization(options: [.alert, .badge, .sound])
             await MainActor.run {
@@ -41,8 +54,9 @@ import GrowWiseModels
             return false
         }
     }
-    
+
     private func checkNotificationPermissions() {
+        guard let notificationCenter else { return }
         Task {
             let settings = await notificationCenter.notificationSettings()
             await MainActor.run {
@@ -51,49 +65,50 @@ import GrowWiseModels
             }
         }
     }
-    
+
     public func checkAuthorizationStatus() async {
+        guard let notificationCenter else { return }
         let settings = await notificationCenter.notificationSettings()
         await MainActor.run {
             self.authorizationStatus = settings.authorizationStatus
             self.isAuthorized = settings.authorizationStatus == .authorized
         }
     }
-    
+
     // MARK: - Scheduling Notifications
-    
+
     public func scheduleReminderNotification(for reminder: PlantReminder) async throws {
-        guard isAuthorized else { return }
-        
+        guard isAuthorized, let notificationCenter else { return }
+
         let content = createReminderNotificationContent(for: reminder)
         let trigger = createNotificationTrigger(for: reminder.nextDueDate, repeats: false)
-        
+
         let request = UNNotificationRequest(
             identifier: reminder.id.uuidString,
             content: content,
             trigger: trigger
         )
-        
+
         try await notificationCenter.add(request)
     }
-    
+
     public func cancelNotification(with identifier: String) async {
-        notificationCenter.removePendingNotificationRequests(withIdentifiers: [identifier])
+        notificationCenter?.removePendingNotificationRequests(withIdentifiers: [identifier])
     }
-    
+
     public func cancelAllNotifications() async {
-        notificationCenter.removeAllPendingNotificationRequests()
+        notificationCenter?.removeAllPendingNotificationRequests()
     }
-    
+
     // MARK: - Helper Functions
-    
+
     private func updateBadgeCount() async {
         let pendingCount = await getPendingNotificationsCount()
         await MainActor.run {
             self.badgeCount = pendingCount
         }
-        
-        try? await notificationCenter.setBadgeCount(pendingCount)
+
+        try? await notificationCenter?.setBadgeCount(pendingCount)
     }
     
     private func createReminderNotificationContent(for reminder: PlantReminder) -> UNMutableNotificationContent {
@@ -124,7 +139,7 @@ import GrowWiseModels
     }
     
     private func getPendingNotificationsCount() async -> Int {
-        let requests = await notificationCenter.pendingNotificationRequests()
+        let requests = await notificationCenter?.pendingNotificationRequests() ?? []
         return requests.count
     }
     
@@ -151,22 +166,22 @@ import GrowWiseModels
     // MARK: - Additional Methods for View Compatibility
     
     public func scheduleSeasonalReminder(title: String, body: String, date: Date, identifier: String) async throws {
-        guard isAuthorized else { return }
-        
+        guard isAuthorized, let notificationCenter else { return }
+
         let content = UNMutableNotificationContent()
         content.title = title
         content.body = body
         content.sound = .default
         content.badge = NSNumber(value: badgeCount + 1)
-        
+
         let trigger = createNotificationTrigger(for: date, repeats: false)
         let request = UNNotificationRequest(identifier: identifier, content: content, trigger: trigger)
-        
+
         try await notificationCenter.add(request)
     }
-    
+
     public func getPendingNotifications() async -> [UNNotificationRequest] {
-        return await notificationCenter.pendingNotificationRequests()
+        return await notificationCenter?.pendingNotificationRequests() ?? []
     }
     
     public func clearAllNotifications() {
