@@ -8,7 +8,7 @@ final class GrowWiseUITests: XCTestCase {
         app = XCUIApplication()
         
         // Configure app for UI testing
-        app.launchArguments = ["--uitesting"]
+        app.launchArguments = ["--uitesting", "--skip-onboarding", "--reset-data"]
         app.launch()
     }
 

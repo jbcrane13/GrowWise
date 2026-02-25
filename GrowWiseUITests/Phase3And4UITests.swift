@@ -11,7 +11,7 @@ class Phase3And4UITests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting", "--reset-data"]
+        app.launchArguments = ["--uitesting", "--skip-onboarding", "--reset-data"]
         app.launch()
     }
 
@@ -242,7 +242,7 @@ class Phase3And4PerformanceTests: XCTestCase {
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        app.launchArguments = ["--uitesting"]
+        app.launchArguments = ["--uitesting", "--skip-onboarding", "--reset-data"]
         app.launch()
     }
 
