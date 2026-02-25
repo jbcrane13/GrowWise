@@ -21,7 +21,6 @@ public struct MainAppView: View {
     @State private var isInitializing = true
     @State private var initializationError: Error?
     @State private var cachedOnboardingStatus: Bool?
-    @State private var isFallbackMode = false
     @State private var initializationStage: String = "Initializing..."
 
     public init() {
@@ -35,6 +34,7 @@ public struct MainAppView: View {
         }
 
         _cachedOnboardingStatus = State(initialValue: initialOnboardingStatus)
+
     }
 
     private struct FeatureServices {
@@ -45,11 +45,13 @@ public struct MainAppView: View {
     }
     
     public var body: some View {
-        Group {
+        ZStack {
             if isInitializing {
                 VStack(spacing: 16) {
-                    ProgressView()
-                        .scaleEffect(1.5)
+                    if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
+                        ProgressView()
+                            .scaleEffect(1.5)
+                    }
                     Text(initializationStage)
                         .font(.headline)
                         .foregroundColor(.secondary)
@@ -59,43 +61,17 @@ public struct MainAppView: View {
                 .task {
                     await initializeDataService()
                 }
-            } else if isFallbackMode {
-                if shouldShowOnboarding {
-                    OnboardingView {
-                        cachedOnboardingStatus = true
-                    }
-                } else if let ds = dataService, let services = featureServices {
-                    VStack(spacing: 0) {
-                        // Subtle banner so Blake knows limited mode is active
-                        HStack {
-                            Image(systemName: "exclamationmark.triangle.fill")
-                                .foregroundColor(.orange)
-                            Text("Running in Limited Mode")
-                                .font(.caption)
-                                .foregroundColor(.secondary)
-                        }
-                        .padding(.vertical, 4)
-                        .frame(maxWidth: .infinity)
-                        .background(Color(.systemBackground))
-
-                        mainTabView
-                            .environment(ds)
-                            .environment(services.reminderService)
-                            .environment(services.photoService)
-                            .environment(services.plantDatabaseService)
-                            .environment(services.tutorialService)
-                    }
-                }
             } else if let error = initializationError {
                 ErrorView(error: error) {
                     Task {
                         await initializeDataService()
                     }
                 }
-            } else if shouldShowOnboarding {
+            } else if shouldShowOnboarding, let ds = dataService {
                 OnboardingView {
                     cachedOnboardingStatus = true
                 }
+                .environment(ds)
             } else if let ds = dataService, let services = featureServices {
                 mainTabView
                     .environment(ds)
@@ -114,8 +90,9 @@ public struct MainAppView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
+        .accessibilityIdentifier("MainAppView")
     }
-    
+
     private var mainTabView: some View {
         TabView(selection: $selectedTab) {
             HomeView()
@@ -172,7 +149,21 @@ public struct MainAppView: View {
     private func initializeDataService() async {
         isInitializing = true
         initializationError = nil
-        isFallbackMode = false
+
+        // Fast path for UI testing — skip performance monitoring and background work
+        // to allow XCTest quiescence detection to succeed.
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            let service = await DataService.makeAsync()
+            self.dataService = service
+            self.featureServices = FeatureServices(
+                reminderService: ReminderService(dataService: service, notificationService: notificationService),
+                photoService: PhotoService(dataService: service),
+                plantDatabaseService: PlantDatabaseService(dataService: service),
+                tutorialService: TutorialService(dataService: service)
+            )
+            isInitializing = false
+            return
+        }
 
         // Start tracking app launch
         performanceMonitor.recordAppLaunchStart()
@@ -197,8 +188,10 @@ public struct MainAppView: View {
         )
         cloudSyncService.attach(dataService: service)
 
-        Task {
-            await featureServices?.reminderService.synchronizePendingNotifications()
+        if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            Task {
+                await featureServices?.reminderService.synchronizePendingNotifications()
+            }
         }
 
         let initDuration = CFAbsoluteTimeGetCurrent() - initStartTime
@@ -209,36 +202,31 @@ public struct MainAppView: View {
         print("[Init] Memory delta: \(String(format: "%.1fMB", memoryDelta))")
         print("[Init] DataService initialized in \(String(format: "%.3fs", initDuration))")
 
-        // Validate memory delta is reasonable
-        if memoryDelta > 10 {
-            print("[Init] ⚠️ WARNING: Memory delta (\(String(format: "%.1fMB", memoryDelta))) exceeds expected threshold (10MB)")
-            print("[Init] This may indicate in-memory storage is being used instead of persistent storage")
-            isFallbackMode = true
-        } else {
-            print("[Init] ✅ Memory delta is reasonable - persistent storage confirmed")
-        }
-
         // Log storage configuration
         print("[Init] Storage configuration: persistent=true, allowsSave=true")
 
         // Performance breakdown logging
         print("[Init] Performance: init=\(String(format: "%.3fs", initDuration)), total=\(String(format: "%.3fs", initDuration))")
 
-        // Warm cache in background
-        initializationStage = "Loading data..."
-        Task.detached(priority: .utility) { [service] in
-            await MainActor.run {
-                print("[Init] Starting cache warming...")
-            }
-            let warmingStart = CFAbsoluteTimeGetCurrent()
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
 
-            await service.warmCache()
+        if !isUITesting {
+            // Warm cache in background
+            initializationStage = "Loading data..."
+            Task.detached(priority: .utility) { [service] in
+                await MainActor.run {
+                    print("[Init] Starting cache warming...")
+                }
+                let warmingStart = CFAbsoluteTimeGetCurrent()
 
-            let warmingDuration = CFAbsoluteTimeGetCurrent() - warmingStart
-            await MainActor.run {
-                let stats = service.getCacheStats()
-                print("[Init] Cache warming completed in \(String(format: "%.3fs", warmingDuration))")
-                print("[Init] Cache ready: \(stats.size) entries preloaded")
+                await service.warmCache()
+
+                let warmingDuration = CFAbsoluteTimeGetCurrent() - warmingStart
+                await MainActor.run {
+                    let stats = service.getCacheStats()
+                    print("[Init] Cache warming completed in \(String(format: "%.3fs", warmingDuration))")
+                    print("[Init] Cache ready: \(stats.size) entries preloaded")
+                }
             }
         }
 
@@ -250,10 +238,12 @@ public struct MainAppView: View {
         print("[Init] App launch complete in \(String(format: "%.3fs", report.appLaunchTime))")
         print("[Init] Performance score: \(String(format: "%.1f", report.performanceScore))/100")
 
-        // Defer non-critical initialization
-        initializationStage = "Almost ready..."
-        Task.detached(priority: .background) {
-            await seedDatabaseIfNeeded()
+        if !isUITesting {
+            // Defer non-critical initialization
+            initializationStage = "Almost ready..."
+            Task.detached(priority: .background) {
+                await seedDatabaseIfNeeded()
+            }
         }
 
         isInitializing = false

@@ -10,10 +10,19 @@ struct GrowWiseApp: App {
     @State private var notificationService = NotificationService()
     @State private var performanceMonitor = PerformanceMonitor()
     @State private var cloudSyncService = CloudSyncService()
-    
+
     init() {
         let launchArgs = ProcessInfo.processInfo.arguments
         let launchEnv = ProcessInfo.processInfo.environment
+
+        // Disable all animations during UI testing so XCTest's idle detection
+        // doesn't get blocked by continuous ProgressView spinner animations.
+        #if canImport(UIKit)
+        if launchArgs.contains("--uitesting") {
+            UIView.setAnimationsEnabled(false)
+        }
+        #endif
+
         // --reset-data must run FIRST so subsequent flags can re-apply on a clean slate.
         // DataService automatically uses in-memory store when --uitesting is present,
         // so persistent store migration is never triggered during UI test runs.
@@ -29,12 +38,14 @@ struct GrowWiseApp: App {
             UserDefaults.standard.set(false, forKey: "hasCompletedOnboarding")
         }
 
-        // Initialize security/encryption early to avoid compliance blocks
-        GrowWiseApp.ensureEncryptionReady()
+        if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            // Initialize security/encryption early to avoid compliance blocks
+            GrowWiseApp.ensureEncryptionReady()
 
-        // Initialize authentication services with proper dependency injection
-        Task { @MainActor in
-            AuthenticationInitializer.initialize()
+            // Initialize authentication services with proper dependency injection
+            Task { @MainActor in
+                AuthenticationInitializer.initialize()
+            }
         }
     }
     

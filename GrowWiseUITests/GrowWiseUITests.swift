@@ -22,13 +22,14 @@ final class GrowWiseUITests: XCTestCase {
     func testAppLaunches() throws {
         // Test that the app launches successfully
         XCTAssertTrue(app.exists)
-        
-        // Check for main UI elements
-        let mainElement = app.otherElements["MainAppView"]
-        let onboardingElement = app.otherElements["OnboardingView"]
-        
-        // Either main app or onboarding should be visible
-        XCTAssertTrue(mainElement.exists || onboardingElement.exists)
+
+        // Verify the app rendered content — either the main tab bar
+        // (onboarding complete) or onboarding welcome screen text.
+        let tabBar = app.tabBars.firstMatch
+        let growWiseText = app.staticTexts["GrowWise"]
+        let foundTabBar = tabBar.waitForExistence(timeout: 15.0)
+        let foundOnboarding = !foundTabBar && growWiseText.waitForExistence(timeout: 10.0)
+        XCTAssertTrue(foundTabBar || foundOnboarding, "Expected tab bar or onboarding screen")
     }
     
     @MainActor

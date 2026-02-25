@@ -736,6 +736,8 @@ public final class AuditLogger: @unchecked Sendable {
     // MARK: - Maintenance and Retention
     
     private func scheduleMaintenanceTasks() {
+        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
+
         // Schedule daily maintenance at 2 AM
         Timer.scheduledTimer(withTimeInterval: 86400, repeats: true) { [weak self] _ in
             guard let logger = self else { return }

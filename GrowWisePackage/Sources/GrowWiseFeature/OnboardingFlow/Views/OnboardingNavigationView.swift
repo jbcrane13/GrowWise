@@ -7,6 +7,7 @@ struct OnboardingNavigationView: View {
     @Binding var userProfile: UserProfile
     @Binding var isCompleted: Bool
 
+    @Environment(DataService.self) private var dataService
     @Environment(NotificationService.self) private var notificationService
     
     private var isFirstStep: Bool {
@@ -82,14 +83,6 @@ struct OnboardingNavigationView: View {
     private func completeOnboarding() {
         Task {
             do {
-                // Create user in database
-                let dataService: DataService
-                do {
-                    dataService = try DataService()
-                } catch {
-                    print("Primary DataService failed, using fallback: \(error)")
-                    dataService = DataService.createFallback()
-                }
                 
                 // Email and display name validation will be added when user authentication is implemented
                 // For now, we use placeholder values

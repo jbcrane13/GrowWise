@@ -68,6 +68,7 @@ public struct OnboardingView: View {
                 }
             }
         }
+        .accessibilityIdentifier("OnboardingView")
         .gwNavigationBarHidden(true)
         .onChange(of: isCompleted) { _, completed in
             if completed {

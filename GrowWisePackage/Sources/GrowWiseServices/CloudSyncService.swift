@@ -21,18 +21,23 @@ import os
     private var cloudEventObserver: NSObjectProtocol?
     private var accountObserver: NSObjectProtocol?
     
-    // CloudKit containers
-    private let privateContainer: CKContainer
-    private let publicDatabase: CKDatabase
-    private let privateDatabase: CKDatabase
-    
+    // CloudKit containers — nil during UI testing to avoid CKContainer crash on simulator
+    private var privateContainer: CKContainer?
+    private var publicDatabase: CKDatabase?
+    private var privateDatabase: CKDatabase?
+
     // Logger
     private let logger = Logger(subsystem: "com.growwise.cloudkit", category: "CloudSyncService")
 
     public init() {
-        self.privateContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
-        self.publicDatabase = privateContainer.publicCloudDatabase
-        self.privateDatabase = privateContainer.privateCloudDatabase
+        // CKContainer crashes on simulators without iCloud entitlements.
+        // Skip CloudKit entirely during UI testing.
+        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
+
+        let container = CKContainer(identifier: "iCloud.com.growwise.gardening")
+        self.privateContainer = container
+        self.publicDatabase = container.publicCloudDatabase
+        self.privateDatabase = container.privateCloudDatabase
         startObserving()
     }
 
@@ -54,6 +59,7 @@ import os
     // MARK: - Account Status
     
     public func checkAccountStatus() async -> CKAccountStatus {
+        guard let privateContainer else { return .couldNotDetermine }
         do {
             let status = try await privateContainer.accountStatus()
             await MainActor.run {
@@ -96,6 +102,7 @@ import os
         record["viewCount"] = 0
         
         // Save to public database
+        guard let publicDatabase else { throw CloudKitError.publishFailed("CloudKit unavailable") }
         do {
             let savedRecord = try await publicDatabase.save(record)
             guard let publicGarden = PublicGarden(from: savedRecord) else {
@@ -139,6 +146,7 @@ import os
             query.sortDescriptors = [NSSortDescriptor(key: "viewCount", ascending: false)]
         }
         
+        guard let publicDatabase else { throw CloudKitError.fetchFailed("CloudKit unavailable") }
         do {
             let (results, newCursor) = try await publicDatabase.records(
                 matching: query,
@@ -178,11 +186,12 @@ import os
             throw CloudKitError.invalidRecord
         }
         
+        guard let publicDatabase else { throw CloudKitError.operationFailed("CloudKit unavailable") }
         do {
             let record = try await publicDatabase.record(for: recordID)
             let currentLikes = record["likeCount"] as? Int ?? 0
             record["likeCount"] = currentLikes + 1
-            
+
             try await publicDatabase.save(record)
             logger.info("Liked garden: \(garden.name)")
         } catch {
@@ -193,13 +202,13 @@ import os
     
     /// Increment view count for a public garden
     public func incrementViewCount(for garden: PublicGarden) async {
-        guard let recordID = garden.recordID else { return }
-        
+        guard let recordID = garden.recordID, let publicDatabase else { return }
+
         do {
             let record = try await publicDatabase.record(for: recordID)
             let currentViews = record["viewCount"] as? Int ?? 0
             record["viewCount"] = currentViews + 1
-            
+
             try await publicDatabase.save(record)
         } catch {
             logger.error("Failed to increment view count: \(error.localizedDescription)")
@@ -212,6 +221,7 @@ import os
             throw CloudKitError.invalidRecord
         }
         
+        guard let publicDatabase else { throw CloudKitError.operationFailed("CloudKit unavailable") }
         do {
             try await publicDatabase.deleteRecord(withID: recordID)
             logger.info("Unpublished garden: \(garden.name)")

@@ -441,6 +441,8 @@ public final class RateLimiter: @unchecked Sendable {
     
     /// Schedule periodic cleanup
     private func scheduleCleanup() {
+        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
+
         // Clean up every hour
         Timer.scheduledTimer(withTimeInterval: 3600, repeats: true) { [weak self] _ in
             self?.performMaintenance()

@@ -14,7 +14,7 @@ class Phase3And4UITests: XCTestCase {
         app.launchArguments = ["--uitesting", "--reset-data"]
         app.launch()
     }
-    
+
     // MARK: - Companion Planting Tests
     
     func testCompanionPlantingWarningsInAddPlantSheet() throws {
@@ -245,7 +245,7 @@ class Phase3And4PerformanceTests: XCTestCase {
         app.launchArguments = ["--uitesting"]
         app.launch()
     }
-    
+
     func testCompanionPlantingLookupPerformance() throws {
         measure {
             // Navigate to My Garden

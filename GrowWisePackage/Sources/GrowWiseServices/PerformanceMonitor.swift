@@ -50,6 +50,13 @@ import QuartzCore
         guard !isMonitoring else { return }
         isMonitoring = true
 
+        // Skip timers during UI testing — repeating timers on the main run loop
+        // prevent XCTest from ever considering the app "idle".
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            logger.info("Performance monitoring skipped (UI testing mode)")
+            return
+        }
+
         // Start memory monitoring
         memoryTimer = Timer.scheduledTimer(withTimeInterval: 1.0, repeats: true) { [weak self] _ in
             Task { @MainActor in

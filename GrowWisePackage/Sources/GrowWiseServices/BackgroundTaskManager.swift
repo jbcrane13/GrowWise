@@ -303,12 +303,14 @@ import os.log
     }
     
     private func startResourceMonitoring() {
+        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
+
         cpuUsageTimer = Timer.scheduledTimer(withTimeInterval: 5.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.monitorCPUUsage()
             }
         }
-        
+
         memoryUsageTimer = Timer.scheduledTimer(withTimeInterval: 10.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.monitorMemoryUsage()
