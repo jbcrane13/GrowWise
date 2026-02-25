@@ -23,8 +23,8 @@ import os
     // Performance optimizations
     private let cache = SwiftDataCache()
 
-    // CloudKit container for sync
-    private let cloudContainer: CKContainer
+    // CloudKit container for sync — nil during UI testing (CKContainer crashes on simulator)
+    private let cloudContainer: CKContainer?
 
     // Logger for initialization tracking
     private let logger = Logger(subsystem: "com.growwise.dataservice", category: "Initialization")
@@ -70,7 +70,11 @@ import os
             configurations: [modelConfiguration]
         )
 
-        self.cloudContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
+        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+            self.cloudContainer = nil
+        } else {
+            self.cloudContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
+        }
 
         // Validate storage configuration
         validateStorageConfiguration()
@@ -208,10 +212,18 @@ import os
     /// Private minimal initializer for fallback
     private init(minimal container: ModelContainer, performanceMonitor: PerformanceMonitor) {
         self.modelContainer = container
-        self.cloudContainer = CKContainer.default()
+        self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
         self.performanceMonitor = performanceMonitor
     }
-    
+
+    /// Private initializer that accepts an explicit (possibly nil) CloudKit container.
+    /// Used by `makeForTesting()` to avoid CKContainer.default() crashing in swift test.
+    private init(testing container: ModelContainer, cloudContainer: CKContainer?, performanceMonitor: PerformanceMonitor) {
+        self.modelContainer = container
+        self.cloudContainer = cloudContainer
+        self.performanceMonitor = performanceMonitor
+    }
+
     /// Static factory method for minimal DataService
     private static func __allocating_init_minimal(container: ModelContainer, performanceMonitor: PerformanceMonitor) -> DataService {
         return DataService(minimal: container, performanceMonitor: performanceMonitor)
@@ -231,8 +243,7 @@ import os
         logger.critical("[Emergency] Creating emergency stub - Memory: \(memoryState, privacy: .private)MB")
 
         // This is an emergency stub to prevent app crashes
-        // Use CKContainer.default() to avoid initialization failures
-        self.cloudContainer = CKContainer.default()
+        self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
 
         // Create a minimal in-memory container with just User
         do {
@@ -1166,6 +1177,9 @@ import os
     // MARK: - CloudKit Sync Status
     
     public func getCloudSyncStatus() async -> CloudSyncStatus {
+        guard let cloudContainer else {
+            return CloudSyncStatus(isAvailable: false, accountStatus: .couldNotDetermine, lastSync: nil, error: nil)
+        }
         do {
             let accountStatus = try await cloudContainer.accountStatus()
             return CloudSyncStatus(
@@ -1214,6 +1228,36 @@ extension DataService {
             return DataService.__allocating_init_minimal(container: container, performanceMonitor: performanceMonitor)
         } catch {
             throw DataServiceError.criticalInitializationFailure("Cannot create fallback DataService: \(error)")
+        }
+    }
+
+    /// Creates a fully-schema'd in-memory DataService for unit and integration tests.
+    ///
+    /// Includes all production models (Plant, Garden, User, PlantReminder, JournalEntry,
+    /// SoilLog, ReminderSettings) and does **not** initialise a CloudKit container, making
+    /// it safe to call from `swift test` without app entitlements.
+    ///
+    /// - Parameter performanceMonitor: Optional monitor; defaults to a fresh instance.
+    /// - Returns: A DataService backed by an in-memory SQLite store.
+    /// - Throws: `DataServiceError.criticalInitializationFailure` if the container cannot be created.
+    public static func makeForTesting(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) throws -> DataService {
+        let schema = Schema([
+            Plant.self,
+            Garden.self,
+            User.self,
+            PlantReminder.self,
+            JournalEntry.self,
+            SoilLog.self
+        ])
+        let modelConfiguration = ModelConfiguration(
+            schema: schema,
+            isStoredInMemoryOnly: true
+        )
+        do {
+            let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
+            return DataService(testing: container, cloudContainer: nil, performanceMonitor: performanceMonitor)
+        } catch {
+            throw DataServiceError.criticalInitializationFailure("Cannot create test DataService: \(error)")
         }
     }
 }
