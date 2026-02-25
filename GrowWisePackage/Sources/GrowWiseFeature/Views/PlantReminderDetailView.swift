@@ -14,6 +14,8 @@ public struct PlantReminderDetailView: View {
     @State private var selectedReminder: PlantReminder?
     @State private var showingDeleteConfirmation = false
     @State private var reminderToDelete: PlantReminder?
+    @State private var showingError = false
+    @State private var errorMessage = ""
     
     public init(plant: Plant, reminderService: ReminderService, dataService: DataService) {
         self.plant = plant
@@ -92,6 +94,11 @@ public struct PlantReminderDetailView: View {
                 Button("Cancel", role: .cancel) { }
             } message: {
                 Text("Are you sure you want to delete this reminder? This action cannot be undone.")
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
             }
         }
     }
@@ -347,30 +354,40 @@ public struct PlantReminderDetailView: View {
     
     private func completeReminder(_ reminder: PlantReminder) {
         reminder.markCompleted()
-        
+
         Task {
-            if reminder.isRecurring {
-                try? await reminderService.scheduleNotification(for: reminder)
+            do {
+                if reminder.isRecurring {
+                    try await reminderService.scheduleNotification(for: reminder)
+                }
+            } catch {
+                errorMessage = "Failed to reschedule reminder: \(error.localizedDescription)"
+                showingError = true
             }
-            
+
             await MainActor.run {
                 loadReminders()
             }
         }
-        
+
         // Provide feedback
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
     }
-    
+
     private func toggleReminder(_ reminder: PlantReminder) {
         reminder.isEnabled.toggle()
-        
+
         Task {
-            if reminder.isEnabled {
-                try? await reminderService.scheduleNotification(for: reminder)
-            } else {
-                reminderService.cancelNotification(for: reminder)
+            do {
+                if reminder.isEnabled {
+                    try await reminderService.scheduleNotification(for: reminder)
+                } else {
+                    reminderService.cancelNotification(for: reminder)
+                }
+            } catch {
+                errorMessage = "Failed to update reminder notification: \(error.localizedDescription)"
+                showingError = true
             }
         }
     }
@@ -394,43 +411,58 @@ public struct PlantReminderDetailView: View {
     
     private func addFertilizingReminder() {
         Task {
-            _ = try? await reminderService.createSmartReminder(
-                for: plant,
-                type: .fertilizing,
-                baseFrequencyDays: 28,
-                priority: .medium
-            )
-            
+            do {
+                _ = try await reminderService.createSmartReminder(
+                    for: plant,
+                    type: .fertilizing,
+                    baseFrequencyDays: 28,
+                    priority: .medium
+                )
+            } catch {
+                errorMessage = "Failed to create fertilizing reminder: \(error.localizedDescription)"
+                showingError = true
+            }
+
             await MainActor.run {
                 loadReminders()
             }
         }
     }
-    
+
     private func addInspectionReminder() {
         Task {
-            _ = try? await reminderService.createSmartReminder(
-                for: plant,
-                type: .inspection,
-                baseFrequencyDays: 7,
-                priority: .low
-            )
-            
+            do {
+                _ = try await reminderService.createSmartReminder(
+                    for: plant,
+                    type: .inspection,
+                    baseFrequencyDays: 7,
+                    priority: .low
+                )
+            } catch {
+                errorMessage = "Failed to create inspection reminder: \(error.localizedDescription)"
+                showingError = true
+            }
+
             await MainActor.run {
                 loadReminders()
             }
         }
     }
-    
+
     private func acceptSuggestion(_ suggestion: ReminderSuggestion) {
         Task {
-            _ = try? await reminderService.createSmartReminder(
-                for: suggestion.plant,
-                type: suggestion.type,
-                baseFrequencyDays: suggestion.suggestedFrequencyDays,
-                priority: suggestion.priority
-            )
-            
+            do {
+                _ = try await reminderService.createSmartReminder(
+                    for: suggestion.plant,
+                    type: suggestion.type,
+                    baseFrequencyDays: suggestion.suggestedFrequencyDays,
+                    priority: suggestion.priority
+                )
+            } catch {
+                errorMessage = "Failed to create reminder: \(error.localizedDescription)"
+                showingError = true
+            }
+
             await MainActor.run {
                 loadReminders()
             }

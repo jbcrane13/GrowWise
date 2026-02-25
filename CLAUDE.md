@@ -84,6 +84,8 @@ xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWiseUITests \
 - **os.Logger** with `.private` for user data
 - **Every interactive element** needs `.accessibilityIdentifier("screen_element_descriptor")`
 - **Files in appropriate subdirs** — never save to root folder
+- **No silent `try?` in views** — user-facing operations must surface errors via alerts (see ADR-007)
+- **Test-friendly services** — system-dependent services must provide test init/factory (see ADR-008)
 
 ## Issue Tracking
 
@@ -96,6 +98,25 @@ bd create "Title" --type task --priority 2
 bd update <id> --status in_progress
 bd close <id>
 bd sync               # Sync with git
+```
+
+## Testing
+
+587 tests across 60 suites (as of 2026-02-25). Test targets:
+- **GrowWiseModelsTests** — Plant, Garden, User, PlantReminder, JournalEntry, SoilLog, GardeningStats, SecureCredentials
+- **GrowWiseServicesTests** — CompanionPlanting, Location, Subscription, Reminder, Validation, CloudSync, DataService, CacheManager, BackgroundTaskManager, PlantDatabaseService, TutorialService, NotificationService
+- **GrowWiseFeatureTests** — Basic view instantiation
+- Many security test files (Keychain, JWT, Encryption) exist but are **excluded from Package.swift** — gated behind `KEYCHAIN_TESTS_ENABLED=1`
+
+```bash
+# Run all package tests
+cd GrowWisePackage && swift test
+
+# Run specific suite
+swift test --filter "ReminderServiceIntegration"
+
+# For in-memory DataService in tests
+let service = try await DataService.makeForTesting()
 ```
 
 ## Current State

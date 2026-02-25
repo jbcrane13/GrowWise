@@ -9,6 +9,9 @@ struct OnboardingNavigationView: View {
 
     @Environment(DataService.self) private var dataService
     @Environment(NotificationService.self) private var notificationService
+
+    @State private var showingError = false
+    @State private var errorMessage = ""
     
     private var isFirstStep: Bool {
         currentStep == OnboardingStep.allCases.first
@@ -63,8 +66,13 @@ struct OnboardingNavigationView: View {
             .disabled(!canProceed)
         }
         .padding(.horizontal)
+        .alert("Setup Error", isPresented: $showingError) {
+            Button("OK") { }
+        } message: {
+            Text(errorMessage)
+        }
     }
-    
+
     private func moveToStep(direction: StepDirection) {
         let allCases = OnboardingStep.allCases
         guard let currentIndex = allCases.firstIndex(of: currentStep) else { return }
@@ -83,74 +91,90 @@ struct OnboardingNavigationView: View {
     private func completeOnboarding() {
         Task {
             do {
-                
                 // Email and display name validation will be added when user authentication is implemented
                 // For now, we use placeholder values
                 let email = "user@example.com"
                 let displayName = "Gardener"
-                
+
                 // Validate email for future use
                 let emailValidation = ValidationService.shared.validateEmail(email)
-                
+
                 guard emailValidation.isValid else {
-                    print("Invalid email: \(emailValidation.errorMessage ?? "Unknown error")")
-                    // In production, show error to user
+                    errorMessage = emailValidation.errorMessage ?? "Invalid email address"
+                    showingError = true
                     return
                 }
-                
+
                 // Validate display name for future use
                 let nameValidation = ValidationService.shared.validateName(displayName)
-                
+
                 guard nameValidation.isValid else {
-                    print("Invalid name: \(nameValidation.errorMessage ?? "Unknown error")")
-                    // In production, show error to user
+                    errorMessage = nameValidation.errorMessage ?? "Invalid display name"
+                    showingError = true
                     return
                 }
-                
+
                 let user = try dataService.createUser(
                     email: email,
                     displayName: displayName,
                     skillLevel: userProfile.skillLevel
                 )
-                
-                // Save additional preferences
+
+                // Save additional preferences (non-critical — log failures but don't block onboarding)
                 await saveUserPreferences(user: user)
-                
+
                 // Mark onboarding as completed (persist for presentation logic)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
-                
-                // Mark onboarding as completed
-                try? KeychainManager.shared.storeBool(true, for: "hasCompletedOnboarding")
-                
+
+                // Also store in Keychain as backup (non-critical — UserDefaults is primary)
+                do {
+                    try KeychainManager.shared.storeBool(true, for: "hasCompletedOnboarding")
+                } catch {
+                    // UserDefaults already persisted, so this is non-critical
+                }
+
                 await MainActor.run {
                     isCompleted = true
                 }
             } catch {
-                print("Failed to complete onboarding: \(error)")
-                // In a real app, show error to user
+                errorMessage = "Failed to complete setup: \(error.localizedDescription)"
+                showingError = true
             }
         }
     }
-    
+
     private func saveUserPreferences(user: User) async {
-        // Save goals and interests securely in Keychain
-        // In a more complex app, these might be separate entities
-        let goalsData = try? JSONEncoder().encode(userProfile.goals.map(\.rawValue))
-        let interestsData = try? JSONEncoder().encode(userProfile.interests.map(\.rawValue))
-        
-        if let goalsData = goalsData {
-            try? KeychainManager.shared.store(goalsData, for: "userGardeningGoals")
+        // Save goals and interests securely in Keychain.
+        // These are supplementary preferences — failures are logged but don't block onboarding
+        // since the User record is already persisted in SwiftData.
+        do {
+            let goalsData = try JSONEncoder().encode(userProfile.goals.map(\.rawValue))
+            try KeychainManager.shared.store(goalsData, for: "userGardeningGoals")
+        } catch {
+            // Non-critical: goals are stored on User model in SwiftData
         }
-        if let interestsData = interestsData {
-            try? KeychainManager.shared.store(interestsData, for: "userPlantInterests")
+
+        do {
+            let interestsData = try JSONEncoder().encode(userProfile.interests.map(\.rawValue))
+            try KeychainManager.shared.store(interestsData, for: "userPlantInterests")
+        } catch {
+            // Non-critical: interests are supplementary
         }
-        try? KeychainManager.shared.storeString(userProfile.gardenType.rawValue, for: "userGardenType")
-        try? KeychainManager.shared.storeString(userProfile.spaceSize.rawValue, for: "userSpaceSize")
-        let timeData = try? JSONEncoder().encode(userProfile.preferredNotificationTime)
-        if let timeData = timeData {
-            try? KeychainManager.shared.store(timeData, for: "userPreferredNotificationTime")
+
+        do {
+            try KeychainManager.shared.storeString(userProfile.gardenType.rawValue, for: "userGardenType")
+            try KeychainManager.shared.storeString(userProfile.spaceSize.rawValue, for: "userSpaceSize")
+        } catch {
+            // Non-critical: garden preferences are supplementary
         }
-        
+
+        do {
+            let timeData = try JSONEncoder().encode(userProfile.preferredNotificationTime)
+            try KeychainManager.shared.store(timeData, for: "userPreferredNotificationTime")
+        } catch {
+            // Non-critical: notification time preference is supplementary
+        }
+
         // Set up notifications if permission granted
         if userProfile.hasNotificationPermission {
             notificationService.setupNotificationCategories()

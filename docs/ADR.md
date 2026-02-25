@@ -80,4 +80,31 @@ A running log of significant architecture and design decisions. Both Daneel (Ope
 
 ---
 
+## ADR-007: No silent `try?` for user-facing operations
+**Date:** 2026-02-25
+**Status:** Active
+**Decision:** User-facing operations must use `do/catch` with error surfacing (alerts/state), never `try?`. Non-critical background operations (supplementary Keychain preferences, photo loading per-item) may use `try?` with a comment explaining why.
+**Context:** Audit found 29 `try?` operations in view code silently swallowing errors. Users would tap "Add Reminder" and see no feedback when it failed. Onboarding completion errors were only logged to console. Journal saves could silently fail. This made features appear broken without any error message.
+**Consequences:**
+- All `try?` in views must have an explicit comment justifying why silent failure is acceptable, OR be converted to `do/catch` with error state
+- Views that perform save/create/delete operations must have `@State private var showingError` + `.alert` modifier
+- Print-only error handling (`print("error: \(error)")`) is not acceptable for user-facing operations
+- Non-critical operations (e.g., supplementary Keychain preference storage where SwiftData is primary) may fail silently with a comment
+
+---
+
+## ADR-008: Service testability patterns — injectable dependencies
+**Date:** 2026-02-25
+**Status:** Active
+**Decision:** Services that depend on system frameworks (UNNotificationCenter, CKContainer, Keychain) must provide test-friendly initialization paths that avoid crashing in the `swift test` runner.
+**Context:** `DataService` crashed in tests due to `CKContainer.default()` init. `NotificationService` crashed due to `UNUserNotificationCenter.current()` without an app bundle. `ReminderService` couldn't be tested because its dependencies couldn't be constructed.
+**Consequences:**
+- `DataService.makeForTesting()` — public factory producing in-memory SwiftData store without CloudKit
+- `NotificationService(notificationCenter: nil)` — optional UNNotificationCenter avoids crash in package tests
+- `ReminderService` accepts `WeatherAdjustmentProviding` protocol for mock weather injection
+- New services should follow this pattern: provide a test-friendly init or factory method
+- Mark system-dependent test gaps with `// INTEGRATION GAP:` comments
+
+---
+
 *To add a new ADR: append with the next number, include date, status, decision, context, and consequences.*

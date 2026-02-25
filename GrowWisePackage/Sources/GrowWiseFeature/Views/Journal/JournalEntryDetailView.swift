@@ -24,7 +24,9 @@ public struct JournalEntryDetailView: View {
     @State private var editContent: String = ""
     @State private var editTags: [String] = []
     @State private var newTag = ""
-    
+    @State private var showingSaveError = false
+    @State private var saveErrorMessage = ""
+
     public init(entry: JournalEntry, photoService: PhotoService) {
         self._entry = State(initialValue: entry)
         self.photoService = photoService
@@ -199,6 +201,11 @@ public struct JournalEntryDetailView: View {
             } message: {
                 Text("Are you sure you want to delete this journal entry? This action cannot be undone.")
             }
+            .alert("Save Error", isPresented: $showingSaveError) {
+                Button("OK") { }
+            } message: {
+                Text(saveErrorMessage)
+            }
             .sheet(isPresented: $showingShareSheet) {
                 ShareSheet(entry: entry)
             }
@@ -283,15 +290,25 @@ public struct JournalEntryDetailView: View {
         entry.content = editContent
         entry.tags = editTags
         entry.lastModified = Date()
-        
-        try? modelContext.save()
-        isEditing = false
+
+        do {
+            try modelContext.save()
+            isEditing = false
+        } catch {
+            saveErrorMessage = "Failed to save changes: \(error.localizedDescription)"
+            showingSaveError = true
+        }
     }
-    
+
     private func deleteEntry() {
         modelContext.delete(entry)
-        try? modelContext.save()
-        dismiss()
+        do {
+            try modelContext.save()
+            dismiss()
+        } catch {
+            saveErrorMessage = "Failed to delete entry: \(error.localizedDescription)"
+            showingSaveError = true
+        }
     }
     
     private func formatFullDate(_ date: Date) -> String {

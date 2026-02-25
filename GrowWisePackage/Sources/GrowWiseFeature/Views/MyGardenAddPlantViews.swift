@@ -354,11 +354,22 @@ struct AddPlantToGardenSheet: View {
     private func loadDatabasePlants() async {
         isLoading = true
 
-        // Ensure database is seeded
-        try? await plantDatabaseService.seedPlantDatabase()
+        // Ensure database is seeded (non-critical — database may already be populated)
+        do {
+            try await plantDatabaseService.seedPlantDatabase()
+        } catch {
+            // Seed failure is non-critical if database was previously seeded.
+            // Show error only if database is empty after the attempt.
+        }
 
         databasePlants = dataService.fetchPlantDatabase()
         filteredPlants = databasePlants
+
+        if databasePlants.isEmpty {
+            errorMessage = "Unable to load plant database. Please try again later."
+            showingError = true
+        }
+
         isLoading = false
     }
     
@@ -533,7 +544,9 @@ struct DatabasePlantCustomizationSheet: View {
     @State private var customNotes: String
     @State private var plantingDate = Date()
     @State private var selectedPhotos: [PhotosPickerItem] = []
-    
+    @State private var showingError = false
+    @State private var errorMessage = ""
+
     init(plant: Plant, targetGarden: Garden?, dataService: DataService, onSave: @escaping (Plant) -> Void, onCancel: @escaping () -> Void) {
         self.plant = plant
         self.targetGarden = targetGarden
@@ -649,7 +662,7 @@ struct DatabasePlantCustomizationSheet: View {
                         onCancel()
                     }
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Add to Garden") {
                         Task {
@@ -658,6 +671,11 @@ struct DatabasePlantCustomizationSheet: View {
                     }
                     .disabled(customPlantName.isEmpty)
                 }
+            }
+            .alert("Error", isPresented: $showingError) {
+                Button("OK") { }
+            } message: {
+                Text(errorMessage)
             }
         }
     }
@@ -712,7 +730,8 @@ struct DatabasePlantCustomizationSheet: View {
             onSave(customizedPlant)
             
         } catch {
-            print("Failed to save customized plant: \(error)")
+            errorMessage = "Failed to save plant: \(error.localizedDescription)"
+            showingError = true
         }
     }
 }
