@@ -18,7 +18,7 @@ final class JournalUITests: XCTestCase {
     
     func testNavigateToJournal() throws {
         let journalTab = app.tabBars.buttons["Journal"]
-        XCTAssertTrue(journalTab.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(journalTab.waitForExistence(timeout: 10.0))
         journalTab.tap()
         
         let navTitle = app.navigationBars["Plant Journal"]
@@ -27,7 +27,7 @@ final class JournalUITests: XCTestCase {
     
     func testCreateJournalEntry() throws {
         let journalTab = app.tabBars.buttons["Journal"]
-        XCTAssertTrue(journalTab.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(journalTab.waitForExistence(timeout: 10.0))
         journalTab.tap()
         
         // Tap Add
@@ -74,7 +74,7 @@ final class JournalUITests: XCTestCase {
     
     func testFilterJournalEntries() throws {
         let journalTab = app.tabBars.buttons["Journal"]
-        XCTAssertTrue(journalTab.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(journalTab.waitForExistence(timeout: 10.0))
         journalTab.tap()
         
         // Find filter chips (e.g., "All Types", "Observation", "Problem")

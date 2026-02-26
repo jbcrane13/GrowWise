@@ -169,9 +169,9 @@ struct AddPlantToGardenSheet: View {
             
             // Basic Information Section
             Section("Basic Information") {
-                TextField("Plant Name", text: $plantName)
+                TextField("Name", text: $plantName)
                     .autocorrectionDisabled()
-                
+
                 TextField("Scientific Name (Optional)", text: $scientificName)
                     .autocorrectionDisabled()
                     .gwTextInputAutocapitalization(.none)

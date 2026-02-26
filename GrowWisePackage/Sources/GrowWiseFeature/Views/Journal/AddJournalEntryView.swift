@@ -65,7 +65,7 @@ public struct AddJournalEntryView: View {
                 // Basic Information Section
                 Section("Entry Details") {
                     ValidatedTextField(
-                        "Entry title (optional)",
+                        "Title (Optional)",
                         text: $title,
                         validation: { text in
                             ValidationService.shared.validateText(text, fieldName: "Title", minLength: 0, maxLength: 100)
@@ -97,7 +97,7 @@ public struct AddJournalEntryView: View {
                             .frame(minHeight: 100)
                         
                         if content.isEmpty {
-                            Text("What's happening with your plant?")
+                            Text("How is your plant doing today?")
                                 .foregroundColor(.secondary)
                                 .padding(.horizontal, 4)
                                 .padding(.vertical, 8)

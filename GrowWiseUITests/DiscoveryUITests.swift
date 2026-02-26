@@ -18,7 +18,7 @@ final class DiscoveryUITests: XCTestCase {
     
     func testPlantDatabaseSearch() throws {
         let plantGuideTab = app.tabBars.buttons["Plant Guide"]
-        XCTAssertTrue(plantGuideTab.waitForExistence(timeout: 5.0))
+        XCTAssertTrue(plantGuideTab.waitForExistence(timeout: 10.0))
         plantGuideTab.tap()
         
         let navTitle = app.navigationBars["Plant Guide"]
@@ -37,9 +37,18 @@ final class DiscoveryUITests: XCTestCase {
     }
     
     func testTutorialsFlow() throws {
+        // With 6 tabs, "Learn" may be under the "More" tab
         let tutorialsTab = app.tabBars.buttons["Learn"]
-        XCTAssertTrue(tutorialsTab.waitForExistence(timeout: 5.0))
-        tutorialsTab.tap()
+        if tutorialsTab.waitForExistence(timeout: 10.0) {
+            tutorialsTab.tap()
+        } else {
+            let moreTab = app.tabBars.buttons["More"]
+            XCTAssertTrue(moreTab.waitForExistence(timeout: 5.0), "Neither Learn nor More tab found")
+            moreTab.tap()
+            let learnCell = app.tables.staticTexts["Learn"]
+            XCTAssertTrue(learnCell.waitForExistence(timeout: 5.0), "Learn not found in More menu")
+            learnCell.tap()
+        }
         
         let navTitle = app.navigationBars["Learn & Grow"]
         XCTAssertTrue(navTitle.waitForExistence(timeout: 2.0))

@@ -143,6 +143,7 @@ public struct JournalView: View {
                     } label: {
                         Image(systemName: "plus")
                     }
+                    .accessibilityLabel("Add")
                 }
             }
             .sheet(isPresented: $showingAddEntry) {

@@ -28,7 +28,7 @@ public struct PlantDatabaseView: View {
                 // Plant Database Content
                 plantDatabaseContent
             }
-            .navigationTitle("Plant Database")
+            .navigationTitle("Plant Guide")
             .toolbar {
                 ToolbarItemGroup(placement: .primaryAction) {
                     sortMenuButton

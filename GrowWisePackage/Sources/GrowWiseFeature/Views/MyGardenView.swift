@@ -40,7 +40,7 @@ public struct MyGardenView: View {
                     Button(action: { showingCreateGarden = true }) {
                         Image(systemName: "leaf.fill")
                     }
-                    .accessibilityLabel("Create Garden")
+                    .accessibilityLabel("New Garden")
                 }
             }
             .sheet(isPresented: $showingFilters) {
@@ -78,6 +78,12 @@ public struct MyGardenView: View {
             }
             .onChange(of: selectedSortOption) { _, _ in
                 sortPlants()
+            }
+            .onChange(of: showingCreateGarden) { _, isShowing in
+                if !isShowing { Task { await loadData() } }
+            }
+            .onChange(of: showingAddPlant) { _, isShowing in
+                if !isShowing { Task { await loadData() } }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowCreateGardenFromAddPlant"))) { _ in
                 showingAddPlant = false
@@ -207,6 +213,7 @@ public struct MyGardenView: View {
         Button(action: { showingAddPlant = true }) {
             Image(systemName: "plus")
         }
+        .accessibilityLabel("Add")
     }
     
     private var hasActiveFilters: Bool {
