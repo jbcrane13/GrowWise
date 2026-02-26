@@ -453,7 +453,7 @@ struct AddPlantToGardenSheet: View {
             // Save the updated plant
             try dataService.updatePlant(plant)
             
-            dismiss()
+            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
             
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
