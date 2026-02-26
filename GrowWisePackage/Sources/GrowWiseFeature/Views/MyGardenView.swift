@@ -89,6 +89,11 @@ public struct MyGardenView: View {
                 showingAddPlant = false
                 showingCreateGarden = true
             }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
+                Task { await loadData() }
+            }
+            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PlantCreated"))) { _ in
+            }
         }
     }
     

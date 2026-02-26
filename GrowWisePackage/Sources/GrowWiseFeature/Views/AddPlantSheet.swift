@@ -198,8 +198,8 @@ public struct AddPlantSheet: View {
 
             newPlant.garden = selectedGarden
             modelContext.insert(newPlant)
-            try modelContext.save()
-            dismiss()
+            
+            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true

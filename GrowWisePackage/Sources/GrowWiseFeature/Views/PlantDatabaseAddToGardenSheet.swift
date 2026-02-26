@@ -219,8 +219,8 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 plant: userPlant
             )
             
-            isLoading = false
-            dismiss()
+            
+            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
             
         } catch {
             isLoading = false
