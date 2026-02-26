@@ -109,3 +109,4 @@ build/Index.noindex/.DS_Store
 build/Index.noindex/DataStore/.DS_Store
 build/Index.noindex/DataStore/v5/.DS_Store
 .DS_Store
+.worktrees/
