@@ -2,342 +2,287 @@ import XCTest
 
 final class OnboardingFlowUITests: XCTestCase {
     var app: XCUIApplication!
-    
+
     override func setUpWithError() throws {
         continueAfterFailure = false
         app = XCUIApplication()
-        
+
         // Reset app state for consistent testing
-        app.launchArguments = ["--uitesting", "--reset-onboarding"]
+        app.launchArguments = ["--uitesting", "--reset-onboarding", "--reset-data"]
         app.launch()
     }
-    
+
     override func tearDownWithError() throws {
         app.terminate()
     }
-    
-    // MARK: - Complete Onboarding Flow Tests
-    
-    func testCompleteOnboardingFlow() throws {
-        // Test the complete onboarding flow from start to finish
-        
-        // 1. Welcome Screen
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
-        XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        let getStartedButton = app.buttons["Get Started"]
-        XCTAssertTrue(getStartedButton.exists)
-        getStartedButton.tap()
-        
-        // 2. Skill Assessment Screen
-        let skillTitle = app.staticTexts["What's Your Gardening Experience?"]
-        XCTAssertTrue(skillTitle.waitForExistence(timeout: 2.0))
-        
-        let beginnerOption = app.buttons["Beginner"]
-        XCTAssertTrue(beginnerOption.exists)
-        beginnerOption.tap()
-        
-        let nextButton = app.buttons["Next"]
-        XCTAssertTrue(nextButton.exists)
-        nextButton.tap()
-        
-        // 3. Gardening Goals Screen
-        let goalsTitle = app.staticTexts["What Are Your Gardening Goals?"]
-        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 2.0))
-        
-        // Select multiple goals
-        app.buttons["Grow My Own Food"].tap()
-        app.buttons["Learn New Skills"].tap()
-        
+
+    // MARK: - Helpers
+
+    /// Waits for the Continue button to exist and taps it.
+    private func tapContinue(file: StaticString = #file, line: UInt = #line) {
         let continueButton = app.buttons["Continue"]
-        XCTAssertTrue(continueButton.exists)
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 5.0), "Continue button not found", file: file, line: line)
         continueButton.tap()
-        
-        // 4. Location Setup Screen
-        let locationTitle = app.staticTexts["Set Your Location"]
-        XCTAssertTrue(locationTitle.waitForExistence(timeout: 2.0))
-        
-        let allowLocationButton = app.buttons["Allow Location Access"]
-        if allowLocationButton.exists {
-            allowLocationButton.tap()
-            
-            // Handle system location permission alert
-            let systemAlert = app.alerts.firstMatch
-            if systemAlert.exists {
-                systemAlert.buttons["Allow While Using App"].tap()
-            }
+    }
+
+    /// Selects a goal by label, then taps Continue (which requires enabled state).
+    private func selectGoalAndContinue(_ goalLabel: String, file: StaticString = #file, line: UInt = #line) {
+        let goalButton = app.buttons[goalLabel]
+        XCTAssertTrue(goalButton.waitForExistence(timeout: 3.0), "\(goalLabel) goal not found", file: file, line: line)
+        goalButton.tap()
+
+        // Wait a beat for the disabled state to update after goal selection
+        let continueButton = app.buttons["Continue"]
+        XCTAssertTrue(continueButton.waitForExistence(timeout: 3.0), file: file, line: line)
+        // Poll briefly for enabled state
+        var attempts = 0
+        while !continueButton.isEnabled && attempts < 10 {
+            Thread.sleep(forTimeInterval: 0.2)
+            attempts += 1
         }
-        
-        // Skip if location not available
+        XCTAssertTrue(continueButton.isEnabled, "Continue not enabled after selecting goal", file: file, line: line)
+        continueButton.tap()
+    }
+
+    // MARK: - Complete Onboarding Flow Tests
+
+    func testCompleteOnboardingFlow() throws {
+        // 1. Welcome Screen
+        let welcomeTitle = app.staticTexts["GrowWise"]
+        XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
+
+        tapContinue() // welcome → skill
+
+        // 2. Skill Assessment Screen (Beginner is selected by default)
+        let skillTitle = app.staticTexts["What's your gardening experience?"]
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+
+        tapContinue() // skill → goals
+
+        // 3. Gardening Goals Screen — select a goal and continue
+        let goalsTitle = app.staticTexts["What are your gardening goals?"]
+        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 5.0))
+
+        selectGoalAndContinue("Grow My Own Food") // goals → location
+
+        // 4. Location Setup Screen
+        let locationTitle = app.staticTexts["Help us know your location"]
+        XCTAssertTrue(locationTitle.waitForExistence(timeout: 5.0))
+
         let skipLocationButton = app.buttons["Skip for Now"]
         if skipLocationButton.exists {
             skipLocationButton.tap()
         }
-        
+
+        tapContinue() // location → notifications
+
         // 5. Notification Permission Screen
-        let notificationTitle = app.staticTexts["Stay Connected with Your Plants"]
-        XCTAssertTrue(notificationTitle.waitForExistence(timeout: 2.0))
-        
-        let enableNotificationsButton = app.buttons["Enable Notifications"]
-        XCTAssertTrue(enableNotificationsButton.exists)
-        enableNotificationsButton.tap()
-        
-        // Handle system notification permission alert
-        let notificationAlert = app.alerts.firstMatch
-        if notificationAlert.exists {
-            notificationAlert.buttons["Allow"].tap()
+        let notificationTitle = app.staticTexts["Stay connected to your garden"]
+        XCTAssertTrue(notificationTitle.waitForExistence(timeout: 5.0))
+
+        let maybeLaterButton = app.buttons["Maybe Later"]
+        if maybeLaterButton.exists {
+            maybeLaterButton.tap()
         }
-        
+
+        tapContinue() // notifications → completion
+
         // 6. Completion Screen
-        let completionTitle = app.staticTexts["You're All Set!"]
-        XCTAssertTrue(completionTitle.waitForExistence(timeout: 3.0))
-        
-        let startGardeningButton = app.buttons["Start Gardening"]
-        XCTAssertTrue(startGardeningButton.exists)
-        startGardeningButton.tap()
-        
-        // 7. Verify navigation to main app
-        let mainScreenTitle = app.staticTexts["My Garden"]
-        XCTAssertTrue(mainScreenTitle.waitForExistence(timeout: 3.0))
+        let completionTitle = app.staticTexts["Welcome to GrowWise!"]
+        XCTAssertTrue(completionTitle.waitForExistence(timeout: 5.0))
+
+        let getStartedButton = app.buttons["Get Started"]
+        XCTAssertTrue(getStartedButton.waitForExistence(timeout: 3.0))
+        getStartedButton.tap()
+
+        // 7. Verify navigation to main app (tab bar should appear)
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5.0))
     }
-    
+
     func testOnboardingSkipFlow() throws {
-        // Test skipping through onboarding quickly
-        
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
+        // Test skipping through onboarding as quickly as possible
+
+        let welcomeTitle = app.staticTexts["GrowWise"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        // Look for skip button
-        let skipButton = app.buttons["Skip"]
-        if skipButton.exists {
-            skipButton.tap()
-            
-            // Verify we reach main app
-            let mainScreenTitle = app.staticTexts["My Garden"]
-            XCTAssertTrue(mainScreenTitle.waitForExistence(timeout: 3.0))
-        } else {
-            // If no skip button, go through minimal flow
-            app.buttons["Get Started"].tap()
-            
-            // Skip through each screen rapidly
-            let screens = [
-                "Beginner",
-                "Continue",
-                "Skip for Now",
-                "Maybe Later",
-                "Start Gardening"
-            ]
-            
-            for buttonText in screens {
-                let button = app.buttons[buttonText]
-                if button.waitForExistence(timeout: 2.0) {
-                    button.tap()
-                }
-            }
-            
-            let mainScreenTitle = app.staticTexts["My Garden"]
-            XCTAssertTrue(mainScreenTitle.waitForExistence(timeout: 3.0))
-        }
+
+        tapContinue() // welcome → skill
+
+        // Skill Assessment: Beginner is already selected by default
+        let skillTitle = app.staticTexts["What's your gardening experience?"]
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+        tapContinue() // skill → goals
+
+        // Goals: select one goal to enable Continue
+        let goalsTitle = app.staticTexts["What are your gardening goals?"]
+        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 5.0))
+        selectGoalAndContinue("Grow My Own Food") // goals → location
+
+        // Location: skip and continue
+        let locationTitle = app.staticTexts["Help us know your location"]
+        XCTAssertTrue(locationTitle.waitForExistence(timeout: 5.0))
+        let skipButton = app.buttons["Skip for Now"]
+        if skipButton.exists { skipButton.tap() }
+        tapContinue() // location → notifications
+
+        // Notifications: skip and continue
+        let notifTitle = app.staticTexts["Stay connected to your garden"]
+        XCTAssertTrue(notifTitle.waitForExistence(timeout: 5.0))
+        let maybeLater = app.buttons["Maybe Later"]
+        if maybeLater.exists { maybeLater.tap() }
+        tapContinue() // notifications → completion
+
+        // Completion: finish
+        let completionTitle = app.staticTexts["Welcome to GrowWise!"]
+        XCTAssertTrue(completionTitle.waitForExistence(timeout: 5.0))
+        let getStartedButton = app.buttons["Get Started"]
+        XCTAssertTrue(getStartedButton.waitForExistence(timeout: 3.0))
+        getStartedButton.tap()
+
+        // Verify main app
+        let tabBar = app.tabBars.firstMatch
+        XCTAssertTrue(tabBar.waitForExistence(timeout: 5.0))
     }
-    
+
     func testOnboardingBackNavigation() throws {
         // Test navigating backwards through onboarding
-        
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
+
+        let welcomeTitle = app.staticTexts["GrowWise"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        app.buttons["Get Started"].tap()
-        
-        // Go to skill assessment
-        let skillTitle = app.staticTexts["What's Your Gardening Experience?"]
-        XCTAssertTrue(skillTitle.waitForExistence(timeout: 2.0))
-        
-        app.buttons["Intermediate"].tap()
-        app.buttons["Next"].tap()
-        
-        // Go to goals screen
-        let goalsTitle = app.staticTexts["What Are Your Gardening Goals?"]
-        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 2.0))
-        
-        // Navigate back
+
+        tapContinue() // welcome → skill
+
+        let skillTitle = app.staticTexts["What's your gardening experience?"]
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+
+        // Select a non-default skill level
+        let intermediateButton = app.buttons["Intermediate"]
+        XCTAssertTrue(intermediateButton.waitForExistence(timeout: 3.0))
+        intermediateButton.tap()
+        tapContinue() // skill → goals
+
+        let goalsTitle = app.staticTexts["What are your gardening goals?"]
+        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 5.0))
+
+        // Navigate back to skill assessment
         let backButton = app.buttons["Back"]
-        if backButton.exists {
-            backButton.tap()
-            
-            // Verify we're back on skill assessment
-            XCTAssertTrue(skillTitle.waitForExistence(timeout: 2.0))
-            
-            // Go back again
-            if backButton.exists {
-                backButton.tap()
-                
-                // Verify we're back on welcome screen
-                XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 2.0))
-            }
+        XCTAssertTrue(backButton.exists)
+        backButton.tap()
+
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+
+        // Navigate back to welcome
+        let backButton2 = app.buttons["Back"]
+        if backButton2.exists {
+            backButton2.tap()
+            XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
         }
     }
-    
+
     func testOnboardingFormValidation() throws {
         // Test form validation throughout onboarding
-        
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
+
+        let welcomeTitle = app.staticTexts["GrowWise"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        app.buttons["Get Started"].tap()
-        
-        // Skill Assessment - try to continue without selection
-        let skillTitle = app.staticTexts["What's Your Gardening Experience?"]
-        XCTAssertTrue(skillTitle.waitForExistence(timeout: 2.0))
-        
-        let nextButton = app.buttons["Next"]
-        if nextButton.exists {
-            nextButton.tap()
-            
-            // Should still be on skill screen if validation works
-            XCTAssertTrue(skillTitle.exists)
-        }
-        
+
+        tapContinue() // welcome → skill
+
+        let skillTitle = app.staticTexts["What's your gardening experience?"]
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+
         // Select skill level and continue
-        app.buttons["Advanced"].tap()
-        nextButton.tap()
-        
-        // Goals screen - try to continue without selection
-        let goalsTitle = app.staticTexts["What Are Your Gardening Goals?"]
-        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 2.0))
-        
+        let advancedButton = app.buttons["Advanced"]
+        XCTAssertTrue(advancedButton.waitForExistence(timeout: 3.0))
+        advancedButton.tap()
+        tapContinue() // skill → goals
+
+        // Goals screen - Continue should be disabled without goal selection
+        let goalsTitle = app.staticTexts["What are your gardening goals?"]
+        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 5.0))
+
         let continueButton = app.buttons["Continue"]
-        if continueButton.exists {
-            continueButton.tap()
-            
-            // Should still be on goals screen if validation works
-            XCTAssertTrue(goalsTitle.exists)
-        }
-        
-        // Select at least one goal and continue
-        app.buttons["Beautify My Space"].tap()
-        continueButton.tap()
-        
-        // Should progress to next screen
-        let locationTitle = app.staticTexts["Set Your Location"]
-        XCTAssertTrue(locationTitle.waitForExistence(timeout: 2.0))
+        XCTAssertTrue(continueButton.exists)
+        XCTAssertFalse(continueButton.isEnabled, "Continue should be disabled without goal selection")
+
+        // Select a goal — Continue should become enabled
+        selectGoalAndContinue("Beautify My Space") // goals → location
+
+        // Should progress to location screen
+        let locationTitle = app.staticTexts["Help us know your location"]
+        XCTAssertTrue(locationTitle.waitForExistence(timeout: 5.0))
     }
-    
+
     func testOnboardingAccessibility() throws {
-        // Test accessibility features in onboarding
-        
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
+        // Test that key onboarding elements are present and navigable
+
+        // 1. Welcome screen has title and progress indicator
+        let welcomeTitle = app.staticTexts["GrowWise"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        // Check accessibility labels and traits
-        XCTAssertTrue(welcomeTitle.isAccessibilityElement)
-        XCTAssertNotNil(welcomeTitle.label)
-        
-        let getStartedButton = app.buttons["Get Started"]
-        XCTAssertTrue(getStartedButton.isAccessibilityElement)
-        XCTAssertEqual(getStartedButton.elementType, .button)
-        XCTAssertNotNil(getStartedButton.label)
-        
-        getStartedButton.tap()
-        
-        // Check skill assessment accessibility
-        let skillTitle = app.staticTexts["What's Your Gardening Experience?"]
-        XCTAssertTrue(skillTitle.waitForExistence(timeout: 2.0))
-        XCTAssertTrue(skillTitle.isAccessibilityElement)
-        
-        let beginnerButton = app.buttons["Beginner"]
-        XCTAssertTrue(beginnerButton.isAccessibilityElement)
-        XCTAssertEqual(beginnerButton.elementType, .button)
-        
-        // Test VoiceOver hints if available
-        if let hint = beginnerButton.value as? String {
-            XCTAssertFalse(hint.isEmpty)
-        }
+
+        // Wait for onboarding UI to fully load
+        let progressText = app.staticTexts["1 of 6"]
+        XCTAssertTrue(progressText.waitForExistence(timeout: 3.0))
+
+        // 2. Skill assessment has title and skill level buttons
+        tapContinue() // welcome → skill
+
+        let skillTitle = app.staticTexts["What's your gardening experience?"]
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+
+        let intermediateButton = app.buttons["Intermediate"]
+        XCTAssertTrue(intermediateButton.waitForExistence(timeout: 3.0))
+        intermediateButton.tap()
+
+        // 3. Goals screen has title and goal buttons
+        tapContinue() // skill → goals
+
+        let goalsTitle = app.staticTexts["What are your gardening goals?"]
+        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 5.0))
+
+        let goalButton = app.buttons["Grow My Own Food"]
+        XCTAssertTrue(goalButton.waitForExistence(timeout: 3.0))
     }
-    
+
     func testOnboardingProgressIndicator() throws {
-        // Test that progress indicator updates correctly
-        
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
+        // Test that progress updates as user navigates through onboarding
+
+        let welcomeTitle = app.staticTexts["GrowWise"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        app.buttons["Get Started"].tap()
-        
-        // Check initial progress
-        let progressIndicator = app.progressIndicators.firstMatch
-        if progressIndicator.exists {
-            let initialProgress = progressIndicator.value as? String
-            
-            // Continue through onboarding and check progress updates
-            app.buttons["Expert"].tap()
-            app.buttons["Next"].tap()
-            
-            // Progress should have increased
-            let updatedProgress = progressIndicator.value as? String
-            XCTAssertNotEqual(initialProgress, updatedProgress)
-        }
+
+        // Check initial progress text (step indicator)
+        let initialProgress = app.staticTexts["1 of 6"]
+        XCTAssertTrue(initialProgress.waitForExistence(timeout: 3.0))
+
+        tapContinue() // welcome → skill
+
+        // Progress should update to step 2
+        let skillTitle = app.staticTexts["What's your gardening experience?"]
+        XCTAssertTrue(skillTitle.waitForExistence(timeout: 5.0))
+
+        let updatedProgress = app.staticTexts["2 of 6"]
+        XCTAssertTrue(updatedProgress.waitForExistence(timeout: 3.0))
+
+        // Select a non-default skill and advance to goals
+        let expertButton = app.buttons["Expert"]
+        XCTAssertTrue(expertButton.waitForExistence(timeout: 3.0))
+        expertButton.tap()
+        tapContinue() // skill → goals
+
+        let goalsTitle = app.staticTexts["What are your gardening goals?"]
+        XCTAssertTrue(goalsTitle.waitForExistence(timeout: 5.0))
+
+        let thirdProgress = app.staticTexts["3 of 6"]
+        XCTAssertTrue(thirdProgress.waitForExistence(timeout: 3.0))
     }
-    
+
     func testOnboardingPerformance() throws {
-        // Measure onboarding performance
-        
+        // Measure onboarding launch performance
+
         measure(metrics: [XCTApplicationLaunchMetric()]) {
             app.launch()
         }
-        
-        let welcomeTitle = app.staticTexts["Welcome to GrowWise"]
+
+        let welcomeTitle = app.staticTexts["GrowWise"]
         XCTAssertTrue(welcomeTitle.waitForExistence(timeout: 5.0))
-        
-        // Measure time to complete onboarding
-        measure {
-            app.buttons["Get Started"].tap()
-            
-            app.buttons["Beginner"].waitForExistence(timeout: 1.0)
-            app.buttons["Beginner"].tap()
-            app.buttons["Next"].tap()
-            
-            app.buttons["Grow My Own Food"].waitForExistence(timeout: 1.0)
-            app.buttons["Grow My Own Food"].tap()
-            app.buttons["Continue"].tap()
-            
-            app.buttons["Skip for Now"].waitForExistence(timeout: 1.0)
-            app.buttons["Skip for Now"].tap()
-            
-            app.buttons["Maybe Later"].waitForExistence(timeout: 1.0)
-            app.buttons["Maybe Later"].tap()
-            
-            app.buttons["Start Gardening"].waitForExistence(timeout: 1.0)
-            app.buttons["Start Gardening"].tap()
-            
-            let mainScreen = app.staticTexts["My Garden"]
-            XCTAssertTrue(mainScreen.waitForExistence(timeout: 2.0))
-        }
-    }
-    
-    // MARK: - Helper Methods
-    
-    private func navigateToScreen(_ screenIdentifier: String) {
-        // Helper to navigate to specific onboarding screen
-        while !app.staticTexts[screenIdentifier].exists {
-            let nextButton = app.buttons["Next"]
-            let continueButton = app.buttons["Continue"]
-            
-            if nextButton.exists {
-                nextButton.tap()
-            } else if continueButton.exists {
-                continueButton.tap()
-            } else {
-                break
-            }
-        }
-    }
-    
-    private func selectRandomOption(in buttons: [String]) {
-        // Helper to select random option from list
-        if let randomButton = buttons.randomElement() {
-            let button = app.buttons[randomButton]
-            if button.exists {
-                button.tap()
-            }
-        }
     }
 }

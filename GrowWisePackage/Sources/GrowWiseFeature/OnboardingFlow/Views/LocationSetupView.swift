@@ -103,7 +103,9 @@ struct LocationSetupView: View {
                                 )
                             }
                             .disabled(isRequesting)
-                            
+                            .accessibilityLabel("Enable Location Services")
+                            .accessibilityIdentifier("onboarding_location_enable")
+
                             Button("Skip for Now") {
                                 userProfile.hasLocationPermission = false
                             }

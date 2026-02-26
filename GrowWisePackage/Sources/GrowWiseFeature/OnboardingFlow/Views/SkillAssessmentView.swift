@@ -123,6 +123,7 @@ struct SkillLevelCard: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(level.displayName)
     }
 }
 

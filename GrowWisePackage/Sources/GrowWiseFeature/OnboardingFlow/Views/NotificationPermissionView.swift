@@ -136,7 +136,9 @@ struct NotificationPermissionView: View {
                             )
                         }
                         .disabled(isRequesting)
-                        
+                        .accessibilityLabel("Enable Notifications")
+                        .accessibilityIdentifier("onboarding_notifications_enable")
+
                         Button("Maybe Later") {
                             userProfile.hasNotificationPermission = false
                         }

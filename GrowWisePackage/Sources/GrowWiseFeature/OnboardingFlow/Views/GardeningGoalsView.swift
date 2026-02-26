@@ -133,6 +133,7 @@ struct GoalCard: View {
             )
         }
         .buttonStyle(PlainButtonStyle())
+        .accessibilityLabel(goal.displayName)
     }
 }
 
