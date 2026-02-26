@@ -3,7 +3,7 @@ import GrowWiseFeature
 import GrowWiseServices
 
 @main
-struct GrowWiseApp: App {
+struct CultivationApp: App {
     // Core services injected into environment for app-wide access
     // DataService initialized in MainAppView due to async requirements and error handling
     @State private var locationService = LocationService()

@@ -1,125 +1,123 @@
-# GrowWise - iOS App
+# 🌱 Cultivation
 
-A modern iOS application using a **workspace + SPM package** architecture for clean separation between app shell and feature code.
+**Your personal garden companion — track plants, log care, and grow with confidence.**
 
-## AI Assistant Rules Files
+Cultivation is a native iOS app for gardeners of all skill levels. Whether you're keeping a single succulent alive or managing a full backyard garden, Cultivation keeps your plants organized, your care schedule on track, and your knowledge growing.
 
-This template includes **opinionated rules files** for popular AI coding assistants. These files establish coding standards, architectural patterns, and best practices for modern iOS development using the latest APIs and Swift features.
+---
 
-### Included Rules Files
-- **Claude Code**: `CLAUDE.md` - Claude Code rules
-- **Cursor**: `.cursor/*.mdc` - Cursor-specific rules
-- **GitHub Copilot**: `.github/copilot-instructions.md` - GitHub Copilot rules
+## Features
 
-### Customization Options
-These rules files are **starting points** - feel free to:
-- ✅ **Edit them** to match your team's coding standards
-- ✅ **Delete them** if you prefer different approaches
-- ✅ **Add your own** rules for other AI tools
-- ✅ **Update them** as new iOS APIs become available
+### 🌿 My Garden
+Track every plant in your collection with photos, care notes, and health status. Add plants from a curated database or create your own. See everything at a glance on your garden dashboard.
 
-### What Makes These Rules Opinionated
-- **No ViewModels**: Embraces pure SwiftUI state management patterns
-- **Swift 6+ Concurrency**: Enforces modern async/await over legacy patterns
-- **Latest APIs**: Recommends iOS 18+ features with optional iOS 26 guidelines
-- **Testing First**: Promotes Swift Testing framework over XCTest
-- **Performance Focus**: Emphasizes @Observable over @Published for better performance
+### 🔔 Smart Reminders
+Never miss a watering, fertilizing, or pruning again. Reminders are tailored to each plant's needs, with weather-aware adjustments that adapt to your local conditions.
 
-**Note for AI assistants**: You MUST read the relevant rules files before making changes to ensure consistency with project standards.
+### 📓 Plant Journal
+Log observations, milestones, and photos over time. Track soil conditions, spot problems early, and build a detailed history for every plant.
 
-## Project Architecture
+### 🌍 Location-Aware
+Set up your garden profile with your location and Cultivation automatically factors in your hardiness zone, climate, and seasonal patterns for smarter care recommendations.
+
+### 📚 Learning Center
+Step-by-step tutorials for beginners, companion planting guides, and a searchable plant database — everything you need to level up your gardening knowledge.
+
+### 🌱 Onboarding
+A short skill assessment gets you personalized recommendations from day one. Beginner or expert, the experience adapts to you.
+
+---
+
+## Tech Stack
+
+| Layer | Technology |
+|-------|-----------|
+| Language | Swift 6 |
+| UI | SwiftUI |
+| Data | SwiftData |
+| Architecture | Workspace + SPM package |
+| Min iOS | 18.0 |
+| Concurrency | Swift 6 strict concurrency |
+
+### Package Structure
 
 ```
-GrowWise/
-├── GrowWise.xcworkspace/              # Open this file in Xcode
-├── GrowWise.xcodeproj/                # App shell project
-├── GrowWise/                          # App target (minimal)
-│   ├── Assets.xcassets/                # App-level assets (icons, colors)
-│   ├── GrowWiseApp.swift              # App entry point
-│   └── GrowWise.xctestplan            # Test configuration
-├── GrowWisePackage/                   # 🚀 Primary development area
-│   ├── Package.swift                   # Package configuration
-│   ├── Sources/GrowWiseFeature/       # Your feature code
-│   └── Tests/GrowWiseFeatureTests/    # Unit tests
+Cultivation/
+├── GrowWise/                          # App shell (entry point, lifecycle)
+│   └── CultivationApp.swift
+├── GrowWisePackage/                   # Primary development area
+│   ├── Sources/
+│   │   ├── GrowWiseFeature/           # All UI and feature code
+│   │   ├── GrowWiseServices/          # Business logic and services
+│   │   └── GrowWiseModels/            # SwiftData models
+│   └── Tests/                         # Unit + integration tests (72 passing)
 └── GrowWiseUITests/                   # UI automation tests
 ```
 
-## Key Architecture Points
+### Key Services
 
-### Workspace + SPM Structure
-- **App Shell**: `GrowWise/` contains minimal app lifecycle code
-- **Feature Code**: `GrowWisePackage/Sources/GrowWiseFeature/` is where most development happens
-- **Separation**: Business logic lives in the SPM package, app target just imports and displays it
+- **DataService** — SwiftData persistence, async-safe
+- **ReminderService** — Notification scheduling with weather adjustment
+- **LocationService** — Hardiness zone + climate lookup
+- **PlantDatabaseService** — Searchable plant catalog
+- **CloudSyncService** — CloudKit sync (in progress)
+- **NotificationService** — Local notifications
 
-### Buildable Folders (Xcode 16)
-- Files added to the filesystem automatically appear in Xcode
-- No need to manually add files to project targets
-- Reduces project file conflicts in teams
+---
 
-## Development Notes
+## Development
 
-### Code Organization
-Most development happens in `GrowWisePackage/Sources/GrowWiseFeature/` - organize your code as you prefer.
+### Requirements
+- Xcode 16+
+- iOS 18.0+ simulator or device
+- Swift 6
 
-### Public API Requirements
-Types exposed to the app target need `public` access:
-```swift
-public struct NewView: View {
-    public init() {}
-    
-    public var body: some View {
-        // Your view code
-    }
-}
+### Getting Started
+
+```bash
+git clone <repo>
+cd GrowWise
+open GrowWise.xcworkspace
 ```
 
-### Adding Dependencies
-Edit `GrowWisePackage/Package.swift` to add SPM dependencies:
-```swift
-dependencies: [
-    .package(url: "https://github.com/example/SomePackage", from: "1.0.0")
-],
-targets: [
-    .target(
-        name: "GrowWiseFeature",
-        dependencies: ["SomePackage"]
-    ),
-]
+Build and run the `GrowWise` scheme. The app uses in-memory SwiftData during UI tests — no migration needed for simulator runs.
+
+### Running Tests
+
+```bash
+# Unit tests
+xcodebuild test -workspace GrowWise.xcworkspace -scheme GrowWisePackage \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
+
+# UI tests
+xcodebuild test -workspace GrowWise.xcworkspace -scheme GrowWise \
+  -destination 'platform=iOS Simulator,name=iPhone 16 Pro'
 ```
 
-### Test Structure
-- **Unit Tests**: `GrowWisePackage/Tests/GrowWiseFeatureTests/` (Swift Testing framework)
-- **UI Tests**: `GrowWiseUITests/` (XCUITest framework)
-- **Test Plan**: `GrowWise.xctestplan` coordinates all tests
+### Launch Arguments (UI Testing)
 
-## Configuration
+| Argument | Effect |
+|----------|--------|
+| `--uitesting` | Enables in-memory store, disables animations |
+| `--skip-onboarding` | Skips onboarding flow |
+| `--reset-data` | Clears UserDefaults (run before `--skip-onboarding`) |
+| `--reset-onboarding` | Forces onboarding to show |
 
-### XCConfig Build Settings
-Build settings are managed through **XCConfig files** in `Config/`:
-- `Config/Shared.xcconfig` - Common settings (bundle ID, versions, deployment target)
-- `Config/Debug.xcconfig` - Debug-specific settings  
-- `Config/Release.xcconfig` - Release-specific settings
-- `Config/Tests.xcconfig` - Test-specific settings
+---
 
-### Entitlements Management
-App capabilities are managed through a **declarative entitlements file**:
-- `Config/GrowWise.entitlements` - All app entitlements and capabilities
-- AI agents can safely edit this XML file to add HealthKit, CloudKit, Push Notifications, etc.
-- No need to modify complex Xcode project files
+## Status
 
-### Asset Management
-- **App-Level Assets**: `GrowWise/Assets.xcassets/` (app icon, accent color)
-- **Feature Assets**: Add `Resources/` folder to SPM package if needed
+- ✅ Core garden tracking (My Garden, plant detail, reminders)
+- ✅ Plant journal with soil logs
+- ✅ Onboarding flow with skill assessment
+- ✅ Location setup + hardiness zone
+- ✅ Tutorial system
+- ✅ 72 unit tests passing
+- 🔄 CloudKit sync (in progress)
+- 🔄 App Store submission
 
-### SPM Package Resources
-To include assets in your feature package:
-```swift
-.target(
-    name: "GrowWiseFeature",
-    dependencies: [],
-    resources: [.process("Resources")]
-)
-```
+---
 
-### Generated with XcodeBuildMCP
-This project was scaffolded using [XcodeBuildMCP](https://github.com/cameroncooke/XcodeBuildMCP), which provides tools for AI-assisted iOS development workflows.
+## License
+
+MIT

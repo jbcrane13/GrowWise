@@ -1,8 +1,8 @@
-# GrowWise - Gardening App Product Requirements Document
+# Cultivation - Gardening App Product Requirements Document
 
 ## 1. Executive Summary
 
-GrowWise is a comprehensive iOS gardening application designed to guide novice gardeners through their journey while providing advanced tools and insights for experienced horticulturists. The app bridges the knowledge gap between beginners and experts through adaptive content delivery, personalized recommendations, and community-driven features.
+Cultivation is a comprehensive iOS gardening application designed to guide novice gardeners through their journey while providing advanced tools and insights for experienced horticulturists. The app bridges the knowledge gap between beginners and experts through adaptive content delivery, personalized recommendations, and community-driven features.
 
 ## 2. Product Vision
 
