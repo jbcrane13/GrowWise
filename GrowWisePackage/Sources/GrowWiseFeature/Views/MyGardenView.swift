@@ -49,10 +49,14 @@ public struct MyGardenView: View {
                     selectedDifficulty: $selectedDifficulty
                 )
             }
-            .sheet(isPresented: $showingAddPlant) {
+            .sheet(isPresented: $showingAddPlant, onDismiss: {
+                Task { await loadData() }
+            }) {
                 AddPlantToGardenSheet(selectedGarden: selectedGarden)
             }
-            .sheet(isPresented: $showingCreateGarden) {
+            .sheet(isPresented: $showingCreateGarden, onDismiss: {
+                Task { await loadData() }
+            }) {
                 CreateGardenSheet()
             }
             .refreshable {
@@ -78,12 +82,6 @@ public struct MyGardenView: View {
             }
             .onChange(of: selectedSortOption) { _, _ in
                 sortPlants()
-            }
-            .onChange(of: showingCreateGarden) { _, isShowing in
-                if !isShowing { Task { await loadData() } }
-            }
-            .onChange(of: showingAddPlant) { _, isShowing in
-                if !isShowing { Task { await loadData() } }
             }
             .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowCreateGardenFromAddPlant"))) { _ in
                 showingAddPlant = false

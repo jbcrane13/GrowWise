@@ -113,23 +113,34 @@ import GrowWiseModels
     
     private func createReminderNotificationContent(for reminder: PlantReminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
-        content.title = reminder.title
-        content.body = reminder.message
+        let plantName = reminder.plant?.name ?? reminder.plantName
+        content.title = "Time to care for \(plantName)"
+        content.body = reminder.reminderType.displayName
         content.sound = .default
         content.badge = NSNumber(value: badgeCount + 1)
-        
+
         // Add custom user info for handling actions
         var userInfo: [String: Any] = [
             "reminderId": reminder.id.uuidString,
             "reminderType": reminder.reminderType.rawValue
         ]
-        
+
         if let plantId = reminder.plant?.id {
             userInfo["plantId"] = plantId.uuidString
         }
-        
+
         content.userInfo = userInfo
         return content
+    }
+
+    /// Returns the notification title and body that would be used for the given reminder.
+    /// Exposed for unit-testing notification content without scheduling a real notification.
+    public func notificationContent(for reminder: PlantReminder) -> (title: String, body: String) {
+        let plantName = reminder.plant?.name ?? reminder.plantName
+        return (
+            title: "Time to care for \(plantName)",
+            body: reminder.reminderType.displayName
+        )
     }
     
     private func createNotificationTrigger(for date: Date, repeats: Bool) -> UNNotificationTrigger {

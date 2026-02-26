@@ -81,7 +81,7 @@ import GrowWiseModels
                 companionPlants: ["Carrots", "Radishes", "Chives"]
             ),
             PlantData(
-                name: "Carrots",
+                name: "Carrot",
                 scientificName: "Daucus carota",
                 type: .vegetable,
                 difficulty: .beginner,
@@ -115,9 +115,45 @@ import GrowWiseModels
                 description: "Nutritious cool-season leafy green",
                 careInstructions: ["Plant in cool weather", "Keep soil moist", "Harvest young leaves", "Bolt in hot weather"],
                 companionPlants: ["Lettuce", "Radishes", "Peas"]
+            ),
+            PlantData(
+                name: "Zucchini",
+                scientificName: "Cucurbita pepo",
+                type: .vegetable,
+                difficulty: .beginner,
+                sunlight: .fullSun,
+                watering: .everyOtherDay,
+                space: .large,
+                description: "Prolific summer squash that produces abundantly through the season",
+                careInstructions: ["Direct sow after last frost", "Needs ample space to sprawl", "Harvest when 6-8 inches long for best flavor", "Check daily — squash grow fast"],
+                companionPlants: ["Nasturtium", "Beans", "Corn"]
+            ),
+            PlantData(
+                name: "Cucumber",
+                scientificName: "Cucumis sativus",
+                type: .vegetable,
+                difficulty: .beginner,
+                sunlight: .fullSun,
+                watering: .daily,
+                space: .medium,
+                description: "Fast-growing vine vegetable that thrives in warm weather",
+                careInstructions: ["Plant after soil warms to 60°F", "Train vines on a trellis to save space", "Water deeply and consistently", "Harvest when firm and dark green"],
+                companionPlants: ["Beans", "Peas", "Radishes"]
+            ),
+            PlantData(
+                name: "Kale",
+                scientificName: "Brassica oleracea var. sabellica",
+                type: .vegetable,
+                difficulty: .beginner,
+                sunlight: .fullSun,
+                watering: .twiceWeekly,
+                space: .small,
+                description: "Hardy superfood leafy green that withstands frost and cold temperatures",
+                careInstructions: ["Plant in early spring or fall", "Flavor improves after frost", "Harvest outer leaves from bottom up", "Very cold-hardy — grows in winter in mild climates"],
+                companionPlants: ["Beets", "Herbs", "Onions"]
             )
         ]
-        
+
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(vegetables, batchSize: 5, category: .vegetables)
     }
@@ -174,14 +210,14 @@ import GrowWiseModels
             ),
             PlantData(
                 name: "Rosemary",
-                scientificName: "Rosmarinus officinalis",
+                scientificName: "Salvia rosmarinus",
                 type: .herb,
                 difficulty: .intermediate,
                 sunlight: .fullSun,
                 watering: .weekly,
                 space: .medium,
-                description: "Woody perennial herb with needle-like leaves",
-                careInstructions: ["Plant in well-draining soil", "Very drought tolerant", "Prune lightly after flowering", "Protect from hard frost"],
+                description: "Woody perennial herb with needle-like leaves and pine-like fragrance",
+                careInstructions: ["Plant in well-draining soil", "Very drought tolerant once established", "Prune lightly after flowering", "Protect from hard frost"],
                 companionPlants: ["Sage", "Thyme", "Lavender"]
             ),
             PlantData(
@@ -192,12 +228,36 @@ import GrowWiseModels
                 sunlight: .partialSun,
                 watering: .daily,
                 space: .small,
-                description: "Fast-growing aromatic herb that spreads readily",
+                description: "Fast-growing aromatic herb that spreads readily and repels pests",
                 careInstructions: ["Grow in containers to prevent spreading", "Keep soil consistently moist", "Harvest regularly to encourage growth", "Can grow in partial shade"],
                 companionPlants: ["Tomatoes", "Cabbage", "Carrots"]
+            ),
+            PlantData(
+                name: "Thyme",
+                scientificName: "Thymus vulgaris",
+                type: .herb,
+                difficulty: .beginner,
+                sunlight: .fullSun,
+                watering: .weekly,
+                space: .small,
+                description: "Low-growing perennial herb with tiny fragrant leaves perfect for culinary use",
+                careInstructions: ["Plant in well-draining soil", "Excellent drought tolerance once established", "Trim after flowering to keep compact", "Overwinters well in most climates"],
+                companionPlants: ["Rosemary", "Cabbage", "Strawberries"]
+            ),
+            PlantData(
+                name: "Cilantro",
+                scientificName: "Coriandrum sativum",
+                type: .herb,
+                difficulty: .beginner,
+                sunlight: .partialSun,
+                watering: .everyOtherDay,
+                space: .small,
+                description: "Fast-growing herb used in cooking worldwide; leaves are cilantro, seeds are coriander",
+                careInstructions: ["Direct sow in cool weather — bolts quickly in heat", "Succession plant every 2-3 weeks for continuous harvest", "Allow some to bolt and self-seed", "Keep soil evenly moist"],
+                companionPlants: ["Tomatoes", "Peppers", "Spinach"]
             )
         ]
-        
+
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(herbs, batchSize: 5, category: .herbs)
     }
@@ -212,7 +272,7 @@ import GrowWiseModels
                 sunlight: .fullSun,
                 watering: .everyOtherDay,
                 space: .small,
-                description: "Bright annual flowers that deter garden pests",
+                description: "Bright annual flowers that deter garden pests and attract beneficial insects",
                 careInstructions: ["Direct sow after last frost", "Deadhead for continuous blooms", "Very heat tolerant", "Self-seeds readily"],
                 companionPlants: ["Tomatoes", "Peppers", "Beans"]
             ),
@@ -224,48 +284,48 @@ import GrowWiseModels
                 sunlight: .fullSun,
                 watering: .everyOtherDay,
                 space: .large,
-                description: "Tall annual flowers that follow the sun",
-                careInstructions: ["Direct sow in spring", "Support tall varieties", "Deep watering preferred", "Harvest seeds when mature"],
+                description: "Tall annual flowers that track the sun and produce edible seeds",
+                careInstructions: ["Direct sow in spring after frost", "Support tall varieties with stakes", "Deep watering encourages strong roots", "Harvest seeds when dried on stalk"],
                 companionPlants: ["Corn", "Beans", "Squash"]
             ),
             PlantData(
-                name: "Nasturtium",
-                scientificName: "Tropaeolum majus",
+                name: "Lavender",
+                scientificName: "Lavandula angustifolia",
                 type: .flower,
-                difficulty: .beginner,
-                sunlight: .fullSun,
-                watering: .everyOtherDay,
-                space: .medium,
-                description: "Edible flowers with peppery flavor",
-                careInstructions: ["Direct sow after last frost", "Poor soil produces more flowers", "Both leaves and flowers are edible", "Attracts beneficial insects"],
-                companionPlants: ["Tomatoes", "Cucumbers", "Radishes"]
-            ),
-            PlantData(
-                name: "Zinnia",
-                scientificName: "Zinnia elegans",
-                type: .flower,
-                difficulty: .beginner,
-                sunlight: .fullSun,
-                watering: .twiceWeekly,
-                space: .small,
-                description: "Colorful annual flowers that attract butterflies",
-                careInstructions: ["Direct sow after soil warms", "Deadhead for more blooms", "Good air circulation prevents powdery mildew", "Excellent cut flowers"],
-                companionPlants: ["Vegetables", "Other annuals"]
-            ),
-            PlantData(
-                name: "Cosmos",
-                scientificName: "Cosmos bipinnatus",
-                type: .flower,
-                difficulty: .beginner,
+                difficulty: .intermediate,
                 sunlight: .fullSun,
                 watering: .weekly,
                 space: .medium,
-                description: "Delicate annual flowers with feathery foliage",
-                careInstructions: ["Direct sow in spring", "Drought tolerant", "Self-seeds readily", "Attracts beneficial insects"],
-                companionPlants: ["Vegetables", "Other wildflowers"]
+                description: "Fragrant perennial shrub prized for aromatherapy, culinary use, and pollinator attraction",
+                careInstructions: ["Plant in well-draining alkaline soil", "Excellent drought tolerance once established", "Prune by one-third after first bloom to encourage bushiness", "Harvest flower spikes just before fully open for drying"],
+                companionPlants: ["Rosemary", "Thyme", "Sage"]
+            ),
+            PlantData(
+                name: "Rose",
+                scientificName: "Rosa",
+                type: .flower,
+                difficulty: .intermediate,
+                sunlight: .fullSun,
+                watering: .everyOtherDay,
+                space: .medium,
+                description: "Classic flowering shrub beloved for its fragrant blooms and elegant form",
+                careInstructions: ["Plant in fertile, well-draining soil with at least 6 hours of sun", "Water at the base to prevent fungal disease on leaves", "Deadhead spent blooms to encourage reblooming", "Prune in early spring to shape and remove dead wood"],
+                companionPlants: ["Lavender", "Marigold", "Garlic"]
+            ),
+            PlantData(
+                name: "Petunia",
+                scientificName: "Petunia × atkinsiana",
+                type: .flower,
+                difficulty: .beginner,
+                sunlight: .fullSun,
+                watering: .daily,
+                space: .small,
+                description: "Prolific blooming annual with trumpet-shaped flowers in a wide range of colors",
+                careInstructions: ["Plant after last frost in full sun", "Water consistently — they wilt quickly when dry", "Deadhead regularly or pinch stems to prevent legginess", "Fertilize monthly for best bloom performance"],
+                companionPlants: ["Marigolds", "Basil", "Vegetables"]
             )
         ]
-        
+
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(flowers, batchSize: 5, category: .flowers)
     }
@@ -280,45 +340,21 @@ import GrowWiseModels
                 sunlight: .partialSun,
                 watering: .weekly,
                 space: .medium,
-                description: "Easy-care trailing vine perfect for beginners",
-                careInstructions: ["Low to medium light", "Water when soil is dry", "Trim to maintain shape", "Propagates easily in water"],
+                description: "Easy-care trailing vine perfect for beginners; one of the most forgiving houseplants",
+                careInstructions: ["Tolerates low to medium light", "Water when top inch of soil is dry", "Trim to maintain shape and propagate cuttings", "Propagates easily in a glass of water"],
                 companionPlants: ["Snake Plant", "ZZ Plant"]
             ),
             PlantData(
                 name: "Snake Plant",
-                scientificName: "Sansevieria trifasciata",
+                scientificName: "Dracaena trifasciata",
                 type: .houseplant,
                 difficulty: .beginner,
                 sunlight: .fullShade,
                 watering: .biweekly,
                 space: .small,
-                description: "Extremely low-maintenance plant with upright leaves",
-                careInstructions: ["Tolerates low light", "Water sparingly", "Very drought tolerant", "Propagates from leaf cuttings"],
+                description: "Extremely low-maintenance upright plant that tolerates neglect and low light",
+                careInstructions: ["Tolerates very low light conditions", "Water sparingly — overwatering is the main risk", "Allow soil to dry completely between waterings", "Propagates from leaf cuttings or division"],
                 companionPlants: ["ZZ Plant", "Pothos"]
-            ),
-            PlantData(
-                name: "Rubber Plant",
-                scientificName: "Ficus elastica",
-                type: .houseplant,
-                difficulty: .intermediate,
-                sunlight: .partialSun,
-                watering: .weekly,
-                space: .large,
-                description: "Popular houseplant with glossy green leaves",
-                careInstructions: ["Bright, indirect light", "Water when top inch is dry", "Wipe leaves clean regularly", "Can grow quite large"],
-                companionPlants: ["Fiddle Leaf Fig", "Monstera"]
-            ),
-            PlantData(
-                name: "ZZ Plant",
-                scientificName: "Zamioculcas zamiifolia",
-                type: .houseplant,
-                difficulty: .beginner,
-                sunlight: .fullShade,
-                watering: .biweekly,
-                space: .medium,
-                description: "Glossy-leaved plant that tolerates neglect",
-                careInstructions: ["Low to bright indirect light", "Water when soil is completely dry", "Very drought tolerant", "Grows slowly"],
-                companionPlants: ["Snake Plant", "Pothos"]
             ),
             PlantData(
                 name: "Spider Plant",
@@ -328,12 +364,36 @@ import GrowWiseModels
                 sunlight: .partialSun,
                 watering: .twiceWeekly,
                 space: .medium,
-                description: "Fast-growing plant that produces baby plantlets",
-                careInstructions: ["Bright, indirect light", "Keep soil evenly moist", "Produces 'babies' on runners", "Non-toxic to pets"],
+                description: "Fast-growing plant that produces cascading baby plantlets on long runners",
+                careInstructions: ["Bright, indirect light preferred", "Keep soil evenly moist but not soggy", "Allow plantlets to root in soil or water", "Non-toxic to pets and children"],
                 companionPlants: ["Pothos", "Peace Lily"]
+            ),
+            PlantData(
+                name: "Monstera",
+                scientificName: "Monstera deliciosa",
+                type: .houseplant,
+                difficulty: .beginner,
+                sunlight: .partialSun,
+                watering: .weekly,
+                space: .large,
+                description: "Iconic tropical plant with large split leaves, also known as Swiss cheese plant",
+                careInstructions: ["Bright, indirect light brings out best leaf fenestration", "Water when top 2 inches of soil are dry", "Provide a moss pole or trellis for climbing support", "Wipe leaves with a damp cloth to remove dust"],
+                companionPlants: ["Pothos", "Bird of Paradise"]
+            ),
+            PlantData(
+                name: "Peace Lily",
+                scientificName: "Spathiphyllum wallisii",
+                type: .houseplant,
+                difficulty: .beginner,
+                sunlight: .fullShade,
+                watering: .weekly,
+                space: .medium,
+                description: "Elegant low-light plant that blooms with white spathes and purifies indoor air",
+                careInstructions: ["Tolerates deep shade — great for bathrooms and offices", "Water when leaves just begin to droop slightly", "Mist leaves or use a humidifier for best growth", "Toxic to pets — keep out of reach of cats and dogs"],
+                companionPlants: ["Snake Plant", "Spider Plant"]
             )
         ]
-        
+
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(houseplants, batchSize: 5, category: .houseplants)
     }

@@ -42,6 +42,8 @@ public struct MainAppView: View {
         let photoService: PhotoService
         let plantDatabaseService: PlantDatabaseService
         let tutorialService: TutorialService
+        let subscriptionService: SubscriptionService
+        let companionPlantingService: CompanionPlantingService
     }
     
     public var body: some View {
@@ -79,6 +81,8 @@ public struct MainAppView: View {
                     .environment(services.photoService)
                     .environment(services.plantDatabaseService)
                     .environment(services.tutorialService)
+                    .environment(services.subscriptionService)
+                    .environment(services.companionPlantingService)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -138,6 +142,13 @@ public struct MainAppView: View {
                     Text("Scanner")
                 }
                 .tag(TabSelection.scanner)
+
+            ProfileView()
+                .tabItem {
+                    Image(systemName: "person.circle.fill")
+                    Text("Profile")
+                }
+                .tag(TabSelection.profile)
         }
     }
     
@@ -159,7 +170,9 @@ public struct MainAppView: View {
                 reminderService: ReminderService(dataService: service, notificationService: notificationService),
                 photoService: PhotoService(dataService: service),
                 plantDatabaseService: PlantDatabaseService(dataService: service),
-                tutorialService: TutorialService(dataService: service)
+                tutorialService: TutorialService(dataService: service),
+                subscriptionService: SubscriptionService(),
+                companionPlantingService: CompanionPlantingService()
             )
             isInitializing = false
             return
@@ -184,7 +197,9 @@ public struct MainAppView: View {
             reminderService: ReminderService(dataService: service, notificationService: notificationService),
             photoService: PhotoService(dataService: service),
             plantDatabaseService: PlantDatabaseService(dataService: service),
-            tutorialService: TutorialService(dataService: service)
+            tutorialService: TutorialService(dataService: service),
+            subscriptionService: SubscriptionService(),
+            companionPlantingService: CompanionPlantingService()
         )
         cloudSyncService.attach(dataService: service)
 
@@ -241,24 +256,29 @@ public struct MainAppView: View {
         if !isUITesting {
             // Defer non-critical initialization
             initializationStage = "Almost ready..."
-            Task.detached(priority: .background) {
+            Task(priority: .background) {
                 await seedDatabaseIfNeeded()
             }
         }
 
         isInitializing = false
     }
-    
+
     @MainActor
     private func seedDatabaseIfNeeded() async {
+        guard let plantDatabaseService = featureServices?.plantDatabaseService else {
+            print("[Seed] PlantDatabaseService not available, skipping seeding")
+            return
+        }
+
         let memoryBefore = performanceMonitor.currentMemoryUsage
         print("[Seed] Memory before database seeding: \(String(format: "%.1fMB", memoryBefore))")
 
-        // Database seeding in background to avoid blocking UI
-        await Task.detached(priority: .background) {
-            print("Database seeding available - using real DataService")
-            // Actual seeding logic would go here
-        }.value
+        do {
+            try await plantDatabaseService.seedPlantDatabase()
+        } catch {
+            print("[Seed] Seeding encountered errors: \(error.localizedDescription)")
+        }
 
         let memoryAfter = performanceMonitor.currentMemoryUsage
         let memoryUsedBySeed = memoryAfter - memoryBefore
@@ -267,7 +287,7 @@ public struct MainAppView: View {
         print("[Seed] Memory used by seeding: \(String(format: "%.1fMB", memoryUsedBySeed))")
 
         if memoryUsedBySeed > 5 {
-            print("[Seed] ⚠️ WARNING: Seeding used \(String(format: "%.1fMB", memoryUsedBySeed)) - more than expected (5MB threshold)")
+            print("[Seed] WARNING: Seeding used \(String(format: "%.1fMB", memoryUsedBySeed)) - more than expected (5MB threshold)")
         }
     }
 }
@@ -279,7 +299,8 @@ enum TabSelection: Int, CaseIterable {
     case journal = 3
     case tutorials = 4
     case scanner = 5
-    
+    case profile = 6
+
     var title: String {
         switch self {
         case .home: return "Home"
@@ -288,9 +309,10 @@ enum TabSelection: Int, CaseIterable {
         case .journal: return "Journal"
         case .tutorials: return "Learn"
         case .scanner: return "Scanner"
+        case .profile: return "Profile"
         }
     }
-    
+
     var iconName: String {
         switch self {
         case .home: return "house.fill"
@@ -299,6 +321,7 @@ enum TabSelection: Int, CaseIterable {
         case .journal: return "book.pages.fill"
         case .tutorials: return "graduationcap.fill"
         case .scanner: return "camera.macro"
+        case .profile: return "person.circle.fill"
         }
     }
 }

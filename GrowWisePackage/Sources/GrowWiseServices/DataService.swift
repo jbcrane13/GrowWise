@@ -55,22 +55,31 @@ import os
             SoilLog.self
         ])
 
-        // EMERGENCY MEMORY FIX: Use persistent storage instead of in-memory
-        // This critical change reduces memory usage by 90% by storing data on disk
-        let modelConfiguration = ModelConfiguration(
-            schema: schema,
-            isStoredInMemoryOnly: false,
-            allowsSave: true
-        )
+        // Use persistent storage with CloudKit sync for production.
+        // CloudKit requires all @Model properties to be Optional (already done).
+        let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
+        let modelConfiguration: ModelConfiguration
+        if isUITesting {
+            modelConfiguration = ModelConfiguration(
+                schema: schema,
+                isStoredInMemoryOnly: true,
+                allowsSave: true
+            )
+        } else {
+            modelConfiguration = ModelConfiguration(
+                schema: schema,
+                cloudKitDatabase: .private("iCloud.com.growwise.gardening")
+            )
+        }
 
-        logger.info("[DataService] Creating ModelContainer (persistent storage)")
+        logger.info("[DataService] Creating ModelContainer (\(isUITesting ? "in-memory" : "CloudKit-backed", privacy: .public) storage)")
 
         self.modelContainer = try ModelContainer(
             for: schema,
             configurations: [modelConfiguration]
         )
 
-        if ProcessInfo.processInfo.arguments.contains("--uitesting") {
+        if isUITesting {
             self.cloudContainer = nil
         } else {
             self.cloudContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
@@ -129,14 +138,22 @@ import os
                     ])
 
                     // In-memory for UI tests (no migration risk, clean state every run).
-                    // Persistent on disk for production.
-                    let modelConfiguration = ModelConfiguration(
-                        schema: schema,
-                        isStoredInMemoryOnly: isUITesting,
-                        allowsSave: true
-                    )
+                    // CloudKit-backed persistent storage for production.
+                    let modelConfiguration: ModelConfiguration
+                    if isUITesting {
+                        modelConfiguration = ModelConfiguration(
+                            schema: schema,
+                            isStoredInMemoryOnly: true,
+                            allowsSave: true
+                        )
+                    } else {
+                        modelConfiguration = ModelConfiguration(
+                            schema: schema,
+                            cloudKitDatabase: .private("iCloud.com.growwise.gardening")
+                        )
+                    }
 
-                    logger.info("[DataService] Creating ModelContainer on background thread (\(isUITesting ? "in-memory" : "persistent", privacy: .public) storage)")
+                    logger.info("[DataService] Creating ModelContainer on background thread (\(isUITesting ? "in-memory" : "CloudKit-backed", privacy: .public) storage)")
 
                     // Create ModelContainer - this is the heavy work
                     let container = try ModelContainer(

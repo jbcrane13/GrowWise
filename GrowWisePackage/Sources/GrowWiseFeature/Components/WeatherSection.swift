@@ -49,6 +49,7 @@ public struct WeatherSection: View {
             HStack {
                 Image(systemName: weather.iconName)
                     .foregroundColor(.blue)
+                    .accessibilityIdentifier("weather_condition_icon")
                 Text("Today's Weather")
                     .font(.headline)
                 Spacer()
@@ -59,9 +60,11 @@ public struct WeatherSection: View {
                     Text("\(Int(weather.temperature))°F")
                         .font(.title)
                         .fontWeight(.semibold)
+                        .accessibilityIdentifier("weather_temperature")
                     Text(weather.description)
                         .font(.subheadline)
                         .foregroundColor(.secondary)
+                        .accessibilityIdentifier("weather_description")
                 }
 
                 Spacer()
@@ -70,9 +73,11 @@ public struct WeatherSection: View {
                     Label("Humidity: \(Int(weather.humidity))%", systemImage: "drop.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityIdentifier("weather_humidity")
                     Label("UV Index: \(weather.uvIndex)", systemImage: "sun.max.fill")
                         .font(.caption)
                         .foregroundColor(.secondary)
+                        .accessibilityIdentifier("weather_uv_index")
                 }
             }
 
@@ -80,11 +85,18 @@ public struct WeatherSection: View {
                 Label("Great day for gardening!", systemImage: "checkmark.circle.fill")
                     .foregroundColor(.green)
                     .font(.caption)
+                    .accessibilityIdentifier("weather_gardening_guidance_good")
+            } else {
+                Label("Consider staying indoors today.", systemImage: "xmark.circle.fill")
+                    .foregroundColor(.orange)
+                    .font(.caption)
+                    .accessibilityIdentifier("weather_gardening_guidance_bad")
             }
         }
         .padding(16)
         .background(Color(.systemGray6))
         .cornerRadius(12)
+        .accessibilityIdentifier("weather_section")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(weatherAccessibilityLabel)
     }
@@ -93,6 +105,8 @@ public struct WeatherSection: View {
         var label = "Today's weather: \(weather.description), \(Int(weather.temperature)) degrees, humidity \(Int(weather.humidity)) percent, UV index \(weather.uvIndex)"
         if weather.isGoodForGardening {
             label += ". Great day for gardening"
+        } else {
+            label += ". Consider staying indoors today"
         }
         return label
     }

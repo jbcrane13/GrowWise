@@ -9,10 +9,11 @@ struct AddPlantToGardenSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(DataService.self) private var dataService
     @Environment(PlantDatabaseService.self) private var plantDatabaseService
-    
+    @Environment(CompanionPlantingService.self) private var companionService
+
     // Tab Selection
     @State private var selectedTab: PlantAdditionTab = .newPlant
-    
+
     // New Plant Form fields
     @State private var plantName = ""
     @State private var scientificName = ""
@@ -21,14 +22,18 @@ struct AddPlantToGardenSheet: View {
     @State private var plantingDate = Date()
     @State private var notes = ""
     @State private var selectedPhotos: [PhotosPickerItem] = []
-    
+
     // Database Plants search and selection
     @State private var searchText = ""
     @State private var databasePlants: [Plant] = []
     @State private var filteredPlants: [Plant] = []
     @State private var selectedDatabasePlant: Plant?
     @State private var showingPlantCustomization = false
-    
+
+    // Companion planting analysis
+    @State private var compatibilityAnalysis: GardenCompatibilityAnalysis?
+    @State private var showCompanionDetails = false
+
     // UI state
     @State private var availableGardens: [Garden] = []
     @State private var targetGarden: Garden?
@@ -81,6 +86,11 @@ struct AddPlantToGardenSheet: View {
                 Button("OK") { }
             } message: {
                 Text(errorMessage)
+            }
+            .sheet(isPresented: $showCompanionDetails) {
+                if let analysis = compatibilityAnalysis {
+                    CompanionDetailsSheet(analysis: analysis)
+                }
             }
             .onAppear {
                 setupInitialState()
@@ -164,6 +174,9 @@ struct AddPlantToGardenSheet: View {
                         }
                     }
                     .disabled(selectedGarden != nil)
+                    .onChange(of: targetGarden) { _, _ in
+                        updateCompatibilityAnalysis()
+                    }
                 }
             }
             
@@ -171,6 +184,9 @@ struct AddPlantToGardenSheet: View {
             Section("Basic Information") {
                 TextField("Name", text: $plantName)
                     .autocorrectionDisabled()
+                    .onChange(of: plantName) { _, _ in
+                        updateCompatibilityAnalysis()
+                    }
 
                 TextField("Scientific Name (Optional)", text: $scientificName)
                     .autocorrectionDisabled()
@@ -203,7 +219,12 @@ struct AddPlantToGardenSheet: View {
             Section("Planting Information") {
                 DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
             }
-            
+
+            // Companion Planting Section
+            if let analysis = compatibilityAnalysis, !plantName.isEmpty {
+                CompanionPlantingSection(analysis: analysis, showDetails: $showCompanionDetails)
+            }
+
             // Notes Section
             Section("Notes") {
                 TextEditor(text: $notes)
@@ -348,6 +369,23 @@ struct AddPlantToGardenSheet: View {
     private func setupInitialState() {
         targetGarden = selectedGarden
         availableGardens = dataService.fetchGardens()
+    }
+
+    private func updateCompatibilityAnalysis() {
+        let garden = selectedGarden ?? targetGarden
+        guard !plantName.isEmpty,
+              companionService.isPlantKnown(plantName),
+              let garden,
+              let plants = garden.plants else {
+            compatibilityAnalysis = nil
+            return
+        }
+
+        let existingPlantNames = plants.compactMap { $0.name }
+        compatibilityAnalysis = companionService.analyzeGardenCompatibility(
+            plantName: plantName,
+            existingPlants: existingPlantNames
+        )
     }
     
     @MainActor

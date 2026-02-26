@@ -149,9 +149,9 @@ struct PlantDatabaseServiceTests {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await plantDBService.seedPlantDatabase()
-        // Use the cache-free count API to verify all 25 plants were persisted
-        // 5 vegetables + 6 herbs + 5 flowers + 5 houseplants + 1 fruit + 3 succulents = 25
-        #expect(dataService.getPlantDatabaseCount() == 25)
+        // Use the cache-free count API to verify all plants were persisted
+        // 8 vegetables + 8 herbs + 5 flowers + 5 houseplants + 1 fruit + 3 succulents = 30
+        #expect(dataService.getPlantDatabaseCount() == 30)
         _ = plantDBService
     }
 
@@ -172,7 +172,7 @@ struct PlantDatabaseServiceTests {
 
         let countAfterFirst = dataService.getPlantDatabaseCount()
 
-        // Second seed should be a no-op: fetchPlantDatabase() now returns the 25 seeded
+        // Second seed should be a no-op: fetchPlantDatabase() now returns the seeded
         // plants, so the early-exit guard triggers and no duplicates are inserted.
         try await plantDBService.seedPlantDatabase()
         #expect(dataService.getPlantDatabaseCount() == countAfterFirst)

@@ -60,9 +60,7 @@ public struct HomeView: View {
                     StatsSection(stats: gardeningStats)
 
                     // Weather Widget
-                    if let weather = currentWeather {
-                        WeatherSection(weather: weather)
-                    }
+                    weatherSection
 
                     syncStatusSection
 
@@ -123,6 +121,61 @@ public struct HomeView: View {
                     withAnimation { showGardenCreatedToast = false }
                 }
             }
+        }
+    }
+
+    @ViewBuilder
+    private var weatherSection: some View {
+        if let weather = currentWeather {
+            WeatherSection(weather: weather)
+        } else if locationService.isLoading {
+            HStack(spacing: 12) {
+                ProgressView()
+                Text("Fetching weather…")
+                    .font(.subheadline)
+                    .foregroundColor(.secondary)
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .accessibilityIdentifier("weather_loading")
+        } else if let locationError = locationService.error {
+            HStack(spacing: 12) {
+                Image(systemName: "cloud.slash.fill")
+                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Weather unavailable")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text(locationError.localizedDescription)
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .accessibilityIdentifier("weather_error")
+        } else if !locationService.hasLocationPermission {
+            HStack(spacing: 12) {
+                Image(systemName: "location.slash.fill")
+                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("Weather unavailable")
+                        .font(.subheadline)
+                        .fontWeight(.medium)
+                    Text("Enable location access to see local weather.")
+                        .font(.caption)
+                        .foregroundColor(.secondary)
+                }
+            }
+            .padding()
+            .frame(maxWidth: .infinity, alignment: .leading)
+            .background(Color(.systemGray6))
+            .cornerRadius(12)
+            .accessibilityIdentifier("weather_no_permission")
         }
     }
 
