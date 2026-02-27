@@ -19,12 +19,17 @@ public enum GardenError: Error, LocalizedError {
 
 
 
-public enum JournalError: Error, LocalizedError {
+public enum ReminderRepositoryError: Error, LocalizedError {
     case notFound
     case saveFailed(Error)
 }
 
-public enum UserError: Error, LocalizedError {
+public enum JournalRepositoryError: Error, LocalizedError {
+    case notFound
+    case saveFailed(Error)
+}
+
+public enum UserRepositoryError: Error, LocalizedError {
     case notFound
     case saveFailed(Error)
 }

@@ -24,6 +24,15 @@ import os
     public var gardens: GardenRepository {
         GardenRepository(context: mainContext)
     }
+    public var reminders: ReminderRepository {
+        ReminderRepository(context: mainContext)
+    }
+    public var journals: JournalRepository {
+        JournalRepository(context: mainContext)
+    }
+    public var users: UserRepository {
+        UserRepository(context: mainContext)
+    }
 
     // Expose ModelContainer for background operations (e.g., PlantSeedingWorker)
     // Workers can create their own background ModelContext for safe concurrency
