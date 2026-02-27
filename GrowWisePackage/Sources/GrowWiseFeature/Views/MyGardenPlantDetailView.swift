@@ -535,7 +535,7 @@ struct PlantDetailView: View {
     private func deletePlant() {
         Task {
             do {
-                try dataService.deletePlant(plant)
+                try dataService.plants.delete(plant)
                 await MainActor.run {
                     dismiss()
                 }

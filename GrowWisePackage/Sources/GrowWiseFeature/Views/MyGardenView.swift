@@ -279,10 +279,10 @@ public struct MyGardenView: View {
         isLoading = true
         
         // Load gardens
-        gardens = dataService.fetchGardens()
+        gardens = (try? dataService.gardens.fetchAll()) ?? []
         
         // Load all user plants
-        plants = dataService.fetchPlants()
+        plants = (try? dataService.plants.fetchAll()) ?? []
         
         // Sort plants
         sortPlants()
@@ -468,7 +468,8 @@ struct CreateGardenSheet: View {
     private func saveGarden() async {
         isSaving = true
         do {
-            _ = try dataService.createGarden(name: name.trimmingCharacters(in: .whitespacesAndNewlines), type: type, isIndoor: isIndoor)
+            let garden = Garden(name: name.trimmingCharacters(in: .whitespacesAndNewlines), gardenType: type, isIndoor: isIndoor)
+            try dataService.gardens.add(garden)
             NotificationCenter.default.post(name: Notification.Name("GardenCreated"), object: nil)
             dismiss()
         } catch {
@@ -518,7 +519,7 @@ struct AssignGardenSheet: View {
     }
 
     private func load() {
-        gardens = dataService.fetchGardens()
+        gardens = (try? dataService.gardens.fetchAll()) ?? []
         selectedGarden = plant.garden
     }
 

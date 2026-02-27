@@ -196,7 +196,7 @@ public struct JournalView: View {
     // MARK: - Data Loading
     
     private func loadInitialData() {
-        plants = dataService.fetchPlants()
+        plants = (try? dataService.plants.fetchAll()) ?? []
         loadFilteredData(reset: true)
     }
     

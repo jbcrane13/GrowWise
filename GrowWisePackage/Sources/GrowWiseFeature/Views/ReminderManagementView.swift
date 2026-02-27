@@ -153,7 +153,7 @@ public struct ReminderManagementView: View {
             
             ReminderStatCard(
                 title: "Total Plants",
-                count: dataService.fetchPlants().count,
+                count: ((try? dataService.plants.fetchAll()) ?? []).count,
                 icon: "leaf.fill",
                 color: .green
             )
@@ -223,7 +223,7 @@ public struct ReminderManagementView: View {
     // MARK: - Helper Properties
     
     private var filteredPlants: [Plant] {
-        let plants = dataService.fetchPlants()
+        let plants = (try? dataService.plants.fetchAll()) ?? []
         
         if searchText.isEmpty {
             return plants

@@ -24,7 +24,7 @@ public struct AddReminderView: View {
     @State private var errorMessage: String?
     
     private var plants: [Plant] {
-        dataService.fetchPlants()
+        (try? dataService.plants.fetchAll()) ?? []
     }
     
     public init(reminderService: ReminderService, dataService: DataService) {

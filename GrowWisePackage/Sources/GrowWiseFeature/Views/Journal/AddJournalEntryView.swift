@@ -275,7 +275,7 @@ public struct AddJournalEntryView: View {
             }
             .navigationTitle("New Journal Entry")
             .task {
-                plants = dataService.fetchPlants().filter { $0.isUserPlant ?? false }
+                plants = (try? dataService.plants.fetchAll()) ?? [].filter { $0.isUserPlant ?? false }
             }
             .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {

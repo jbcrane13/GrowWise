@@ -178,7 +178,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
     }
     
     private func loadData() {
-        availableGardens = dataService.fetchGardens()
+        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
         if availableGardens.count == 1 {
             selectedGarden = availableGardens.first
         }
@@ -190,12 +190,10 @@ struct AddPlantToGardenFromDatabaseSheet: View {
         
         do {
             // Create a user instance of the database plant
-            let userPlant = try dataService.createPlant(
-                name: plant.name ?? "Unknown Plant",
-                type: plant.plantType ?? .houseplant,
-                difficultyLevel: plant.difficultyLevel ?? .beginner,
-                garden: selectedGarden
-            )
+            let newPlant = Plant(name: plant.name ?? "Unknown Plant", plantType: plant.plantType ?? .houseplant, difficultyLevel: plant.difficultyLevel ?? .beginner, isUserPlant: true)
+            newPlant.garden = selectedGarden
+            try dataService.plants.add(newPlant)
+            let userPlant = newPlant
             
             // Copy properties from database plant
             userPlant.scientificName = plant.scientificName

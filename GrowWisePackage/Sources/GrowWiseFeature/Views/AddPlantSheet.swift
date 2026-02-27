@@ -152,7 +152,7 @@ public struct AddPlantSheet: View {
     }
 
     private func loadGardens() {
-        availableGardens = dataService.fetchGardens()
+        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
     }
     
     private func updateCompatibilityAnalysis() {

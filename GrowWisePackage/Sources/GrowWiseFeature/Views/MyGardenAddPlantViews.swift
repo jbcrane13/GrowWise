@@ -368,7 +368,7 @@ struct AddPlantToGardenSheet: View {
     
     private func setupInitialState() {
         targetGarden = selectedGarden
-        availableGardens = dataService.fetchGardens()
+        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
     }
 
     private func updateCompatibilityAnalysis() {
@@ -436,12 +436,10 @@ struct AddPlantToGardenSheet: View {
             }
             
             // Create the plant using DataService
-            let plant = try dataService.createPlant(
-                name: plantName,
-                type: selectedPlantType,
-                difficultyLevel: selectedDifficultyLevel,
-                garden: selectedGarden ?? targetGarden
-            )
+            let newPlant = Plant(name: plantName, plantType: selectedPlantType, difficultyLevel: selectedDifficultyLevel, isUserPlant: true)
+            newPlant.garden = selectedGarden ?? targetGarden
+            try dataService.plants.add(newPlant)
+            let plant = newPlant
             
             // Update additional plant properties
             plant.scientificName = scientificName.isEmpty ? nil : scientificName
@@ -736,12 +734,10 @@ struct DatabasePlantCustomizationSheet: View {
     private func saveCustomizedPlant() async {
         do {
             // Create a new plant based on the database plant
-            let customizedPlant = try dataService.createPlant(
-                name: customPlantName,
-                type: plant.plantType ?? .vegetable,
-                difficultyLevel: plant.difficultyLevel ?? .beginner,
-                garden: targetGarden
-            )
+            let newPlant = Plant(name: customPlantName, plantType: plant.plantType ?? .vegetable, difficultyLevel: plant.difficultyLevel ?? .beginner, isUserPlant: true)
+            newPlant.garden = targetGarden
+            try dataService.plants.add(newPlant)
+            let customizedPlant = newPlant
             
             // Copy relevant properties from database plant
             customizedPlant.scientificName = customScientificName.isEmpty ? plant.scientificName : customScientificName
