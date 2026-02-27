@@ -800,56 +800,14 @@ import os
 
     // MARK: - Search and Filter
 
-    public func searchPlants(query: String) -> [Plant] {
-        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return []
-        }
-        
-        let cacheKey = "search_plants:query:\(query.lowercased())"
-        
-        // Check cache first
-        if let cachedPlants = cache.get(cacheKey, as: [Plant].self) {
-            return cachedPlants
-        }
-        
-        // Try to use a supported case-insensitive contains in #Predicate on newer OS versions
-        if #available(iOS 18.0, macOS 15.0, *), #available(tvOS 18.0, watchOS 11.0, *) {
-            var descriptor = FetchDescriptor<Plant>(
-                sortBy: [SortDescriptor(\.name)]
-            )
-            descriptor.fetchLimit = 20
-            // Use localizedStandardContains for improved search relevance
-            descriptor.predicate = #Predicate<Plant> { plant in
-                (plant.name?.localizedStandardContains(query) ?? false) ||
-                (plant.scientificName?.localizedStandardContains(query) ?? false)
-            }
-
-            let result = (try? modelContext.fetch(descriptor)) ?? []
-            cache.set(cacheKey, value: result, policy: .short)
-            return result
-        }
-
-        // Fallback for older OS versions: fetch and filter in-memory (case-insensitive)
-        var descriptor = FetchDescriptor<Plant>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        descriptor.fetchLimit = 200 // Reasonable upper bound for search
-
-        let allPlants = (try? modelContext.fetch(descriptor)) ?? []
-
-        // Filter in-memory with case-insensitive search
-        let lowercasedQuery = query.lowercased()
-        let result = allPlants.filter { plant in
-            plant.name?.lowercased().contains(lowercasedQuery) == true ||
-            plant.scientificName?.lowercased().contains(lowercasedQuery) == true
-        }.prefix(20) // Limit results
-
-        let limitedResult = Array(result)
-
-        // Search results use short TTL as user may add/modify plants
-        cache.set(cacheKey, value: limitedResult, policy: .short)
-
-        return limitedResult
+    public func searchPlants(query: String, limit: Int = 20) -> [Plant] {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedQuery.isEmpty { return [] }
+        let cacheKey = "plants:search:\(trimmedQuery):limit:\(limit)"
+        if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
+        let result = (try? plants.search(query: query, limit: limit)) ?? []
+        cache.set(cacheKey, value: result, policy: .short)
+        return result
     }
     
     public func filterPlants(
@@ -859,53 +817,14 @@ import os
         offset: Int = 0,
         limit: Int = 20
     ) -> [Plant] {
-        let noFilters = (type == nil && difficultyLevel == nil && sunlightRequirement == nil)
-
-        if noFilters {
-            var descriptor = FetchDescriptor<Plant>(sortBy: [SortDescriptor(\.name)])
-            descriptor.fetchLimit = min(limit, 50)
-            descriptor.fetchOffset = offset
-            return (try? modelContext.fetch(descriptor)) ?? []
-        }
-
-        // Build predicate safely without force unwrapping
-        let predicate: Predicate<Plant>
-
-        switch (type, difficultyLevel, sunlightRequirement) {
-        case (let t?, let d?, let s?):
-            predicate = #Predicate<Plant> { plant in
-                plant.plantType == t && plant.difficultyLevel == d && plant.sunlightRequirement == s
-            }
-        case (let t?, let d?, nil):
-            predicate = #Predicate<Plant> { plant in
-                plant.plantType == t && plant.difficultyLevel == d
-            }
-        case (let t?, nil, let s?):
-            predicate = #Predicate<Plant> { plant in
-                plant.plantType == t && plant.sunlightRequirement == s
-            }
-        case (nil, let d?, let s?):
-            predicate = #Predicate<Plant> { plant in
-                plant.difficultyLevel == d && plant.sunlightRequirement == s
-            }
-        case (let t?, nil, nil):
-            predicate = #Predicate<Plant> { plant in plant.plantType == t }
-        case (nil, let d?, nil):
-            predicate = #Predicate<Plant> { plant in plant.difficultyLevel == d }
-        case (nil, nil, let s?):
-            predicate = #Predicate<Plant> { plant in plant.sunlightRequirement == s }
-        default:
-            predicate = #Predicate<Plant> { _ in true }
-        }
-
-        var descriptor = FetchDescriptor<Plant>(
-            predicate: predicate,
-            sortBy: [SortDescriptor(\.name)]
-        )
-        descriptor.fetchLimit = min(limit, 50)
-        descriptor.fetchOffset = offset
-
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let typeKey = type?.rawValue ?? "all"
+        let diffKey = difficultyLevel?.rawValue ?? "all"
+        let sunKey = sunlightRequirement?.rawValue ?? "all"
+        let cacheKey = "plants:filter:\(typeKey):\(diffKey):\(sunKey):limit:\(limit):offset:\(offset)"
+        if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
+        let result = (try? plants.filter(byType: type, difficultyLevel: difficultyLevel, sunlightRequirement: sunlightRequirement, offset: offset, limit: limit)) ?? []
+        cache.set(cacheKey, value: result, policy: .medium)
+        return result
     }
     
     // MARK: - Statistics
