@@ -33,6 +33,9 @@ import os
     public var users: UserRepository {
         UserRepository(context: mainContext)
     }
+    public var stats: StatsRepository {
+        StatsRepository(context: mainContext)
+    }
 
     // Expose ModelContainer for background operations (e.g., PlantSeedingWorker)
     // Workers can create their own background ModelContext for safe concurrency
@@ -800,56 +803,14 @@ import os
 
     // MARK: - Search and Filter
 
-    public func searchPlants(query: String) -> [Plant] {
-        guard !query.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty else {
-            return []
-        }
-        
-        let cacheKey = "search_plants:query:\(query.lowercased())"
-        
-        // Check cache first
-        if let cachedPlants = cache.get(cacheKey, as: [Plant].self) {
-            return cachedPlants
-        }
-        
-        // Try to use a supported case-insensitive contains in #Predicate on newer OS versions
-        if #available(iOS 18.0, macOS 15.0, *), #available(tvOS 18.0, watchOS 11.0, *) {
-            var descriptor = FetchDescriptor<Plant>(
-                sortBy: [SortDescriptor(\.name)]
-            )
-            descriptor.fetchLimit = 20
-            // Use localizedStandardContains for improved search relevance
-            descriptor.predicate = #Predicate<Plant> { plant in
-                (plant.name?.localizedStandardContains(query) ?? false) ||
-                (plant.scientificName?.localizedStandardContains(query) ?? false)
-            }
-
-            let result = (try? modelContext.fetch(descriptor)) ?? []
-            cache.set(cacheKey, value: result, policy: .short)
-            return result
-        }
-
-        // Fallback for older OS versions: fetch and filter in-memory (case-insensitive)
-        var descriptor = FetchDescriptor<Plant>(
-            sortBy: [SortDescriptor(\.name)]
-        )
-        descriptor.fetchLimit = 200 // Reasonable upper bound for search
-
-        let allPlants = (try? modelContext.fetch(descriptor)) ?? []
-
-        // Filter in-memory with case-insensitive search
-        let lowercasedQuery = query.lowercased()
-        let result = allPlants.filter { plant in
-            plant.name?.lowercased().contains(lowercasedQuery) == true ||
-            plant.scientificName?.lowercased().contains(lowercasedQuery) == true
-        }.prefix(20) // Limit results
-
-        let limitedResult = Array(result)
-
-        // Search results use short TTL as user may add/modify plants
-        cache.set(cacheKey, value: limitedResult, policy: .short)
-
-        return limitedResult
+    public func searchPlants(query: String, limit: Int = 20) -> [Plant] {
+        let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
+        if trimmedQuery.isEmpty { return [] }
+        let cacheKey = "plants:search:\(trimmedQuery):limit:\(limit)"
+        if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
+        let result = (try? plants.search(query: query, limit: limit)) ?? []
+        cache.set(cacheKey, value: result, policy: .short)
+        return result
     }
     
     public func filterPlants(
@@ -859,185 +820,88 @@ import os
         offset: Int = 0,
         limit: Int = 20
     ) -> [Plant] {
-        let noFilters = (type == nil && difficultyLevel == nil && sunlightRequirement == nil)
-
-        if noFilters {
-            var descriptor = FetchDescriptor<Plant>(sortBy: [SortDescriptor(\.name)])
-            descriptor.fetchLimit = min(limit, 50)
-            descriptor.fetchOffset = offset
-            return (try? modelContext.fetch(descriptor)) ?? []
-        }
-
-        // Build predicate safely without force unwrapping
-        let predicate: Predicate<Plant>
-
-        switch (type, difficultyLevel, sunlightRequirement) {
-        case (let t?, let d?, let s?):
-            predicate = #Predicate<Plant> { plant in
-                plant.plantType == t && plant.difficultyLevel == d && plant.sunlightRequirement == s
-            }
-        case (let t?, let d?, nil):
-            predicate = #Predicate<Plant> { plant in
-                plant.plantType == t && plant.difficultyLevel == d
-            }
-        case (let t?, nil, let s?):
-            predicate = #Predicate<Plant> { plant in
-                plant.plantType == t && plant.sunlightRequirement == s
-            }
-        case (nil, let d?, let s?):
-            predicate = #Predicate<Plant> { plant in
-                plant.difficultyLevel == d && plant.sunlightRequirement == s
-            }
-        case (let t?, nil, nil):
-            predicate = #Predicate<Plant> { plant in plant.plantType == t }
-        case (nil, let d?, nil):
-            predicate = #Predicate<Plant> { plant in plant.difficultyLevel == d }
-        case (nil, nil, let s?):
-            predicate = #Predicate<Plant> { plant in plant.sunlightRequirement == s }
-        default:
-            predicate = #Predicate<Plant> { _ in true }
-        }
-
-        var descriptor = FetchDescriptor<Plant>(
-            predicate: predicate,
-            sortBy: [SortDescriptor(\.name)]
-        )
-        descriptor.fetchLimit = min(limit, 50)
-        descriptor.fetchOffset = offset
-
-        return (try? modelContext.fetch(descriptor)) ?? []
+        let typeKey = type?.rawValue ?? "all"
+        let diffKey = difficultyLevel?.rawValue ?? "all"
+        let sunKey = sunlightRequirement?.rawValue ?? "all"
+        let cacheKey = "plants:filter:\(typeKey):\(diffKey):\(sunKey):limit:\(limit):offset:\(offset)"
+        if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
+        let result = (try? plants.filter(byType: type, difficultyLevel: difficultyLevel, sunlightRequirement: sunlightRequirement, offset: offset, limit: limit)) ?? []
+        cache.set(cacheKey, value: result, policy: .medium)
+        return result
     }
     
-    // MARK: - Statistics
+            // MARK: - Statistics
 
     public func getGardeningStats() -> GardeningStats {
-        // Use efficient count queries instead of loading all records
+        let cacheKey = "stats:gardening_summary"
+        if let cached = cache.get(cacheKey, as: GardeningStats.self) {
+            return cached
+        }
+        
         let totalPlants = getPlantCount()
-        // Using limited samples for performance - full counts would require separate count queries
-        let plants = fetchPlants(offset: 0, limit: 50) // Sample for health calculation
-        let healthyPlants = plants.reduce(0) { $0 + ($1.healthStatus == .healthy ? 1 : 0) }
-        let healthPercentage = totalPlants > 0 ? Double(healthyPlants) / Double(min(plants.count, totalPlants)) : 0
+        var healthyPlants = 0
+        
+        let allPlants = (try? plants.fetchAll()) ?? []
+        for plant in allPlants {
+            if plant.healthStatus == .healthy { healthyPlants += 1 }
+        }
+        
         let activeReminders = getReminderCount(activeOnly: true)
-        let journalEntries = getJournalEntryCount()
-
-        return GardeningStats(
+        let totalJournalEntries = getJournalEntryCount()
+        
+        let gardeningStats = GardeningStats(
             totalPlants: totalPlants,
-            healthyPlants: Int(Double(totalPlants) * healthPercentage),
+            healthyPlants: healthyPlants,
             activeReminders: activeReminders,
-            totalJournalEntries: journalEntries
+            totalJournalEntries: totalJournalEntries
         )
+        
+        cache.set(cacheKey, value: gardeningStats, policy: .medium)
+        return gardeningStats
     }
-
-    // MARK: - Efficient Count Queries
-    // These methods use fetchCount() instead of loading all records, significantly reducing memory usage
 
     public func getPlantCount(for garden: Garden? = nil) -> Int {
-        var descriptor = FetchDescriptor<Plant>()
-
-        if let garden = garden {
-            let gardenId = garden.id
-            descriptor.predicate = #Predicate<Plant> { plant in
-                plant.garden?.id == gardenId
-            }
-        }
-
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
-    }
-
-    public func getGardenCount() -> Int {
-        let descriptor = FetchDescriptor<Garden>()
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
-    }
-
-    public func getReminderCount(activeOnly: Bool = false) -> Int {
-        var descriptor = FetchDescriptor<PlantReminder>()
-
-        if activeOnly {
-            let currentDate = Date()
-            descriptor.predicate = #Predicate<PlantReminder> { reminder in
-                reminder.isEnabled == true && reminder.nextDueDate > currentDate
-            }
-        }
-
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
-    }
-
-    public func getJournalEntryCount(for plant: Plant? = nil) -> Int {
-        var descriptor = FetchDescriptor<JournalEntry>()
-
-        if let plant = plant, let plantId = plant.id {
-            descriptor.predicate = #Predicate<JournalEntry> { entry in
-                entry.plant?.id == plantId
-            }
-        }
-
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
-    }
-
-    public func getPlantDatabaseCount() -> Int {
-        let descriptor = FetchDescriptor<Plant>(
-            predicate: #Predicate<Plant> { plant in
-                plant.garden == nil || plant.garden?.user == nil // Database plants with no garden or no user
-            }
-        )
-        return (try? modelContext.fetchCount(descriptor)) ?? 0
+        let cacheKey = "stats:count:plants:\(garden?.id?.uuidString ?? "all")"
+        if let count = cache.get(cacheKey, as: Int.self) { return count }
+        let count = stats.getPlantCount(for: garden)
+        cache.set(cacheKey, value: count, policy: .long)
+        return count
     }
     
+    public func getGardenCount() -> Int {
+        let cacheKey = "stats:count:gardens"
+        if let count = cache.get(cacheKey, as: Int.self) { return count }
+        let count = stats.getGardenCount()
+        cache.set(cacheKey, value: count, policy: .long)
+        return count
+    }
+    
+    public func getReminderCount(activeOnly: Bool = false) -> Int {
+        let cacheKey = "stats:count:reminders:\(activeOnly)"
+        if let count = cache.get(cacheKey, as: Int.self) { return count }
+        let count = stats.getReminderCount(activeOnly: activeOnly)
+        cache.set(cacheKey, value: count, policy: .long)
+        return count
+    }
+    
+    public func getJournalEntryCount(for plant: Plant? = nil) -> Int {
+        let cacheKey = "stats:count:journals:\(plant?.id?.uuidString ?? "all")"
+        if let count = cache.get(cacheKey, as: Int.self) { return count }
+        let count = stats.getJournalEntryCount(for: plant)
+        cache.set(cacheKey, value: count, policy: .long)
+        return count
+    }
+    
+    public func getPlantDatabaseCount() -> Int {
+        let cacheKey = "stats:count:plantdatabase"
+        if let count = cache.get(cacheKey, as: Int.self) { return count }
+        let count = stats.getPlantDatabaseCount()
+        cache.set(cacheKey, value: count, policy: .long)
+        return count
+    }
+
     // MARK: - Data Export/Import
 
-    // TODO: PLACEHOLDER - Current implementation exports only summary counts
-    // This is a minimal placeholder implementation that needs to be expanded for production use.
-    //
-    // REQUIRED IMPLEMENTATION PLAN:
-    // 1. Full Entity Export:
-    //    - Export complete User profile with all attributes
-    //    - Export all Gardens with full details (name, location, zones, creation date, etc.)
-    //    - Export all Plants with complete data (species, health status, watering schedule, etc.)
-    //    - Export all PlantReminders with full configuration and history
-    //    - Export all JournalEntries with text, photos, timestamps, and metadata
-    //
-    // 2. Pagination Support:
-    //    - Implement chunked export for large datasets (e.g., 100 entities per batch)
-    //    - Add pagination parameters to prevent memory issues with thousands of records
-    //    - Support streaming export for very large data sets
-    //    - Include progress reporting for UI feedback during long exports
-    //
-    // 3. Error Handling:
-    //    - Implement graceful degradation if individual entities fail to serialize
-    //    - Add validation to ensure data integrity before export
-    //    - Handle partial export scenarios (e.g., some entities succeed, others fail)
-    //    - Log detailed error information for debugging failed exports
-    //    - Support retry logic for transient failures
-    //
-    // 4. Data Relationships:
-    //    - Preserve all relationships between entities (Garden -> Plants, Plant -> Reminders, etc.)
-    //    - Include foreign keys or relationship identifiers in exported data
-    //    - Ensure referential integrity in exported data structure
-    //
-    // 5. Export Format:
-    //    - Use versioned export format to support future schema changes
-    //    - Include metadata: export timestamp, app version, schema version
-    //    - Support both JSON and compressed formats for large exports
-    //    - Consider encryption for sensitive user data
-    //
-    // 6. Use Cases to Support:
-    //    - Complete backup for disaster recovery
-    //    - Data transfer to new device
-    //    - Account migration between users
-    //    - Compliance with data portability regulations (GDPR, etc.)
-    //    - Debugging and support scenarios
-    //
-    // EXAMPLE FULL IMPLEMENTATION STRUCTURE:
-    // struct FullUserDataExport: Codable {
-    //     let version: String
-    //     let exportDate: Date
-    //     let user: UserExport
-    //     let gardens: [GardenExport]
-    //     let plants: [PlantExport]
-    //     let reminders: [ReminderExport]
-    //     let journalEntries: [JournalEntryExport]
-    //     let relationships: [EntityRelationship]
-    // }
     public func exportUserData() async throws -> Data {
         // Implementation for exporting user data for backup/transfer
         // This would serialize all user data to JSON
