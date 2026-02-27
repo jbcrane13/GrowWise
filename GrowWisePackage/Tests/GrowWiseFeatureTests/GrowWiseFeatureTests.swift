@@ -6,12 +6,6 @@ import SwiftUI
 @Suite("GrowWise Feature Tests")
 struct GrowWiseFeatureTests {
     
-    @Test("ContentView loads successfully")
-    @MainActor func testContentViewLoads() async throws {
-        // Test that ContentView can be instantiated without errors
-        let contentView = ContentView()
-        #expect(contentView.self != nil)
-    }
     
     @Test("MainAppView loads successfully") 
     @MainActor func testMainAppViewLoads() async throws {
@@ -62,14 +56,12 @@ struct GrowWiseFeatureTests {
         // Test that views render quickly
         let startTime = CFAbsoluteTimeGetCurrent()
         
-        let contentView = ContentView()
         let mainAppView = MainAppView()
         let onboardingView = OnboardingView()
         
         let endTime = CFAbsoluteTimeGetCurrent()
         let renderTime = endTime - startTime
         
-        #expect(contentView.self != nil)
         #expect(mainAppView.self != nil)
         #expect(onboardingView.self != nil)
         
