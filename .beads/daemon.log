@@ -1,0 +1,47 @@
+time=2026-02-12T00:48:55.923-06:00 level=INFO msg="Daemon started" interval=5s auto_commit=false auto_push=false
+time=2026-02-12T00:48:55.924-06:00 level=INFO msg="using database" path=/Users/blake/Projects/GrowWise/.beads/beads.db
+time=2026-02-12T00:48:55.944-06:00 level=INFO msg="database opened" path=/Users/blake/Projects/GrowWise/.beads/beads.db backend=sqlite freshness_checking=true
+time=2026-02-12T00:48:55.944-06:00 level=INFO msg="upgrading .beads/.gitignore"
+time=2026-02-12T00:48:55.944-06:00 level=WARN msg="failed to upgrade .gitignore" error="open .beads/.gitignore: no such file or directory"
+time=2026-02-12T00:48:55.954-06:00 level=INFO msg="Repository fingerprint validated" repo_id=b2ab71e8
+time=2026-02-12T00:48:55.955-06:00 level=INFO msg="starting RPC server" socket=/Users/blake/Projects/GrowWise/.beads/bd.sock
+time=2026-02-12T00:48:55.955-06:00 level=INFO msg="RPC server ready (socket listening)"
+time=2026-02-12T00:48:55.961-06:00 level=INFO msg="registered in global registry"
+time=2026-02-12T00:48:55.961-06:00 level=WARN msg="initial import failed (continuing anyway)" error="failed to open JSONL: open /Users/blake/Projects/GrowWise/.beads/issues.jsonl: no such file or directory"
+time=2026-02-12T00:48:55.961-06:00 level=INFO msg="Starting sync cycle" mode="sync cycle"
+time=2026-02-12T00:48:55.962-06:00 level=INFO msg="Exported to JSONL"
+time=2026-02-12T00:48:56.257-06:00 level=INFO msg="Pulled from remote"
+time=2026-02-12T00:48:56.275-06:00 level=INFO msg="Imported from JSONL"
+time=2026-02-12T00:48:56.290-06:00 level=INFO msg="Sync cycle complete"
+time=2026-02-12T00:48:56.290-06:00 level=INFO msg="monitoring parent process" pid=0
+time=2026-02-12T00:48:56.290-06:00 level=INFO msg="using event-driven mode"
+time=2026-02-12T00:48:56.290-06:00 level=INFO msg="Auto-pull disabled: use 'git pull' manually to sync remote changes"
+time=2026-02-15T16:17:53.718-06:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-15T16:17:53.770-06:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-15T16:17:53.771-06:00 level=INFO msg="JSONL file created" path=/Users/blake/Projects/GrowWise/.beads/issues.jsonl
+time=2026-02-15T16:17:54.773-06:00 level=INFO msg="Import triggered by file change"
+time=2026-02-15T16:17:54.774-06:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-15T16:17:56.638-06:00 level=INFO msg="Pull failed" error="git pull failed: exit status 128\nFrom https://github.com/jbcrane13/GrowWise\n * branch            master     -> FETCH_HEAD\nhint: You have divergent branches and need to specify how to reconcile them.\nhint: You can do so by running one of the following commands sometime before\nhint: your next pull:\nhint:\nhint:   git config pull.rebase false  # merge\nhint:   git config pull.rebase true   # rebase\nhint:   git config pull.ff only       # fast-forward only\nhint:\nhint: You can replace \"git config\" with \"git config --global\" to set a default\nhint: preference for all repositories. You can also pass --rebase, --no-rebase,\nhint: or --ff-only on the command line to override the configured default per\nhint: invocation.\nfatal: Need to specify how to reconcile divergent branches.\n" backoff=30s
+time=2026-02-15T16:18:01.936-06:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-15T16:18:01.988-06:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-15T16:18:01.989-06:00 level=INFO msg="Git HEAD change detected" path=/Users/blake/Projects/GrowWise/.git/HEAD
+time=2026-02-15T16:18:01.989-06:00 level=INFO msg="JSONL file created" path=/Users/blake/Projects/GrowWise/.beads/issues.jsonl
+time=2026-02-15T16:18:02.991-06:00 level=INFO msg="Import triggered by file change"
+time=2026-02-15T16:18:02.992-06:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-15T16:18:05.023-06:00 level=INFO msg="Git HEAD change detected" path=/Users/blake/Projects/GrowWise/.git/HEAD
+time=2026-02-15T16:18:06.026-06:00 level=INFO msg="Import triggered by file change"
+time=2026-02-15T16:18:06.026-06:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-15T16:18:10.182-06:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-15T16:18:10.233-06:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-15T16:18:10.233-06:00 level=INFO msg="JSONL file created" path=/Users/blake/Projects/GrowWise/.beads/issues.jsonl
+time=2026-02-15T16:18:11.234-06:00 level=INFO msg="Import triggered by file change"
+time=2026-02-15T16:18:11.235-06:00 level=INFO msg="Skipping: in backoff period" mode=auto-import
+time=2026-02-15T16:18:45.165-06:00 level=INFO msg="JSONL removed/renamed, re-establishing watch"
+time=2026-02-15T16:18:45.216-06:00 level=INFO msg="Successfully re-established JSONL watch" delay=50ms
+time=2026-02-15T16:18:45.216-06:00 level=INFO msg="JSONL file created" path=/Users/blake/Projects/GrowWise/.beads/issues.jsonl
+time=2026-02-15T16:18:46.218-06:00 level=INFO msg="Import triggered by file change"
+time=2026-02-15T16:18:46.219-06:00 level=INFO msg="Starting auto-import" mode=auto-import
+time=2026-02-15T16:18:46.614-06:00 level=INFO msg="Pulled from remote"
+time=2026-02-15T16:18:46.614-06:00 level=INFO msg="🔍 Checking JSONL content hash AFTER pull (fix: auto-pull-not-pulling)"
+time=2026-02-15T16:18:46.614-06:00 level=INFO msg="Skipping: JSONL content unchanged" mode=auto-import
+time=2026-02-15T19:36:32.490-06:00 level=INFO msg="Received signal, shutting down..." signal=terminated

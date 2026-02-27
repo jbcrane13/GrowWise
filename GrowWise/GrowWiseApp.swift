@@ -40,7 +40,7 @@ struct CultivationApp: App {
 
         if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
             // Initialize security/encryption early to avoid compliance blocks
-            GrowWiseApp.ensureEncryptionReady()
+            CultivationApp.ensureEncryptionReady()
 
             // Initialize authentication services with proper dependency injection
             Task { @MainActor in
