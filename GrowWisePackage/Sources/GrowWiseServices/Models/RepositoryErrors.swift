@@ -17,10 +17,7 @@ public enum GardenError: Error, LocalizedError {
     case saveFailed(Error)
 }
 
-public enum ReminderError: Error, LocalizedError {
-    case notFound
-    case saveFailed(Error)
-}
+
 
 public enum JournalError: Error, LocalizedError {
     case notFound

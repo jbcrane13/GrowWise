@@ -10,8 +10,19 @@ import os
 @MainActor
 @Observable public final class DataService {
     private let modelContainer: ModelContainer
-    private var modelContext: ModelContext {
+    public var mainContext: ModelContext {
         modelContainer.mainContext
+    }
+    private var modelContext: ModelContext {
+        mainContext
+    }
+
+    // Domain Repositories
+    public var plants: PlantRepository {
+        PlantRepository(context: mainContext)
+    }
+    public var gardens: GardenRepository {
+        GardenRepository(context: mainContext)
     }
 
     // Expose ModelContainer for background operations (e.g., PlantSeedingWorker)
