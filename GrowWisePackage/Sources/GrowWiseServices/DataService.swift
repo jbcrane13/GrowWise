@@ -52,21 +52,12 @@ import os
     // Logger for initialization tracking
     private let logger = Logger(subsystem: "com.growwise.dataservice", category: "Initialization")
 
-    // Performance monitor instance
-    private let performanceMonitor: PerformanceMonitor
-
     // Privacy annotation helper for internal telemetry
     // Removed static property to avoid @MainActor isolation issues - use .private inline
 
     // Legacy synchronous initialization - prefer createAsync() for better performance
-    public init(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) throws {
-        self.performanceMonitor = performanceMonitor
-        
+    public init() throws {
         let initStartTime = CFAbsoluteTimeGetCurrent()
-        let memoryBefore = performanceMonitor.currentMemoryUsage
-
-        logger.info("[DataService] Memory before init: \(memoryBefore, privacy: .private)MB")
-        logger.info("[DataService] Pressure: \(String(describing: performanceMonitor.memoryPressureLevel), privacy: .private)")
 
         // Configure SwiftData model container without CloudKit for testing
         let schema = Schema([
@@ -112,25 +103,13 @@ import os
         validateStorageConfiguration()
         logger.info("[DataService] Storage validated: persistent=true, allowsSave=true")
 
-        let memoryAfter = performanceMonitor.currentMemoryUsage
-        let memoryDelta = memoryAfter - memoryBefore
         let duration = CFAbsoluteTimeGetCurrent() - initStartTime
-
-        logger.info("[DataService] Memory after init: \(memoryAfter, privacy: .private)MB (delta: \(memoryDelta, privacy: .private)MB)")
         logger.info("[DataService] Initialization completed in \(duration, privacy: .private)s")
-
-        if duration > 0.5 {
-            logger.warning("[DataService] ⚠️ Slow initialization: \(duration, privacy: .private)s > 500ms")
-        }
-
-        if memoryDelta > 10 {
-            logger.warning("[DataService] ⚠️ High memory delta: \(memoryDelta, privacy: .private)MB > 10MB")
-        }
     }
-    
+
     /// True async initialization that moves heavy work off main thread
     /// Moves ModelContainer creation to background thread for better startup performance
-    public static func createAsync(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) async throws -> DataService {
+    public static func createAsync() async throws -> DataService {
         let logger = Logger(subsystem: "com.growwise.dataservice", category: "Initialization")
 
         // Use in-memory store during UI test runs to avoid schema migration crashes
@@ -139,16 +118,9 @@ import os
 
         logger.info("[DataService] Starting async initialization on background thread (inMemory=\(isUITesting, privacy: .public))")
 
-        // Capture main-actor values before detaching
-        let memoryBefore = await MainActor.run { performanceMonitor.currentMemoryUsage }
-
         // Create ModelContainer on background thread using Task.detached
         let container = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<ModelContainer, Error>) in
             Task.detached(priority: .userInitiated) {
-                let initStartTime = CFAbsoluteTimeGetCurrent()
-
-                logger.info("[DataService] Background thread: Memory before init: \(memoryBefore, privacy: .private)MB")
-
                 do {
                     // Create schema
                     let schema = Schema([
@@ -184,22 +156,6 @@ import os
                         configurations: [modelConfiguration]
                     )
 
-                    // Capture memory after on main actor
-                    let memoryAfter = await MainActor.run { performanceMonitor.currentMemoryUsage }
-                    let memoryDelta = memoryAfter - memoryBefore
-                    let duration = CFAbsoluteTimeGetCurrent() - initStartTime
-
-                    logger.info("[DataService] Background thread: Memory after init: \(memoryAfter, privacy: .private)MB (delta: \(memoryDelta, privacy: .private)MB)")
-                    logger.info("[DataService] Background thread: Initialization completed in \(duration, privacy: .private)s")
-
-                    if duration > 0.5 {
-                        logger.warning("[DataService] ⚠️ Slow initialization: \(duration, privacy: .private)s > 500ms")
-                    }
-
-                    if memoryDelta > 10 {
-                        logger.warning("[DataService] ⚠️ High memory delta: \(memoryDelta, privacy: .private)MB > 10MB")
-                    }
-
                     continuation.resume(returning: container)
                 } catch {
                     logger.error("[DataService] Background initialization failed: \(error.localizedDescription, privacy: .public)")
@@ -210,7 +166,7 @@ import os
 
         // Return to MainActor for final DataService creation
         return await MainActor.run {
-            let service = DataService.__allocating_init_minimal(container: container, performanceMonitor: performanceMonitor)
+            let service = DataService.__allocating_init_minimal(container: container)
             service.validateStorageConfiguration()
             logger.info("[DataService] Async initialization complete - service created on MainActor")
             return service
@@ -230,57 +186,52 @@ import os
     }
     
     /// Creates a fallback DataService instance with minimal functionality to prevent app crashes
-    public static func createFallback(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) -> DataService {
+    public static func createFallback() -> DataService {
         let logger = Logger(subsystem: "com.growwise.dataservice", category: "Fallback")
-        let memoryBefore = performanceMonitor.currentMemoryUsage
 
-        logger.warning("[Fallback] Creating fallback DataService - Memory: \(memoryBefore, privacy: .private)MB")
+        logger.warning("[Fallback] Creating fallback DataService")
 
         // Create a truly minimal DataService that won't crash
         do {
-            let fallback = try createFallbackOrThrow(performanceMonitor: performanceMonitor)
+            let fallback = try createFallbackOrThrow()
             logger.info("[Fallback] Fallback DataService created successfully (in-memory)")
             return fallback
         } catch {
             // Final fallback - log error but return a stub service to prevent crashes
             logger.critical("CRITICAL: Cannot create fallback DataService: \(error.localizedDescription, privacy: .public)")
             logger.critical("Creating emergency stub service to prevent app crash")
-            return DataService.__allocating_init_emergency_stub(performanceMonitor: performanceMonitor)
+            return DataService.__allocating_init_emergency_stub()
         }
     }
-    
+
     /// Private minimal initializer for fallback
-    private init(minimal container: ModelContainer, performanceMonitor: PerformanceMonitor) {
+    private init(minimal container: ModelContainer) {
         self.modelContainer = container
         self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
-        self.performanceMonitor = performanceMonitor
     }
 
     /// Private initializer that accepts an explicit (possibly nil) CloudKit container.
     /// Used by `makeForTesting()` to avoid CKContainer.default() crashing in swift test.
-    private init(testing container: ModelContainer, cloudContainer: CKContainer?, performanceMonitor: PerformanceMonitor) {
+    private init(testing container: ModelContainer, cloudContainer: CKContainer?) {
         self.modelContainer = container
         self.cloudContainer = cloudContainer
-        self.performanceMonitor = performanceMonitor
     }
 
     /// Static factory method for minimal DataService
-    private static func __allocating_init_minimal(container: ModelContainer, performanceMonitor: PerformanceMonitor) -> DataService {
-        return DataService(minimal: container, performanceMonitor: performanceMonitor)
+    private static func __allocating_init_minimal(container: ModelContainer) -> DataService {
+        return DataService(minimal: container)
     }
-    
-    /// Emergency stub service that does nothing but prevents crashes
-    private static func __allocating_init_emergency_stub(performanceMonitor: PerformanceMonitor) -> DataService {
-        return DataService(emergencyStub: true, performanceMonitor: performanceMonitor)
-    }
-    
-    /// Emergency stub initializer
-    private init(emergencyStub: Bool, performanceMonitor: PerformanceMonitor) {
-        self.performanceMonitor = performanceMonitor
-        let logger = Logger(subsystem: "com.growwise.dataservice", category: "Emergency")
-        let memoryState = performanceMonitor.currentMemoryUsage
 
-        logger.critical("[Emergency] Creating emergency stub - Memory: \(memoryState, privacy: .private)MB")
+    /// Emergency stub service that does nothing but prevents crashes
+    private static func __allocating_init_emergency_stub() -> DataService {
+        return DataService(emergencyStub: true)
+    }
+
+    /// Emergency stub initializer
+    private init(emergencyStub: Bool) {
+        let logger = Logger(subsystem: "com.growwise.dataservice", category: "Emergency")
+
+        logger.critical("[Emergency] Creating emergency stub")
 
         // This is an emergency stub to prevent app crashes
         self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
@@ -1115,7 +1066,7 @@ public enum DataServiceError: Error, LocalizedError {
 
 extension DataService {
     /// A throwing variant of `createFallback()` so callers that can handle errors don't have to rely on emergency stubs.
-    public static func createFallbackOrThrow(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) throws -> DataService {
+    public static func createFallbackOrThrow() throws -> DataService {
         do {
             let schema = Schema([User.self])
             let modelConfiguration = ModelConfiguration(
@@ -1126,7 +1077,7 @@ extension DataService {
                 for: schema,
                 configurations: [modelConfiguration]
             )
-            return DataService.__allocating_init_minimal(container: container, performanceMonitor: performanceMonitor)
+            return DataService.__allocating_init_minimal(container: container)
         } catch {
             throw DataServiceError.criticalInitializationFailure("Cannot create fallback DataService: \(error)")
         }
@@ -1135,13 +1086,12 @@ extension DataService {
     /// Creates a fully-schema'd in-memory DataService for unit and integration tests.
     ///
     /// Includes all production models (Plant, Garden, User, PlantReminder, JournalEntry,
-    /// SoilLog, ReminderSettings) and does **not** initialise a CloudKit container, making
+    /// SoilLog) and does **not** initialise a CloudKit container, making
     /// it safe to call from `swift test` without app entitlements.
     ///
-    /// - Parameter performanceMonitor: Optional monitor; defaults to a fresh instance.
     /// - Returns: A DataService backed by an in-memory SQLite store.
     /// - Throws: `DataServiceError.criticalInitializationFailure` if the container cannot be created.
-    public static func makeForTesting(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) throws -> DataService {
+    public static func makeForTesting() throws -> DataService {
         let schema = Schema([
             Plant.self,
             Garden.self,
@@ -1156,7 +1106,7 @@ extension DataService {
         )
         do {
             let container = try ModelContainer(for: schema, configurations: [modelConfiguration])
-            return DataService(testing: container, cloudContainer: nil, performanceMonitor: performanceMonitor)
+            return DataService(testing: container, cloudContainer: nil)
         } catch {
             throw DataServiceError.criticalInitializationFailure("Cannot create test DataService: \(error)")
         }

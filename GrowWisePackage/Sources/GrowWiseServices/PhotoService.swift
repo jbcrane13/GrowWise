@@ -306,13 +306,13 @@ import GrowWiseModels
         await Task.detached(priority: .background) { @Sendable in
             // Get existing photos without capturing self
             let key = "plant_photos_\(plantId.uuidString)"
-            let existingData = try? KeychainManager.shared.retrieve(for: key)
+            let existingData = try? KeychainService.shared.retrieve(for: key)
             var existingPhotos = (try? JSONDecoder().decode([PlantPhoto].self, from: existingData ?? Data())) ?? []
             existingPhotos.append(photo)
             
             if let encodedData = try? JSONEncoder().encode(existingPhotos) {
                 await MainActor.run {
-                    try? KeychainManager.shared.store(encodedData, for: key)
+                    try? KeychainService.shared.store(encodedData, for: key)
                 }
             }
         }.value
@@ -320,7 +320,7 @@ import GrowWiseModels
     
     private func getAllPhotosMetadata(for plantId: UUID) async -> [PlantPhoto] {
         let key = "plant_photos_\(plantId.uuidString)"
-        guard let data = try? KeychainManager.shared.retrieve(for: key),
+        guard let data = try? KeychainService.shared.retrieve(for: key),
               let photos = try? JSONDecoder().decode([PlantPhoto].self, from: data) else {
             return []
         }
@@ -333,13 +333,13 @@ import GrowWiseModels
         
         let key = "plant_photos_\(photo.plantId.uuidString)"
         if let encodedData = try? JSONEncoder().encode(existingPhotos) {
-            try? KeychainManager.shared.store(encodedData, for: key)
+            try? KeychainService.shared.store(encodedData, for: key)
         }
     }
     
     private func removeAllPhotoMetadata(for plantId: UUID) async {
         let key = "plant_photos_\(plantId.uuidString)"
-        try? KeychainManager.shared.delete(for: key)
+        try? KeychainService.shared.delete(for: key)
     }
     
     // MARK: - Storage Statistics
