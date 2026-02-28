@@ -22,7 +22,10 @@ public final class Garden {
     public var layout: String?
     
     // Relationships
+    @Relationship(deleteRule: .cascade, inverse: \Plant.garden)
     public var plants: [Plant]? = []
+    
+    public var soilLogs: [SoilLog]? = []
     public var user: User?
     
     // Metadata
