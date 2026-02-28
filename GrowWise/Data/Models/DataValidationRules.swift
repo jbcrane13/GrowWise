@@ -485,9 +485,8 @@ enum DataValidationRules {
     @MainActor
     static func validateAllEntitiesPaginated(in context: ModelContext, batchSize: Int = 50) async -> [String: [ValidationResult]] {
         var results: [String: [ValidationResult]] = [:]
-        let performanceMonitor = PerformanceMonitor()
-        let memoryBefore = performanceMonitor.currentMemoryUsage
-        print("Starting paginated validation - Memory: \(memoryBefore)MB")
+        let memoryBefore = Double(ProcessInfo.processInfo.physicalMemory) / 1_048_576
+        print("Starting paginated validation - Memory: \(Int(memoryBefore))MB")
 
         do {
             // Validate users in batches
@@ -533,12 +532,12 @@ enum DataValidationRules {
             print("Error in paginated validation: \(error)")
         }
 
-        let memoryAfter = performanceMonitor.currentMemoryUsage
+        let memoryAfter = Double(ProcessInfo.processInfo.physicalMemory) / 1_048_576
         let memoryDelta = memoryAfter - memoryBefore
-        print("Validation memory usage: \(memoryDelta)MB")
+        print("Validation memory usage: \(Int(memoryDelta))MB")
 
         if memoryDelta > 10 {
-            print("⚠️ High memory usage during validation: \(memoryDelta)MB")
+            print("⚠️ High memory usage during validation: \(Int(memoryDelta))MB")
         }
 
         return results
