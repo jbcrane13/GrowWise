@@ -171,9 +171,9 @@ public final class AnalyticsService {
                 apiKey: resolvedKey,
                 flushQueueSize: 30,
                 flushIntervalMillis: 30000,
+                logLevel: isDevelopment ? .debug : .warn,
                 flushEventsOnClose: true,
-                autocapture: [.sessions, .appLifecycles],
-                logLevel: isDevelopment ? .debug : .warn
+                autocapture: [.sessions, .appLifecycles]
             )
         )
 

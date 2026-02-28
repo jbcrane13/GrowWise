@@ -63,7 +63,7 @@ public final class ObservabilityService {
     /// Sets an anonymous user identifier for grouping errors by user.
     /// Never pass real names, emails, or device identifiers.
     public func setAnonymousUser(stableID: String, subscriptionTier: String) {
-        let user = SentrySDK.currentHub().scope.user ?? User()
+        let user = User()
         user.userId = stableID // Opaque UUID — not linked to real identity
         user.data = ["subscription_tier": subscriptionTier]
         SentrySDK.setUser(user)
@@ -124,7 +124,7 @@ public final class ObservabilityService {
     // MARK: - Performance Tracing
 
     /// Start a performance transaction for a user-visible operation.
-    public func startTransaction(name: String, operation: String) -> any SentrySpan {
+    public func startTransaction(name: String, operation: String) -> any Span {
         SentrySDK.startTransaction(name: name, operation: operation)
     }
 
