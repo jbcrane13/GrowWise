@@ -80,8 +80,8 @@ struct CompanionPlantingServiceTests {
     
     @Test("Three sisters pattern detection")
     func testThreeSistersPattern() async throws {
-        let cornBeans = service.checkCompatibility(plant1: "Corn", plant2: "Beans")
-        let cornSquash = service.checkCompatibility(plant1: "Corn", plant2: "Squash")
+        let cornBeans = service.checkCompatibility(plant1: "Corn", plant2: "beans")
+        let cornSquash = service.checkCompatibility(plant1: "Corn", plant2: "squash")
         
         #expect(cornBeans.compatibility == .companion)
         #expect(cornSquash.compatibility == .companion)

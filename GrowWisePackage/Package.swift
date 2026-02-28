@@ -44,7 +44,8 @@ let package = Package(
         .target(
             name: "GrowWiseServices",
             dependencies: ["GrowWiseModels"],
-            exclude: ["AGENTS.md"]
+            exclude: ["AGENTS.md"],
+            resources: [.process("CompanionPlantingData.json")]
         ),
         
         // Tests
