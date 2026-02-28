@@ -1,30 +1,30 @@
-import SwiftUI
 import GrowWiseModels
+import SwiftUI
 
 extension PlantType {
     public var iconName: String {
         switch self {
-        case .vegetable: return "carrot.fill"
-        case .herb: return "leaf.fill"
-        case .flower: return "sparkles"
-        case .houseplant: return "house.fill"
-        case .fruit: return "apple.logo"
-        case .succulent: return "circle.grid.3x3.fill"
-        case .tree: return "tree.fill"
-        case .shrub: return "tree.fill"
+        case .vegetable: "carrot.fill"
+        case .herb: "leaf.fill"
+        case .flower: "sparkles"
+        case .houseplant: "house.fill"
+        case .fruit: "apple.logo"
+        case .succulent: "circle.grid.3x3.fill"
+        case .tree: "tree.fill"
+        case .shrub: "tree.fill"
         }
     }
-    
+
     public var color: Color {
         switch self {
-        case .houseplant: return .green
-        case .succulent: return .mint
-        case .flower: return .pink
-        case .vegetable: return .orange
-        case .herb: return .green
-        case .tree: return .brown
-        case .shrub: return .green
-        case .fruit: return .red
+        case .houseplant: .green
+        case .succulent: .mint
+        case .flower: .pink
+        case .vegetable: .orange
+        case .herb: .green
+        case .tree: .brown
+        case .shrub: .green
+        case .fruit: .red
         }
     }
 }

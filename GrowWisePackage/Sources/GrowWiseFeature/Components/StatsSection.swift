@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 /// A reusable stats section component that displays gardening statistics in a grid layout.
 public struct StatsSection: View {

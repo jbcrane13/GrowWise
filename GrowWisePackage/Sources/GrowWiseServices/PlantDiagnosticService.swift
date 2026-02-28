@@ -1,7 +1,7 @@
-import Foundation
-import Vision
 import CoreML
+import Foundation
 import Observation
+import Vision
 
 #if canImport(UIKit)
 import UIKit
@@ -56,9 +56,10 @@ public enum PlantDiagnosticError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidImage:
-            return "The selected image is invalid for diagnosis."
+            "The selected image is invalid for diagnosis."
+
         case .noClassification:
-            return "No diagnosis could be produced from the image."
+            "No diagnosis could be produced from the image."
         }
     }
 }
@@ -74,7 +75,7 @@ public enum PlantDiagnosticError: Error, LocalizedError {
     public func setSampleDiagnosis() {
         lastDiagnosis = summarize([
             PlantClassificationCandidate(label: "leaf_spot", confidence: 0.81),
-            PlantClassificationCandidate(label: "powdery_mildew", confidence: 0.42)
+            PlantClassificationCandidate(label: "powdery_mildew", confidence: 0.42),
         ])
     }
 
@@ -104,31 +105,33 @@ public enum PlantDiagnosticError: Error, LocalizedError {
         }
 
         let lowercased = primary.label.lowercased()
-        let severity: PlantDiagnosis.Severity
-        if lowercased.contains("healthy") {
-            severity = .healthy
+        let severity: PlantDiagnosis.Severity = if lowercased.contains("healthy") {
+            .healthy
         } else if primary.confidence >= 0.85 {
-            severity = .severe
+            .severe
         } else if primary.confidence >= 0.65 {
-            severity = .moderate
+            .moderate
         } else if primary.confidence >= 0.45 {
-            severity = .mild
+            .mild
         } else {
-            severity = .unknown
+            .unknown
         }
 
-        let recommendation: String
-        switch severity {
+        let recommendation = switch severity {
         case .healthy:
-            recommendation = "No obvious disease detected. Continue normal care and weekly inspection."
+            "No obvious disease detected. Continue normal care and weekly inspection."
+
         case .mild:
-            recommendation = "Possible early issue. Isolate affected leaves and monitor for 48 hours."
+            "Possible early issue. Isolate affected leaves and monitor for 48 hours."
+
         case .moderate:
-            recommendation = "Likely disease or stress. Remove affected tissue and apply targeted treatment."
+            "Likely disease or stress. Remove affected tissue and apply targeted treatment."
+
         case .severe:
-            recommendation = "High-confidence issue. Quarantine plant, inspect nearby plants, and begin treatment now."
+            "High-confidence issue. Quarantine plant, inspect nearby plants, and begin treatment now."
+
         case .unknown:
-            recommendation = "Low-confidence result. Retake photo and capture both leaf top and underside."
+            "Low-confidence result. Retake photo and capture both leaf top and underside."
         }
 
         return PlantDiagnosis(

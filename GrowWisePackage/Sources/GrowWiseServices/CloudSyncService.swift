@@ -1,6 +1,6 @@
-import Foundation
 import CloudKit
 import CoreData
+import Foundation
 import GrowWiseModels
 import os
 
@@ -11,7 +11,7 @@ import os
     public private(set) var lastSyncDate: Date?
     public private(set) var lastErrorMessage: String?
     public private(set) var accountStatus: CKAccountStatus = .couldNotDetermine
-    
+
     // Public database state
     public private(set) var isLoadingPublicGardens = false
     public private(set) var publicGardens: [PublicGarden] = []
@@ -20,13 +20,13 @@ import os
     private weak var dataService: DataService?
     private var cloudEventObserver: NSObjectProtocol?
     private var accountObserver: NSObjectProtocol?
-    
+
     // CloudKit containers — nil during UI testing to avoid CKContainer crash on simulator
     private var privateContainer: CKContainer?
     private var publicDatabase: CKDatabase?
     private var privateDatabase: CKDatabase?
 
-    // Logger
+    /// Logger
     private let logger = Logger(subsystem: "com.growwise.cloudkit", category: "CloudSyncService")
 
     public init() {
@@ -35,9 +35,9 @@ import os
         guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
 
         let container = CKContainer(identifier: "iCloud.com.growwise.gardening")
-        self.privateContainer = container
-        self.publicDatabase = container.publicCloudDatabase
-        self.privateDatabase = container.privateCloudDatabase
+        privateContainer = container
+        publicDatabase = container.publicCloudDatabase
+        privateDatabase = container.privateCloudDatabase
         startObserving()
     }
 
@@ -55,9 +55,9 @@ import os
         lastSyncDate = status.lastSync
         lastErrorMessage = status.error
     }
-    
+
     // MARK: - Account Status
-    
+
     public func checkAccountStatus() async -> CKAccountStatus {
         guard let privateContainer else { return .couldNotDetermine }
         do {
@@ -73,7 +73,7 @@ import os
     }
 
     // MARK: - Public Database Operations (Garden Showcase)
-    
+
     /// Publish a garden to the public database (Garden Showcase)
     public func publishGarden(_ garden: Garden, authorName: String, description: String? = nil) async throws -> PublicGarden {
         // Check account status first
@@ -81,7 +81,7 @@ import os
         guard status == .available else {
             throw CloudKitError.accountNotAvailable
         }
-        
+
         await MainActor.run {
             isLoadingPublicGardens = true
         }
@@ -90,7 +90,7 @@ import os
                 isLoadingPublicGardens = false
             }
         }
-        
+
         // Create a CKRecord for the public garden
         let record = CKRecord(recordType: "PublicGarden")
         record["name"] = garden.name
@@ -100,7 +100,7 @@ import os
         record["publishedDate"] = Date()
         record["likeCount"] = 0
         record["viewCount"] = 0
-        
+
         // Save to public database
         guard let publicDatabase else { throw CloudKitError.publishFailed("CloudKit unavailable") }
         do {
@@ -115,7 +115,7 @@ import os
             throw CloudKitError.publishFailed(error.localizedDescription)
         }
     }
-    
+
     /// Fetch public gardens from the Garden Showcase
     public func fetchPublicGardens(
         sortBy: PublicGardenSort = .newest,
@@ -131,21 +131,24 @@ import os
                 isLoadingPublicGardens = false
             }
         }
-        
+
         let query = CKQuery(recordType: "PublicGarden", predicate: NSPredicate(value: true))
-        
+
         // Apply sorting
         switch sortBy {
         case .newest:
             query.sortDescriptors = [NSSortDescriptor(key: "publishedDate", ascending: false)]
+
         case .oldest:
             query.sortDescriptors = [NSSortDescriptor(key: "publishedDate", ascending: true)]
+
         case .mostLiked:
             query.sortDescriptors = [NSSortDescriptor(key: "likeCount", ascending: false)]
+
         case .mostViewed:
             query.sortDescriptors = [NSSortDescriptor(key: "viewCount", ascending: false)]
         }
-        
+
         guard let publicDatabase else { throw CloudKitError.fetchFailed("CloudKit unavailable") }
         do {
             let (results, newCursor) = try await publicDatabase.records(
@@ -153,21 +156,22 @@ import os
                 inZoneWith: nil,
                 resultsLimit: limit
             )
-            
-            let gardens = results.compactMap { (_, result) -> PublicGarden? in
+
+            let gardens = results.compactMap { _, result -> PublicGarden? in
                 switch result {
-                case .success(let record):
+                case let .success(record):
                     return PublicGarden(from: record)
-                case .failure(let error):
+
+                case let .failure(error):
                     logger.error("Failed to decode garden record: \(error.localizedDescription)")
                     return nil
                 }
             }
-            
+
             await MainActor.run {
                 self.publicGardens = gardens
             }
-            
+
             logger.info("Fetched \(gardens.count) public gardens")
             return (gardens, newCursor)
         } catch {
@@ -179,15 +183,15 @@ import os
             throw CloudKitError.fetchFailed(errorMessage)
         }
     }
-    
+
     /// Like a public garden
     public func likeGarden(_ garden: PublicGarden) async throws {
         guard let recordID = garden.recordID else {
             throw CloudKitError.invalidRecord
         }
-        
+
         guard let publicDatabase else { throw CloudKitError.operationFailed("CloudKit unavailable") }
-        
+
         // Note: Simple fetch-increment-save pattern.
         // For a high-traffic app, this would need CKModifyRecordsOperation with
         // .serverRecordChanged resolution policy to handle concurrent likes.
@@ -211,7 +215,7 @@ import os
             throw CloudKitError.operationFailed(error.localizedDescription)
         }
     }
-    
+
     /// Increment view count for a public garden
     public func incrementViewCount(for garden: PublicGarden) async {
         guard let recordID = garden.recordID, let publicDatabase else { return }
@@ -232,13 +236,13 @@ import os
             logger.error("Failed to increment view count: \(error.localizedDescription)")
         }
     }
-    
+
     /// Delete a published garden (only by owner)
     public func unpublishGarden(_ garden: PublicGarden) async throws {
         guard let recordID = garden.recordID else {
             throw CloudKitError.invalidRecord
         }
-        
+
         guard let publicDatabase else { throw CloudKitError.operationFailed("CloudKit unavailable") }
         do {
             try await publicDatabase.deleteRecord(withID: recordID)
@@ -248,12 +252,12 @@ import os
             throw CloudKitError.operationFailed(error.localizedDescription)
         }
     }
-    
+
     // MARK: - Private Database Operations
 
     public func getCloudSyncStatus() async -> CloudSyncStatus {
         let status = await checkAccountStatus()
-        
+
         return CloudSyncStatus(
             isAvailable: status == .available,
             accountStatus: status,
@@ -261,6 +265,7 @@ import os
             error: lastErrorMessage
         )
     }
+
     private func startObserving() {
         cloudEventObserver = NotificationCenter.default.addObserver(
             forName: NSPersistentCloudKitContainer.eventChangedNotification,
@@ -270,7 +275,7 @@ import os
             guard let self else { return }
             guard
                 let event = notification.userInfo?[NSPersistentCloudKitContainer.eventNotificationUserInfoKey]
-                    as? NSPersistentCloudKitContainer.Event
+                as? NSPersistentCloudKitContainer.Event
             else {
                 return
             }
@@ -320,7 +325,7 @@ public struct PublicGarden: Identifiable, Sendable {
     public let likeCount: Int
     public let viewCount: Int
     public let imageAsset: CKAsset?
-    
+
     public init(
         id: UUID = UUID(),
         recordID: CKRecord.ID? = nil,
@@ -344,38 +349,39 @@ public struct PublicGarden: Identifiable, Sendable {
         self.viewCount = viewCount
         self.imageAsset = imageAsset
     }
-    
+
     init?(from record: CKRecord) {
         guard let name = record["name"] as? String,
-              let authorName = record["authorName"] as? String else {
+              let authorName = record["authorName"] as? String
+        else {
             return nil
         }
-        
-        self.id = UUID()
-        self.recordID = record.recordID
+
+        id = UUID()
+        recordID = record.recordID
         self.name = name
         self.authorName = authorName
-        self.gardenType = record["gardenType"] as? String
-        self.description = record["description"] as? String
-        self.publishedDate = record["publishedDate"] as? Date ?? Date()
-        self.likeCount = record["likeCount"] as? Int ?? 0
-        self.viewCount = record["viewCount"] as? Int ?? 0
-        self.imageAsset = record["image"] as? CKAsset
+        gardenType = record["gardenType"] as? String
+        description = record["description"] as? String
+        publishedDate = record["publishedDate"] as? Date ?? Date()
+        likeCount = record["likeCount"] as? Int ?? 0
+        viewCount = record["viewCount"] as? Int ?? 0
+        imageAsset = record["image"] as? CKAsset
     }
 }
 
 public enum PublicGardenSort: String, CaseIterable, Sendable {
-    case newest = "newest"
-    case oldest = "oldest"
-    case mostLiked = "mostLiked"
-    case mostViewed = "mostViewed"
-    
+    case newest
+    case oldest
+    case mostLiked
+    case mostViewed
+
     public var displayName: String {
         switch self {
-        case .newest: return "Newest First"
-        case .oldest: return "Oldest First"
-        case .mostLiked: return "Most Liked"
-        case .mostViewed: return "Most Viewed"
+        case .newest: "Newest First"
+        case .oldest: "Oldest First"
+        case .mostLiked: "Most Liked"
+        case .mostViewed: "Most Viewed"
         }
     }
 }
@@ -388,19 +394,23 @@ public enum CloudKitError: LocalizedError, Sendable {
     case fetchFailed(String)
     case operationFailed(String)
     case invalidRecord
-    
+
     public var errorDescription: String? {
         switch self {
         case .accountNotAvailable:
-            return "iCloud account is not available. Please sign in to iCloud to use this feature."
-        case .publishFailed(let message):
-            return "Failed to publish garden: \(message)"
-        case .fetchFailed(let message):
-            return "Failed to fetch gardens: \(message)"
-        case .operationFailed(let message):
-            return "Operation failed: \(message)"
+            "iCloud account is not available. Please sign in to iCloud to use this feature."
+
+        case let .publishFailed(message):
+            "Failed to publish garden: \(message)"
+
+        case let .fetchFailed(message):
+            "Failed to fetch gardens: \(message)"
+
+        case let .operationFailed(message):
+            "Operation failed: \(message)"
+
         case .invalidRecord:
-            return "Invalid record data"
+            "Invalid record data"
         }
     }
 }

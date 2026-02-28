@@ -25,22 +25,31 @@ extension Color {
         switch token {
         case .systemBackground:
             self.init(uiColor: .systemBackground)
+
         case .secondarySystemBackground:
             self.init(uiColor: .secondarySystemBackground)
+
         case .tertiarySystemBackground:
             self.init(uiColor: .tertiarySystemBackground)
+
         case .systemGroupedBackground:
             self.init(uiColor: .systemGroupedBackground)
+
         case .secondarySystemGroupedBackground:
             self.init(uiColor: .secondarySystemGroupedBackground)
+
         case .tertiarySystemGroupedBackground:
             self.init(uiColor: .tertiarySystemGroupedBackground)
+
         case .systemGray4:
             self.init(uiColor: .systemGray4)
+
         case .systemGray5:
             self.init(uiColor: .systemGray5)
+
         case .systemGray6:
             self.init(uiColor: .systemGray6)
+
         case .quaternaryLabel:
             self.init(uiColor: .quaternaryLabel)
         }
@@ -48,16 +57,22 @@ extension Color {
         switch token {
         case .systemBackground, .systemGroupedBackground:
             self.init(nsColor: .windowBackgroundColor)
+
         case .secondarySystemBackground, .secondarySystemGroupedBackground:
             self.init(nsColor: .underPageBackgroundColor)
+
         case .tertiarySystemBackground, .tertiarySystemGroupedBackground:
             self.init(nsColor: .controlBackgroundColor)
+
         case .systemGray4:
             self = .gray.opacity(0.40)
+
         case .systemGray5:
             self = .gray.opacity(0.30)
+
         case .systemGray6:
             self = .gray.opacity(0.20)
+
         case .quaternaryLabel:
             self = .secondary.opacity(0.45)
         }
@@ -93,8 +108,10 @@ extension View {
         switch displayMode {
         case .automatic:
             self.navigationBarTitleDisplayMode(.automatic)
+
         case .inline:
             self.navigationBarTitleDisplayMode(.inline)
+
         case .large:
             self.navigationBarTitleDisplayMode(.large)
         }
@@ -106,7 +123,7 @@ extension View {
     @ViewBuilder
     public func gwNavigationBarHidden(_ hidden: Bool) -> some View {
         #if os(iOS)
-        self.navigationBarHidden(hidden)
+        navigationBarHidden(hidden)
         #else
         self
         #endif
@@ -115,9 +132,9 @@ extension View {
     @ViewBuilder
     public func gwWheelPickerStyle() -> some View {
         #if os(iOS)
-        self.pickerStyle(.wheel)
+        pickerStyle(.wheel)
         #else
-        self.pickerStyle(.menu)
+        pickerStyle(.menu)
         #endif
     }
 
@@ -127,8 +144,10 @@ extension View {
         switch indexDisplayMode {
         case .automatic:
             self.tabViewStyle(.page(indexDisplayMode: .automatic))
+
         case .always:
             self.tabViewStyle(.page(indexDisplayMode: .always))
+
         case .never:
             self.tabViewStyle(.page(indexDisplayMode: .never))
         }
@@ -143,10 +162,13 @@ extension View {
         switch style {
         case .none:
             self.textInputAutocapitalization(.never)
+
         case .words:
             self.textInputAutocapitalization(.words)
+
         case .sentences:
             self.textInputAutocapitalization(.sentences)
+
         case .characters:
             self.textInputAutocapitalization(.characters)
         }
@@ -158,9 +180,9 @@ extension View {
     @ViewBuilder
     public func gwWheelDatePickerStyle() -> some View {
         #if os(iOS)
-        self.datePickerStyle(.wheel)
+        datePickerStyle(.wheel)
         #else
-        self.datePickerStyle(.automatic)
+        datePickerStyle(.automatic)
         #endif
     }
 }

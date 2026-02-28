@@ -14,7 +14,7 @@
 --octal-grouping 4,8
 --hex-grouping 4,8
 --pattern-let hoist
---self remove
+--self init-only
 --self-required
 --strip-unused-args closure-only
 --closing-paren balanced
@@ -34,7 +34,7 @@
 --mark-extensions always
 --ifdef no-indent
 
---disable isEmpty
+--disable isEmpty,redundantSelf
 
 # Exclude generated files and dependencies
 --exclude build,.build,Pods,GrowWisePackage/Sources/GrowWiseServices/CompanionPlantingData.json

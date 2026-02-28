@@ -7,22 +7,21 @@ import QuartzCore
 /// Singleton pattern removed - injected via environment
 @MainActor
 @Observable public final class PerformanceMonitor {
-    
-    // Performance logger
+    /// Performance logger
     private let logger = Logger(subsystem: "com.growwise", category: "Performance")
-    
+
     // Metrics storage
     public private(set) var appLaunchTime: TimeInterval = 0
     public private(set) var currentMemoryUsage: Double = 0
     public private(set) var peakMemoryUsage: Double = 0
-    public private(set) var peakMemoryTimestamp: Date? = nil
+    public private(set) var peakMemoryTimestamp: Date?
     public private(set) var averageFrameRate: Double = 60
     public private(set) var queryMetrics: [QueryMetric] = []
     public private(set) var photoOperationMetrics: [PhotoOperationMetric] = []
     public private(set) var memoryPressureLevel: MemoryPressureLevel = .normal
     public private(set) var memoryPressureEvents: [MemoryPressureEvent] = []
 
-    // Performance budgets
+    /// Performance budgets
     private let performanceBudgets = PerformanceBudgets()
 
     // Monitoring state
@@ -34,17 +33,17 @@ import QuartzCore
     private var frameRateSampleStart: CFTimeInterval = CACurrentMediaTime()
     private var frameRateFrameCount = 0
     private var frameRateSamples: [Double] = []
-    
+
     // Metrics aggregation
     private var queryTimes: [String: [TimeInterval]] = [:]
     private var operationTimes: [String: [TimeInterval]] = [:]
-    
+
     public init() {
         startMonitoring()
     }
-    
+
     // MARK: - Public Interface
-    
+
     /// Start monitoring app performance
     public func startMonitoring() {
         guard !isMonitoring else { return }
@@ -81,54 +80,54 @@ import QuartzCore
         stopMemoryPressureMonitoring()
         logger.info("🛑 Performance monitoring stopped")
     }
-    
+
     /// Track app launch time
     public func recordAppLaunchStart() {
         appStartTime = CFAbsoluteTimeGetCurrent()
     }
-    
+
     /// Complete app launch tracking
     public func recordAppLaunchComplete() {
         guard let startTime = appStartTime else { return }
         appLaunchTime = CFAbsoluteTimeGetCurrent() - startTime
-        
+
         if appLaunchTime > performanceBudgets.appLaunchTimeLimit {
             logger.warning("⚠️ App launch exceeded budget: \(self.appLaunchTime)s > \(self.performanceBudgets.appLaunchTimeLimit)s")
         } else {
             logger.info("✅ App launched in \(self.appLaunchTime)s")
         }
-        
+
         appStartTime = nil
     }
-    
+
     /// Track query performance
     public func startQueryTracking(identifier: String) -> QueryTracker {
-        return QueryTracker(identifier: identifier, monitor: self)
+        QueryTracker(identifier: identifier, monitor: self)
     }
-    
+
     /// Track photo operation performance
     public func startPhotoOperation(type: PhotoOperationType) -> PhotoOperationTracker {
-        return PhotoOperationTracker(type: type, monitor: self)
+        PhotoOperationTracker(type: type, monitor: self)
     }
-    
+
     /// Track UI operation
     public func trackUIOperation(name: String, duration: TimeInterval) {
         if duration > performanceBudgets.uiResponseTimeLimit {
             logger.warning("⚠️ Slow UI operation '\(name)': \(duration)s")
         }
-        
+
         // Store for aggregation
         if operationTimes[name] == nil {
             operationTimes[name] = []
         }
         operationTimes[name]?.append(duration)
-        
+
         // Keep only recent measurements
         if let count = operationTimes[name]?.count, count > 100 {
             operationTimes[name]?.removeFirst(count - 100)
         }
     }
-    
+
     /// Get performance report
     public func generatePerformanceReport() -> PerformanceReport {
         let avgQueryTime = calculateAverageQueryTime()
@@ -182,7 +181,7 @@ import QuartzCore
             recommendations: recommendations
         )
     }
-    
+
     /// Clear all metrics
     public func clearMetrics() {
         queryMetrics.removeAll()
@@ -191,45 +190,45 @@ import QuartzCore
         operationTimes.removeAll()
         logger.info("🧹 Performance metrics cleared")
     }
-    
+
     // MARK: - Internal Methods
-    
-    internal func recordQueryMetric(_ metric: QueryMetric) {
+
+    func recordQueryMetric(_ metric: QueryMetric) {
         queryMetrics.append(metric)
-        
+
         // Keep only recent metrics
         if queryMetrics.count > 1000 {
             queryMetrics.removeFirst(queryMetrics.count - 1000)
         }
-        
+
         // Track for aggregation
         if queryTimes[metric.identifier] == nil {
             queryTimes[metric.identifier] = []
         }
         queryTimes[metric.identifier]?.append(metric.duration)
-        
+
         // Check performance budget
         if metric.duration > performanceBudgets.queryTimeLimit {
             logger.warning("⚠️ Slow query '\(metric.identifier)': \(metric.duration)s")
         }
     }
-    
-    internal func recordPhotoOperationMetric(_ metric: PhotoOperationMetric) {
+
+    func recordPhotoOperationMetric(_ metric: PhotoOperationMetric) {
         photoOperationMetrics.append(metric)
-        
+
         // Keep only recent metrics
         if photoOperationMetrics.count > 500 {
             photoOperationMetrics.removeFirst(photoOperationMetrics.count - 500)
         }
-        
+
         // Check performance budget
         if metric.duration > performanceBudgets.photoOperationTimeLimit {
             logger.warning("⚠️ Slow photo operation '\(metric.type.rawValue)': \(metric.duration)s")
         }
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func updateMemoryMetrics() {
         let memoryUsed = Double(getMemoryUsage())
 
@@ -259,29 +258,31 @@ import QuartzCore
             triggerMemoryCleanup()
         }
     }
-    
+
     private func getMemoryUsage() -> Int64 {
         var info = mach_task_basic_info()
         var count = mach_msg_type_number_t(MemoryLayout<mach_task_basic_info>.size) / 4
-        
+
         let result = withUnsafeMutablePointer(to: &info) {
             $0.withMemoryRebound(to: integer_t.self, capacity: Int(count)) {
-                task_info(mach_task_self_,
-                         task_flavor_t(MACH_TASK_BASIC_INFO),
-                         $0,
-                         &count)
+                task_info(
+                    mach_task_self_,
+                    task_flavor_t(MACH_TASK_BASIC_INFO),
+                    $0,
+                    &count
+                )
             }
         }
-        
+
         return result == KERN_SUCCESS ? Int64(info.resident_size) : 0
     }
-    
+
     private func startFrameRateMonitoring() {
         frameRateSampleStart = CACurrentMediaTime()
         frameRateFrameCount = 0
         frameRateSamples.removeAll(keepingCapacity: true)
 
-        frameRateTimer = Timer.scheduledTimer(withTimeInterval: 1.0/60.0, repeats: true) { [weak self] _ in
+        frameRateTimer = Timer.scheduledTimer(withTimeInterval: 1.0 / 60.0, repeats: true) { [weak self] _ in
             Task { @MainActor in
                 self?.recordFrameSample()
             }
@@ -309,40 +310,40 @@ import QuartzCore
         frameRateFrameCount = 0
         frameRateSamples.removeAll(keepingCapacity: true)
     }
-    
+
     private func calculateAverageQueryTime() -> TimeInterval {
-        let allTimes = queryTimes.values.flatMap { $0 }
+        let allTimes = queryTimes.values.flatMap(\.self)
         guard !allTimes.isEmpty else { return 0 }
         return allTimes.reduce(0, +) / Double(allTimes.count)
     }
-    
+
     private func calculateAveragePhotoOperationTime() -> TimeInterval {
         guard !photoOperationMetrics.isEmpty else { return 0 }
         let totalTime = photoOperationMetrics.reduce(0) { $0 + $1.duration }
         return totalTime / Double(photoOperationMetrics.count)
     }
-    
+
     private func getSlowQueries() -> [QueryMetric] {
         queryMetrics.filter { $0.duration > performanceBudgets.queryTimeLimit }
             .sorted { $0.duration > $1.duration }
             .prefix(10)
-            .map { $0 }
+            .map(\.self)
     }
-    
+
     private func getMemoryWarnings() -> [String] {
         var warnings: [String] = []
-        
+
         if currentMemoryUsage > performanceBudgets.memoryUsageLimit {
             warnings.append("Current memory usage (\(String(format: "%.1f", currentMemoryUsage))MB) exceeds limit")
         }
-        
+
         if peakMemoryUsage > performanceBudgets.memoryUsageLimit * 1.5 {
             warnings.append("Peak memory usage (\(String(format: "%.1f", peakMemoryUsage))MB) is critically high")
         }
-        
+
         return warnings
     }
-    
+
     private func calculatePerformanceScore() -> Double {
         var score = 100.0
 
@@ -386,7 +387,7 @@ import QuartzCore
         let source = DispatchSource.makeMemoryPressureSource(eventMask: [.warning, .critical], queue: .main)
 
         source.setEventHandler { [weak self] in
-            guard let self = self else { return }
+            guard let self else { return }
 
             let event = source.data
             var level: MemoryPressureLevel = .normal
@@ -467,8 +468,7 @@ import QuartzCore
     private func calculateMemoryEfficiency() -> Double {
         let budgetUsageRatio = currentMemoryUsage / performanceBudgets.memoryUsageLimit
         let pressurePenalty = Double(memoryPressureEvents.count) * 2.0
-        let efficiency = max(0, 100 - (budgetUsageRatio * 50) - pressurePenalty)
-        return efficiency
+        return max(0, 100 - (budgetUsageRatio * 50) - pressurePenalty)
     }
 }
 
@@ -530,15 +530,15 @@ public enum MemoryPressureLevel: Int, Sendable, Comparable, CustomStringConverti
     case urgent = 3
 
     public static func < (lhs: MemoryPressureLevel, rhs: MemoryPressureLevel) -> Bool {
-        return lhs.rawValue < rhs.rawValue
+        lhs.rawValue < rhs.rawValue
     }
 
     public var description: String {
         switch self {
-        case .normal: return "Normal"
-        case .warning: return "Warning"
-        case .critical: return "Critical"
-        case .urgent: return "Urgent"
+        case .normal: "Normal"
+        case .warning: "Warning"
+        case .critical: "Critical"
+        case .urgent: "Urgent"
         }
     }
 }
@@ -572,21 +572,21 @@ public class QueryTracker: Sendable {
     private let startTime: CFAbsoluteTime
     private var resultCount = 0
     private var cacheHit = false
-    
+
     init(identifier: String, monitor: PerformanceMonitor) {
         self.identifier = identifier
         self.monitor = monitor
         self.startTime = CFAbsoluteTimeGetCurrent()
     }
-    
+
     public func setCacheHit(_ hit: Bool) {
         cacheHit = hit
     }
-    
+
     public func setResultCount(_ count: Int) {
         resultCount = count
     }
-    
+
     public func complete() {
         let duration = CFAbsoluteTimeGetCurrent() - startTime
         let metric = QueryMetric(
@@ -596,7 +596,7 @@ public class QueryTracker: Sendable {
             cacheHit: cacheHit,
             timestamp: Date()
         )
-        
+
         monitor.recordQueryMetric(metric)
     }
 }
@@ -607,17 +607,17 @@ public class PhotoOperationTracker: Sendable {
     private let monitor: PerformanceMonitor
     private let startTime: CFAbsoluteTime
     private var fileSize: Int?
-    
+
     init(type: PhotoOperationType, monitor: PerformanceMonitor) {
         self.type = type
         self.monitor = monitor
         self.startTime = CFAbsoluteTimeGetCurrent()
     }
-    
+
     public func setFileSize(_ size: Int) {
         fileSize = size
     }
-    
+
     public func complete(success: Bool = true) {
         let duration = CFAbsoluteTimeGetCurrent() - startTime
         let metric = PhotoOperationMetric(
@@ -627,7 +627,7 @@ public class PhotoOperationTracker: Sendable {
             success: success,
             timestamp: Date()
         )
-        
+
         monitor.recordPhotoOperationMetric(metric)
     }
 }

@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 public struct OnboardingView: View {
     @State private var currentStep: OnboardingStep = .welcome
@@ -10,12 +10,12 @@ public struct OnboardingView: View {
 
     /// Called when the user finishes onboarding. Used when OnboardingView is
     /// embedded in an if/else branch (not a sheet) so dismiss() has no effect.
-    var onCompleted: (() -> Void)? = nil
+    var onCompleted: (() -> Void)?
 
     public init(onCompleted: (() -> Void)? = nil) {
         self.onCompleted = onCompleted
     }
-    
+
     public var body: some View {
         NavigationStack {
             ZStack {
@@ -23,41 +23,41 @@ public struct OnboardingView: View {
                 LinearGradient(
                     colors: [
                         Color.adaptiveGreenBackground,
-                        Color(light: Color.blue.opacity(0.1), dark: Color.blue.opacity(0.15))
+                        Color(light: Color.blue.opacity(0.1), dark: Color.blue.opacity(0.15)),
                     ],
                     startPoint: .topLeading,
                     endPoint: .bottomTrailing
                 )
                 .ignoresSafeArea()
-                
+
                 VStack(spacing: 0) {
                     // Progress indicator
                     OnboardingProgressView(currentStep: currentStep)
                         .padding(.top)
-                    
+
                     // Main content
                     TabView(selection: $currentStep) {
                         WelcomeStepView()
                             .tag(OnboardingStep.welcome)
-                        
+
                         SkillAssessmentView(userProfile: $userProfile)
                             .tag(OnboardingStep.skillAssessment)
-                        
+
                         GardeningGoalsView(userProfile: $userProfile)
                             .tag(OnboardingStep.goals)
-                        
+
                         LocationSetupView(userProfile: $userProfile)
                             .tag(OnboardingStep.location)
-                        
+
                         NotificationPermissionView(userProfile: $userProfile)
                             .tag(OnboardingStep.notifications)
-                        
+
                         CompletionView(userProfile: $userProfile)
                             .tag(OnboardingStep.completion)
                     }
                     .gwPagingTabStyle(indexDisplayMode: .never)
                     .animation(.easeInOut, value: currentStep)
-                    
+
                     // Navigation buttons
                     OnboardingNavigationView(
                         currentStep: $currentStep,
@@ -72,8 +72,8 @@ public struct OnboardingView: View {
         .gwNavigationBarHidden(true)
         .onChange(of: isCompleted) { _, completed in
             if completed {
-                onCompleted?()  // Update parent state when embedded in a branch
-                dismiss()       // Also works when presented as a sheet
+                onCompleted?() // Update parent state when embedded in a branch
+                dismiss() // Also works when presented as a sheet
             }
         }
     }
@@ -88,24 +88,24 @@ public enum OnboardingStep: String, CaseIterable {
     case location
     case notifications
     case completion
-    
+
     var title: String {
         switch self {
-        case .welcome: return "Welcome to GrowWise"
-        case .skillAssessment: return "Your Gardening Experience"
-        case .goals: return "Your Gardening Goals"
-        case .location: return "Your Location"
-        case .notifications: return "Stay Connected"
-        case .completion: return "You're All Set!"
+        case .welcome: "Welcome to GrowWise"
+        case .skillAssessment: "Your Gardening Experience"
+        case .goals: "Your Gardening Goals"
+        case .location: "Your Location"
+        case .notifications: "Stay Connected"
+        case .completion: "You're All Set!"
         }
     }
-    
+
     var stepNumber: Int {
-        return OnboardingStep.allCases.firstIndex(of: self) ?? 0
+        OnboardingStep.allCases.firstIndex(of: self) ?? 0
     }
-    
+
     var totalSteps: Int {
-        return OnboardingStep.allCases.count
+        OnboardingStep.allCases.count
     }
 }
 
@@ -124,70 +124,72 @@ public enum GardeningGoal: String, CaseIterable, Identifiable {
     case growFood = "grow_food"
     case beautifySpace = "beautify_space"
     case learnSkills = "learn_skills"
-    case relaxation = "relaxation"
-    case sustainability = "sustainability"
+    case relaxation
+    case sustainability
     case healingGarden = "healing_garden"
-    
-    public var id: String { rawValue }
-    
+
+    public var id: String {
+        rawValue
+    }
+
     var displayName: String {
         switch self {
-        case .growFood: return "Grow My Own Food"
-        case .beautifySpace: return "Beautify My Space"
-        case .learnSkills: return "Learn Gardening Skills"
-        case .relaxation: return "Relaxation & Therapy"
-        case .sustainability: return "Sustainable Living"
-        case .healingGarden: return "Create a Healing Garden"
+        case .growFood: "Grow My Own Food"
+        case .beautifySpace: "Beautify My Space"
+        case .learnSkills: "Learn Gardening Skills"
+        case .relaxation: "Relaxation & Therapy"
+        case .sustainability: "Sustainable Living"
+        case .healingGarden: "Create a Healing Garden"
         }
     }
-    
+
     var description: String {
         switch self {
-        case .growFood: return "Fresh vegetables, herbs, and fruits"
-        case .beautifySpace: return "Flowers and decorative plants"
-        case .learnSkills: return "Master gardening techniques"
-        case .relaxation: return "Peaceful gardening activities"
-        case .sustainability: return "Eco-friendly practices"
-        case .healingGarden: return "Plants for wellness and meditation"
+        case .growFood: "Fresh vegetables, herbs, and fruits"
+        case .beautifySpace: "Flowers and decorative plants"
+        case .learnSkills: "Master gardening techniques"
+        case .relaxation: "Peaceful gardening activities"
+        case .sustainability: "Eco-friendly practices"
+        case .healingGarden: "Plants for wellness and meditation"
         }
     }
-    
+
     var icon: String {
         switch self {
-        case .growFood: return "carrot.fill"
-        case .beautifySpace: return "sparkles"
-        case .learnSkills: return "book.fill"
-        case .relaxation: return "leaf.fill"
-        case .sustainability: return "globe.americas.fill"
-        case .healingGarden: return "heart.fill"
+        case .growFood: "carrot.fill"
+        case .beautifySpace: "sparkles"
+        case .learnSkills: "book.fill"
+        case .relaxation: "leaf.fill"
+        case .sustainability: "globe.americas.fill"
+        case .healingGarden: "heart.fill"
         }
     }
 }
 
 public enum SpaceSize: String, CaseIterable {
-    case tiny = "tiny"           // Windowsill, small containers
-    case small = "small"         // Balcony, small patio
-    case medium = "medium"       // Small yard, large patio
-    case large = "large"         // Large yard, multiple beds
-    case acreage = "acreage"     // Farm or large property
-    
+    case tiny // Windowsill, small containers
+    case small // Balcony, small patio
+    case medium // Small yard, large patio
+    case large // Large yard, multiple beds
+    case acreage // Farm or large property
+
     var displayName: String {
         switch self {
-        case .tiny: return "Tiny (Windowsill/Indoor)"
-        case .small: return "Small (Balcony/Patio)"
-        case .medium: return "Medium (Small Yard)"
-        case .large: return "Large (Large Yard)"
-        case .acreage: return "Acreage (Farm/Estate)"
+        case .tiny: "Tiny (Windowsill/Indoor)"
+        case .small: "Small (Balcony/Patio)"
+        case .medium: "Medium (Small Yard)"
+        case .large: "Large (Large Yard)"
+        case .acreage: "Acreage (Farm/Estate)"
         }
     }
-    
+
     var description: String {
         switch self {
-        case .tiny: return "Perfect for herbs and small houseplants"
-        case .small: return "Container gardening and small plants"
-        case .medium: return "Raised beds and medium-sized gardens"
-        case .large: return "Multiple garden areas and diverse plantings"
-        case .acreage: return "Large-scale gardening and farming"
+        case .tiny: "Perfect for herbs and small houseplants"
+        case .small: "Container gardening and small plants"
+        case .medium: "Raised beds and medium-sized gardens"
+        case .large: "Multiple garden areas and diverse plantings"
+        case .acreage: "Large-scale gardening and farming"
         }
     }
 }

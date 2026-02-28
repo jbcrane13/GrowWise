@@ -1,26 +1,25 @@
 import Foundation
-import UserNotifications
 import GrowWiseModels
+import UserNotifications
 
 /// Notification management service using @Observable pattern
 /// Access via @Environment(NotificationService.self) in views
 /// Singleton pattern removed - injected via environment
 @MainActor
 @Observable public final class NotificationService: NSObject {
-    
     public var isAuthorized = false
     public var badgeCount = 0
     public var authorizationStatus: UNAuthorizationStatus = .notDetermined
-    
+
     private let notificationCenter: UNUserNotificationCenter?
 
     /// Alias for isAuthorized to maintain backward compatibility
     public var isEnabled: Bool {
-        return isAuthorized
+        isAuthorized
     }
 
-    public override init() {
-        self.notificationCenter = UNUserNotificationCenter.current()
+    override public init() {
+        notificationCenter = UNUserNotificationCenter.current()
         super.init()
 
         notificationCenter?.delegate = self
@@ -38,9 +37,9 @@ import GrowWiseModels
         super.init()
         // Do not set delegate or check permissions in test mode.
     }
-    
+
     // MARK: - Permission Management
-    
+
     public func requestNotificationPermissions() async -> Bool {
         guard let notificationCenter else { return false }
         do {
@@ -110,7 +109,7 @@ import GrowWiseModels
 
         try? await notificationCenter?.setBadgeCount(pendingCount)
     }
-    
+
     private func createReminderNotificationContent(for reminder: PlantReminder) -> UNMutableNotificationContent {
         let content = UNMutableNotificationContent()
         let plantName = reminder.plant?.name ?? reminder.plantName
@@ -122,7 +121,7 @@ import GrowWiseModels
         // Add custom user info for handling actions
         var userInfo: [String: Any] = [
             "reminderId": reminder.id.uuidString,
-            "reminderType": reminder.reminderType.rawValue
+            "reminderType": reminder.reminderType.rawValue,
         ]
 
         if let plantId = reminder.plant?.id {
@@ -142,40 +141,40 @@ import GrowWiseModels
             body: reminder.reminderType.displayName
         )
     }
-    
+
     private func createNotificationTrigger(for date: Date, repeats: Bool) -> UNNotificationTrigger {
         let calendar = Calendar.current
         let components = calendar.dateComponents([.year, .month, .day, .hour, .minute], from: date)
         return UNCalendarNotificationTrigger(dateMatching: components, repeats: repeats)
     }
-    
+
     private func getPendingNotificationsCount() async -> Int {
         let requests = await notificationCenter?.pendingNotificationRequests() ?? []
         return requests.count
     }
-    
+
     // MARK: - Additional Helper Methods
-    
+
     public func isInQuietHours() -> Bool {
         let hour = Calendar.current.component(.hour, from: Date())
         return hour < 8 || hour > 21 // Quiet hours are before 8 AM and after 9 PM
     }
-    
+
     public func cancelReminderNotification(for reminderId: UUID) async {
         await cancelNotification(with: reminderId.uuidString)
     }
-    
+
     public func requestPermission() async -> Bool {
-        return await requestNotificationPermissions()
+        await requestNotificationPermissions()
     }
-    
+
     public func setupNotificationCategories() {
         // Setup notification categories for reminder actions
         // This would be implementation-specific for garden care categories
     }
-    
+
     // MARK: - Additional Methods for View Compatibility
-    
+
     public func scheduleSeasonalReminder(title: String, body: String, date: Date, identifier: String) async throws {
         guard isAuthorized, let notificationCenter else { return }
 
@@ -192,9 +191,9 @@ import GrowWiseModels
     }
 
     public func getPendingNotifications() async -> [UNNotificationRequest] {
-        return await notificationCenter?.pendingNotificationRequests() ?? []
+        await notificationCenter?.pendingNotificationRequests() ?? []
     }
-    
+
     public func clearAllNotifications() {
         Task {
             await cancelAllNotifications()
@@ -211,7 +210,7 @@ public struct NotificationStatistics: Sendable {
     public let badgeEnabled: Bool
     public let soundEnabled: Bool
     public let alertEnabled: Bool
-    
+
     public init(pendingCount: Int, deliveredCount: Int, isAuthorized: Bool, badgeEnabled: Bool, soundEnabled: Bool, alertEnabled: Bool) {
         self.pendingCount = pendingCount
         self.deliveredCount = deliveredCount
@@ -230,23 +229,24 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
         didReceive response: UNNotificationResponse,
         withCompletionHandler completionHandler: @escaping () -> Void
     ) {
-        let _ = response.notification.request.content.userInfo
-        
+        _ = response.notification.request.content.userInfo
+
         switch response.actionIdentifier {
         case UNNotificationDefaultActionIdentifier:
             // Handle default tap action
             break
+
         default:
             break
         }
-        
+
         Task {
             await updateBadgeCount()
         }
-        
+
         completionHandler()
     }
-    
+
     public func userNotificationCenter(
         _ center: UNUserNotificationCenter,
         willPresent notification: UNNotification,

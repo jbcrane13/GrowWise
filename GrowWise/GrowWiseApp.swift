@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseFeature
 import GrowWiseServices
+import SwiftUI
 
 @main
 struct CultivationApp: App {
@@ -48,7 +48,7 @@ struct CultivationApp: App {
             }
         }
     }
-    
+
     var body: some Scene {
         WindowGroup {
             MainAppView()
@@ -63,7 +63,7 @@ struct CultivationApp: App {
         // Ensure encryption keys are initialized and compliant early in app startup
         let storage = KeychainStorageService(service: "com.growwiser.audit", accessGroup: nil)
         let encryptionService = EncryptionService(storage: storage)
-        
+
         Task.detached(priority: .utility) {
             if encryptionService.isKeyRotationOverdue() {
                 do {
@@ -74,7 +74,7 @@ struct CultivationApp: App {
                     print("[AppBootstrap] enforceComplianceRotation failed: \(error)")
                 }
             }
-            
+
             if encryptionService.isKeyRotationNeeded() || encryptionService.currentKeyVersion == 0 {
                 do {
                     let newVersion = try await encryptionService.rotateKey(reason: "Initial setup")

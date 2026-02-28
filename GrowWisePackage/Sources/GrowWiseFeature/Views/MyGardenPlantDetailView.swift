@@ -1,10 +1,10 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 struct PlantDetailView: View {
     let plant: Plant
-    
+
     @Environment(\.dismiss) private var dismiss
     @Environment(DataService.self) private var dataService
     @Environment(PhotoService.self) private var photoService
@@ -16,12 +16,12 @@ struct PlantDetailView: View {
     @State private var selectedPhoto: String?
     @State private var showingPhotoViewer = false
     @State private var showingAssignGarden = false // Added per instruction
-    
+
     // Care action states
     @State private var isPerformingCareAction = false
     @State private var showingCareSuccess = false
     @State private var careActionMessage = ""
-    
+
     var body: some View {
         ScrollView {
             LazyVStack(alignment: .leading, spacing: 20) {
@@ -33,7 +33,7 @@ struct PlantDetailView: View {
         .gwNavigationBarTitleDisplayMode(.inline)
         .toolbar { toolbarContent }
         .alert("Delete Plant", isPresented: $showingDeleteConfirmation) {
-            Button("Cancel", role: .cancel) { }
+            Button("Cancel", role: .cancel) {}
             Button("Delete", role: .destructive) {
                 deletePlant()
             }
@@ -41,7 +41,7 @@ struct PlantDetailView: View {
             Text("Are you sure you want to delete \(plant.name ?? "this plant")? This action cannot be undone.")
         }
         .alert("Care Action Completed", isPresented: $showingCareSuccess) {
-            Button("OK") { }
+            Button("OK") {}
         } message: {
             Text(careActionMessage)
         }
@@ -60,18 +60,18 @@ struct PlantDetailView: View {
             AssignGardenSheet(plant: plant)
         }
     }
-    
+
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button("Edit Plant") {
                     showingEditPlant = true
                 }
-                
+
                 Button("Assign to Garden") { showingAssignGarden = true }
-                
+
                 Divider()
-                
+
                 Button("Delete Plant", role: .destructive) {
                     showingDeleteConfirmation = true
                 }
@@ -80,7 +80,7 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     private var plantInfoSections: some View {
         VStack(alignment: .leading, spacing: 20) {
             basicInfoSection
@@ -92,9 +92,9 @@ struct PlantDetailView: View {
         }
         .padding(.horizontal)
     }
-    
+
     // MARK: - Hero Image Section
-    
+
     private var heroImageSection: some View {
         VStack {
             if let photoURLs = plant.photoURLs, !photoURLs.isEmpty {
@@ -142,40 +142,40 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Basic Info Section
-    
+
     private var basicInfoSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Basic Information")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             InfoCard {
                 VStack(alignment: .leading, spacing: 8) {
                     if let scientificName = plant.scientificName {
                         InfoRow(title: "Scientific Name", value: scientificName, systemImage: "leaf.fill")
                     }
-                    
+
                     InfoRow(title: "Type", value: plant.plantType?.displayName ?? "Unknown", systemImage: "tag.fill")
                     InfoRow(title: "Difficulty", value: plant.difficultyLevel?.displayName ?? "Unknown", systemImage: "star.fill")
-                    
+
                     if let plantingDate = plant.plantingDate {
                         InfoRow(title: "Planted", value: plantingDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
                     }
-                    
+
                     if let growthStage = plant.growthStage {
                         InfoRow(title: "Growth Stage", value: growthStage.displayName, systemImage: "chart.line.uptrend.xyaxis")
                     }
-                    
+
                     if let location = plant.gardenLocation, !location.isEmpty {
                         InfoRow(title: "Location", value: location, systemImage: "location.fill")
                     }
-                    
+
                     if let containerType = plant.containerType {
                         InfoRow(title: "Container", value: containerType.displayName, systemImage: "square.stack")
                     }
-                    
+
                     if let notes = plant.notes, !notes.isEmpty {
                         VStack(alignment: .leading, spacing: 4) {
                             HStack {
@@ -195,29 +195,29 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Care Requirements Section
-    
+
     private var careRequirementsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Care Requirements")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             InfoCard {
                 VStack(alignment: .leading, spacing: 8) {
                     if let sunlight = plant.sunlightRequirement {
                         InfoRow(title: "Sunlight", value: sunlight.displayName, systemImage: "sun.max.fill")
                     }
-                    
+
                     if let watering = plant.wateringFrequency {
                         InfoRow(title: "Watering", value: watering.displayName, systemImage: "drop.fill")
                     }
-                    
+
                     if let space = plant.spaceRequirement {
                         InfoRow(title: "Space Needed", value: space.displayName, systemImage: "square.dashed")
                     }
-                    
+
                     if let harvestDate = plant.harvestDate {
                         InfoRow(title: "Expected Harvest", value: harvestDate.formatted(date: .abbreviated, time: .omitted), systemImage: "basket.fill")
                     }
@@ -225,15 +225,15 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Health Status Section
-    
+
     private var healthStatusSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Health Status")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             InfoCard {
                 VStack(alignment: .leading, spacing: 8) {
                     HStack {
@@ -249,15 +249,15 @@ struct PlantDetailView: View {
                             .fontWeight(.semibold)
                             .foregroundColor(healthStatusColor)
                     }
-                    
+
                     if let lastWatered = plant.lastWatered {
                         InfoRow(title: "Last Watered", value: lastWatered.formatted(date: .abbreviated, time: .omitted), systemImage: "drop.fill")
                     }
-                    
+
                     if let lastFertilized = plant.lastFertilized {
                         InfoRow(title: "Last Fertilized", value: lastFertilized.formatted(date: .abbreviated, time: .omitted), systemImage: "leaf.fill")
                     }
-                    
+
                     if let lastPruned = plant.lastPruned {
                         InfoRow(title: "Last Pruned", value: lastPruned.formatted(date: .abbreviated, time: .omitted), systemImage: "scissors")
                     }
@@ -265,18 +265,18 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Action Buttons Section
-    
+
     private var actionButtonsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Actions")
                 .font(.title2)
                 .fontWeight(.semibold)
-            
+
             LazyVGrid(columns: [
                 GridItem(.flexible()),
-                GridItem(.flexible())
+                GridItem(.flexible()),
             ], spacing: 12) {
                 ActionButton(
                     title: "Water",
@@ -286,7 +286,7 @@ struct PlantDetailView: View {
                 ) {
                     performCareAction(.watering)
                 }
-                
+
                 ActionButton(
                     title: "Fertilize",
                     systemImage: "leaf.fill",
@@ -295,7 +295,7 @@ struct PlantDetailView: View {
                 ) {
                     performCareAction(.fertilizing)
                 }
-                
+
                 ActionButton(
                     title: "Add Entry",
                     systemImage: "plus.circle.fill",
@@ -304,7 +304,7 @@ struct PlantDetailView: View {
                 ) {
                     showingJournalEntry = true
                 }
-                
+
                 ActionButton(
                     title: "Set Reminder",
                     systemImage: "bell.fill",
@@ -316,25 +316,25 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Care History Section
-    
+
     private var careHistorySection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Recent Activity")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
+
                 Button("View All") {
                     // Navigate to full journal view
                 }
                 .font(.caption)
                 .foregroundColor(.blue)
             }
-            
+
             if let journalEntries = plant.journalEntries?.prefix(5) {
                 if journalEntries.isEmpty {
                     InfoCard {
@@ -356,25 +356,25 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Upcoming Reminders Section
-    
+
     private var upcomingRemindersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Upcoming Reminders")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
+
                 Button("Manage") {
                     // Navigate to reminder management
                 }
                 .font(.caption)
                 .foregroundColor(.blue)
             }
-            
+
             if let reminders = plant.reminders?.filter({ $0.isEnabled == true }).prefix(3) {
                 if reminders.isEmpty {
                     InfoCard {
@@ -396,16 +396,16 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Views
-    
+
     private struct InfoCard<Content: View>: View {
         let content: Content
-        
+
         init(@ViewBuilder content: () -> Content) {
             self.content = content()
         }
-        
+
         var body: some View {
             VStack {
                 content
@@ -415,12 +415,12 @@ struct PlantDetailView: View {
             .cornerRadius(12)
         }
     }
-    
+
     private struct InfoRow: View {
         let title: String
         let value: String
         let systemImage: String
-        
+
         var body: some View {
             HStack {
                 Image(systemName: systemImage)
@@ -435,14 +435,14 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     private struct ActionButton: View {
         let title: String
         let systemImage: String
         let color: Color
         let isLoading: Bool
         let action: () -> Void
-        
+
         var body: some View {
             Button(action: action) {
                 VStack(spacing: 8) {
@@ -453,7 +453,7 @@ struct PlantDetailView: View {
                         Image(systemName: systemImage)
                             .font(.system(size: 20))
                     }
-                    
+
                     Text(title)
                         .font(.caption)
                         .fontWeight(.medium)
@@ -467,12 +467,12 @@ struct PlantDetailView: View {
             .disabled(isLoading)
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var healthStatusColor: Color {
         guard let healthStatus = plant.healthStatus else { return .gray }
-        
+
         switch healthStatus {
         case .healthy: return .green
         case .needsAttention: return .yellow
@@ -481,30 +481,32 @@ struct PlantDetailView: View {
         case .dead: return .gray
         }
     }
-    
+
     // MARK: - Helper Functions
-    
+
     private func performCareAction(_ type: JournalEntryType) {
         guard !isPerformingCareAction else { return }
-        
+
         isPerformingCareAction = true
-        
+
         Task {
             do {
                 // Update plant's care dates
                 let currentDate = Date()
-                
+
                 switch type {
                 case .watering:
                     plant.lastWatered = currentDate
                     careActionMessage = "Watering recorded for \(plant.name ?? "your plant")!"
+
                 case .fertilizing:
                     plant.lastFertilized = currentDate
                     careActionMessage = "Fertilizing recorded for \(plant.name ?? "your plant")!"
+
                 default:
                     break
                 }
-                
+
                 // Create a journal entry
                 let journalEntry = JournalEntry(
                     title: type.displayName,
@@ -512,15 +514,14 @@ struct PlantDetailView: View {
                     entryType: type,
                     plant: plant
                 )
-                
+
                 // Save to data service
                 try dataService.addJournalEntry(journalEntry)
-                
+
                 await MainActor.run {
                     isPerformingCareAction = false
                     showingCareSuccess = true
                 }
-                
             } catch {
                 await MainActor.run {
                     isPerformingCareAction = false
@@ -531,7 +532,7 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     private func deletePlant() {
         Task {
             do {
@@ -544,34 +545,34 @@ struct PlantDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Simple Fallback Views
-    
+
     private struct SimpleJournalEntryRow: View {
         let entry: JournalEntry
-        
+
         var body: some View {
             HStack(spacing: 12) {
                 Image(systemName: entry.entryType.iconName)
                     .font(.title3)
                     .foregroundColor(Color(entry.entryType.color))
                     .frame(width: 24, height: 24)
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(entry.title.isEmpty ? entry.entryType.displayName : entry.title)
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+
                     Text(entry.content)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
-                    
+
                     Text(entry.entryDate.formatted(date: .abbreviated, time: .shortened))
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
             }
             .padding()
@@ -579,34 +580,34 @@ struct PlantDetailView: View {
             .cornerRadius(8)
         }
     }
-    
+
     private struct SimpleReminderRow: View {
         let reminder: PlantReminder
-        
+
         var body: some View {
             HStack(spacing: 12) {
                 Image(systemName: reminder.reminderType.iconName)
                     .font(.title3)
                     .foregroundColor(Color(reminder.priority.color))
                     .frame(width: 24, height: 24)
-                
+
                 VStack(alignment: .leading, spacing: 4) {
                     Text(reminder.title)
                         .font(.headline)
                         .foregroundColor(.primary)
-                    
+
                     Text(reminder.message)
                         .font(.caption)
                         .foregroundColor(.secondary)
                         .lineLimit(2)
-                    
+
                     Text("Due: \(reminder.nextDueDate.formatted(date: .abbreviated, time: .shortened))")
                         .font(.caption2)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 if reminder.isEnabled {
                     Circle()
                         .fill(Color(reminder.priority.color))
@@ -627,13 +628,13 @@ enum SortOption: CaseIterable {
     case dateAdded
     case healthStatus
     case wateringSchedule
-    
+
     var displayName: String {
         switch self {
-        case .name: return "Name"
-        case .dateAdded: return "Date Added"
-        case .healthStatus: return "Health Status"
-        case .wateringSchedule: return "Watering Schedule"
+        case .name: "Name"
+        case .dateAdded: "Date Added"
+        case .healthStatus: "Health Status"
+        case .wateringSchedule: "Watering Schedule"
         }
     }
 }

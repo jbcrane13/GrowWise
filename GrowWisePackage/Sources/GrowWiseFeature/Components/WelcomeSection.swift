@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 /// A reusable welcome section component that displays a time-based greeting
 /// and the current user's name.
@@ -29,12 +29,15 @@ public struct WelcomeSection: View {
     private var welcomeMessage: String {
         let hour = Calendar.current.component(.hour, from: Date())
         switch hour {
-        case 0..<12:
+        case 0 ..< 12:
             return "Good Morning"
-        case 12..<17:
+
+        case 12 ..< 17:
             return "Good Afternoon"
-        case 17..<21:
+
+        case 17 ..< 21:
             return "Good Evening"
+
         default:
             return "Good Night"
         }

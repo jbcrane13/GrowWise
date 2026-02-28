@@ -1,5 +1,5 @@
-import SwiftUI
 import GrowWiseServices
+import SwiftUI
 
 public struct ValidatedTextField: View {
     let title: String
@@ -10,10 +10,10 @@ public struct ValidatedTextField: View {
     #else
     let keyboardType: Int
     #endif
-    
+
     @State private var errorMessage: String?
     @FocusState private var isFocused: Bool
-    
+
     #if canImport(UIKit)
     public init(
         _ title: String,
@@ -22,7 +22,7 @@ public struct ValidatedTextField: View {
         keyboardType: UIKeyboardType = .default
     ) {
         self.title = title
-        self._text = text
+        _text = text
         self.validation = validation
         self.keyboardType = keyboardType
     }
@@ -34,19 +34,19 @@ public struct ValidatedTextField: View {
         keyboardType: Int = 0
     ) {
         self.title = title
-        self._text = text
+        _text = text
         self.validation = validation
         self.keyboardType = keyboardType
     }
     #endif
-    
+
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             TextField(title, text: $text)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
-                #if canImport(UIKit)
+            #if canImport(UIKit)
                 .keyboardType(keyboardType)
-                #endif
+            #endif
                 .focused($isFocused)
                 .onChange(of: isFocused) { _, newValue in
                     if !newValue {
@@ -61,8 +61,8 @@ public struct ValidatedTextField: View {
                         errorMessage = nil
                     }
                 }
-            
-            if let errorMessage = errorMessage {
+
+            if let errorMessage {
                 Text(errorMessage)
                     .font(.caption)
                     .foregroundColor(.red)

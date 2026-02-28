@@ -7,17 +7,17 @@ import Foundation
 public final class SwiftDataCache {
     /// TTL policy for cache entries
     public enum TTLPolicy {
-        case short       // 120 seconds (2 minutes) - time-sensitive data like active reminders
-        case medium      // 300 seconds (5 minutes) - standard queries like plants/gardens
-        case long        // 900 seconds (15 minutes) - stable data like plant database
+        case short // 120 seconds (2 minutes) - time-sensitive data like active reminders
+        case medium // 300 seconds (5 minutes) - standard queries like plants/gardens
+        case long // 900 seconds (15 minutes) - stable data like plant database
         case custom(TimeInterval) // custom TTL for special cases
 
         var timeInterval: TimeInterval {
             switch self {
-            case .short: return 120
-            case .medium: return 300
-            case .long: return 900
-            case .custom(let interval): return interval
+            case .short: 120
+            case .medium: 300
+            case .long: 900
+            case let .custom(interval): interval
             }
         }
     }
@@ -57,7 +57,7 @@ public final class SwiftDataCache {
     }
 
     /// Store value with TTL
-    public func set<T>(_ key: String, value: T, ttl: TimeInterval? = nil) {
+    public func set(_ key: String, value: some Any, ttl: TimeInterval? = nil) {
         let actualTTL = ttl ?? defaultTTL
         cache[key] = CacheEntry(value: value, timestamp: Date(), ttl: actualTTL, policy: .custom(actualTTL))
 
@@ -68,7 +68,7 @@ public final class SwiftDataCache {
     }
 
     /// Store value with TTL policy
-    public func set<T>(_ key: String, value: T, policy: TTLPolicy) {
+    public func set(_ key: String, value: some Any, policy: TTLPolicy) {
         let ttl = policy.timeInterval
         cache[key] = CacheEntry(value: value, timestamp: Date(), ttl: ttl, policy: policy)
         print("[Cache] Set: key=\(key), policy=\(policy), size=\(cache.count)")
@@ -100,7 +100,7 @@ public final class SwiftDataCache {
 
     /// Get cache statistics
     public func getStats() -> (hits: Int, misses: Int, size: Int) {
-        return (hitCount, missCount, cache.count)
+        (hitCount, missCount, cache.count)
     }
 
     /// Get cache hit ratio for performance monitoring
@@ -127,12 +127,11 @@ public final class SwiftDataCache {
         var newestTimestamp: Date?
 
         for entry in cache.values {
-            let policyKey: String
-            switch entry.policy {
-            case .short: policyKey = "short"
-            case .medium: policyKey = "medium"
-            case .long: policyKey = "long"
-            case .custom: policyKey = "custom"
+            let policyKey = switch entry.policy {
+            case .short: "short"
+            case .medium: "medium"
+            case .long: "long"
+            case .custom: "custom"
             }
             entriesByPolicy[policyKey, default: 0] += 1
 
@@ -166,12 +165,12 @@ public final class SwiftDataCache {
 
         // Check hit ratio
         let hitRatio = getHitRatio()
-        if hitRatio < 0.3 && (hitCount + missCount) > 10 {
+        if hitRatio < 0.3, (hitCount + missCount) > 10 {
             issues.append("Low cache hit ratio (\(String(format: "%.1f%%", hitRatio * 100)))")
         }
 
         // Check expired entries
-        let expiredCount = cache.values.filter { $0.isExpired }.count
+        let expiredCount = cache.values.count(where: { $0.isExpired })
         if expiredCount > cache.count / 5 {
             issues.append("High expiration rate (\(expiredCount) expired entries)")
         }
@@ -180,7 +179,7 @@ public final class SwiftDataCache {
     }
 
     /// Preload value into cache if not already cached
-    public func preload<T>(_ key: String, policy: TTLPolicy = .medium, loader: () async throws -> T) async {
+    public func preload(_ key: String, policy: TTLPolicy = .medium, loader: () async throws -> some Any) async {
         // Skip if already cached and not expired
         if let entry = cache[key], !entry.isExpired {
             return
@@ -231,7 +230,7 @@ public final class SwiftDataCache {
         cache = cache.filter { !$0.value.isExpired }
         let removedCount = sizeBefore - cache.count
 
-        if removedCount > 0 && cache.count > 10 {
+        if removedCount > 0, cache.count > 10 {
             print("[Cache] Cleaned \(removedCount) expired entries")
         }
     }

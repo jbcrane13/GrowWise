@@ -1,10 +1,9 @@
 import Foundation
-import SwiftData
 import GrowWiseModels
+import SwiftData
 
 /// Sample plant database with 25+ common plants for MVP
-struct PlantDatabase {
-    
+enum PlantDatabase {
     static let samplePlants: [PlantData] = [
         // Herbs
         PlantData(
@@ -28,7 +27,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 2,
             companionPlants: ["tomato", "pepper", "oregano"]
         ),
-        
+
         PlantData(
             name: "Mint",
             scientificName: "Mentha",
@@ -50,7 +49,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 2,
             companionPlants: ["cabbage", "broccoli", "kale"]
         ),
-        
+
         PlantData(
             name: "Rosemary",
             scientificName: "Rosmarinus officinalis",
@@ -72,7 +71,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 8,
             companionPlants: ["sage", "thyme", "lavender"]
         ),
-        
+
         PlantData(
             name: "Parsley",
             scientificName: "Petroselinum crispum",
@@ -94,7 +93,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 3,
             companionPlants: ["tomato", "carrot", "chives"]
         ),
-        
+
         PlantData(
             name: "Oregano",
             scientificName: "Origanum vulgare",
@@ -116,7 +115,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 4,
             companionPlants: ["basil", "thyme", "tomato"]
         ),
-        
+
         // Vegetables
         PlantData(
             name: "Tomato",
@@ -139,7 +138,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 2,
             companionPlants: ["basil", "marigold", "pepper"]
         ),
-        
+
         PlantData(
             name: "Lettuce",
             scientificName: "Lactuca sativa",
@@ -161,7 +160,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["carrot", "radish", "chives"]
         ),
-        
+
         PlantData(
             name: "Spinach",
             scientificName: "Spinacia oleracea",
@@ -183,7 +182,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["strawberry", "peas", "radish"]
         ),
-        
+
         PlantData(
             name: "Carrot",
             scientificName: "Daucus carota",
@@ -205,7 +204,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["onion", "leek", "rosemary"]
         ),
-        
+
         PlantData(
             name: "Radish",
             scientificName: "Raphanus sativus",
@@ -227,7 +226,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["carrot", "lettuce", "cucumber"]
         ),
-        
+
         // Flowers
         PlantData(
             name: "Marigold",
@@ -250,7 +249,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 1,
             companionPlants: ["tomato", "pepper", "cabbage"]
         ),
-        
+
         PlantData(
             name: "Sunflower",
             scientificName: "Helianthus annuus",
@@ -272,7 +271,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["corn", "beans", "squash"]
         ),
-        
+
         PlantData(
             name: "Zinnia",
             scientificName: "Zinnia elegans",
@@ -294,7 +293,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 1,
             companionPlants: ["cosmos", "marigold", "nasturtium"]
         ),
-        
+
         PlantData(
             name: "Cosmos",
             scientificName: "Cosmos bipinnatus",
@@ -316,7 +315,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 1,
             companionPlants: ["zinnia", "marigold", "sunflower"]
         ),
-        
+
         PlantData(
             name: "Nasturtium",
             scientificName: "Tropaeolum majus",
@@ -338,7 +337,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 2,
             companionPlants: ["cucumber", "radish", "beans"]
         ),
-        
+
         // Succulents
         PlantData(
             name: "Aloe Vera",
@@ -361,7 +360,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["jade", "echeveria", "haworthia"]
         ),
-        
+
         PlantData(
             name: "Jade Plant",
             scientificName: "Crassula ovata",
@@ -383,7 +382,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 12,
             companionPlants: ["aloe", "snake_plant", "pothos"]
         ),
-        
+
         PlantData(
             name: "Echeveria",
             scientificName: "Echeveria",
@@ -405,7 +404,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["sedum", "jade", "haworthia"]
         ),
-        
+
         // Houseplants
         PlantData(
             name: "Pothos",
@@ -428,7 +427,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 8,
             companionPlants: ["snake_plant", "philodendron", "peace_lily"]
         ),
-        
+
         PlantData(
             name: "Snake Plant",
             scientificName: "Sansevieria trifasciata",
@@ -450,7 +449,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 0,
             companionPlants: ["pothos", "philodendron", "rubber_tree"]
         ),
-        
+
         PlantData(
             name: "Peace Lily",
             scientificName: "Spathiphyllum",
@@ -472,7 +471,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 4,
             companionPlants: ["pothos", "philodendron", "boston_fern"]
         ),
-        
+
         PlantData(
             name: "Rubber Tree",
             scientificName: "Ficus elastica",
@@ -494,7 +493,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 12,
             companionPlants: ["monstera", "fiddle_leaf", "philodendron"]
         ),
-        
+
         PlantData(
             name: "Philodendron",
             scientificName: "Philodendron hederaceum",
@@ -516,7 +515,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 8,
             companionPlants: ["pothos", "monstera", "peace_lily"]
         ),
-        
+
         // Fruits
         PlantData(
             name: "Strawberry",
@@ -539,7 +538,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 4,
             companionPlants: ["thyme", "borage", "lettuce"]
         ),
-        
+
         PlantData(
             name: "Blueberry",
             scientificName: "Vaccinium corymbosum",
@@ -561,7 +560,7 @@ struct PlantDatabase {
             pruningFrequencyWeeks: 52,
             companionPlants: ["azalea", "rhododendron", "cranberry"]
         ),
-        
+
         PlantData(
             name: "Lemon Tree",
             scientificName: "Citrus limon",
@@ -582,60 +581,53 @@ struct PlantDatabase {
             fertilizingFrequencyWeeks: 6,
             pruningFrequencyWeeks: 12,
             companionPlants: ["lavender", "rosemary", "thyme"]
-        )
+        ),
     ]
-    
+
     /// Load sample plants into SwiftData
+    // swiftlint:disable:next cyclomatic_complexity
     static func loadSamplePlants(into context: ModelContext) {
         for plantData in samplePlants {
             // Map category string to PlantType enum
-            let plantType: PlantType = {
-                switch plantData.category.lowercased() {
-                case "herb": return .herb
-                case "vegetable": return .vegetable
-                case "flower": return .flower
-                case "houseplant": return .houseplant
-                case "fruit": return .fruit
-                case "succulent": return .succulent
-                default: return .herb // Default fallback
-                }
-            }()
-            
+            let plantType: PlantType = switch plantData.category.lowercased() {
+            case "herb": .herb
+            case "vegetable": .vegetable
+            case "flower": .flower
+            case "houseplant": .houseplant
+            case "fruit": .fruit
+            case "succulent": .succulent
+            default: .herb // Default fallback
+            }
+
             // Map difficulty level string to DifficultyLevel enum
-            let difficultyLevel: DifficultyLevel = {
-                switch plantData.difficultyLevel.lowercased() {
-                case "beginner": return .beginner
-                case "intermediate": return .intermediate
-                case "advanced": return .advanced
-                default: return .beginner // Default fallback
-                }
-            }()
-            
+            let difficultyLevel: DifficultyLevel = switch plantData.difficultyLevel.lowercased() {
+            case "beginner": .beginner
+            case "intermediate": .intermediate
+            case "advanced": .advanced
+            default: .beginner // Default fallback
+            }
+
             // Map sun requirement string to SunlightLevel enum
-            let sunlightRequirement: SunlightLevel = {
-                switch plantData.sunRequirement.lowercased() {
-                case "full_sun": return .fullSun
-                case "partial_sun": return .partialSun
-                case "partial_shade": return .partialShade
-                case "full_shade", "low_light": return .fullShade
-                case "bright_indirect": return .partialSun
-                default: return .fullSun // Default fallback
-                }
-            }()
-            
+            let sunlightRequirement: SunlightLevel = switch plantData.sunRequirement.lowercased() {
+            case "full_sun": .fullSun
+            case "partial_sun": .partialSun
+            case "partial_shade": .partialShade
+            case "full_shade", "low_light": .fullShade
+            case "bright_indirect": .partialSun
+            default: .fullSun // Default fallback
+            }
+
             // Map watering frequency days to WateringFrequency enum
-            let wateringFrequency: WateringFrequency = {
-                switch plantData.wateringFrequencyDays {
-                case 1: return .daily
-                case 2: return .everyOtherDay
-                case 3: return .twiceWeekly
-                case 7: return .weekly
-                case 14: return .biweekly
-                case 21...30: return .monthly
-                default: return .weekly // Default fallback
-                }
-            }()
-            
+            let wateringFrequency: WateringFrequency = switch plantData.wateringFrequencyDays {
+            case 1: .daily
+            case 2: .everyOtherDay
+            case 3: .twiceWeekly
+            case 7: .weekly
+            case 14: .biweekly
+            case 21 ... 30: .monthly
+            default: .weekly // Default fallback
+            }
+
             // Create SwiftData Plant model
             let plant = Plant(
                 name: plantData.name,
@@ -643,7 +635,7 @@ struct PlantDatabase {
                 difficultyLevel: difficultyLevel,
                 isUserPlant: false // This is a database plant, not user's plant
             )
-            
+
             // Set additional properties
             plant.scientificName = plantData.scientificName
             plant.sunlightRequirement = sunlightRequirement
@@ -652,11 +644,11 @@ struct PlantDatabase {
             plant.growthStage = .seedling // Default starting stage
             plant.healthStatus = .healthy // Default status
             plant.notes = plantData.description
-            
+
             // Insert the plant into the context
             context.insert(plant)
         }
-        
+
         do {
             try context.save()
         } catch {

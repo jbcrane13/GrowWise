@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 /// Custom search bar component for views that need specialized search UI
 /// For standard search, prefer SwiftUI's native .searchable modifier which includes built-in debouncing
@@ -8,47 +8,47 @@ import GrowWiseServices
 public struct SearchBarView: View {
     @Binding var text: String
     var placeholder: String = "Search..."
-    var onSearchButtonClicked: (() -> Void)? = nil
-    var onCancelButtonClicked: (() -> Void)? = nil
+    var onSearchButtonClicked: (() -> Void)?
+    var onCancelButtonClicked: (() -> Void)?
 
     @FocusState private var isSearchFieldFocused: Bool
     @State private var isEditing = false
-    
+
     public init(
         text: Binding<String>,
         placeholder: String = "Search...",
         onSearchButtonClicked: (() -> Void)? = nil,
         onCancelButtonClicked: (() -> Void)? = nil
     ) {
-        self._text = text
+        _text = text
         self.placeholder = placeholder
         self.onSearchButtonClicked = onSearchButtonClicked
         self.onCancelButtonClicked = onCancelButtonClicked
     }
-    
+
     public var body: some View {
         HStack {
             searchTextField
-            
+
             if isEditing {
                 cancelButton
             }
         }
         .background(Color(.systemGray6))
         .cornerRadius(10)
-        .onChange(of: isSearchFieldFocused) { oldValue, newValue in
+        .onChange(of: isSearchFieldFocused) { _, newValue in
             withAnimation(.easeInOut(duration: 0.2)) {
                 isEditing = newValue
             }
         }
     }
-    
+
     private var searchTextField: some View {
         HStack {
             Image(systemName: "magnifyingglass")
                 .foregroundColor(.secondary)
                 .font(.system(size: 16))
-            
+
             TextField(placeholder, text: $text)
                 .focused($isSearchFieldFocused)
                 .textFieldStyle(PlainTextFieldStyle())
@@ -66,7 +66,7 @@ public struct SearchBarView: View {
                         text = sanitized
                     }
                 }
-            
+
             if !text.isEmpty {
                 clearButton
             }
@@ -74,7 +74,7 @@ public struct SearchBarView: View {
         .padding(.horizontal, 12)
         .padding(.vertical, 8)
     }
-    
+
     private var clearButton: some View {
         Button(action: {
             withAnimation(.easeInOut(duration: 0.1)) {
@@ -87,7 +87,7 @@ public struct SearchBarView: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
+
     private var cancelButton: some View {
         Button("Cancel") {
             withAnimation(.easeInOut(duration: 0.2)) {
@@ -108,31 +108,31 @@ public struct SearchBarView: View {
 public struct PlantSearchBarView: View {
     @Binding var text: String
     @Binding var selectedFilter: PlantSearchFilter?
-    var onFilterChanged: ((PlantSearchFilter?) -> Void)? = nil
-    
+    var onFilterChanged: ((PlantSearchFilter?) -> Void)?
+
     @State private var showingFilters = false
-    
+
     public init(
         text: Binding<String>,
         selectedFilter: Binding<PlantSearchFilter?> = .constant(nil),
         onFilterChanged: ((PlantSearchFilter?) -> Void)? = nil
     ) {
-        self._text = text
-        self._selectedFilter = selectedFilter
+        _text = text
+        _selectedFilter = selectedFilter
         self.onFilterChanged = onFilterChanged
     }
-    
+
     public var body: some View {
         VStack(spacing: 8) {
             HStack {
                 SearchBarView(text: $text, placeholder: "Search plants...")
-                
+
                 Button(action: { showingFilters.toggle() }) {
                     Image(systemName: selectedFilter != nil ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                         .foregroundColor(selectedFilter != nil ? .blue : .secondary)
                 }
             }
-            
+
             if let filter = selectedFilter {
                 activeFilterView(filter)
             }
@@ -143,13 +143,13 @@ public struct PlantSearchBarView: View {
             }
         }
     }
-    
+
     private func activeFilterView(_ filter: PlantSearchFilter) -> some View {
         HStack {
             Text("Filter: \(filter.displayName)")
                 .font(.caption)
                 .foregroundColor(.blue)
-            
+
             Button(action: {
                 selectedFilter = nil
                 onFilterChanged?(nil)
@@ -158,7 +158,7 @@ public struct PlantSearchBarView: View {
                     .font(.caption)
                     .foregroundColor(.blue)
             }
-            
+
             Spacer()
         }
         .padding(.horizontal, 8)
@@ -176,55 +176,63 @@ public enum PlantSearchFilter: CaseIterable {
     case sunlight(SunlightLevel)
     case watering(WateringFrequency)
     case healthStatus(HealthStatus)
-    
+
     public static var allCases: [PlantSearchFilter] {
         var cases: [PlantSearchFilter] = []
-        
+
         // Add plant types
         cases.append(contentsOf: PlantType.allCases.map { .plantType($0) })
-        
+
         // Add difficulty levels
         cases.append(contentsOf: DifficultyLevel.allCases.map { .difficulty($0) })
-        
+
         // Add sunlight levels
         cases.append(contentsOf: SunlightLevel.allCases.map { .sunlight($0) })
-        
+
         // Add watering frequencies
         cases.append(contentsOf: WateringFrequency.allCases.map { .watering($0) })
-        
+
         // Add health statuses
         cases.append(contentsOf: HealthStatus.allCases.map { .healthStatus($0) })
-        
+
         return cases
     }
-    
+
     public var displayName: String {
         switch self {
-        case .plantType(let type):
-            return type.displayName
-        case .difficulty(let level):
-            return level.displayName
-        case .sunlight(let level):
-            return level.displayName
-        case .watering(let frequency):
-            return frequency.displayName
-        case .healthStatus(let status):
-            return status.displayName
+        case let .plantType(type):
+            type.displayName
+
+        case let .difficulty(level):
+            level.displayName
+
+        case let .sunlight(level):
+            level.displayName
+
+        case let .watering(frequency):
+            frequency.displayName
+
+        case let .healthStatus(status):
+            status.displayName
         }
     }
-    
+
     public var category: String {
         switch self {
         case .plantType:
-            return "Plant Type"
+            "Plant Type"
+
         case .difficulty:
-            return "Difficulty"
+            "Difficulty"
+
         case .sunlight:
-            return "Sunlight"
+            "Sunlight"
+
         case .watering:
-            return "Watering"
+            "Watering"
+
         case .healthStatus:
-            return "Health"
+            "Health"
         }
     }
 }
@@ -235,7 +243,7 @@ struct PlantFilterSheet: View {
     @Binding var selectedFilter: PlantSearchFilter?
     let onFilterSelected: (PlantSearchFilter?) -> Void
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             List {
@@ -244,25 +252,25 @@ struct PlantFilterSheet: View {
                         filterRow(for: .plantType(type))
                     }
                 }
-                
+
                 Section("Difficulty Level") {
                     ForEach(DifficultyLevel.allCases, id: \.self) { level in
                         filterRow(for: .difficulty(level))
                     }
                 }
-                
+
                 Section("Sunlight Requirement") {
                     ForEach(SunlightLevel.allCases, id: \.self) { level in
                         filterRow(for: .sunlight(level))
                     }
                 }
-                
+
                 Section("Watering Frequency") {
                     ForEach(WateringFrequency.allCases, id: \.self) { frequency in
                         filterRow(for: .watering(frequency))
                     }
                 }
-                
+
                 Section("Health Status") {
                     ForEach(HealthStatus.allCases, id: \.self) { status in
                         filterRow(for: .healthStatus(status))
@@ -279,7 +287,7 @@ struct PlantFilterSheet: View {
                     }
                     .disabled(selectedFilter == nil)
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Done") {
                         dismiss()
@@ -288,7 +296,7 @@ struct PlantFilterSheet: View {
             }
         }
     }
-    
+
     private func filterRow(for filter: PlantSearchFilter) -> some View {
         Button(action: {
             if isSelected(filter) {
@@ -302,9 +310,9 @@ struct PlantFilterSheet: View {
             HStack {
                 Text(filter.displayName)
                     .foregroundColor(.primary)
-                
+
                 Spacer()
-                
+
                 if isSelected(filter) {
                     Image(systemName: "checkmark")
                         .foregroundColor(.blue)
@@ -312,21 +320,26 @@ struct PlantFilterSheet: View {
             }
         }
     }
-    
+
     private func isSelected(_ filter: PlantSearchFilter) -> Bool {
-        guard let selectedFilter = selectedFilter else { return false }
-        
+        guard let selectedFilter else { return false }
+
         switch (filter, selectedFilter) {
         case let (.plantType(a), .plantType(b)):
             return a == b
+
         case let (.difficulty(a), .difficulty(b)):
             return a == b
+
         case let (.sunlight(a), .sunlight(b)):
             return a == b
+
         case let (.watering(a), .watering(b)):
             return a == b
+
         case let (.healthStatus(a), .healthStatus(b)):
             return a == b
+
         default:
             return false
         }
@@ -338,12 +351,12 @@ struct PlantFilterSheet: View {
 public struct SearchSuggestionsView: View {
     let suggestions: [String]
     let onSuggestionTapped: (String) -> Void
-    
+
     public init(suggestions: [String], onSuggestionTapped: @escaping (String) -> Void) {
         self.suggestions = suggestions
         self.onSuggestionTapped = onSuggestionTapped
     }
-    
+
     public var body: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 8) {
@@ -370,11 +383,11 @@ public struct SearchSuggestionsView: View {
 #Preview {
     VStack(spacing: 20) {
         SearchBarView(text: .constant(""))
-        
+
         SearchBarView(text: .constant("Tomato"))
-        
+
         PlantSearchBarView(text: .constant(""))
-        
+
         SearchSuggestionsView(
             suggestions: ["Tomato", "Basil", "Rose", "Succulent"],
             onSuggestionTapped: { _ in }

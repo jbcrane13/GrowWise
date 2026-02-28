@@ -9,33 +9,33 @@ public enum QuickAction: CaseIterable {
 
     public var icon: String {
         switch self {
-        case .waterPlants: return "drop.fill"
-        case .addJournalEntry: return "book.fill"
-        case .plantDatabase: return "books.vertical.fill"
-        case .myGarden: return "leaf.fill"
+        case .waterPlants: "drop.fill"
+        case .addJournalEntry: "book.fill"
+        case .plantDatabase: "books.vertical.fill"
+        case .myGarden: "leaf.fill"
         }
     }
 
     public var label: String {
         switch self {
-        case .waterPlants: return "Water Plants"
-        case .addJournalEntry: return "Add Journal Entry"
-        case .plantDatabase: return "Plant Database"
-        case .myGarden: return "My Garden"
+        case .waterPlants: "Water Plants"
+        case .addJournalEntry: "Add Journal Entry"
+        case .plantDatabase: "Plant Database"
+        case .myGarden: "My Garden"
         }
     }
 
     public var color: Color {
         switch self {
-        case .waterPlants: return .blue
-        case .addJournalEntry: return .green
-        case .plantDatabase: return .orange
-        case .myGarden: return .mint
+        case .waterPlants: .blue
+        case .addJournalEntry: .green
+        case .plantDatabase: .orange
+        case .myGarden: .mint
         }
     }
 
     public var accessibilityLabel: String {
-        return label
+        label
     }
 }
 
@@ -68,7 +68,6 @@ public struct QuickActionsSection: View {
         }
     }
 }
-
 
 #Preview {
     QuickActionsSection { action in

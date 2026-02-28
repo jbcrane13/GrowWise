@@ -1,8 +1,8 @@
 import Foundation
-import SwiftUI
-import SwiftData
 import GrowWiseModels
 import GrowWiseServices
+import SwiftData
+import SwiftUI
 #if canImport(UIKit)
 import UIKit
 #endif
@@ -10,12 +10,12 @@ import UIKit
 public struct MainAppView: View {
     // Services injected from GrowWiseApp via environment
     @Environment(LocationService.self) private var locationService
-    @Environment(NotificationService.self) private var notificationService  
+    @Environment(NotificationService.self) private var notificationService
     @Environment(PerformanceMonitor.self) private var performanceMonitor
     @Environment(CloudSyncService.self) private var cloudSyncService
-    
+
     // DataService initialized asynchronously in this view, then injected to children
-    @State private var dataService: DataService? = nil
+    @State private var dataService: DataService?
     @State private var featureServices: FeatureServices?
     @State private var selectedTab: TabSelection = .home
     @State private var isInitializing = true
@@ -26,15 +26,13 @@ public struct MainAppView: View {
     public init() {
         let launchArgs = ProcessInfo.processInfo.arguments
         let launchEnv = ProcessInfo.processInfo.environment
-        let initialOnboardingStatus: Bool
-        if launchArgs.contains("--skip-onboarding") || launchEnv["UITEST_SKIP_ONBOARDING"] == "1" {
-            initialOnboardingStatus = true
+        let initialOnboardingStatus: Bool = if launchArgs.contains("--skip-onboarding") || launchEnv["UITEST_SKIP_ONBOARDING"] == "1" {
+            true
         } else {
-            initialOnboardingStatus = UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
+            UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
         }
 
         _cachedOnboardingStatus = State(initialValue: initialOnboardingStatus)
-
     }
 
     private struct FeatureServices {
@@ -45,7 +43,7 @@ public struct MainAppView: View {
         let subscriptionService: SubscriptionService
         let companionPlantingService: CompanionPlantingService
     }
-    
+
     public var body: some View {
         ZStack {
             if isInitializing {
@@ -105,21 +103,21 @@ public struct MainAppView: View {
                     Text("Home")
                 }
                 .tag(TabSelection.home)
-            
+
             MyGardenView()
                 .tabItem {
                     Image(systemName: "leaf.fill")
                     Text("My Garden")
                 }
                 .tag(TabSelection.garden)
-            
+
             PlantDatabaseView()
                 .tabItem {
                     Image(systemName: "books.vertical.fill")
                     Text("Plant Guide")
                 }
                 .tag(TabSelection.plantGuide)
-            
+
             if dataService != nil {
                 JournalView()
                     .tabItem {
@@ -128,7 +126,7 @@ public struct MainAppView: View {
                     }
                     .tag(TabSelection.journal)
             }
-            
+
             TutorialsView()
                 .tabItem {
                     Image(systemName: "graduationcap.fill")
@@ -151,7 +149,7 @@ public struct MainAppView: View {
                 .tag(TabSelection.profile)
         }
     }
-    
+
     private var shouldShowOnboarding: Bool {
         !(cachedOnboardingStatus ?? false)
     }
@@ -165,8 +163,8 @@ public struct MainAppView: View {
         // to allow XCTest quiescence detection to succeed.
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
             let service = await DataService.makeAsync()
-            self.dataService = service
-            self.featureServices = FeatureServices(
+            dataService = service
+            featureServices = FeatureServices(
                 reminderService: ReminderService(dataService: service, notificationService: notificationService),
                 photoService: PhotoService(dataService: service),
                 plantDatabaseService: PlantDatabaseService(dataService: service),
@@ -192,8 +190,8 @@ public struct MainAppView: View {
 
         print("[Init] Using async background initialization...")
         let service = await DataService.makeAsync()
-        self.dataService = service
-        self.featureServices = FeatureServices(
+        dataService = service
+        featureServices = FeatureServices(
             reminderService: ReminderService(dataService: service, notificationService: notificationService),
             photoService: PhotoService(dataService: service),
             plantDatabaseService: PlantDatabaseService(dataService: service),
@@ -303,25 +301,25 @@ enum TabSelection: Int, CaseIterable {
 
     var title: String {
         switch self {
-        case .home: return "Home"
-        case .garden: return "My Garden"
-        case .plantGuide: return "Plant Guide"
-        case .journal: return "Journal"
-        case .tutorials: return "Learn"
-        case .scanner: return "Scanner"
-        case .profile: return "Profile"
+        case .home: "Home"
+        case .garden: "My Garden"
+        case .plantGuide: "Plant Guide"
+        case .journal: "Journal"
+        case .tutorials: "Learn"
+        case .scanner: "Scanner"
+        case .profile: "Profile"
         }
     }
 
     var iconName: String {
         switch self {
-        case .home: return "house.fill"
-        case .garden: return "leaf.fill"
-        case .plantGuide: return "books.vertical.fill"
-        case .journal: return "book.pages.fill"
-        case .tutorials: return "graduationcap.fill"
-        case .scanner: return "camera.macro"
-        case .profile: return "person.circle.fill"
+        case .home: "house.fill"
+        case .garden: "leaf.fill"
+        case .plantGuide: "books.vertical.fill"
+        case .journal: "book.pages.fill"
+        case .tutorials: "graduationcap.fill"
+        case .scanner: "camera.macro"
+        case .profile: "person.circle.fill"
         }
     }
 }

@@ -8,38 +8,43 @@ import os
 /// Flags can be enabled per-environment (debug/release) or remotely via remote config.
 public enum FeatureFlag: String, CaseIterable, Sendable {
     // MARK: - Gardening Features
+
     case companionPlantingV2 = "companion_planting_v2"
     case plantHealthDiagnostics = "plant_health_diagnostics"
     case weatherIntegration = "weather_integration"
     case gardenCalendar = "garden_calendar"
 
     // MARK: - Journal Features
+
     case journalPhotoEnhancement = "journal_photo_enhancement"
     case journalMarkdown = "journal_markdown"
 
     // MARK: - Social / Sharing
+
     case gardenSharing = "garden_sharing"
 
     // MARK: - Premium / Subscription
+
     case premiumAnalytics = "premium_analytics"
 
     // MARK: - Developer / Debug
+
     case debugOverlay = "debug_overlay"
     case mockData = "mock_data"
 
     /// Default value when no override is configured
     var defaultValue: Bool {
         switch self {
-        case .companionPlantingV2: return true
-        case .plantHealthDiagnostics: return false
-        case .weatherIntegration: return false
-        case .gardenCalendar: return false
-        case .journalPhotoEnhancement: return true
-        case .journalMarkdown: return false
-        case .gardenSharing: return false
-        case .premiumAnalytics: return false
-        case .debugOverlay: return false
-        case .mockData: return false
+        case .companionPlantingV2: true
+        case .plantHealthDiagnostics: false
+        case .weatherIntegration: false
+        case .gardenCalendar: false
+        case .journalPhotoEnhancement: true
+        case .journalMarkdown: false
+        case .gardenSharing: false
+        case .premiumAnalytics: false
+        case .debugOverlay: false
+        case .mockData: false
         }
     }
 }
@@ -68,7 +73,7 @@ public final class FeatureFlagService {
     private let userDefaults: UserDefaults
     private let overrideKeyPrefix = "feature_flag_override_"
 
-    // Remote configuration store (CloudKit-backed, future)
+    /// Remote configuration store (CloudKit-backed, future)
     private var remoteFlags: [String: Bool] = [:]
 
     public init(userDefaults: UserDefaults = .standard) {
@@ -135,8 +140,8 @@ public final class FeatureFlagService {
     // MARK: - FlagSource
 
     public enum FlagSource: String {
-        case `default` = "default"
+        case `default`
         case override = "override (dev)"
-        case remote = "remote"
+        case remote
     }
 }

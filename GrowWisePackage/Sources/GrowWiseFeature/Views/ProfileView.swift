@@ -1,7 +1,7 @@
-import SwiftUI
-import StoreKit
 import GrowWiseModels
 import GrowWiseServices
+import StoreKit
+import SwiftUI
 
 public struct ProfileView: View {
     @Environment(DataService.self) private var dataService
@@ -10,8 +10,8 @@ public struct ProfileView: View {
     @State private var gardenCount: Int = 0
     @State private var plantCount: Int = 0
     @State private var showShareComingSoon = false
-    @State private var selectedProductID: String? = nil
-    @State private var purchaseError: String? = nil
+    @State private var selectedProductID: String?
+    @State private var purchaseError: String?
     @State private var showPurchaseError = false
     @State private var showRestoreSuccess = false
 
@@ -97,15 +97,15 @@ public struct ProfileView: View {
 
     // MARK: - Subscription Section
 
-    @ViewBuilder
     private var subscriptionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Subscription")
                 .font(.headline)
 
             switch subscriptionService.subscriptionStatus {
-            case .active(let tier, let expiryDate):
+            case let .active(tier, expiryDate):
                 activeSubscriptionCard(tier: tier, expiryDate: expiryDate)
+
             case .notSubscribed:
                 paywallView
             }
@@ -293,6 +293,7 @@ public struct ProfileView: View {
 }
 
 #Preview {
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let subscriptionService = SubscriptionService()
 

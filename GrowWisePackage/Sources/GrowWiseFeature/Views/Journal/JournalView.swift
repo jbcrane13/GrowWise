@@ -1,8 +1,8 @@
 #if canImport(UIKit)
-import SwiftUI
-import SwiftData
 import GrowWiseModels
 import GrowWiseServices
+import SwiftData
+import SwiftUI
 
 public struct JournalView: View {
     @Environment(DataService.self) private var dataService
@@ -11,7 +11,7 @@ public struct JournalView: View {
     @State private var plants: [Plant] = []
     @State private var hasMoreData = true
     @State private var currentOffset = 0
-    
+
     @State private var searchText = ""
     @State private var selectedPlant: Plant?
     @State private var selectedEntryType: JournalEntryType?
@@ -21,9 +21,9 @@ public struct JournalView: View {
     @State private var isLoadingMore = false
     @State private var visibleEntryCount = 20
     @State private var filteredCache: [JournalEntry]?
-    
+
     public init() {}
-    
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -37,7 +37,7 @@ public struct JournalView: View {
                                 isSelected: selectedPlant == nil,
                                 action: { selectedPlant = nil }
                             )
-                            
+
                             ForEach(plants.filter { $0.isUserPlant ?? false }) { plant in
                                 JournalFilterChip(
                                     title: plant.name ?? "Unknown Plant",
@@ -48,7 +48,7 @@ public struct JournalView: View {
                         }
                         .padding(.horizontal)
                     }
-                    
+
                     ScrollView(.horizontal, showsIndicators: false) {
                         HStack(spacing: 8) {
                             JournalFilterChip(
@@ -56,7 +56,7 @@ public struct JournalView: View {
                                 isSelected: selectedEntryType == nil,
                                 action: { selectedEntryType = nil }
                             )
-                            
+
                             ForEach(JournalEntryType.allCases, id: \.self) { type in
                                 JournalFilterChip(
                                     title: type.displayName,
@@ -70,7 +70,7 @@ public struct JournalView: View {
                 }
                 .padding(.vertical, 8)
                 .background(Color(.systemGroupedBackground))
-                
+
                 // Sort picker
                 HStack {
                     Picker("Sort", selection: $sortOrder) {
@@ -79,12 +79,12 @@ public struct JournalView: View {
                         }
                     }
                     .pickerStyle(SegmentedPickerStyle())
-                    
+
                     Spacer()
                 }
                 .padding(.horizontal)
                 .padding(.top, 8)
-                
+
                 // Journal entries list with pagination
                 if journalEntries.isEmpty {
                     EmptyJournalView(hasEntries: !journalEntries.isEmpty)
@@ -110,7 +110,7 @@ public struct JournalView: View {
                                     .foregroundColor(.primary)
                             }
                         }
-                        
+
                         // Load more button
                         if hasMoreData {
                             HStack {
@@ -156,7 +156,7 @@ public struct JournalView: View {
                 )
             }
             // Native SwiftUI search with built-in debouncing - no manual Task management needed
-            
+
             .task {
                 loadInitialData()
             }
@@ -179,43 +179,37 @@ public struct JournalView: View {
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
-    
-    
-    
-    
+
     private var paginatedGroupedEntries: [String: [JournalEntry]] {
         Dictionary(grouping: journalEntries) { entry in
             formatDateForGrouping(entry.entryDate)
         }
     }
-    
-    
+
     // MARK: - Data Loading
-    
+
     private func loadInitialData() {
         plants = (try? dataService.plants.fetchAll()) ?? []
         loadFilteredData(reset: true)
     }
-    
+
     private func loadFilteredData(reset: Bool = false) {
         if reset {
             currentOffset = 0
             journalEntries.removeAll()
             hasMoreData = true
         }
-        
+
         guard hasMoreData else { return }
-        
+
         isLoadingMore = true
-        
-        let baseEntries: [JournalEntry]
-        if let selectedPlant {
-            baseEntries = dataService.fetchJournalEntries(for: selectedPlant, offset: 0, limit: 200)
+
+        let baseEntries: [JournalEntry] = if let selectedPlant {
+            dataService.fetchJournalEntries(for: selectedPlant, offset: 0, limit: 200)
         } else {
-            baseEntries = dataService.fetchRecentJournalEntries(limit: 200)
+            dataService.fetchRecentJournalEntries(limit: 200)
         }
 
         var fetched = baseEntries
@@ -226,44 +220,47 @@ public struct JournalView: View {
             let query = searchText.lowercased()
             fetched = fetched.filter {
                 $0.title.lowercased().contains(query) ||
-                $0.content.lowercased().contains(query) ||
-                ($0.plant?.name?.lowercased().contains(query) ?? false)
+                    $0.content.lowercased().contains(query) ||
+                    ($0.plant?.name?.lowercased().contains(query) ?? false)
             }
         }
 
         switch sortOrder {
         case .dateAscending:
             fetched.sort { $0.entryDate < $1.entryDate }
+
         case .dateDescending:
             fetched.sort { $0.entryDate > $1.entryDate }
+
         case .plantName:
             fetched.sort { ($0.plant?.name ?? "") < ($1.plant?.name ?? "") }
+
         case .entryType:
             fetched.sort { $0.entryType.displayName < $1.entryType.displayName }
         }
 
         let start = min(currentOffset, fetched.count)
         let end = min(start + visibleEntryCount, fetched.count)
-        let page = start < end ? Array(fetched[start..<end]) : []
-        
+        let page = start < end ? Array(fetched[start ..< end]) : []
+
         if page.count < visibleEntryCount {
             hasMoreData = false
         }
-        
+
         // Final in-memory sort if needed
         let finalEntries = page
-        
+
         journalEntries.append(contentsOf: finalEntries)
         currentOffset += finalEntries.count
         isLoadingMore = false
     }
-    
+
     private func loadMoreEntries() {
         loadFilteredData(reset: false)
     }
 
     // MARK: - Helper Methods
-    
+
     private func deleteEntries(at offsets: IndexSet, in entries: [JournalEntry]) {
         for index in offsets {
             let entry = entries[index]
@@ -271,15 +268,15 @@ public struct JournalView: View {
             journalEntries.removeAll { $0.id == entry.id }
         }
     }
-    
+
     private func formatSectionDate(_ dateString: String) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
-        
+
         guard let date = formatter.date(from: dateString) else {
             return dateString
         }
-        
+
         if Calendar.current.isDateInToday(date) {
             return "Today"
         } else if Calendar.current.isDateInYesterday(date) {
@@ -289,21 +286,23 @@ public struct JournalView: View {
             return formatter.string(from: date)
         }
     }
-    
+
     private func formatDateForGrouping(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.dateFormat = "yyyy-MM-dd"
         return formatter.string(from: date)
     }
-    
+
     private func sortGroupsByDate(_ lhs: String, _ rhs: String) -> Bool {
         switch sortOrder {
         case .dateAscending:
-            return lhs < rhs
+            lhs < rhs
+
         case .dateDescending:
-            return lhs > rhs
+            lhs > rhs
+
         default:
-            return lhs > rhs // Default to newest first
+            lhs > rhs // Default to newest first
         }
     }
 }
@@ -314,7 +313,7 @@ private struct JournalFilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -334,28 +333,29 @@ private struct JournalFilterChip: View {
 
 private struct EmptyJournalView: View {
     let hasEntries: Bool
-    
+
     var body: some View {
         VStack(spacing: 20) {
             Image(systemName: hasEntries ? "magnifyingglass" : "book.closed")
                 .font(.system(size: 60))
                 .foregroundColor(.secondary)
-            
+
             VStack(spacing: 8) {
                 Text(hasEntries ? "No entries found" : "Start Your Plant Journal")
                     .font(.title2)
                     .fontWeight(.semibold)
-                
-                Text(hasEntries ? 
-                     "Try adjusting your search or filters to find entries." :
-                     "Document your plant care journey with photos and notes."
+
+                Text(
+                    hasEntries ?
+                        "Try adjusting your search or filters to find entries." :
+                        "Document your plant care journey with photos and notes."
                 )
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal, 40)
             }
-            
+
             if !hasEntries {
                 Button("Add Your First Entry") {
                     // This will be handled by the parent view
@@ -372,16 +372,16 @@ private struct EmptyJournalView: View {
 
 private enum SortOrder: String, CaseIterable {
     case dateDescending = "date_desc"
-    case dateAscending = "date_asc" 
+    case dateAscending = "date_asc"
     case plantName = "plant_name"
     case entryType = "entry_type"
-    
+
     var displayName: String {
         switch self {
-        case .dateDescending: return "Newest First"
-        case .dateAscending: return "Oldest First"
-        case .plantName: return "Plant Name"
-        case .entryType: return "Entry Type"
+        case .dateDescending: "Newest First"
+        case .dateAscending: "Oldest First"
+        case .plantName: "Plant Name"
+        case .entryType: "Entry Type"
         }
     }
 }

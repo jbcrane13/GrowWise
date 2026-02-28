@@ -1,5 +1,5 @@
-import SwiftUI
 import GrowWiseModels
+import SwiftUI
 
 /// A reusable compact reminder row component for displaying reminders in a compact format.
 public struct CompactReminderRow: View {

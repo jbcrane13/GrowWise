@@ -1,7 +1,7 @@
-import SwiftUI
-import UserNotifications
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
+import UserNotifications
 
 /// Full view for displaying and managing all plant reminders.
 public struct RemindersListView: View {
@@ -95,7 +95,7 @@ public struct RemindersListView: View {
             "Today": [],
             "Tomorrow": [],
             "This Week": [],
-            "Later": []
+            "Later": [],
         ]
 
         for reminder in reminders {
@@ -176,7 +176,7 @@ public struct RemindersListView: View {
         )
 
         UNUserNotificationCenter.current().add(request) { error in
-            if let error = error {
+            if let error {
                 print("Failed to schedule notification: \(error)")
             }
         }

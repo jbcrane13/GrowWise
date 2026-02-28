@@ -1,8 +1,8 @@
-import SwiftUI
-import SwiftData
-import PhotosUI
 import GrowWiseModels
 import GrowWiseServices
+import PhotosUI
+import SwiftData
+import SwiftUI
 
 public struct MyGardenView: View {
     @Environment(DataService.self) private var dataService
@@ -17,9 +17,9 @@ public struct MyGardenView: View {
     @State private var isLoading = true
     @State private var selectedSortOption: SortOption = .name
     @State private var showingCreateGarden = false // Added per instruction
-    
+
     public init() {}
-    
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
@@ -94,7 +94,7 @@ public struct MyGardenView: View {
             }
         }
     }
-    
+
     private var gardenSelectorSection: some View {
         ScrollView(.horizontal, showsIndicators: false) {
             LazyHStack(spacing: 12) {
@@ -104,7 +104,7 @@ public struct MyGardenView: View {
                 ) {
                     selectedGarden = nil
                 }
-                
+
                 ForEach(gardens, id: \.id) { garden in
                     GardenChip(
                         name: garden.name ?? "Unknown Garden",
@@ -119,7 +119,7 @@ public struct MyGardenView: View {
         .padding(.vertical, 8)
         .background(Color(.systemGray6))
     }
-    
+
     private var plantsSection: some View {
         Group {
             if isLoading {
@@ -131,7 +131,7 @@ public struct MyGardenView: View {
             }
         }
     }
-    
+
     private var plantsGrid: some View {
         ScrollView {
             LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 16), count: 2), spacing: 16) {
@@ -145,7 +145,7 @@ public struct MyGardenView: View {
             .padding()
         }
     }
-    
+
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -155,28 +155,28 @@ public struct MyGardenView: View {
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var emptyStateView: some View {
         VStack(spacing: 20) {
             Image(systemName: "leaf.circle")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
-            
+
             VStack(spacing: 8) {
                 Text(emptyStateTitle)
                     .font(.headline)
-                
+
                 Text(emptyStateMessage)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
             }
-            
+
             Button("Add Your First Plant") {
                 showingAddPlant = true
             }
             .buttonStyle(.borderedProminent)
-            
+
             Button("Create Garden") {
                 showingCreateGarden = true
             }
@@ -185,7 +185,7 @@ public struct MyGardenView: View {
         .padding()
         .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
-    
+
     private var sortMenuButton: some View {
         Menu {
             ForEach(SortOption.allCases, id: \.self) { option in
@@ -204,7 +204,7 @@ public struct MyGardenView: View {
             Image(systemName: "arrow.up.arrow.down")
         }
     }
-    
+
     private var filterButton: some View {
         Button(action: { showingFilters = true }) {
             Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
@@ -218,95 +218,98 @@ public struct MyGardenView: View {
         }
         .accessibilityLabel("Add")
     }
-    
+
     private var hasActiveFilters: Bool {
         selectedPlantType != nil || selectedDifficulty != nil
     }
-    
+
     private var filteredPlants: [Plant] {
         var filtered = plants
-        
+
         // Filter by garden
-        if let selectedGarden = selectedGarden {
+        if let selectedGarden {
             filtered = filtered.filter { $0.garden?.id == selectedGarden.id }
         }
-        
+
         // Filter by search text (using lowercased for in-memory filtering)
         if !searchText.isEmpty {
             let lowercasedSearch = searchText.lowercased()
             filtered = filtered.filter { plant in
                 (plant.name ?? "").lowercased().contains(lowercasedSearch) ||
-                (plant.scientificName?.lowercased().contains(lowercasedSearch) ?? false) ||
-                (plant.notes ?? "").lowercased().contains(lowercasedSearch)
+                    (plant.scientificName?.lowercased().contains(lowercasedSearch) ?? false) ||
+                    (plant.notes ?? "").lowercased().contains(lowercasedSearch)
             }
         }
-        
+
         // Filter by plant type
         if let selectedType = selectedPlantType {
             filtered = filtered.filter { $0.plantType == selectedType }
         }
-        
+
         // Filter by difficulty
-        if let selectedDifficulty = selectedDifficulty {
+        if let selectedDifficulty {
             filtered = filtered.filter { $0.difficultyLevel == selectedDifficulty }
         }
-        
+
         return filtered
     }
-    
+
     private var emptyStateTitle: String {
         if hasActiveFilters || !searchText.isEmpty {
-            return "No Plants Found"
+            "No Plants Found"
         } else if selectedGarden != nil {
-            return "This Garden is Empty"
+            "This Garden is Empty"
         } else {
-            return "Start Your Garden Journey"
+            "Start Your Garden Journey"
         }
     }
-    
+
     private var emptyStateMessage: String {
         if hasActiveFilters || !searchText.isEmpty {
-            return "Try adjusting your search or filters to find your plants."
+            "Try adjusting your search or filters to find your plants."
         } else if selectedGarden != nil {
-            return "Add some plants to this garden to get started."
+            "Add some plants to this garden to get started."
         } else {
-            return "Add your first plant and begin tracking your gardening adventure!"
+            "Add your first plant and begin tracking your gardening adventure!"
         }
     }
-    
+
     @MainActor
     private func loadData() async {
         isLoading = true
-        
+
         // Load gardens
         gardens = (try? dataService.gardens.fetchAll()) ?? []
-        
+
         // Load all user plants
         plants = (try? dataService.plants.fetchAll()) ?? []
-        
+
         // Sort plants
         sortPlants()
-        
+
         isLoading = false
     }
-    
+
     private func filterPlants() {
         // The filteredPlants computed property handles filtering
         // This method can be used for any additional filtering logic
     }
-    
+
     private func sortPlants() {
         switch selectedSortOption {
         case .name:
             plants.sort { ($0.name ?? "") < ($1.name ?? "") }
+
         case .dateAdded:
             plants.sort { ($0.plantingDate ?? Date.distantPast) > ($1.plantingDate ?? Date.distantPast) }
+
         case .healthStatus:
-            plants.sort { (plant1, plant2) in
+            plants.sort { plant1, plant2 in
                 let health1 = plant1.healthStatus?.rawValue ?? "zzz"
                 let health2 = plant2.healthStatus?.rawValue ?? "zzz"
                 return health1 < health2
             }
+
         case .wateringSchedule:
             plants.sort { ($0.wateringFrequency?.days ?? 0) < ($1.wateringFrequency?.days ?? 0) }
         }
@@ -319,7 +322,7 @@ struct GardenChip: View {
     let name: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(name)
@@ -338,7 +341,7 @@ struct FiltersSheet: View {
     @Binding var selectedPlantType: PlantType?
     @Binding var selectedDifficulty: DifficultyLevel?
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -350,7 +353,7 @@ struct FiltersSheet: View {
                             }
                             .foregroundColor(.red)
                         }
-                        
+
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
                             ForEach(PlantType.allCases, id: \.self) { type in
                                 FilterChip(
@@ -363,7 +366,7 @@ struct FiltersSheet: View {
                         }
                     }
                 }
-                
+
                 Section("Difficulty Level") {
                     VStack(alignment: .leading, spacing: 8) {
                         if selectedDifficulty != nil {
@@ -372,7 +375,7 @@ struct FiltersSheet: View {
                             }
                             .foregroundColor(.red)
                         }
-                        
+
                         VStack(spacing: 8) {
                             ForEach(DifficultyLevel.allCases, id: \.self) { difficulty in
                                 FilterChip(
@@ -403,7 +406,7 @@ struct FilterChip: View {
     let title: String
     let isSelected: Bool
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             Text(title)
@@ -457,7 +460,7 @@ struct CreateGardenSheet: View {
             }
             .onDisappear { saveTask?.cancel() }
             .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+                Button("OK") {}
             } message: {
                 Text(errorMessage)
             }
@@ -527,7 +530,7 @@ struct AssignGardenSheet: View {
     private func save() async {
         isSaving = true
         plant.garden = selectedGarden
-        if let selectedGarden = selectedGarden {
+        if let selectedGarden {
             selectedGarden.plants = (selectedGarden.plants ?? []) + [plant]
         }
         do {
@@ -542,6 +545,7 @@ struct AssignGardenSheet: View {
 }
 
 #Preview {
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)

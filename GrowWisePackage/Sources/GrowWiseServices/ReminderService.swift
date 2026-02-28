@@ -1,8 +1,8 @@
+import CoreLocation
 import Foundation
+import GrowWiseModels
 import SwiftData
 import WeatherKit
-import CoreLocation
-import GrowWiseModels
 
 public struct WeatherAdjustmentSnapshot: Sendable, Equatable {
     public let maxTemperatureF: Double
@@ -33,7 +33,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
             .map { $0.temperature.converted(to: .fahrenheit).value }
             .max() ?? weather.currentWeather.temperature.converted(to: .fahrenheit).value
 
-        let maxChance = next24h.map { $0.precipitationChance }.max() ?? 0
+        let maxChance = next24h.map(\.precipitationChance).max() ?? 0
         let totalPrecipInches = next24h
             .map { $0.precipitationAmount.converted(to: .inches).value }
             .reduce(0, +)
@@ -52,7 +52,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
     public let notificationService: NotificationService
     private let weatherProvider: any WeatherAdjustmentProviding
     private let shouldScheduleNotifications: Bool
-    
+
     public init(
         dataService: DataService,
         notificationService: NotificationService,
@@ -64,9 +64,9 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         self.weatherProvider = weatherProvider
         self.shouldScheduleNotifications = shouldScheduleNotifications
     }
-    
+
     // MARK: - Smart Reminder Scheduling
-    
+
     public func createSmartReminder(
         for plant: Plant,
         type: ReminderType,
@@ -75,7 +75,6 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         priority: ReminderPriority = .medium,
         preferredTime: Date? = nil
     ) async throws -> PlantReminder {
-        
         let nextDueDate = await calculateNextDueDate(
             baseFrequencyDays: baseFrequencyDays,
             reminderType: type,
@@ -83,7 +82,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
             enableWeatherAdjustment: enableWeatherAdjustment,
             preferredTime: preferredTime
         )
-        
+
         let reminder = try dataService.createReminder(
             title: generateReminderTitle(type: type, plant: plant),
             message: generateReminderMessage(type: type, plant: plant),
@@ -92,35 +91,34 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
             dueDate: nextDueDate,
             plant: plant
         )
-        
+
         // Set smart reminder properties
         reminder.priority = priority
         reminder.enableWeatherAdjustment = enableWeatherAdjustment
         reminder.baseFrequencyDays = baseFrequencyDays
-        
+
         // Set preferred notification time if provided
-        if let preferredTime = preferredTime {
+        if let preferredTime {
             reminder.preferredNotificationTime = preferredTime
         }
-        
+
         if shouldScheduleNotifications {
             try await notificationService.scheduleReminderNotification(for: reminder)
         }
-        
+
         return reminder
     }
-    
+
     // MARK: - Watering Reminder Specific Features
-    
+
     public func createWateringReminder(
         for plant: Plant,
         frequency: ReminderFrequency,
         preferredTime: Date? = nil,
         enableSmartAdjustment: Bool = true
     ) async throws -> PlantReminder {
-        
         let baseFrequencyDays = frequency.days
-        
+
         return try await createSmartReminder(
             for: plant,
             type: .watering,
@@ -130,7 +128,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
             preferredTime: preferredTime
         )
     }
-    
+
     public func updateWateringSchedule(
         for reminder: PlantReminder,
         newFrequency: ReminderFrequency,
@@ -139,14 +137,14 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         guard reminder.reminderType == .watering else {
             throw ReminderError.invalidReminderType
         }
-        
+
         reminder.frequency = newFrequency
         reminder.baseFrequencyDays = newFrequency.days
-        
-        if let preferredTime = preferredTime {
+
+        if let preferredTime {
             reminder.preferredNotificationTime = preferredTime
         }
-        
+
         // Recalculate next due date with new frequency
         if let plant = reminder.plant {
             reminder.nextDueDate = await calculateNextDueDate(
@@ -157,33 +155,33 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 preferredTime: preferredTime
             )
         }
-        
+
         // Update notification
         if shouldScheduleNotifications {
             try await notificationService.scheduleReminderNotification(for: reminder)
         }
     }
-    
+
     public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
         let allReminders = dataService.fetchActiveReminders()
         let wateringReminders = allReminders.filter { $0.reminderType == .watering }
-        
-        if let plant = plant {
+
+        if let plant {
             return wateringReminders.filter { $0.plant?.id == plant.id }
         }
-        
+
         return wateringReminders
     }
-    
+
     public func getOverdueWateringReminders() -> [PlantReminder] {
         let wateringReminders = getWateringReminders()
         return wateringReminders.filter { $0.nextDueDate < Date() && $0.isEnabled }
     }
-    
+
     public func getTodaysWateringReminders() -> [PlantReminder] {
         let wateringReminders = getWateringReminders()
         let calendar = Calendar.current
-        
+
         return wateringReminders.filter { reminder in
             calendar.isDate(reminder.nextDueDate, inSameDayAs: Date()) && reminder.isEnabled
         }
@@ -196,7 +194,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
             try? await notificationService.scheduleReminderNotification(for: reminder)
         }
     }
-    
+
     private func calculateNextDueDate(
         baseFrequencyDays: Int,
         reminderType: ReminderType,
@@ -205,50 +203,52 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         preferredTime: Date? = nil
     ) async -> Date {
         let baseDate = Calendar.current.date(byAdding: .day, value: baseFrequencyDays, to: Date()) ?? Date()
-        
+
         var adjustedDate = baseDate
-        
+
         if enableWeatherAdjustment {
             adjustedDate = await adjustDateForWeather(baseDate: baseDate, reminderType: reminderType, plant: plant)
         }
-        
+
         // Apply preferred time if specified
-        if let preferredTime = preferredTime {
+        if let preferredTime {
             adjustedDate = applyPreferredTime(to: adjustedDate, preferredTime: preferredTime)
         }
-        
+
         // Respect quiet hours
         adjustedDate = adjustForQuietHours(date: adjustedDate)
-        
+
         return adjustedDate
     }
-    
+
     private func applyPreferredTime(to date: Date, preferredTime: Date) -> Date {
         let calendar = Calendar.current
         let timeComponents = calendar.dateComponents([.hour, .minute], from: preferredTime)
-        return calendar.date(bySettingHour: timeComponents.hour ?? 9, 
-                           minute: timeComponents.minute ?? 0, 
-                           second: 0, 
-                           of: date) ?? date
+        return calendar.date(
+            bySettingHour: timeComponents.hour ?? 9,
+            minute: timeComponents.minute ?? 0,
+            second: 0,
+            of: date
+        ) ?? date
     }
-    
+
     private func adjustForQuietHours(date: Date) -> Date {
         if notificationService.isInQuietHours() {
             // If the scheduled time is in quiet hours, move to next available time
             let calendar = Calendar.current
             var adjustedDate = date
-            
+
             // Move to 8 AM the next day if in quiet hours
             if let nextMorning = calendar.date(byAdding: .day, value: 1, to: date) {
                 adjustedDate = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: nextMorning) ?? date
             }
-            
+
             return adjustedDate
         }
-        
+
         return date
     }
-    
+
     private func adjustDateForWeather(
         baseDate: Date,
         reminderType: ReminderType,
@@ -256,25 +256,31 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
     ) async -> Date {
         // For demo purposes, we'll simulate weather adjustment
         // In a real app, you'd integrate with WeatherKit or similar service
-        
+
         switch reminderType {
         case .watering:
-            return await adjustWateringForWeather(baseDate: baseDate, plant: plant)
+            await adjustWateringForWeather(baseDate: baseDate, plant: plant)
+
         case .fertilizing:
-            return adjustFertilizingForWeather(baseDate: baseDate)
+            adjustFertilizingForWeather(baseDate: baseDate)
+
         case .pruning:
-            return adjustPruningForWeather(baseDate: baseDate)
+            adjustPruningForWeather(baseDate: baseDate)
+
         case .pestControl:
-            return adjustPestCheckForWeather(baseDate: baseDate)
+            adjustPestCheckForWeather(baseDate: baseDate)
+
         case .harvest:
-            return baseDate // Harvest timing usually doesn't adjust for weather
+            baseDate // Harvest timing usually doesn't adjust for weather
+
         case .repotting, .planting, .inspection, .soilTest, .mulching:
-            return baseDate // These tasks don't typically adjust for weather
+            baseDate // These tasks don't typically adjust for weather
+
         case .custom:
-            return baseDate
+            baseDate
         }
     }
-    
+
     private func adjustWateringForWeather(baseDate: Date, plant: Plant) async -> Date {
         guard
             let user = dataService.getCurrentUser(),
@@ -304,54 +310,54 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
 
         return baseDate
     }
-    
+
     private func adjustFertilizingForWeather(baseDate: Date) -> Date {
         // Avoid fertilizing during extreme weather
         let calendar = Calendar.current
         let weekday = calendar.component(.weekday, from: baseDate)
-        
+
         // Prefer mid-week fertilizing (Tuesday-Thursday)
         if weekday == 1 || weekday == 7 { // Weekend
             return calendar.date(byAdding: .day, value: 2, to: baseDate) ?? baseDate
         }
-        
+
         return baseDate
     }
-    
+
     private func adjustPruningForWeather(baseDate: Date) -> Date {
         // Prefer dry days for pruning to prevent disease
         // This is a simplified implementation
-        return baseDate
+        baseDate
     }
-    
+
     private func adjustPestCheckForWeather(baseDate: Date) -> Date {
         // Increase frequency during warm, humid conditions
         // This is a simplified implementation
-        return baseDate
+        baseDate
     }
-    
+
     // MARK: - Seasonal Care Automation
-    
+
     public func createSeasonalCareSchedule(for plant: Plant, year: Int = Calendar.current.component(.year, from: Date())) async throws {
         let seasonalTasks = generateSeasonalTasks(for: plant, year: year)
-        
+
         for task in seasonalTasks {
-            let _ = try await createSmartReminder(
+            _ = try await createSmartReminder(
                 for: plant,
                 type: task.type,
                 baseFrequencyDays: task.frequencyDays,
                 enableWeatherAdjustment: task.weatherSensitive,
                 priority: task.priority
             )
-            
+
             // Note: Seasonal context could be stored in reminder.message if needed
             // For now, we'll track this through the reminder title and type
         }
     }
-    
+
     private func generateSeasonalTasks(for plant: Plant, year: Int) -> [SeasonalTask] {
         var tasks: [SeasonalTask] = []
-        
+
         // Spring tasks
         tasks.append(contentsOf: [
             SeasonalTask(
@@ -374,9 +380,9 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 frequencyDays: 7,
                 priority: .medium,
                 weatherSensitive: false
-            )
+            ),
         ])
-        
+
         // Summer tasks
         tasks.append(contentsOf: [
             SeasonalTask(
@@ -392,9 +398,9 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 frequencyDays: 5,
                 priority: .high,
                 weatherSensitive: false
-            )
+            ),
         ])
-        
+
         // Fall tasks
         tasks.append(contentsOf: [
             SeasonalTask(
@@ -410,9 +416,9 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 frequencyDays: 45,
                 priority: .medium,
                 weatherSensitive: true
-            )
+            ),
         ])
-        
+
         // Winter tasks
         tasks.append(contentsOf: [
             SeasonalTask(
@@ -421,49 +427,56 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 frequencyDays: 7,
                 priority: .low,
                 weatherSensitive: true
-            )
+            ),
         ])
-        
+
         // Filter tasks based on plant type and characteristics
         return tasks.filter { task in
             isTaskRelevant(task, for: plant)
         }
     }
-    
+
     private func isTaskRelevant(_ task: SeasonalTask, for plant: Plant) -> Bool {
         // Customize tasks based on plant characteristics
         switch plant.plantType {
         case .none:
             return true
+
         case .houseplant:
             // Indoor plants don't need seasonal pruning or pest checks as frequently
             return task.type != .pruning || task.season != .fall
+
         case .succulent:
             // Succulents need less frequent watering
             if task.type == .watering {
                 return task.season != .winter
             }
             return true
+
         case .herb, .vegetable:
             // Most tasks are relevant for edible plants
             return true
+
         case .flower:
             // Flowers benefit from deadheading (pruning) during growing season
             return true
+
         case .fruit:
             // Fruit plants need all seasonal care
             return true
+
         case .tree, .shrub:
             // Trees and shrubs need all seasonal care
             return true
+
         @unknown default:
             // Handle any future PlantType cases
             return true
         }
     }
-    
+
     // MARK: - Batch Operations
-    
+
     public func createBatchReminders(
         for plants: [Plant],
         type: ReminderType,
@@ -471,7 +484,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         enableWeatherAdjustment: Bool = true
     ) async throws -> [PlantReminder] {
         var reminders: [PlantReminder] = []
-        
+
         for plant in plants {
             do {
                 let reminder = try await createSmartReminder(
@@ -485,10 +498,10 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 print("Failed to create reminder for plant \(displayName(for: plant)): \(error)")
             }
         }
-        
+
         return reminders
     }
-    
+
     public func updateBatchReminders(
         _ reminders: [PlantReminder],
         newFrequencyDays: Int? = nil,
@@ -499,11 +512,11 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 reminder.baseFrequencyDays = newFrequency
                 reminder.frequency = .custom
             }
-            
+
             if let weatherAdjustment = enableWeatherAdjustment {
                 reminder.enableWeatherAdjustment = weatherAdjustment
             }
-            
+
             // Recalculate next due date
             if let plant = reminder.plant {
                 reminder.nextDueDate = await calculateNextDueDate(
@@ -513,16 +526,16 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                     enableWeatherAdjustment: reminder.enableWeatherAdjustment
                 )
             }
-            
+
             // Update notification
             try await notificationService.scheduleReminderNotification(for: reminder)
         }
     }
-    
+
     public func completeBatchReminders(_ reminders: [PlantReminder]) async throws {
         for reminder in reminders {
             try dataService.completeReminder(reminder)
-            
+
             // Reschedule if it's a recurring reminder
             if reminder.isRecurring {
                 if let plant = reminder.plant {
@@ -532,25 +545,25 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                         plant: plant,
                         enableWeatherAdjustment: reminder.enableWeatherAdjustment
                     )
-                    
+
                     try await notificationService.scheduleReminderNotification(for: reminder)
                 }
             }
         }
     }
-    
+
     // MARK: - Smart Suggestions
-    
+
     public func suggestReminders(for plant: Plant) async -> [ReminderSuggestion] {
         var suggestions: [ReminderSuggestion] = []
-        
+
         // Analyze existing reminders
         let existingReminders = dataService.fetchActiveReminders().filter { $0.plant?.id == plant.id }
-        let existingTypes = Set(existingReminders.map { $0.reminderType })
-        
+        let existingTypes = Set(existingReminders.map(\.reminderType))
+
         // Suggest missing essential reminders
         let essentialTypes: [ReminderType] = [.watering, .fertilizing, .pestControl]
-        
+
         for type in essentialTypes {
             if !existingTypes.contains(type) {
                 let suggestion = ReminderSuggestion(
@@ -563,18 +576,18 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 suggestions.append(suggestion)
             }
         }
-        
+
         // Add seasonal suggestions based on current date
         let seasonalSuggestions = await generateSeasonalSuggestions(for: plant)
         suggestions.append(contentsOf: seasonalSuggestions)
-        
+
         return suggestions.sorted { $0.priority.rawValue > $1.priority.rawValue }
     }
-    
+
     private func generateSeasonalSuggestions(for plant: Plant) async -> [ReminderSuggestion] {
         let currentSeason = getCurrentSeason()
         var suggestions: [ReminderSuggestion] = []
-        
+
         switch currentSeason {
         case .spring:
             suggestions.append(ReminderSuggestion(
@@ -584,7 +597,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 reason: "Spring is the ideal time to start fertilizing for healthy growth",
                 priority: .high
             ))
-            
+
         case .summer:
             suggestions.append(ReminderSuggestion(
                 type: .watering,
@@ -593,7 +606,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 reason: "Summer heat requires more frequent watering",
                 priority: .high
             ))
-            
+
         case .fall:
             if plant.plantType == .vegetable || plant.plantType == .herb {
                 suggestions.append(ReminderSuggestion(
@@ -604,7 +617,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                     priority: .high
                 ))
             }
-            
+
         case .winter:
             suggestions.append(ReminderSuggestion(
                 type: .watering,
@@ -614,65 +627,85 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
                 priority: .medium
             ))
         }
-        
+
         return suggestions
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func generateReminderTitle(type: ReminderType, plant: Plant) -> String {
         let plantName = displayName(for: plant)
 
         switch type {
         case .watering:
             return "Water \(plantName)"
+
         case .fertilizing:
             return "Fertilize \(plantName)"
+
         case .pruning:
             return "Prune \(plantName)"
+
         case .pestControl:
             return "Check \(plantName) for pests"
+
         case .harvest:
             return "Harvest \(plantName)"
+
         case .repotting:
             return "Repot \(plantName)"
+
         case .planting:
             return "Plant \(plantName)"
+
         case .inspection:
             return "Inspect \(plantName)"
+
         case .soilTest:
             return "Test soil for \(plantName)"
+
         case .mulching:
             return "Mulch around \(plantName)"
+
         case .custom:
             return "Care for \(plantName)"
         }
     }
-    
+
     private func generateReminderMessage(type: ReminderType, plant: Plant) -> String {
         let plantName = displayName(for: plant)
 
         switch type {
         case .watering:
             return "Check soil moisture and water \(plantName) if needed. Water slowly at soil level."
+
         case .fertilizing:
             return "Apply appropriate fertilizer to \(plantName) according to plant needs."
+
         case .pruning:
             return "Inspect \(plantName) and prune dead, damaged, or overgrown parts."
+
         case .pestControl:
             return "Examine \(plantName) leaves and stems for signs of pests or disease."
+
         case .harvest:
             return "Check \(plantName) for ripe fruits, vegetables, or herbs ready to harvest."
+
         case .repotting:
             return "Check if \(plantName) needs repotting - look for roots growing through drainage holes."
+
         case .planting:
             return "Plant \(plantName) in prepared soil with proper spacing."
+
         case .inspection:
             return "Perform general health inspection of \(plantName) for any issues."
+
         case .soilTest:
             return "Test soil pH and nutrients for \(plantName)'s growing area."
+
         case .mulching:
             return "Apply or refresh mulch around \(plantName) to retain moisture."
+
         case .custom:
             return "Perform scheduled care task for \(plantName)."
         }
@@ -681,103 +714,136 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
     private func displayName(for plant: Plant) -> String {
         plant.name ?? "your plant"
     }
-    
+
     private func getRecommendedFrequency(for type: ReminderType, plant: Plant) -> Int {
         switch type {
         case .watering:
             if plant.plantType == .succulent {
-                return 7
+                7
             } else if plant.plantType == .houseplant {
-                return 5
+                5
             } else {
-                return 3
+                3
             }
+
         case .fertilizing:
-            return 28
+            28
+
         case .pruning:
-            return 60
+            60
+
         case .pestControl:
-            return 7
+            7
+
         case .harvest:
-            return 14
+            14
+
         case .repotting:
-            return 365 // Once per year
+            365 // Once per year
+
         case .planting:
-            return 180 // Seasonal
+            180 // Seasonal
+
         case .inspection:
-            return 7 // Weekly
+            7 // Weekly
+
         case .soilTest:
-            return 365 // Annual
+            365 // Annual
+
         case .mulching:
-            return 120 // 3-4 times per year
+            120 // 3-4 times per year
+
         case .custom:
-            return 7
+            7
         }
     }
-    
+
     private func generateSuggestionReason(for type: ReminderType, plant: Plant) -> String {
         switch type {
         case .watering:
-            return "Regular watering schedule helps maintain consistent soil moisture"
+            "Regular watering schedule helps maintain consistent soil moisture"
+
         case .fertilizing:
-            return "Monthly fertilizing supports healthy growth and flowering"
+            "Monthly fertilizing supports healthy growth and flowering"
+
         case .pruning:
-            return "Regular pruning promotes bushier growth and removes dead material"
+            "Regular pruning promotes bushier growth and removes dead material"
+
         case .pestControl:
-            return "Weekly pest checks allow for early detection and treatment"
+            "Weekly pest checks allow for early detection and treatment"
+
         case .harvest:
-            return "Regular harvest encourages continued production"
+            "Regular harvest encourages continued production"
+
         case .repotting:
-            return "Annual repotting ensures adequate root space and fresh soil"
+            "Annual repotting ensures adequate root space and fresh soil"
+
         case .planting:
-            return "Proper timing ensures successful plant establishment"
+            "Proper timing ensures successful plant establishment"
+
         case .inspection:
-            return "Regular inspection allows early detection of problems"
+            "Regular inspection allows early detection of problems"
+
         case .soilTest:
-            return "Annual soil testing helps maintain optimal growing conditions"
+            "Annual soil testing helps maintain optimal growing conditions"
+
         case .mulching:
-            return "Mulching conserves moisture and suppresses weeds"
+            "Mulching conserves moisture and suppresses weeds"
+
         case .custom:
-            return "Custom care routine for optimal plant health"
+            "Custom care routine for optimal plant health"
         }
     }
-    
+
     private func getPriorityForType(_ type: ReminderType, plant: Plant) -> ReminderPriority {
         switch type {
         case .watering:
-            return .high
+            .high
+
         case .fertilizing:
-            return .medium
+            .medium
+
         case .pruning:
-            return .low
+            .low
+
         case .pestControl:
-            return .medium
+            .medium
+
         case .harvest:
-            return .high
+            .high
+
         case .repotting:
-            return .low
+            .low
+
         case .planting:
-            return .high
+            .high
+
         case .inspection:
-            return .medium
+            .medium
+
         case .soilTest:
-            return .low
+            .low
+
         case .mulching:
-            return .low
+            .low
+
         case .custom:
-            return .medium
+            .medium
         }
     }
-    
+
     private func getCurrentSeason() -> Season {
         let month = Calendar.current.component(.month, from: Date())
         switch month {
-        case 3...5:
+        case 3 ... 5:
             return .spring
-        case 6...8:
+
+        case 6 ... 8:
             return .summer
-        case 9...11:
+
+        case 9 ... 11:
             return .fall
+
         default:
             return .winter
         }
@@ -792,7 +858,7 @@ public struct SeasonalTask {
     let frequencyDays: Int
     let priority: ReminderPriority
     let weatherSensitive: Bool
-    
+
     public init(type: ReminderType, season: Season, frequencyDays: Int, priority: ReminderPriority, weatherSensitive: Bool) {
         self.type = type
         self.season = season
@@ -809,7 +875,7 @@ public struct ReminderSuggestion: Identifiable {
     public let suggestedFrequencyDays: Int
     public let reason: String
     public let priority: ReminderPriority
-    
+
     public init(type: ReminderType, plant: Plant, suggestedFrequencyDays: Int, reason: String, priority: ReminderPriority) {
         self.type = type
         self.plant = plant
@@ -820,17 +886,17 @@ public struct ReminderSuggestion: Identifiable {
 }
 
 public enum Season: String, CaseIterable, Codable {
-    case spring = "spring"
-    case summer = "summer"
-    case fall = "fall"
-    case winter = "winter"
-    
+    case spring
+    case summer
+    case fall
+    case winter
+
     public var displayName: String {
         switch self {
-        case .spring: return "Spring"
-        case .summer: return "Summer"
-        case .fall: return "Fall"
-        case .winter: return "Winter"
+        case .spring: "Spring"
+        case .summer: "Summer"
+        case .fall: "Fall"
+        case .winter: "Winter"
         }
     }
 }
@@ -843,19 +909,23 @@ public enum ReminderError: Error, LocalizedError {
     case notificationPermissionDenied
     case invalidFrequency
     case invalidTime
-    
+
     public var errorDescription: String? {
         switch self {
         case .invalidReminderType:
-            return "Invalid reminder type specified"
+            "Invalid reminder type specified"
+
         case .plantNotFound:
-            return "Plant not found for reminder"
+            "Plant not found for reminder"
+
         case .notificationPermissionDenied:
-            return "Notification permission denied"
+            "Notification permission denied"
+
         case .invalidFrequency:
-            return "Invalid reminder frequency"
+            "Invalid reminder frequency"
+
         case .invalidTime:
-            return "Invalid notification time"
+            "Invalid notification time"
         }
     }
 }
@@ -868,7 +938,7 @@ public struct ReminderSettings {
     public var quietHoursStart: Date?
     public var quietHoursEnd: Date?
     public var defaultNotificationTime: Date?
-    
+
     public init(
         enableWateringReminders: Bool = true,
         enableFertilizingReminders: Bool = true,
@@ -889,9 +959,8 @@ public struct ReminderSettings {
 }
 
 extension ReminderService {
-    
     // MARK: - Notification Settings Management
-    
+
     public func updateNotificationSettings(
         reminderTypes: [ReminderType],
         enabled: Bool
@@ -900,51 +969,54 @@ extension ReminderService {
             try? KeychainManager.shared.storeBool(enabled, for: "notification_\(type.rawValue)_enabled")
         }
     }
-    
+
     public func isNotificationEnabled(for type: ReminderType) -> Bool {
-        return (try? KeychainManager.shared.retrieveBool(for: "notification_\(type.rawValue)_enabled")) ?? false
+        (try? KeychainManager.shared.retrieveBool(for: "notification_\(type.rawValue)_enabled")) ?? false
     }
-    
+
     public func setDefaultNotificationTime(_ time: Date) {
         if let timeData = try? JSONEncoder().encode(time) {
             try? KeychainManager.shared.store(timeData, for: "default_notification_time")
         }
     }
-    
+
     public func getDefaultNotificationTime() -> Date {
         if let timeData = try? KeychainManager.shared.retrieve(for: "default_notification_time"),
-           let time = try? JSONDecoder().decode(Date.self, from: timeData) {
+           let time = try? JSONDecoder().decode(Date.self, from: timeData)
+        {
             return time
         }
-        
+
         // Default to 9:00 AM
         let calendar = Calendar.current
         return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
     }
-    
+
     // MARK: - Reminder Settings
-    
+
     public func updateReminderSettings(_ settings: ReminderSettings) {
         try? KeychainManager.shared.storeBool(settings.enableWateringReminders, for: "enable_watering_reminders")
         try? KeychainManager.shared.storeBool(settings.enableFertilizingReminders, for: "enable_fertilizing_reminders")
         try? KeychainManager.shared.storeBool(settings.enablePestControlReminders, for: "enable_pest_control_reminders")
         try? KeychainManager.shared.storeBool(settings.enableWeatherBasedAdjustments, for: "enable_weather_adjustments")
-        
+
         if let quietStart = settings.quietHoursStart,
-           let startData = try? JSONEncoder().encode(quietStart) {
+           let startData = try? JSONEncoder().encode(quietStart)
+        {
             try? KeychainManager.shared.store(startData, for: "quiet_hours_start")
         }
-        
+
         if let quietEnd = settings.quietHoursEnd,
-           let endData = try? JSONEncoder().encode(quietEnd) {
+           let endData = try? JSONEncoder().encode(quietEnd)
+        {
             try? KeychainManager.shared.store(endData, for: "quiet_hours_end")
         }
-        
+
         if let defaultTime = settings.defaultNotificationTime {
             setDefaultNotificationTime(defaultTime)
         }
     }
-    
+
     public func getReminderSettings() -> ReminderSettings {
         let quietStart: Date? = {
             if let data = try? KeychainManager.shared.retrieve(for: "quiet_hours_start") {
@@ -964,7 +1036,7 @@ extension ReminderService {
             }
             return nil
         }()
-        
+
         return ReminderSettings(
             enableWateringReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_watering_reminders")) ?? false,
             enableFertilizingReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_fertilizing_reminders")) ?? false,
@@ -975,14 +1047,14 @@ extension ReminderService {
             defaultNotificationTime: defaultTime ?? getDefaultNotificationTime()
         )
     }
-    
+
     // MARK: - Public Notification Methods
-    
+
     /// Schedule notification for a reminder
     public func scheduleNotification(for reminder: PlantReminder) async throws {
         try await notificationService.scheduleReminderNotification(for: reminder)
     }
-    
+
     /// Cancel notification for a reminder
     public func cancelNotification(for reminder: PlantReminder) {
         Task {

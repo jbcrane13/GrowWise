@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
@@ -9,15 +9,15 @@ import UIKit
 public struct ReminderRowView: View {
     let reminder: PlantReminder
     let reminderService: ReminderService
-    
+
     @State private var isCompleting = false
     @State private var showingSnoozeOptions = false
-    
+
     public init(reminder: PlantReminder, reminderService: ReminderService) {
         self.reminder = reminder
         self.reminderService = reminderService
     }
-    
+
     public var body: some View {
         HStack(spacing: 12) {
             // Plant and reminder type icon
@@ -30,38 +30,38 @@ public struct ReminderRowView: View {
                         Circle()
                             .fill(priorityColor.opacity(0.1))
                     )
-                
+
                 Text(reminder.reminderType.displayName)
                     .font(.caption2)
                     .foregroundColor(.secondary)
                     .lineLimit(1)
             }
-            
+
             // Reminder details
             VStack(alignment: .leading, spacing: 4) {
                 Text(reminder.plant?.name ?? "Unknown Plant")
                     .font(.headline)
                     .fontWeight(.medium)
                     .lineLimit(1)
-                
+
                 Text(reminder.title)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
-                
+
                 HStack(spacing: 8) {
                     // Due date info
                     dueDateView
-                    
+
                     Spacer()
-                    
+
                     // Priority indicator
                     priorityIndicator
                 }
             }
-            
+
             Spacer()
-            
+
             // Action buttons
             VStack(spacing: 8) {
                 Button(action: completeReminder) {
@@ -75,7 +75,7 @@ public struct ReminderRowView: View {
                     }
                 }
                 .disabled(isCompleting)
-                
+
                 Button(action: { showingSnoozeOptions = true }) {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.title3)
@@ -99,41 +99,44 @@ public struct ReminderRowView: View {
                     snoozeReminder(for: duration)
                 }
             }
-            
-            Button("Cancel", role: .cancel) { }
+
+            Button("Cancel", role: .cancel) {}
         }
         .opacity(reminder.isEnabled ? 1.0 : 0.6)
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var isOverdue: Bool {
         reminder.nextDueDate < Date()
     }
-    
+
     private var priorityColor: Color {
         if isOverdue {
             return .red
         }
-        
+
         switch reminder.priority {
         case .low:
             return .gray
+
         case .medium:
             return .blue
+
         case .high:
             return .orange
+
         case .critical:
             return .red
         }
     }
-    
+
     private var dueDateView: some View {
         HStack(spacing: 4) {
             Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar")
                 .font(.caption)
                 .foregroundColor(isOverdue ? .red : .secondary)
-            
+
             Text(dueDateText)
                 .font(.caption)
                 .fontWeight(isOverdue ? .semibold : .regular)
@@ -146,10 +149,10 @@ public struct ReminderRowView: View {
                 .fill(isOverdue ? Color.red.opacity(0.1) : Color(.systemGray6))
         )
     }
-    
+
     private var dueDateText: String {
         let formatter = DateFormatter()
-        
+
         if Calendar.current.isDateInToday(reminder.nextDueDate) {
             formatter.dateStyle = .none
             formatter.timeStyle = .short
@@ -166,40 +169,39 @@ public struct ReminderRowView: View {
             return formatter.string(from: reminder.nextDueDate)
         }
     }
-    
+
     private var priorityIndicator: some View {
         HStack(spacing: 2) {
-            ForEach(1...reminder.priority.numericValue, id: \.self) { _ in
+            ForEach(1 ... reminder.priority.numericValue, id: \.self) { _ in
                 Circle()
                     .fill(priorityColor)
                     .frame(width: 4, height: 4)
             }
         }
     }
-    
+
     // MARK: - Actions
-    
+
     private func completeReminder() {
         isCompleting = true
-        
+
         Task {
             do {
                 // Mark reminder as completed
                 reminder.markCompleted()
-                
+
                 // Create completion feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-                
+
                 // Reschedule notification if recurring
                 if reminder.isRecurring {
                     try await reminderService.notificationService.scheduleReminderNotification(for: reminder)
                 }
-                
+
                 await MainActor.run {
                     isCompleting = false
                 }
-                
             } catch {
                 await MainActor.run {
                     isCompleting = false
@@ -208,19 +210,18 @@ public struct ReminderRowView: View {
             }
         }
     }
-    
+
     private func snoozeReminder(for duration: SnoozeDuration) {
         reminder.snooze(for: duration)
-        
+
         Task {
             do {
                 // Reschedule notification with new time
                 try await reminderService.notificationService.scheduleReminderNotification(for: reminder)
-                
+
                 // Provide feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-                
             } catch {
                 print("Failed to reschedule reminder: \(error)")
             }
@@ -234,7 +235,7 @@ public struct ReminderRowView: View {
         plantType: PlantType.houseplant,
         difficultyLevel: DifficultyLevel.beginner
     )
-    
+
     let reminder = PlantReminder(
         title: "Water Snake Plant",
         message: "Check soil moisture and water if needed",
@@ -243,14 +244,15 @@ public struct ReminderRowView: View {
         nextDueDate: Date(),
         plant: plant
     )
-    
+
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
-    
+
     VStack(spacing: 16) {
         ReminderRowView(reminder: reminder, reminderService: reminderService)
-        
+
         // Create an overdue reminder for comparison
         let overdueReminder = PlantReminder(
             title: "Fertilize Pothos",
@@ -260,13 +262,13 @@ public struct ReminderRowView: View {
             nextDueDate: Calendar.current.date(byAdding: .day, value: -2, to: Date()) ?? Date(),
             plant: plant
         )
-        
+
         ReminderRowView(reminder: overdueReminder, reminderService: reminderService)
     }
     .padding()
     #if canImport(UIKit)
-    .background(Color(.systemGroupedBackground))
+        .background(Color(.systemGroupedBackground))
     #else
-    .background(Color(.controlBackgroundColor))
+        .background(Color(.controlBackgroundColor))
     #endif
 }

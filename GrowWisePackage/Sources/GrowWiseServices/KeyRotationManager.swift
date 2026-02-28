@@ -1,13 +1,12 @@
-import Foundation
 import CryptoKit
+import Foundation
 import Security
 
 /// Comprehensive key rotation manager with PCI DSS and SOC2 compliance
 /// Supports versioned key storage, automatic rotation policies, and audit trails
 public final class KeyRotationManager: @unchecked Sendable {
-    
     // MARK: - Error Types
-    
+
     public enum KeyRotationError: LocalizedError {
         case keyVersionNotFound
         case rotationPolicyViolation
@@ -18,33 +17,41 @@ public final class KeyRotationManager: @unchecked Sendable {
         case invalidKeyVersion
         case rotationInProgress
         case insufficientPermissions
-        
+
         public var errorDescription: String? {
             switch self {
             case .keyVersionNotFound:
-                return "Requested key version not found"
+                "Requested key version not found"
+
             case .rotationPolicyViolation:
-                return "Key rotation violates configured policy"
+                "Key rotation violates configured policy"
+
             case .reencryptionFailed:
-                return "Failed to re-encrypt data with new key"
+                "Failed to re-encrypt data with new key"
+
             case .auditLogFailed:
-                return "Failed to write to audit log"
+                "Failed to write to audit log"
+
             case .complianceViolation:
-                return "Operation violates compliance requirements"
+                "Operation violates compliance requirements"
+
             case .storageError:
-                return "Key storage operation failed"
+                "Key storage operation failed"
+
             case .invalidKeyVersion:
-                return "Invalid key version specified"
+                "Invalid key version specified"
+
             case .rotationInProgress:
-                return "Key rotation already in progress"
+                "Key rotation already in progress"
+
             case .insufficientPermissions:
-                return "Insufficient permissions for key rotation"
+                "Insufficient permissions for key rotation"
             }
         }
     }
-    
+
     // MARK: - Key Metadata Types
-    
+
     public struct KeyMetadata: Codable, Sendable {
         public let version: Int
         public let keyId: String
@@ -55,20 +62,20 @@ public final class KeyRotationManager: @unchecked Sendable {
         public let algorithm: String
         public let keyDerivationInfo: KeyDerivationInfo
         public let complianceInfo: ComplianceInfo
-        
+
         public enum KeyStatus: String, Codable, CaseIterable, Sendable {
-            case active = "active"
-            case retired = "retired"
-            case compromised = "compromised"
-            case pending = "pending"
+            case active
+            case retired
+            case compromised
+            case pending
         }
-        
+
         public struct KeyDerivationInfo: Codable, Sendable {
             public let salt: Data
             public let iterations: Int
             public let algorithm: String
         }
-        
+
         public struct ComplianceInfo: Codable, Sendable {
             public let pciDssCompliant: Bool
             public let soc2Compliant: Bool
@@ -76,7 +83,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             public let auditTrail: [AuditEvent]
         }
     }
-    
+
     public struct AuditEvent: Codable, Sendable {
         public let id: String
         public let timestamp: Date
@@ -84,7 +91,7 @@ public final class KeyRotationManager: @unchecked Sendable {
         public let keyVersion: Int
         public let userId: String?
         public let details: [String: String]
-        
+
         public enum EventType: String, Codable, CaseIterable, Sendable {
             case keyGenerated = "key_generated"
             case keyRotated = "key_rotated"
@@ -96,7 +103,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             case rotationPolicyUpdated = "rotation_policy_updated"
         }
     }
-    
+
     public struct RotationPolicy: Codable, Sendable {
         public let interval: TimeInterval
         public let maxKeyAge: TimeInterval
@@ -105,24 +112,24 @@ public final class KeyRotationManager: @unchecked Sendable {
         public let complianceMode: ComplianceMode
         public let reencryptionBatchSize: Int
         public let quietHours: QuietHours?
-        
+
         public enum ComplianceMode: String, Codable, CaseIterable, Sendable {
-            case strict = "strict"     // PCI DSS Level 1
-            case standard = "standard" // SOC2 Type II
-            case basic = "basic"       // Basic security
+            case strict // PCI DSS Level 1
+            case standard // SOC2 Type II
+            case basic // Basic security
         }
-        
+
         public struct QuietHours: Codable, Sendable {
             public let startHour: Int // 0-23
-            public let endHour: Int   // 0-23
+            public let endHour: Int // 0-23
             public let timezone: String
         }
-        
+
         public static func defaultPolicy() -> RotationPolicy {
-            return RotationPolicy(
+            RotationPolicy(
                 interval: 30 * 24 * 60 * 60, // 30 days
                 maxKeyAge: 90 * 24 * 60 * 60, // 90 days (PCI DSS requirement)
-                minKeyAge: 24 * 60 * 60,      // 24 hours
+                minKeyAge: 24 * 60 * 60, // 24 hours
                 autoRotationEnabled: true,
                 complianceMode: .standard,
                 reencryptionBatchSize: 100,
@@ -130,7 +137,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             )
         }
     }
-    
+
     public struct ComplianceReport: Codable, Sendable {
         public let reportId: String
         public let generationDate: Date
@@ -139,14 +146,14 @@ public final class KeyRotationManager: @unchecked Sendable {
         public let rotationEvents: [RotationEventReport]
         public let complianceStatus: ComplianceStatus
         public let recommendations: [String]
-        
+
         public struct KeyVersionReport: Codable, Sendable {
             public let version: Int
             public let age: TimeInterval
             public let status: KeyMetadata.KeyStatus
             public let usage: KeyUsageStats
         }
-        
+
         public struct RotationEventReport: Codable, Sendable {
             public let date: Date
             public let fromVersion: Int
@@ -154,53 +161,53 @@ public final class KeyRotationManager: @unchecked Sendable {
             public let duration: TimeInterval
             public let dataVolume: Int
         }
-        
+
         public struct KeyUsageStats: Codable, Sendable {
             public let encryptionOperations: Int
             public let decryptionOperations: Int
             public let lastAccessed: Date
         }
-        
+
         public struct ComplianceStatus: Codable, Sendable {
             public let pciDssCompliant: Bool
             public let soc2Compliant: Bool
             public let issues: [ComplianceIssue]
-            
+
             public struct ComplianceIssue: Codable, Sendable {
                 public let severity: Severity
                 public let description: String
                 public let recommendation: String
-                
+
                 public enum Severity: String, Codable, CaseIterable, Sendable {
-                    case critical = "critical"
-                    case high = "high"
-                    case medium = "medium"
-                    case low = "low"
+                    case critical
+                    case high
+                    case medium
+                    case low
                 }
             }
         }
     }
-    
+
     // MARK: - Properties
-    
+
     private let secureEnclaveKeyManager: SecureEnclaveKeyManager
     private let keychainStorage: KeychainStorageService
     private var rotationPolicy: RotationPolicy
     private var isRotationInProgress = false
-    
+
     // Thread-safe access to key metadata
     private var _keyMetadata: [String: KeyMetadata] = [:]
     private let metadataQueue = DispatchQueue(label: "com.growwise.key-rotation-metadata", attributes: .concurrent)
-    
+
     // Audit trail storage
     private var _auditTrail: [AuditEvent] = []
     private let auditQueue = DispatchQueue(label: "com.growwise.key-rotation-audit", attributes: .concurrent)
-    
-    // Current active key version
+
+    /// Current active key version
     private var _currentKeyVersion: Int = 0
-    
+
     // MARK: - Initialization
-    
+
     public init(
         secureEnclaveKeyManager: SecureEnclaveKeyManager,
         keychainStorage: KeychainStorageService,
@@ -209,143 +216,142 @@ public final class KeyRotationManager: @unchecked Sendable {
         self.secureEnclaveKeyManager = secureEnclaveKeyManager
         self.keychainStorage = keychainStorage
         self.rotationPolicy = rotationPolicy
-        
+
         // Load existing key metadata and audit trail
         loadPersistedData()
-        
+
         // Schedule automatic rotation if enabled
         if rotationPolicy.autoRotationEnabled {
             scheduleAutomaticRotation()
         }
     }
-    
+
     // MARK: - Public Key Management Methods
-    
+
     /// Get the current active key for encryption
     public func getCurrentEncryptionKey() throws -> SymmetricKey {
-        return try getKeyForVersion(_currentKeyVersion)
+        try getKeyForVersion(_currentKeyVersion)
     }
-    
+
     /// Get a key for a specific version (used for decryption)
     public func getKeyForVersion(_ version: Int) throws -> SymmetricKey {
         guard let metadata = getKeyMetadata(for: version) else {
             throw KeyRotationError.keyVersionNotFound
         }
-        
+
         guard metadata.status == .active else {
             throw KeyRotationError.invalidKeyVersion
         }
-        
+
         // Log key access for audit trail
         logAuditEvent(.keyAccessed, keyVersion: version, details: [
             "purpose": "decryption",
-            "timestamp": ISO8601DateFormatter().string(from: Date())
+            "timestamp": ISO8601DateFormatter().string(from: Date()),
         ])
-        
+
         // Derive key from Secure Enclave using version-specific derivation
         return try deriveKeyForVersion(version, metadata: metadata)
     }
-    
+
     /// Get all active key versions for decryption support
     public func getActiveKeyVersions() -> [Int] {
-        return metadataQueue.sync {
-            return _keyMetadata.values
+        metadataQueue.sync {
+            _keyMetadata.values
                 .filter { $0.status == .active }
-                .map { $0.version }
+                .map(\.version)
                 .sorted(by: >)
         }
     }
-    
+
     /// Get the current key version
     public var currentKeyVersion: Int {
-        return _currentKeyVersion
+        _currentKeyVersion
     }
-    
+
     // MARK: - Key Rotation Methods
-    
+
     /// Perform manual key rotation
     @discardableResult
     public func rotateKey(reason: String = "Manual rotation") async throws -> Int {
         guard !isRotationInProgress else {
             throw KeyRotationError.rotationInProgress
         }
-        
+
         try validateRotationPolicy()
-        
+
         isRotationInProgress = true
         defer { isRotationInProgress = false }
-        
+
         let startTime = Date()
         let oldVersion = _currentKeyVersion
         let newVersion = oldVersion + 1
-        
+
         do {
             // Generate new key version
             try await generateNewKeyVersion(newVersion)
-            
+
             // Update current key version
             _currentKeyVersion = newVersion
-            
+
             // Mark old key as retired (but keep for decryption)
             if oldVersion > 0 {
                 try retireKeyVersion(oldVersion)
             }
-            
+
             // Log rotation event
             logAuditEvent(.keyRotated, keyVersion: newVersion, details: [
                 "old_version": String(oldVersion),
                 "reason": reason,
-                "duration": String(Date().timeIntervalSince(startTime))
+                "duration": String(Date().timeIntervalSince(startTime)),
             ])
-            
+
             // Note: Background re-encryption should be triggered externally
             // This prevents potential data races in concurrent environments
             // Call performGradualReencryption(fromVersion:toVersion:) separately if needed
-            
+
             // Persist changes
             try persistData()
-            
+
             return newVersion
-            
         } catch {
             // Log failure
             logAuditEvent(.keyRotated, keyVersion: newVersion, details: [
                 "error": error.localizedDescription,
-                "status": "failed"
+                "status": "failed",
             ])
             throw error
         }
     }
-    
+
     /// Check if key rotation is needed based on policy
     public func isRotationNeeded() -> Bool {
         guard let currentMetadata = getKeyMetadata(for: _currentKeyVersion) else {
             return true // No current key, rotation needed
         }
-        
+
         let keyAge = Date().timeIntervalSince(currentMetadata.creationDate)
         return keyAge >= rotationPolicy.interval
     }
-    
+
     /// Check if key rotation is overdue (compliance violation)
     public func isRotationOverdue() -> Bool {
         guard let currentMetadata = getKeyMetadata(for: _currentKeyVersion) else {
             return true
         }
-        
+
         let keyAge = Date().timeIntervalSince(currentMetadata.creationDate)
         return keyAge >= rotationPolicy.maxKeyAge
     }
-    
+
     /// Force rotation if compliance violation detected
     public func forceRotationIfOverdue() async throws {
         if isRotationOverdue() {
             try await rotateKey(reason: "Compliance violation - key overdue")
         }
     }
-    
+
     // MARK: - Compliance and Reporting Methods
-    
+
     /// Generate comprehensive compliance report
     public func generateComplianceReport(period: DateInterval) async -> ComplianceReport {
         let reportId = UUID().uuidString
@@ -353,7 +359,7 @@ public final class KeyRotationManager: @unchecked Sendable {
         let rotationEventReports = generateRotationEventReports(for: period)
         let complianceStatus = assessComplianceStatus()
         let recommendations = generateRecommendations(status: complianceStatus)
-        
+
         return ComplianceReport(
             reportId: reportId,
             generationDate: Date(),
@@ -364,40 +370,40 @@ public final class KeyRotationManager: @unchecked Sendable {
             recommendations: recommendations
         )
     }
-    
+
     /// Get audit trail for compliance review
     public func getAuditTrail(from startDate: Date, to endDate: Date) -> [AuditEvent] {
-        return auditQueue.sync {
-            return _auditTrail.filter { event in
-                return event.timestamp >= startDate && event.timestamp <= endDate
+        auditQueue.sync {
+            _auditTrail.filter { event in
+                event.timestamp >= startDate && event.timestamp <= endDate
             }.sorted { $0.timestamp > $1.timestamp }
         }
     }
-    
+
     /// Update rotation policy
     public func updateRotationPolicy(_ policy: RotationPolicy) throws {
         try validatePolicy(policy)
-        
+
         let oldPolicy = rotationPolicy
         rotationPolicy = policy
-        
+
         // Log policy change
         logAuditEvent(.rotationPolicyUpdated, keyVersion: _currentKeyVersion, details: [
             "old_interval": String(oldPolicy.interval),
             "new_interval": String(policy.interval),
-            "auto_rotation": String(policy.autoRotationEnabled)
+            "auto_rotation": String(policy.autoRotationEnabled),
         ])
-        
+
         // Reschedule automatic rotation if needed
         if policy.autoRotationEnabled {
             scheduleAutomaticRotation()
         }
-        
+
         try persistData()
     }
-    
+
     // MARK: - Data Re-encryption Methods
-    
+
     /// Perform gradual re-encryption of data in background
     private func performGradualReencryption(fromVersion: Int, toVersion: Int) async {
         let batchSize = rotationPolicy.reencryptionBatchSize
@@ -406,17 +412,17 @@ public final class KeyRotationManager: @unchecked Sendable {
         logAuditEvent(.dataReencrypted, keyVersion: toVersion, details: [
             "from_version": String(fromVersion),
             "batch_size": String(batchSize),
-            "status": "completed"
+            "status": "completed",
         ])
     }
-    
+
     // MARK: - Private Implementation Methods
-    
+
     private func generateNewKeyVersion(_ version: Int) async throws {
         // Generate new Secure Enclave key
-        let _ = try secureEnclaveKeyManager.generateSecureEnclaveKey()
-        let _ = try secureEnclaveKeyManager.getPublicKeyData()
-        
+        _ = try secureEnclaveKeyManager.generateSecureEnclaveKey()
+        _ = try secureEnclaveKeyManager.getPublicKeyData()
+
         // Create key derivation info
         let salt = try Data.random(length: 32)
         let derivationInfo = KeyMetadata.KeyDerivationInfo(
@@ -424,7 +430,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             iterations: 10000,
             algorithm: "HKDF-SHA256"
         )
-        
+
         // Create compliance info
         let complianceInfo = KeyMetadata.ComplianceInfo(
             pciDssCompliant: true,
@@ -432,7 +438,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             lastAuditDate: Date(),
             auditTrail: []
         )
-        
+
         // Create metadata
         let metadata = KeyMetadata(
             version: version,
@@ -445,24 +451,24 @@ public final class KeyRotationManager: @unchecked Sendable {
             keyDerivationInfo: derivationInfo,
             complianceInfo: complianceInfo
         )
-        
+
         // Store metadata
         setKeyMetadata(metadata)
-        
+
         // Log key generation
         logAuditEvent(.keyGenerated, keyVersion: version, details: [
             "algorithm": metadata.algorithm,
-            "key_id": metadata.keyId
+            "key_id": metadata.keyId,
         ])
     }
-    
+
     private func deriveKeyForVersion(_ version: Int, metadata: KeyMetadata) throws -> SymmetricKey {
         // Get the base key material from Secure Enclave
         let baseKey = try secureEnclaveKeyManager.getSymmetricKey()
-        
+
         // Use version-specific derivation with stored salt
         let versionSpecificInfo = "GrowWise-Key-v\(version)".data(using: .utf8)!
-        
+
         return HKDF<SHA256>.deriveKey(
             inputKeyMaterial: baseKey,
             salt: metadata.keyDerivationInfo.salt,
@@ -470,12 +476,12 @@ public final class KeyRotationManager: @unchecked Sendable {
             outputByteCount: 32
         )
     }
-    
+
     private func retireKeyVersion(_ version: Int) throws {
         guard var metadata = getKeyMetadata(for: version) else {
             throw KeyRotationError.keyVersionNotFound
         }
-        
+
         metadata = KeyMetadata(
             version: metadata.version,
             keyId: metadata.keyId,
@@ -487,19 +493,20 @@ public final class KeyRotationManager: @unchecked Sendable {
             keyDerivationInfo: metadata.keyDerivationInfo,
             complianceInfo: metadata.complianceInfo
         )
-        
+
         setKeyMetadata(metadata)
     }
-    
+
     private func validateRotationPolicy() throws {
         let currentTime = Date()
-        
+
         // Check if we're in quiet hours
         if let quietHours = rotationPolicy.quietHours,
-           isInQuietHours(currentTime, quietHours: quietHours) {
+           isInQuietHours(currentTime, quietHours: quietHours)
+        {
             throw KeyRotationError.rotationPolicyViolation
         }
-        
+
         // Check minimum key age if we have a current key
         if let currentMetadata = getKeyMetadata(for: _currentKeyVersion) {
             let keyAge = currentTime.timeIntervalSince(currentMetadata.creationDate)
@@ -508,26 +515,27 @@ public final class KeyRotationManager: @unchecked Sendable {
             }
         }
     }
-    
+
     private func validatePolicy(_ policy: RotationPolicy) throws {
         guard policy.interval > 0,
               policy.maxKeyAge > policy.interval,
-              policy.minKeyAge < policy.interval else {
+              policy.minKeyAge < policy.interval
+        else {
             throw KeyRotationError.rotationPolicyViolation
         }
     }
-    
+
     private func isInQuietHours(_ date: Date, quietHours: RotationPolicy.QuietHours) -> Bool {
         let calendar = Calendar.current
         let hour = calendar.component(.hour, from: date)
-        
+
         if quietHours.startHour <= quietHours.endHour {
             return hour >= quietHours.startHour && hour < quietHours.endHour
         } else {
             return hour >= quietHours.startHour || hour < quietHours.endHour
         }
     }
-    
+
     private func scheduleAutomaticRotation() {
         guard rotationPolicy.autoRotationEnabled else { return }
 
@@ -536,7 +544,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             guard let manager = self else { return }
 
             Task { [manager] in
-                if manager.isRotationNeeded() && !manager.isRotationInProgress {
+                if manager.isRotationNeeded(), !manager.isRotationInProgress {
                     _ = try? await manager.rotateKey(reason: "Automatic rotation")
                 }
             }
@@ -544,21 +552,21 @@ public final class KeyRotationManager: @unchecked Sendable {
             manager.scheduleAutomaticRotation()
         }
     }
-    
+
     // MARK: - Thread-Safe Data Access
-    
+
     private func getKeyMetadata(for version: Int) -> KeyMetadata? {
-        return metadataQueue.sync {
-            return _keyMetadata[String(version)]
+        metadataQueue.sync {
+            _keyMetadata[String(version)]
         }
     }
-    
+
     private func setKeyMetadata(_ metadata: KeyMetadata) {
         metadataQueue.sync(flags: .barrier) {
             self._keyMetadata[String(metadata.version)] = metadata
         }
     }
-    
+
     private func logAuditEvent(_ event: AuditEvent.EventType, keyVersion: Int, details: [String: String]) {
         let auditEvent = AuditEvent(
             id: UUID().uuidString,
@@ -568,7 +576,7 @@ public final class KeyRotationManager: @unchecked Sendable {
             userId: nil, // Could be populated from authentication context
             details: details
         )
-        
+
         auditQueue.async(flags: .barrier) {
             self._auditTrail.append(auditEvent)
             // Keep only last 10,000 events to prevent unbounded growth
@@ -577,50 +585,52 @@ public final class KeyRotationManager: @unchecked Sendable {
             }
         }
     }
-    
+
     // MARK: - Persistence Methods
-    
+
     private func loadPersistedData() {
         // Load key metadata from keychain
         if let data = try? keychainStorage.retrieve(for: "key-rotation-metadata"),
-           let metadata = try? JSONDecoder().decode([String: KeyMetadata].self, from: data) {
+           let metadata = try? JSONDecoder().decode([String: KeyMetadata].self, from: data)
+        {
             metadataQueue.sync(flags: .barrier) {
                 self._keyMetadata = metadata
                 // Find current key version
                 let activeVersions = metadata.values
                     .filter { $0.status == .active }
-                    .map { $0.version }
+                    .map(\.version)
                     .sorted(by: >)
                 self._currentKeyVersion = activeVersions.first ?? 0
             }
         }
-        
+
         // Load audit trail from keychain
         if let data = try? keychainStorage.retrieve(for: "key-rotation-audit"),
-           let auditTrail = try? JSONDecoder().decode([AuditEvent].self, from: data) {
+           let auditTrail = try? JSONDecoder().decode([AuditEvent].self, from: data)
+        {
             auditQueue.sync(flags: .barrier) {
                 self._auditTrail = auditTrail
             }
         }
     }
-    
+
     private func persistData() throws {
         // Persist key metadata
         let metadata = metadataQueue.sync { _keyMetadata }
         let metadataData = try JSONEncoder().encode(metadata)
         try keychainStorage.store(metadataData, for: "key-rotation-metadata")
-        
+
         // Persist audit trail
         let auditTrail = auditQueue.sync { _auditTrail }
         let auditData = try JSONEncoder().encode(auditTrail)
         try keychainStorage.store(auditData, for: "key-rotation-audit")
     }
-    
+
     // MARK: - Compliance Assessment Methods
-    
+
     private func generateKeyVersionReports() -> [ComplianceReport.KeyVersionReport] {
         let metadata = metadataQueue.sync { _keyMetadata }
-        
+
         return metadata.values.map { keyMetadata in
             let age = Date().timeIntervalSince(keyMetadata.creationDate)
             let usage = ComplianceReport.KeyUsageStats(
@@ -628,7 +638,7 @@ public final class KeyRotationManager: @unchecked Sendable {
                 decryptionOperations: 0,
                 lastAccessed: Date()
             )
-            
+
             return ComplianceReport.KeyVersionReport(
                 version: keyMetadata.version,
                 age: age,
@@ -637,23 +647,24 @@ public final class KeyRotationManager: @unchecked Sendable {
             )
         }
     }
-    
+
     private func generateRotationEventReports(for period: DateInterval) -> [ComplianceReport.RotationEventReport] {
         let rotationEvents = auditQueue.sync {
             _auditTrail.filter { event in
                 event.event == .keyRotated &&
-                period.contains(event.timestamp)
+                    period.contains(event.timestamp)
             }
         }
-        
+
         return rotationEvents.compactMap { event in
             guard let fromVersionStr = event.details["old_version"],
                   let fromVersion = Int(fromVersionStr),
                   let durationStr = event.details["duration"],
-                  let duration = TimeInterval(durationStr) else {
+                  let duration = TimeInterval(durationStr)
+            else {
                 return nil
             }
-            
+
             return ComplianceReport.RotationEventReport(
                 date: event.timestamp,
                 fromVersion: fromVersion,
@@ -663,10 +674,10 @@ public final class KeyRotationManager: @unchecked Sendable {
             )
         }
     }
-    
+
     private func assessComplianceStatus() -> ComplianceReport.ComplianceStatus {
         var issues: [ComplianceReport.ComplianceStatus.ComplianceIssue] = []
-        
+
         // Check for overdue keys
         if isRotationOverdue() {
             issues.append(ComplianceReport.ComplianceStatus.ComplianceIssue(
@@ -675,7 +686,7 @@ public final class KeyRotationManager: @unchecked Sendable {
                 recommendation: "Perform key rotation immediately"
             ))
         }
-        
+
         // Check for keys nearing expiration
         if isRotationNeeded() {
             issues.append(ComplianceReport.ComplianceStatus.ComplianceIssue(
@@ -684,28 +695,28 @@ public final class KeyRotationManager: @unchecked Sendable {
                 recommendation: "Schedule key rotation within next 24 hours"
             ))
         }
-        
+
         return ComplianceReport.ComplianceStatus(
             pciDssCompliant: !isRotationOverdue(),
             soc2Compliant: !isRotationOverdue(),
             issues: issues
         )
     }
-    
+
     private func generateRecommendations(status: ComplianceReport.ComplianceStatus) -> [String] {
         var recommendations: [String] = []
-        
+
         if !status.pciDssCompliant {
             recommendations.append("Enable automatic key rotation to maintain PCI DSS compliance")
         }
-        
+
         if !status.soc2Compliant {
             recommendations.append("Review key rotation policies to meet SOC2 requirements")
         }
-        
+
         recommendations.append("Regular compliance audits should be performed monthly")
         recommendations.append("Consider implementing hardware security module (HSM) for enhanced key protection")
-        
+
         return recommendations
     }
 }
@@ -716,7 +727,7 @@ extension Data {
     enum RandomError: Error {
         case generationFailed
     }
-    
+
     static func random(length: Int) throws -> Data {
         var data = Data(count: length)
         let result = data.withUnsafeMutableBytes {

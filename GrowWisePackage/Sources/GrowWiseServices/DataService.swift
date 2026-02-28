@@ -1,8 +1,8 @@
-import Foundation
-import SwiftData
 import CloudKit
+import Foundation
 import GrowWiseModels
 import os
+import SwiftData
 
 /// Modern @Observable data service for SwiftData operations
 /// Injected via environment - access with @Environment(DataService.self)
@@ -13,55 +13,61 @@ import os
     public var mainContext: ModelContext {
         modelContainer.mainContext
     }
+
     private var modelContext: ModelContext {
         mainContext
     }
 
-    // Domain Repositories
+    /// Domain Repositories
     public var plants: PlantRepository {
         PlantRepository(context: mainContext)
     }
+
     public var gardens: GardenRepository {
         GardenRepository(context: mainContext)
     }
+
     public var reminders: ReminderRepository {
         ReminderRepository(context: mainContext)
     }
+
     public var journals: JournalRepository {
         JournalRepository(context: mainContext)
     }
+
     public var users: UserRepository {
         UserRepository(context: mainContext)
     }
+
     public var stats: StatsRepository {
         StatsRepository(context: mainContext)
     }
 
-    // Expose ModelContainer for background operations (e.g., PlantSeedingWorker)
-    // Workers can create their own background ModelContext for safe concurrency
+    /// Expose ModelContainer for background operations (e.g., PlantSeedingWorker)
+    /// Workers can create their own background ModelContext for safe concurrency
     public nonisolated var container: ModelContainer {
         modelContainer
     }
 
-    // Performance optimizations
+    /// Performance optimizations
     private let cache = SwiftDataCache()
 
-    // CloudKit container for sync — nil during UI testing (CKContainer crashes on simulator)
+    /// CloudKit container for sync — nil during UI testing (CKContainer crashes on simulator)
     private let cloudContainer: CKContainer?
 
-    // Logger for initialization tracking
+    /// Logger for initialization tracking
     private let logger = Logger(subsystem: "com.growwise.dataservice", category: "Initialization")
 
-    // Performance monitor instance
+    /// Performance monitor instance
     private let performanceMonitor: PerformanceMonitor
 
     // Privacy annotation helper for internal telemetry
     // Removed static property to avoid @MainActor isolation issues - use .private inline
 
-    // Legacy synchronous initialization - prefer createAsync() for better performance
+    /// Legacy synchronous initialization - prefer createAsync() for better performance
     public init(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) throws {
         self.performanceMonitor = performanceMonitor
-        
+
         let initStartTime = CFAbsoluteTimeGetCurrent()
         let memoryBefore = performanceMonitor.currentMemoryUsage
 
@@ -75,21 +81,20 @@ import os
             User.self,
             PlantReminder.self,
             JournalEntry.self,
-            SoilLog.self
+            SoilLog.self,
         ])
 
         // Use persistent storage with CloudKit sync for production.
         // CloudKit requires all @Model properties to be Optional (already done).
         let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
-        let modelConfiguration: ModelConfiguration
-        if isUITesting {
-            modelConfiguration = ModelConfiguration(
+        let modelConfiguration = if isUITesting {
+            ModelConfiguration(
                 schema: schema,
                 isStoredInMemoryOnly: true,
                 allowsSave: true
             )
         } else {
-            modelConfiguration = ModelConfiguration(
+            ModelConfiguration(
                 schema: schema,
                 cloudKitDatabase: .private("iCloud.com.growwise.gardening")
             )
@@ -97,15 +102,15 @@ import os
 
         logger.info("[DataService] Creating ModelContainer (\(isUITesting ? "in-memory" : "CloudKit-backed", privacy: .public) storage)")
 
-        self.modelContainer = try ModelContainer(
+        modelContainer = try ModelContainer(
             for: schema,
             configurations: [modelConfiguration]
         )
 
         if isUITesting {
-            self.cloudContainer = nil
+            cloudContainer = nil
         } else {
-            self.cloudContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
+            cloudContainer = CKContainer(identifier: "iCloud.com.growwise.gardening")
         }
 
         // Validate storage configuration
@@ -127,7 +132,7 @@ import os
             logger.warning("[DataService] ⚠️ High memory delta: \(memoryDelta, privacy: .private)MB > 10MB")
         }
     }
-    
+
     /// True async initialization that moves heavy work off main thread
     /// Moves ModelContainer creation to background thread for better startup performance
     public static func createAsync(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) async throws -> DataService {
@@ -157,20 +162,19 @@ import os
                         User.self,
                         PlantReminder.self,
                         JournalEntry.self,
-                        SoilLog.self
+                        SoilLog.self,
                     ])
 
                     // In-memory for UI tests (no migration risk, clean state every run).
                     // CloudKit-backed persistent storage for production.
-                    let modelConfiguration: ModelConfiguration
-                    if isUITesting {
-                        modelConfiguration = ModelConfiguration(
+                    let modelConfiguration = if isUITesting {
+                        ModelConfiguration(
                             schema: schema,
                             isStoredInMemoryOnly: true,
                             allowsSave: true
                         )
                     } else {
-                        modelConfiguration = ModelConfiguration(
+                        ModelConfiguration(
                             schema: schema,
                             cloudKitDatabase: .private("iCloud.com.growwise.gardening")
                         )
@@ -228,7 +232,7 @@ import os
             return DataService.createFallback()
         }
     }
-    
+
     /// Creates a fallback DataService instance with minimal functionality to prevent app crashes
     public static func createFallback(performanceMonitor: PerformanceMonitor = PerformanceMonitor()) -> DataService {
         let logger = Logger(subsystem: "com.growwise.dataservice", category: "Fallback")
@@ -248,32 +252,32 @@ import os
             return DataService.__allocating_init_emergency_stub(performanceMonitor: performanceMonitor)
         }
     }
-    
+
     /// Private minimal initializer for fallback
     private init(minimal container: ModelContainer, performanceMonitor: PerformanceMonitor) {
-        self.modelContainer = container
-        self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
+        modelContainer = container
+        cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
         self.performanceMonitor = performanceMonitor
     }
 
     /// Private initializer that accepts an explicit (possibly nil) CloudKit container.
     /// Used by `makeForTesting()` to avoid CKContainer.default() crashing in swift test.
     private init(testing container: ModelContainer, cloudContainer: CKContainer?, performanceMonitor: PerformanceMonitor) {
-        self.modelContainer = container
+        modelContainer = container
         self.cloudContainer = cloudContainer
         self.performanceMonitor = performanceMonitor
     }
 
     /// Static factory method for minimal DataService
     private static func __allocating_init_minimal(container: ModelContainer, performanceMonitor: PerformanceMonitor) -> DataService {
-        return DataService(minimal: container, performanceMonitor: performanceMonitor)
+        DataService(minimal: container, performanceMonitor: performanceMonitor)
     }
-    
+
     /// Emergency stub service that does nothing but prevents crashes
     private static func __allocating_init_emergency_stub(performanceMonitor: PerformanceMonitor) -> DataService {
-        return DataService(emergencyStub: true, performanceMonitor: performanceMonitor)
+        DataService(emergencyStub: true, performanceMonitor: performanceMonitor)
     }
-    
+
     /// Emergency stub initializer
     private init(emergencyStub: Bool, performanceMonitor: PerformanceMonitor) {
         self.performanceMonitor = performanceMonitor
@@ -283,13 +287,13 @@ import os
         logger.critical("[Emergency] Creating emergency stub - Memory: \(memoryState, privacy: .private)MB")
 
         // This is an emergency stub to prevent app crashes
-        self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
+        cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
 
         // Create a minimal in-memory container with just User
         do {
             let schema = Schema([User.self])
             let config = ModelConfiguration(schema: schema, isStoredInMemoryOnly: true)
-            self.modelContainer = try ModelContainer(for: schema, configurations: [config])
+            modelContainer = try ModelContainer(for: schema, configurations: [config])
             logger.info("[Emergency] Level 1 fallback successful (in-memory User schema)")
         } catch {
             // Last resort - this should never happen but if it does, we'll handle it gracefully
@@ -297,74 +301,75 @@ import os
             // We'll initialize with a default container and accept potential issues
             let schema = Schema([User.self])
             do {
-                self.modelContainer = try ModelContainer(for: schema)
+                modelContainer = try ModelContainer(for: schema)
                 logger.info("[Emergency] Level 2 fallback successful (default container)")
             } catch {
-            // Absolute last resort - use a completely empty container
-            logger.critical("CRITICAL SYSTEM FAILURE: Cannot initialize any ModelContainer: \(error.localizedDescription, privacy: .public)")
-            // Attempt a temp-file-backed store to avoid hard crash
-            do {
-                let fallbackSchema = Schema([User.self])
-                let tempURL = FileManager.default.temporaryDirectory
-                    .appendingPathComponent("GrowWise-Emergency-\(UUID().uuidString).sqlite")
-                let tempConfig = ModelConfiguration(
-                    schema: fallbackSchema,
-                    url: tempURL
-                )
-                if let tempContainer = try? ModelContainer(for: fallbackSchema, configurations: [tempConfig]) {
-                    self.modelContainer = tempContainer
-                    logger.warning("[Emergency] Level 3 fallback successful (temp file)")
-                    return
+                // Absolute last resort - use a completely empty container
+                logger.critical("CRITICAL SYSTEM FAILURE: Cannot initialize any ModelContainer: \(error.localizedDescription, privacy: .public)")
+                // Attempt a temp-file-backed store to avoid hard crash
+                do {
+                    let fallbackSchema = Schema([User.self])
+                    let tempURL = FileManager.default.temporaryDirectory
+                        .appendingPathComponent("GrowWise-Emergency-\(UUID().uuidString).sqlite")
+                    let tempConfig = ModelConfiguration(
+                        schema: fallbackSchema,
+                        url: tempURL
+                    )
+                    if let tempContainer = try? ModelContainer(for: fallbackSchema, configurations: [tempConfig]) {
+                        modelContainer = tempContainer
+                        logger.warning("[Emergency] Level 3 fallback successful (temp file)")
+                        return
+                    }
                 }
-            }
-            // If that fails, fall back to a read-only in-memory container
-            do {
-                let fallbackSchema = Schema([User.self])
-                let memConfig = ModelConfiguration(
-                    schema: fallbackSchema,
-                    isStoredInMemoryOnly: true,
-                    allowsSave: false
-                )
-                if let memContainer = try? ModelContainer(for: fallbackSchema, configurations: [memConfig]) {
-                    self.modelContainer = memContainer
-                    logger.warning("[Emergency] Level 4 fallback successful (read-only in-memory)")
-                    return
+                // If that fails, fall back to a read-only in-memory container
+                do {
+                    let fallbackSchema = Schema([User.self])
+                    let memConfig = ModelConfiguration(
+                        schema: fallbackSchema,
+                        isStoredInMemoryOnly: true,
+                        allowsSave: false
+                    )
+                    if let memContainer = try? ModelContainer(for: fallbackSchema, configurations: [memConfig]) {
+                        modelContainer = memContainer
+                        logger.warning("[Emergency] Level 4 fallback successful (read-only in-memory)")
+                        return
+                    }
                 }
-            }
-            // Absolute last resort: try default container creation; if this fails too, abort safely
-            do {
-                let fallbackSchema = Schema([User.self])
-                if let defaultContainer = try? ModelContainer(for: fallbackSchema) {
-                    self.modelContainer = defaultContainer
-                    logger.warning("[Emergency] Level 5 fallback successful (default)")
-                    return
+                // Absolute last resort: try default container creation; if this fails too, abort safely
+                do {
+                    let fallbackSchema = Schema([User.self])
+                    if let defaultContainer = try? ModelContainer(for: fallbackSchema) {
+                        modelContainer = defaultContainer
+                        logger.warning("[Emergency] Level 5 fallback successful (default)")
+                        return
+                    }
                 }
-            }
-            logger.critical("[Emergency] All fallback attempts failed - attempting staged recovery")
-            // Instead of crashing, attempt a staged recovery with telemetry
-            do {
-                // Final emergency: create a minimal empty schema container
-                let emptySchema = Schema([])
-                let emptyConfig = ModelConfiguration(
-                    schema: emptySchema,
-                    isStoredInMemoryOnly: true,
-                    allowsSave: false
-                )
-                if let emergencyContainer = try? ModelContainer(for: emptySchema, configurations: [emptyConfig]) {
-                    self.modelContainer = emergencyContainer
-                    logger.warning("[Emergency] Level 6 fallback successful (empty schema - degraded mode)")
-                    logger.critical("[Emergency] App is in severely degraded state - data operations will fail gracefully")
-                    return
+                logger.critical("[Emergency] All fallback attempts failed - attempting staged recovery")
+                // Instead of crashing, attempt a staged recovery with telemetry
+                do {
+                    // Final emergency: create a minimal empty schema container
+                    let emptySchema = Schema([])
+                    let emptyConfig = ModelConfiguration(
+                        schema: emptySchema,
+                        isStoredInMemoryOnly: true,
+                        allowsSave: false
+                    )
+                    if let emergencyContainer = try? ModelContainer(for: emptySchema, configurations: [emptyConfig]) {
+                        modelContainer = emergencyContainer
+                        logger.warning("[Emergency] Level 6 fallback successful (empty schema - degraded mode)")
+                        logger.critical("[Emergency] App is in severely degraded state - data operations will fail gracefully")
+                        return
+                    }
                 }
-            }
-            // If even empty schema fails, we must throw to prevent undefined behavior
-            logger.critical("[Emergency] Critical system failure - all recovery attempts exhausted")
-            fatalError("CRITICAL: Unrecoverable ModelContainer initialization failure. Please reinstall the application.")
+                // If even empty schema fails, we must throw to prevent undefined behavior
+                logger.critical("[Emergency] Critical system failure - all recovery attempts exhausted")
+                fatalError("CRITICAL: Unrecoverable ModelContainer initialization failure. Please reinstall the application.")
             }
         }
     }
-    
+
     // MARK: - User Management
+
     @discardableResult
     public func createUser(email: String, displayName: String, skillLevel: GardeningSkillLevel) throws -> User {
         let user = User(email: email, displayName: displayName, skillLevel: skillLevel)
@@ -372,7 +377,7 @@ import os
         try modelContext.save()
         return user
     }
-    
+
     public func getCurrentUser() -> User? {
         logger.info("Fetching current user (limit: 1)")
         var descriptor = FetchDescriptor<User>(
@@ -381,22 +386,23 @@ import os
         descriptor.fetchLimit = 1
         return try? modelContext.fetch(descriptor).first
     }
-    
+
     public func updateUser(_ user: User) throws {
         user.lastModified = Date()
         try modelContext.save()
     }
-    
+
     // MARK: - Garden Management
+
     @discardableResult
     public func createGarden(name: String, type: GardenType, isIndoor: Bool) throws -> Garden {
         let garden = Garden(name: name, gardenType: type, isIndoor: isIndoor)
-        
+
         if let currentUser = getCurrentUser() {
             garden.user = currentUser
             currentUser.gardens = (currentUser.gardens ?? []) + [garden]
         }
-        
+
         modelContext.insert(garden)
         try modelContext.save()
 
@@ -406,12 +412,12 @@ import os
 
         return garden
     }
-    
+
     public func fetchGardens(offset: Int = 0, limit: Int = 20) -> [Garden] {
         // Validate and clamp input parameters
         let clampedOffset = max(0, offset)
         let clampedLimit = max(1, min(limit, 50))
-        
+
         let cacheKey = "gardens:offset:\(clampedOffset):limit:\(clampedLimit)"
 
         // Check cache first
@@ -437,8 +443,9 @@ import os
         modelContext.delete(garden)
         try modelContext.save()
     }
-    
+
     // MARK: - Plant Management
+
     @discardableResult
     public func createPlant(
         name: String,
@@ -447,17 +454,17 @@ import os
         garden: Garden? = nil
     ) throws -> Plant {
         let plant = Plant(name: name, plantType: type, difficultyLevel: difficultyLevel)
-        
-        if let garden = garden {
+
+        if let garden {
             plant.garden = garden
             garden.plants = (garden.plants ?? []) + [plant]
         }
-        
+
         modelContext.insert(plant)
         try modelContext.save()
         return plant
     }
-    
+
     public func fetchPlants(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) -> [Plant] {
         let cacheKey = "plants:\(garden?.id?.uuidString ?? "all"):offset:\(offset):limit:\(limit)"
 
@@ -472,16 +479,16 @@ import os
         )
         descriptor.fetchLimit = min(limit, 50) // Cap at 50 for memory safety
         descriptor.fetchOffset = offset
-        
+
         // Apply garden filter if specified
-        if let garden = garden {
+        if let garden {
             let gardenId = garden.id
             let gardenPredicate = #Predicate<Plant> { plant in
                 plant.garden?.id == gardenId
             }
             descriptor.predicate = gardenPredicate
         }
-        
+
         let result = (try? modelContext.fetch(descriptor)) ?? []
 
         // Cache the result - user plants use medium TTL (5 min)
@@ -492,37 +499,37 @@ import os
 
     public func fetchPlantDatabase(offset: Int? = nil, limit: Int? = nil) -> [Plant] {
         // If pagination parameters are explicitly provided, use pagination
-        if let offset = offset, let limit = limit {
+        if let offset, let limit {
             return fetchPlantDatabasePage(offset: offset, limit: limit)
         }
-        
+
         // Otherwise, fetch all plants by iterating through pages
         let cacheKey = "plant_database:all"
-        
+
         // Check cache first for full dataset
         if let cachedPlants = cache.get(cacheKey, as: [Plant].self) {
             return cachedPlants
         }
-        
+
         // Fetch all pages internally with a reasonable batch size
         var allPlants: [Plant] = []
         var currentOffset = 0
         let batchSize = 50
-        
+
         while true {
             let batch = fetchPlantDatabasePage(offset: currentOffset, limit: batchSize)
-            
+
             if batch.isEmpty {
                 break
             }
-            
+
             allPlants.append(contentsOf: batch)
-            
+
             // If we got fewer items than requested, we've reached the end
             if batch.count < batchSize {
                 break
             }
-            
+
             currentOffset += batchSize
         }
 
@@ -558,23 +565,24 @@ import os
 
         return result
     }
-    
+
     public func updatePlant(_ plant: Plant) throws {
         // Invalidate relevant caches when plant data changes
         if let plantId = plant.id {
             let plantCacheKey = "plant:\(plantId.uuidString)"
             cache.invalidate(plantCacheKey)
         }
-        
+
         try modelContext.save()
     }
-    
+
     public func deletePlant(_ plant: Plant) throws {
         modelContext.delete(plant)
         try modelContext.save()
     }
-    
+
     // MARK: - Reminder Management
+
     @discardableResult
     public func createReminder(
         title: String,
@@ -592,26 +600,26 @@ import os
             nextDueDate: dueDate,
             plant: plant
         )
-        
+
         if let currentUser = getCurrentUser() {
             reminder.user = currentUser
             currentUser.reminders = (currentUser.reminders ?? []) + [reminder]
         }
-        
+
         plant.reminders = (plant.reminders ?? []) + [reminder]
         modelContext.insert(reminder)
         try modelContext.save()
-        
+
         // Invalidate reminder caches when new reminders are created
         cache.invalidate("reminders:active")
         if let plantId = plant.id {
             let plantCacheKey = "plants:\(plantId.uuidString)"
             cache.invalidate(plantCacheKey)
         }
-        
+
         return reminder
     }
-    
+
     public func fetchActiveReminders() -> [PlantReminder] {
         let cacheKey = "reminders:active:limit:50"
 
@@ -639,7 +647,7 @@ import os
 
         return result
     }
-    
+
     public func fetchUpcomingReminders(days: Int = 7, offset: Int = 0, limit: Int = 50) -> [PlantReminder] {
         let cacheKey = "reminders:upcoming:days:\(days):offset:\(offset):limit:\(limit)"
 
@@ -654,8 +662,8 @@ import os
         var descriptor = FetchDescriptor<PlantReminder>(
             predicate: #Predicate { reminder in
                 reminder.isEnabled == true &&
-                reminder.nextDueDate > now &&
-                reminder.nextDueDate <= futureDate
+                    reminder.nextDueDate > now &&
+                    reminder.nextDueDate <= futureDate
             },
             sortBy: [SortDescriptor(\.nextDueDate)]
         )
@@ -674,13 +682,14 @@ import os
         reminder.markCompleted()
         try modelContext.save()
     }
-    
+
     public func deleteReminder(_ reminder: PlantReminder) throws {
         modelContext.delete(reminder)
         try modelContext.save()
     }
-    
+
     // MARK: - Journal Management
+
     @discardableResult
     public func createJournalEntry(
         title: String,
@@ -689,16 +698,16 @@ import os
         plant: Plant
     ) throws -> JournalEntry {
         let entry = JournalEntry(title: title, content: content, entryType: type, plant: plant)
-        
+
         if let currentUser = getCurrentUser() {
             entry.user = currentUser
             currentUser.journalEntries = (currentUser.journalEntries ?? []) + [entry]
         }
-        
+
         plant.journalEntries = (plant.journalEntries ?? []) + [entry]
         modelContext.insert(entry)
         try modelContext.save()
-        
+
         // Invalidate journal caches when new entries are created
         cache.invalidate("journal:recent")
         if let plantId = plant.id {
@@ -706,24 +715,24 @@ import os
             cache.invalidate(plantCacheKey)
             cache.invalidate("journal:plant:\(plantId.uuidString)")
         }
-        
+
         return entry
     }
-    
-    // Add a journal entry that's already been created
+
+    /// Add a journal entry that's already been created
     public func addJournalEntry(_ entry: JournalEntry) throws {
         if let currentUser = getCurrentUser() {
             entry.user = currentUser
             currentUser.journalEntries = (currentUser.journalEntries ?? []) + [entry]
         }
-        
+
         if let plant = entry.plant {
             plant.journalEntries = (plant.journalEntries ?? []) + [entry]
         }
-        
+
         modelContext.insert(entry)
         try modelContext.save()
-        
+
         // Invalidate journal caches when new entries are added
         cache.invalidate("journal:recent")
         if let plant = entry.plant, let plantId = plant.id {
@@ -749,17 +758,17 @@ import os
             cache.invalidate("plants:\(plantId.uuidString)")
         }
     }
-    
+
     public func fetchJournalEntries(for plant: Plant, offset: Int = 0, limit: Int = 20) -> [JournalEntry] {
         guard let plantId = plant.id else { return [] }
-        
+
         let cacheKey = "journal:plant:\(plantId.uuidString):offset:\(offset):limit:\(limit)"
-        
+
         // Check cache first
         if let cachedEntries = cache.get(cacheKey, as: [JournalEntry].self) {
             return cachedEntries
         }
-        
+
         // Create paginated fetch descriptor for plant journal entries
         var descriptor = FetchDescriptor<JournalEntry>(
             predicate: #Predicate<JournalEntry> { entry in
@@ -769,7 +778,7 @@ import os
         descriptor.sortBy = [SortDescriptor<JournalEntry>(\.entryDate, order: .reverse)]
         descriptor.fetchLimit = min(limit, 30)
         descriptor.fetchOffset = offset
-        
+
         let result = (try? modelContext.fetch(descriptor)) ?? []
 
         // Journal entries for specific plants use medium TTL (5 min)
@@ -780,19 +789,19 @@ import os
 
     public func fetchRecentJournalEntries(limit: Int = 10) -> [JournalEntry] {
         let safeLimit = min(limit, 10) // Enforce reasonable limit
-        
+
         let cacheKey = "recent_journal_entries:limit:\(safeLimit)"
-        
+
         // Check cache first
         if let cachedEntries = cache.get(cacheKey, as: [JournalEntry].self) {
             return cachedEntries
         }
-        
+
         // Create basic fetch descriptor for recent journal entries
         var descriptor = FetchDescriptor<JournalEntry>()
         descriptor.sortBy = [SortDescriptor<JournalEntry>(\.entryDate, order: .reverse)]
         descriptor.fetchLimit = safeLimit
-        
+
         let result = (try? modelContext.fetch(descriptor)) ?? []
 
         // Recent entries use medium TTL (5 min) - balance between freshness and performance
@@ -812,7 +821,7 @@ import os
         cache.set(cacheKey, value: result, policy: .short)
         return result
     }
-    
+
     public func filterPlants(
         by type: PlantType? = nil,
         difficultyLevel: DifficultyLevel? = nil,
@@ -829,33 +838,33 @@ import os
         cache.set(cacheKey, value: result, policy: .medium)
         return result
     }
-    
-            // MARK: - Statistics
+
+    // MARK: - Statistics
 
     public func getGardeningStats() -> GardeningStats {
         let cacheKey = "stats:gardening_summary"
         if let cached = cache.get(cacheKey, as: GardeningStats.self) {
             return cached
         }
-        
+
         let totalPlants = getPlantCount()
         var healthyPlants = 0
-        
+
         let allPlants = (try? plants.fetchAll()) ?? []
         for plant in allPlants {
             if plant.healthStatus == .healthy { healthyPlants += 1 }
         }
-        
+
         let activeReminders = getReminderCount(activeOnly: true)
         let totalJournalEntries = getJournalEntryCount()
-        
+
         let gardeningStats = GardeningStats(
             totalPlants: totalPlants,
             healthyPlants: healthyPlants,
             activeReminders: activeReminders,
             totalJournalEntries: totalJournalEntries
         )
-        
+
         cache.set(cacheKey, value: gardeningStats, policy: .medium)
         return gardeningStats
     }
@@ -867,7 +876,7 @@ import os
         cache.set(cacheKey, value: count, policy: .long)
         return count
     }
-    
+
     public func getGardenCount() -> Int {
         let cacheKey = "stats:count:gardens"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
@@ -875,7 +884,7 @@ import os
         cache.set(cacheKey, value: count, policy: .long)
         return count
     }
-    
+
     public func getReminderCount(activeOnly: Bool = false) -> Int {
         let cacheKey = "stats:count:reminders:\(activeOnly)"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
@@ -883,7 +892,7 @@ import os
         cache.set(cacheKey, value: count, policy: .long)
         return count
     }
-    
+
     public func getJournalEntryCount(for plant: Plant? = nil) -> Int {
         let cacheKey = "stats:count:journals:\(plant?.id?.uuidString ?? "all")"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
@@ -891,7 +900,7 @@ import os
         cache.set(cacheKey, value: count, policy: .long)
         return count
     }
-    
+
     public func getPlantDatabaseCount() -> Int {
         let cacheKey = "stats:count:plantdatabase"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
@@ -910,7 +919,7 @@ import os
         let plants = fetchPlants()
         let reminders = fetchUpcomingReminders(days: 365)
         let journalEntries = fetchRecentJournalEntries(limit: 1000)
-        
+
         let userData = UserDataExport(
             userEmail: user?.email,
             totalPlants: plants.count,
@@ -918,12 +927,12 @@ import os
             totalReminders: reminders.count,
             totalJournalEntries: journalEntries.count
         )
-        
+
         return try JSONEncoder().encode(userData)
     }
-    
+
     // MARK: - Performance Optimization Methods
-    
+
     /// Batch load plant relationships to prevent N+1 queries
     /// - Parameters:
     ///   - plantIds: Array of plant UUIDs to fetch. If provided, results are ordered to match this array.
@@ -989,22 +998,22 @@ import os
 
         return result
     }
-    
+
     /// Get performance metrics for monitoring
     public func getPerformanceMetrics() -> [(operation: String, duration: TimeInterval, cacheHit: Bool)] {
-        return [] // Simplified for now
+        [] // Simplified for now
     }
-    
+
     /// Clear performance metrics
     public func clearPerformanceMetrics() {
         // Simplified for now
     }
-    
+
     /// Get cache statistics
     public func getCacheStats() -> (hits: Int, misses: Int, size: Int) {
-        return cache.getStats()
+        cache.getStats()
     }
-    
+
     /// Manually invalidate caches (useful for development/testing)
     public func invalidateAllCaches() {
         cache.clear()
@@ -1065,18 +1074,19 @@ import os
         }
 
         // Log schema information
-        if let config = config {
+        if let config {
             if let schema = config.schema {
-                logger.info("[Validation] Schema includes: \(schema.entities.map { $0.name }.joined(separator: ", "), privacy: .private)")
+                logger.info("[Validation] Schema includes: \(schema.entities.map(\.name).joined(separator: ", "), privacy: .private)")
             }
         }
     }
 
     // MARK: - Private Performance Tracking
+
     // Performance tracking has been simplified to remove missing type dependencies
 
     // MARK: - CloudKit Sync Status
-    
+
     public func getCloudSyncStatus() async -> CloudSyncStatus {
         guard let cloudContainer else {
             return CloudSyncStatus(isAvailable: false, accountStatus: .couldNotDetermine, lastSync: nil, error: nil)
@@ -1098,17 +1108,20 @@ import os
         }
     }
 }
+
 // MARK: - Errors
+
 public enum DataServiceError: Error, LocalizedError {
     case criticalInitializationFailure(String)
     case initializationFailed(String)
 
     public var errorDescription: String? {
         switch self {
-        case .criticalInitializationFailure(let message):
-            return message
-        case .initializationFailed(let message):
-            return "DataService initialization failed: \(message)"
+        case let .criticalInitializationFailure(message):
+            message
+
+        case let .initializationFailed(message):
+            "DataService initialization failed: \(message)"
         }
     }
 }
@@ -1148,7 +1161,7 @@ extension DataService {
             User.self,
             PlantReminder.self,
             JournalEntry.self,
-            SoilLog.self
+            SoilLog.self,
         ])
         let modelConfiguration = ModelConfiguration(
             schema: schema,
@@ -1162,6 +1175,7 @@ extension DataService {
         }
     }
 }
+
 // MARK: - Supporting Types
 
 // GardeningStats moved to GrowWiseModels/GardeningStats.swift to avoid duplication
@@ -1171,7 +1185,7 @@ public struct CloudSyncStatus: Sendable {
     public let accountStatus: CKAccountStatus
     public let lastSync: Date?
     public let error: String?
-    
+
     public init(isAvailable: Bool, accountStatus: CKAccountStatus, lastSync: Date?, error: String? = nil) {
         self.isAvailable = isAvailable
         self.accountStatus = accountStatus
@@ -1180,8 +1194,8 @@ public struct CloudSyncStatus: Sendable {
     }
 }
 
-// Note: SwiftData models don't automatically conform to Codable
-// For data export, we'll implement a separate export structure in a future iteration
+/// Note: SwiftData models don't automatically conform to Codable
+/// For data export, we'll implement a separate export structure in a future iteration
 public struct UserDataExport: Codable {
     public let exportDate: Date
     public let userEmail: String?
@@ -1189,9 +1203,9 @@ public struct UserDataExport: Codable {
     public let totalGardens: Int
     public let totalReminders: Int
     public let totalJournalEntries: Int
-    
+
     public init(userEmail: String?, totalPlants: Int, totalGardens: Int, totalReminders: Int, totalJournalEntries: Int) {
-        self.exportDate = Date()
+        exportDate = Date()
         self.userEmail = userEmail
         self.totalPlants = totalPlants
         self.totalGardens = totalGardens

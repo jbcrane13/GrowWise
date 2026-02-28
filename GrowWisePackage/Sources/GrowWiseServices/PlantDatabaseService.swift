@@ -1,19 +1,19 @@
 import Foundation
-import SwiftData
 import GrowWiseModels
+import SwiftData
 
 @MainActor
 @Observable public final class PlantDatabaseService {
     private let dataService: DataService
     private let seedingWorker: PlantSeedingWorker
-    
+
     public init(dataService: DataService) {
         self.dataService = dataService
-        self.seedingWorker = PlantSeedingWorker(modelContainer: dataService.container)
+        seedingWorker = PlantSeedingWorker(modelContainer: dataService.container)
     }
-    
+
     // MARK: - Database Seeding
-    
+
     public func seedPlantDatabase() async throws {
         // Check if database is already seeded
         let existingPlants = dataService.fetchPlantDatabase()
@@ -32,7 +32,7 @@ import GrowWiseModels
             (.flowers, seedFlowers),
             (.houseplants, seedHouseplants),
             (.fruits, seedFruits),
-            (.succulents, seedSucculents)
+            (.succulents, seedSucculents),
         ]
 
         for entry in seedOperations {
@@ -53,7 +53,7 @@ import GrowWiseModels
         let totalPlants = dataService.fetchPlantDatabase().count
         print("🚀 Seeded \(totalPlants) plants in \(String(format: "%.2f", totalTime))s")
     }
-    
+
     private func seedVegetables() async throws {
         let vegetables = [
             PlantData(
@@ -151,13 +151,13 @@ import GrowWiseModels
                 description: "Hardy superfood leafy green that withstands frost and cold temperatures",
                 careInstructions: ["Plant in early spring or fall", "Flavor improves after frost", "Harvest outer leaves from bottom up", "Very cold-hardy — grows in winter in mild climates"],
                 companionPlants: ["Beets", "Herbs", "Onions"]
-            )
+            ),
         ]
 
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(vegetables, batchSize: 5, category: .vegetables)
     }
-    
+
     private func seedHerbs() async throws {
         let herbs = [
             PlantData(
@@ -255,13 +255,13 @@ import GrowWiseModels
                 description: "Fast-growing herb used in cooking worldwide; leaves are cilantro, seeds are coriander",
                 careInstructions: ["Direct sow in cool weather — bolts quickly in heat", "Succession plant every 2-3 weeks for continuous harvest", "Allow some to bolt and self-seed", "Keep soil evenly moist"],
                 companionPlants: ["Tomatoes", "Peppers", "Spinach"]
-            )
+            ),
         ]
 
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(herbs, batchSize: 5, category: .herbs)
     }
-    
+
     private func seedFlowers() async throws {
         let flowers = [
             PlantData(
@@ -323,13 +323,13 @@ import GrowWiseModels
                 description: "Prolific blooming annual with trumpet-shaped flowers in a wide range of colors",
                 careInstructions: ["Plant after last frost in full sun", "Water consistently — they wilt quickly when dry", "Deadhead regularly or pinch stems to prevent legginess", "Fertilize monthly for best bloom performance"],
                 companionPlants: ["Marigolds", "Basil", "Vegetables"]
-            )
+            ),
         ]
 
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(flowers, batchSize: 5, category: .flowers)
     }
-    
+
     private func seedHouseplants() async throws {
         let houseplants = [
             PlantData(
@@ -391,13 +391,13 @@ import GrowWiseModels
                 description: "Elegant low-light plant that blooms with white spathes and purifies indoor air",
                 careInstructions: ["Tolerates deep shade — great for bathrooms and offices", "Water when leaves just begin to droop slightly", "Mist leaves or use a humidifier for best growth", "Toxic to pets — keep out of reach of cats and dogs"],
                 companionPlants: ["Snake Plant", "Spider Plant"]
-            )
+            ),
         ]
 
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(houseplants, batchSize: 5, category: .houseplants)
     }
-    
+
     private func seedFruits() async throws {
         let fruits = [
             PlantData(
@@ -411,13 +411,13 @@ import GrowWiseModels
                 description: "Sweet berries perfect for containers or garden beds",
                 careInstructions: ["Plant in spring", "Keep soil consistently moist", "Remove runners for larger fruit", "Harvest when fully red"],
                 companionPlants: ["Thyme", "Borage", "Lettuce"]
-            )
+            ),
         ]
-        
+
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(fruits, batchSize: 5, category: .fruits)
     }
-    
+
     private func seedSucculents() async throws {
         let succulents = [
             PlantData(
@@ -455,26 +455,26 @@ import GrowWiseModels
                 description: "Rosette-forming succulent with beautiful symmetry",
                 careInstructions: ["Bright light", "Well-draining soil", "Water at soil level", "Produces colorful flower spikes"],
                 companionPlants: ["Sedum", "Jade Plant"]
-            )
+            ),
         ]
-        
+
         // Batch create plants with yielding for better performance
         try await createPlantsInBatches(succulents, batchSize: 5, category: .succulents)
     }
-    
+
     // MARK: - Search and Filter
-    
+
     /// Search plants in the database by name or scientific name
     public func searchPlants(query: String) -> [Plant] {
         let allPlants = dataService.fetchPlantDatabase()
         let lowercaseQuery = query.lowercased()
-        
+
         return allPlants.filter { plant in
             plant.name?.lowercased().contains(lowercaseQuery) ?? false ||
-            plant.scientificName?.lowercased().contains(lowercaseQuery) ?? false
+                plant.scientificName?.lowercased().contains(lowercaseQuery) ?? false
         }
     }
-    
+
     /// Filter plants by multiple criteria
     public func filterPlants(
         by type: PlantType? = nil,
@@ -485,115 +485,118 @@ import GrowWiseModels
         season: PlantingSeason? = nil
     ) -> [Plant] {
         let allPlants = dataService.fetchPlantDatabase()
-        
+
         return allPlants.filter { plant in
             var matches = true
-            
-            if let type = type {
+
+            if let type {
                 matches = matches && plant.plantType == type
             }
-            
-            if let difficulty = difficulty {
+
+            if let difficulty {
                 matches = matches && plant.difficultyLevel == difficulty
             }
-            
-            if let sunlight = sunlight {
+
+            if let sunlight {
                 matches = matches && plant.sunlightRequirement == sunlight
             }
-            
-            if let watering = watering {
+
+            if let watering {
                 matches = matches && plant.wateringFrequency == watering
             }
-            
-            if let space = space {
+
+            if let space {
                 matches = matches && plant.spaceRequirement == space
             }
-            
-            if let season = season {
+
+            if let season {
                 // Check if plant is suitable for the given season
                 matches = matches && isPlantSuitableForSeason(plant: plant, season: season)
             }
-            
+
             return matches
         }
     }
-    
+
     /// Get plants suitable for beginners
     public func getBeginnerFriendlyPlants() -> [Plant] {
-        return filterPlants(difficulty: .beginner)
+        filterPlants(difficulty: .beginner)
     }
-    
+
     /// Get plants by growing season
     public func getPlantsBySeason(_ season: PlantingSeason) -> [Plant] {
-        return filterPlants(season: season)
+        filterPlants(season: season)
     }
-    
+
     /// Get companion plants for a given plant
     public func getCompanionPlants(for plant: Plant) -> [Plant] {
         // Note: This would require a companion plant relationship system
         // For now, return plants of complementary types
         let allPlants = dataService.fetchPlantDatabase()
-        
+
         switch plant.plantType {
         case .vegetable:
             return allPlants.filter { $0.plantType == .herb || $0.plantType == .flower }
+
         case .herb:
             return allPlants.filter { $0.plantType == .vegetable }
+
         case .flower:
             return allPlants.filter { $0.plantType == .vegetable || $0.plantType == .herb }
+
         default:
             return []
         }
     }
-    
+
     // MARK: - Plant Statistics and Categories
-    
+
     /// Get count of plants by type
     public func getPlantCountByType() -> [PlantType: Int] {
         let allPlants = dataService.fetchPlantDatabase()
         var counts: [PlantType: Int] = [:]
-        
+
         for type in PlantType.allCases {
-            counts[type] = allPlants.filter { $0.plantType == type }.count
+            counts[type] = allPlants.count(where: { $0.plantType == type })
         }
-        
+
         return counts
     }
-    
+
     /// Get count of plants by difficulty
     public func getPlantCountByDifficulty() -> [DifficultyLevel: Int] {
         let allPlants = dataService.fetchPlantDatabase()
         var counts: [DifficultyLevel: Int] = [:]
-        
+
         for difficulty in DifficultyLevel.allCases {
-            counts[difficulty] = allPlants.filter { $0.difficultyLevel == difficulty }.count
+            counts[difficulty] = allPlants.count(where: { $0.difficultyLevel == difficulty })
         }
-        
+
         return counts
     }
-    
+
     /// Get total number of plants in database
     public func getTotalPlantCount() -> Int {
-        return dataService.fetchPlantDatabase().count
+        dataService.fetchPlantDatabase().count
     }
-    
+
     /// Get all plant types available in the database
     public func getAvailablePlantTypes() -> [PlantType] {
         let allPlants = dataService.fetchPlantDatabase()
-        let uniqueTypes = Set(allPlants.compactMap { $0.plantType })
+        let uniqueTypes = Set(allPlants.compactMap(\.plantType))
         return Array(uniqueTypes).sorted { $0.displayName < $1.displayName }
     }
-    
+
     // MARK: - Plant Recommendations
-    
+
     public func getRecommendedPlants(for userProfile: UserGardenProfile, limit: Int = 10) -> [PlantRecommendation] {
         let allPlants = dataService.fetchPlantDatabase()
         var recommendations: [PlantRecommendation] = []
-        
+
         for plant in allPlants {
             let compatibilityScore = calculateCompatibilityScore(plant: plant, userProfile: userProfile)
             let reasons = generateRecommendationReasons(plant: plant, userProfile: userProfile, score: compatibilityScore)
-            
+
             let recommendation = PlantRecommendation(
                 plant: plant,
                 compatibilityScore: compatibilityScore,
@@ -601,16 +604,16 @@ import GrowWiseModels
             )
             recommendations.append(recommendation)
         }
-        
+
         // Sort by compatibility score and return top recommendations
         return recommendations
             .sorted { $0.compatibilityScore > $1.compatibilityScore }
             .prefix(limit)
-            .map { $0 }
+            .map(\.self)
     }
-    
+
     // MARK: - Helper Methods
-    
+
     /// Optimized batch plant creation with autoreleasepool for aggressive garbage collection
     private func createPlantsInBatches(
         _ plantDataArray: [PlantData],
@@ -622,7 +625,7 @@ import GrowWiseModels
 
         for batchIndex in stride(from: 0, to: plantDataArray.count, by: batchSize) {
             let batchEnd = min(batchIndex + batchSize, plantDataArray.count)
-            let batch = Array(plantDataArray[batchIndex..<batchEnd])
+            let batch = Array(plantDataArray[batchIndex ..< batchEnd])
 
             // Perform async plant creation outside autoreleasepool
             for plantData in batch {
@@ -632,7 +635,7 @@ import GrowWiseModels
             // Wrap synchronous logging in autoreleasepool for garbage collection
             autoreleasepool {
                 // Log batch completion
-                print("      ✓ Batch \(batchIndex/batchSize + 1): \(batch.count) plants")
+                print("      ✓ Batch \(batchIndex / batchSize + 1): \(batch.count) plants")
             }
 
             // Yield control to keep UI responsive
@@ -642,161 +645,181 @@ import GrowWiseModels
         let duration = CFAbsoluteTimeGetCurrent() - startTime
         print("   ✅ Seeded \(plantDataArray.count) \(category.rawValue) in \(String(format: "%.3f", duration))s")
     }
-    
+
     private func createPlantFromData(_ plantData: PlantData) async throws {
         try await seedingWorker.insertPlant(from: plantData)
     }
-    
+
     private func calculateCompatibilityScore(plant: Plant, userProfile: UserGardenProfile) -> Double {
         var score: Double = 0
         var maxScore: Double = 0
-        
+
         // Difficulty level compatibility (30%)
         maxScore += 30
         switch (userProfile.skillLevel, plant.difficultyLevel) {
         case (.beginner, .beginner):
             score += 30
+
         case (.beginner, .intermediate):
             score += 15
+
         case (.intermediate, .beginner), (.intermediate, .intermediate):
             score += 30
+
         case (.intermediate, .advanced):
             score += 20
+
         case (.advanced, _):
             score += 30
+
         default:
             score += 0
         }
-        
+
         // Space compatibility (25%)
         maxScore += 25
         if plant.spaceRequirement == userProfile.availableSpace {
             score += 25
-        } else if (plant.spaceRequirement == .small && userProfile.availableSpace != .small) {
+        } else if plant.spaceRequirement == .small, userProfile.availableSpace != .small {
             score += 20 // Small plants fit in larger spaces
         } else {
             score += 10
         }
-        
+
         // Care time compatibility (25%)
         maxScore += 25
         let plantCareTime = estimateCareTime(for: plant)
         switch (userProfile.timeCommitment, plantCareTime) {
         case (.minimal, .minimal), (.light, .minimal):
             score += 25
+
         case (.minimal, .moderate):
             score += 10
+
         case (.light, .moderate), (.moderate, .minimal), (.moderate, .moderate):
             score += 25
+
         case (.moderate, .heavy), (.heavy, .minimal), (.heavy, .moderate), (.heavy, .heavy):
             score += 25
+
         case (.intensive, _):
             score += 25
+
         default:
             score += 15
         }
-        
+
         // Garden type compatibility (20%)
         maxScore += 20
         let gardenCompatibility = checkGardenTypeCompatibility(plant: plant, gardenType: userProfile.gardenType)
         score += gardenCompatibility * 20
-        
+
         return (score / maxScore) * 100
     }
-    
+
     private func generateRecommendationReasons(plant: Plant, userProfile: UserGardenProfile, score: Double) -> [String] {
         var reasons: [String] = []
-        
+
         // Convert GardeningSkillLevel to DifficultyLevel for comparison
-        let matchingDifficulty: DifficultyLevel = {
-            switch userProfile.skillLevel {
-            case .beginner: return .beginner
-            case .intermediate: return .intermediate
-            case .advanced, .expert: return .advanced
-            }
-        }()
-        
+        let matchingDifficulty: DifficultyLevel = switch userProfile.skillLevel {
+        case .beginner: .beginner
+        case .intermediate: .intermediate
+        case .advanced, .expert: .advanced
+        }
+
         if plant.difficultyLevel == matchingDifficulty {
             reasons.append("Perfect match for your \(userProfile.skillLevel.rawValue) skill level")
         }
-        
+
         if plant.spaceRequirement == userProfile.availableSpace {
             reasons.append("Ideal size for your available space")
         }
-        
+
         let careTime = estimateCareTime(for: plant)
         if careTime == userProfile.timeCommitment {
             reasons.append("Matches your time commitment level")
         }
-        
+
         if plant.plantType == .herb || plant.plantType == .vegetable {
             reasons.append("Provides fresh, homegrown food")
         }
-        
+
         if plant.difficultyLevel == .beginner {
             reasons.append("Very forgiving for new gardeners")
         }
-        
+
         if reasons.isEmpty {
             reasons.append("A versatile plant suitable for many garden types")
         }
-        
+
         return reasons
     }
-    
+
     private func estimateCareTime(for plant: Plant) -> UserTimeCommitment {
         // Estimate based on plant characteristics
         if plant.plantType == .succulent || plant.plantType == .houseplant {
-            return .minimal
+            .minimal
         } else if plant.plantType == .herb || plant.plantType == .flower {
-            return .moderate
+            .moderate
         } else {
-            return .heavy
+            .heavy
         }
     }
-    
+
     private func isPlantSuitableForSeason(plant: Plant, season: PlantingSeason) -> Bool {
         // Determine plant suitability based on type and season
         switch (plant.plantType, season) {
         case (.vegetable, .spring):
             // Cool season vegetables like lettuce, spinach, carrots
-            return ["Lettuce", "Spinach", "Carrots"].contains(plant.name)
+            ["Lettuce", "Spinach", "Carrots"].contains(plant.name)
+
         case (.vegetable, .summer):
             // Warm season vegetables like tomatoes, peppers
-            return ["Tomato", "Bell Pepper"].contains(plant.name)
+            ["Tomato", "Bell Pepper"].contains(plant.name)
+
         case (.herb, .spring), (.herb, .summer), (.herb, .fall):
             // Most herbs can be grown in spring, summer, and fall
-            return true
+            true
+
         case (.flower, .spring), (.flower, .summer):
             // Annual flowers for spring and summer
-            return true
+            true
+
         case (.houseplant, _), (.succulent, _):
             // Indoor plants can be grown year-round
-            return true
+            true
+
         case (.fruit, .spring), (.fruit, .summer):
             // Fruits are typically planted in spring/summer
-            return true
+            true
+
         default:
-            return false
+            false
         }
     }
-    
+
     private func checkGardenTypeCompatibility(plant: Plant, gardenType: String) -> Double {
         switch (plant.plantType, gardenType) {
         case (.houseplant, "indoor"):
-            return 1.0
+            1.0
+
         case (.succulent, "indoor"), (.succulent, "container"):
-            return 1.0
+            1.0
+
         case (.herb, "container"), (.herb, "raised_bed"), (.herb, "outdoor"):
-            return 1.0
+            1.0
+
         case (.vegetable, "raised_bed"), (.vegetable, "outdoor"), (.vegetable, "container"):
-            return 1.0
+            1.0
+
         case (.flower, "outdoor"), (.flower, "raised_bed"):
-            return 1.0
+            1.0
+
         case (.fruit, "outdoor"), (.fruit, "container"):
-            return 0.8
+            0.8
+
         default:
-            return 0.6
+            0.6
         }
     }
 }
@@ -810,7 +833,7 @@ public struct PlantDatabaseSeedingError: Error, LocalizedError, Sendable {
 
         public init(category: String, underlyingError: any Error) {
             self.category = category
-            self.underlyingErrorDescription = underlyingError.localizedDescription
+            underlyingErrorDescription = underlyingError.localizedDescription
         }
     }
 
@@ -821,7 +844,7 @@ public struct PlantDatabaseSeedingError: Error, LocalizedError, Sendable {
     }
 
     public var errorDescription: String? {
-        let categories = failures.map { $0.category }.joined(separator: ", ")
+        let categories = failures.map(\.category).joined(separator: ", ")
         return "Failed to seed plant categories: \(categories)"
     }
 
@@ -897,7 +920,7 @@ public struct PlantRecommendation: Identifiable {
     public let plant: Plant
     public let compatibilityScore: Double
     public let reasons: [String]
-    
+
     public init(plant: Plant, compatibilityScore: Double, reasons: [String]) {
         self.plant = plant
         self.compatibilityScore = compatibilityScore
@@ -910,7 +933,7 @@ public struct UserGardenProfile {
     public let availableSpace: SpaceRequirement
     public let timeCommitment: UserTimeCommitment
     public let gardenType: String // "indoor", "outdoor", "container", "raised_bed"
-    
+
     public init(skillLevel: GardeningSkillLevel, availableSpace: SpaceRequirement, timeCommitment: UserTimeCommitment, gardenType: String) {
         self.skillLevel = skillLevel
         self.availableSpace = availableSpace
@@ -919,30 +942,30 @@ public struct UserGardenProfile {
     }
 }
 
-// Alias for the TimeCommitment from User model to avoid conflicts
+/// Alias for the TimeCommitment from User model to avoid conflicts
 public typealias UserTimeCommitment = TimeCommitment
 
 public enum PlantingSeason: String, CaseIterable, Codable {
-    case spring = "spring"
-    case summer = "summer"
-    case fall = "fall"
-    case winter = "winter"
-    
+    case spring
+    case summer
+    case fall
+    case winter
+
     public var displayName: String {
         switch self {
-        case .spring: return "Spring"
-        case .summer: return "Summer" 
-        case .fall: return "Fall"
-        case .winter: return "Winter"
+        case .spring: "Spring"
+        case .summer: "Summer"
+        case .fall: "Fall"
+        case .winter: "Winter"
         }
     }
-    
+
     public var description: String {
         switch self {
-        case .spring: return "Cool weather planting season"
-        case .summer: return "Warm weather growing season"
-        case .fall: return "Fall planting and harvest season"
-        case .winter: return "Indoor gardening season"
+        case .spring: "Cool weather planting season"
+        case .summer: "Warm weather growing season"
+        case .fall: "Fall planting and harvest season"
+        case .winter: "Indoor gardening season"
         }
     }
 }

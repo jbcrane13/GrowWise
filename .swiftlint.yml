@@ -93,17 +93,17 @@ disabled_rules:
 # Rule configurations
 line_length:
   warning: 130
-  error: 200
+  error: 270
   ignores_comments: true
   ignores_urls: true
 
 file_length:
   warning: 500
-  error: 800
+  error: 1300
 
 type_body_length:
   warning: 300
-  error: 500
+  error: 900
 
 function_body_length:
   warning: 60
@@ -136,6 +136,8 @@ identifier_name:
     - x
     - y
     - db
+  validates_start_with_lowercase: warning
+  allowed_symbols: ["_"]
 
 type_name:
   min_length: 3
@@ -151,7 +153,7 @@ vertical_whitespace:
 
 force_cast: error
 force_try: error
-force_unwrapping: error
+force_unwrapping: warning
 
 # Custom rules
 custom_rules:

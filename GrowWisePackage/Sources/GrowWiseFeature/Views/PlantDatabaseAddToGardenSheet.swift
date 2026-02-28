@@ -1,13 +1,13 @@
-import SwiftUI
-import SwiftData
 import GrowWiseModels
 import GrowWiseServices
+import SwiftData
+import SwiftUI
 
 struct AddPlantToGardenFromDatabaseSheet: View {
     let plant: Plant
     @Environment(\.dismiss) private var dismiss
     @Environment(DataService.self) private var dataService
-    
+
     // Customization fields
     @State private var selectedGarden: Garden?
     @State private var location: String = ""
@@ -18,7 +18,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
     @State private var isLoading = false
     @State private var showingError = false
     @State private var errorMessage = ""
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -38,7 +38,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                         Spacer()
                         PlantTypeIcon(plantType: plant.plantType ?? .houseplant)
                     }
-                    
+
                     if let description = plant.notes, !description.isEmpty {
                         Text(description)
                             .font(.caption)
@@ -48,7 +48,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 } header: {
                     Text("Plant Information")
                 }
-                
+
                 // Garden Selection
                 if !availableGardens.isEmpty {
                     Section {
@@ -65,17 +65,17 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                         Text("Choose which garden to add this plant to")
                     }
                 }
-                
+
                 // Location & Planting
                 Section {
                     TextField("Location in Garden", text: $location)
                         .gwTextInputAutocapitalization(.words)
-                    
+
                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
                 } header: {
                     Text("Planting Details")
                 }
-                
+
                 // Health Status
                 Section {
                     Picker("Initial Health Status", selection: $healthStatus) {
@@ -88,7 +88,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 } header: {
                     Text("Health Status")
                 }
-                
+
                 // Care Requirements Preview
                 Section {
                     if let sunlight = plant.sunlightRequirement {
@@ -100,7 +100,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    
+
                     if let watering = plant.wateringFrequency {
                         HStack {
                             Label("Watering", systemImage: "drop.fill")
@@ -110,7 +110,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                                 .foregroundColor(.secondary)
                         }
                     }
-                    
+
                     if let difficulty = plant.difficultyLevel {
                         HStack {
                             Label("Difficulty", systemImage: "star.fill")
@@ -123,7 +123,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 } header: {
                     Text("Care Requirements")
                 }
-                
+
                 // Notes
                 Section {
                     TextEditor(text: $notes)
@@ -143,7 +143,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                     }
                     .disabled(isLoading)
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         Task {
@@ -167,7 +167,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 }
             }
             .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+                Button("OK") {}
             } message: {
                 Text(errorMessage)
             }
@@ -176,39 +176,39 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             }
         }
     }
-    
+
     private func loadData() {
         availableGardens = (try? dataService.gardens.fetchAll()) ?? []
         if availableGardens.count == 1 {
             selectedGarden = availableGardens.first
         }
     }
-    
+
     @MainActor
     private func saveToGarden() async {
         isLoading = true
-        
+
         do {
             // Create a user instance of the database plant
             let newPlant = Plant(name: plant.name ?? "Unknown Plant", plantType: plant.plantType ?? .houseplant, difficultyLevel: plant.difficultyLevel ?? .beginner, isUserPlant: true)
             newPlant.garden = selectedGarden
             try dataService.plants.add(newPlant)
             let userPlant = newPlant
-            
+
             // Copy properties from database plant
             userPlant.scientificName = plant.scientificName
             userPlant.sunlightRequirement = plant.sunlightRequirement
             userPlant.wateringFrequency = plant.wateringFrequency
-            
+
             // Set customized properties
             userPlant.plantingDate = plantingDate
             userPlant.healthStatus = healthStatus
             userPlant.notes = notes.isEmpty ? plant.notes : notes
             userPlant.isUserPlant = true
-            
+
             // Save the plant
             try dataService.updatePlant(userPlant)
-            
+
             // Create a journal entry for planting
             _ = try dataService.createJournalEntry(
                 title: "Added \(userPlant.name ?? "plant") to garden",
@@ -216,10 +216,8 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 type: .planting,
                 plant: userPlant
             )
-            
-            
+
             NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
-            
         } catch {
             isLoading = false
             errorMessage = "Failed to add plant: \(error.localizedDescription)"
@@ -233,21 +231,21 @@ struct AddPlantToGardenFromDatabaseSheet: View {
 extension HealthStatus {
     var iconName: String {
         switch self {
-        case .healthy: return "checkmark.circle.fill"
-        case .needsAttention: return "exclamationmark.triangle.fill"
-        case .sick: return "xmark.octagon.fill"
-        case .dying: return "exclamationmark.octagon.fill"
-        case .dead: return "xmark.circle.fill"
+        case .healthy: "checkmark.circle.fill"
+        case .needsAttention: "exclamationmark.triangle.fill"
+        case .sick: "xmark.octagon.fill"
+        case .dying: "exclamationmark.octagon.fill"
+        case .dead: "xmark.circle.fill"
         }
     }
-    
+
     var color: Color {
         switch self {
-        case .healthy: return .green
-        case .needsAttention: return .orange
-        case .sick: return .red
-        case .dying: return .red
-        case .dead: return .gray
+        case .healthy: .green
+        case .needsAttention: .orange
+        case .sick: .red
+        case .dying: .red
+        case .dead: .gray
         }
     }
 }

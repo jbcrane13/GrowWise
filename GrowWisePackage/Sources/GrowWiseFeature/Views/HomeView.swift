@@ -2,19 +2,19 @@
 // Components: WelcomeSection, StatsSection, WeatherSection, QuickActionsSection, CompactReminderRow
 // Related Views: AddPlantSheet, RemindersListView
 
-import SwiftUI
-import SwiftData
-import PhotosUI
-import UserNotifications
 import GrowWiseModels
 import GrowWiseServices
+import PhotosUI
+import SwiftData
+import SwiftUI
+import UserNotifications
 
 public struct HomeView: View {
     @Environment(DataService.self) private var dataService
     @Environment(LocationService.self) private var locationService
     @Environment(PhotoService.self) private var photoService
     @Environment(CloudSyncService.self) private var cloudSyncService
-    
+
     @State private var gardeningStats = GardeningStats(totalPlants: 0, healthyPlants: 0, activeReminders: 0, totalJournalEntries: 0)
     @State private var upcomingReminders: [PlantReminder] = []
     @State private var recentJournalEntries: [JournalEntry] = []
@@ -23,16 +23,16 @@ public struct HomeView: View {
     @State private var showingAddPlant = false
     @State private var showingCreateGarden = false
     @State private var showGardenCreatedToast = false
-    
+
     public init() {}
-    
+
     public var body: some View {
         NavigationStack {
             ScrollView {
                 LazyVStack(spacing: 20) {
                     // Welcome Header
                     WelcomeSection()
-                    
+
                     if dataService.getGardenCount() == 0 {
                         VStack(spacing: 12) {
                             HStack(spacing: 8) {
@@ -221,7 +221,7 @@ public struct HomeView: View {
                     .font(.caption)
                 }
             }
-            
+
             if upcomingReminders.isEmpty {
                 Text("No tasks for today - great job keeping up with your plants!")
                     .font(.subheadline)
@@ -239,7 +239,7 @@ public struct HomeView: View {
             }
         }
     }
-    
+
     private var recentJournalSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
@@ -251,7 +251,7 @@ public struct HomeView: View {
                 }
                 .font(.caption)
             }
-            
+
             if recentJournalEntries.isEmpty {
                 Text("Start documenting your plant journey!")
                     .font(.subheadline)
@@ -269,38 +269,41 @@ public struct HomeView: View {
             }
         }
     }
-    
+
     private func handleQuickAction(_ action: QuickAction) {
         // TODO: Implement navigation for quick actions
         switch action {
         case .waterPlants:
             // Navigate to watering flow
             break
+
         case .addJournalEntry:
             // Navigate to journal entry creation
             break
+
         case .plantDatabase:
             // Navigate to plant database
             break
+
         case .myGarden:
             // Navigate to garden view
             break
         }
     }
-    
+
     @MainActor
     private func loadData() async {
         isLoading = true
-        
+
         // Load stats
         gardeningStats = dataService.getGardeningStats()
-        
+
         // Load reminders
         upcomingReminders = dataService.fetchActiveReminders()
-        
+
         // Load recent journal entries
         recentJournalEntries = dataService.fetchRecentJournalEntries(limit: 5)
-        
+
         if ProcessInfo.processInfo.arguments.contains("--uitesting-mock-weather") {
             currentWeather = WeatherInfo.sample
         } else if locationService.hasLocationPermission {
@@ -314,10 +317,10 @@ public struct HomeView: View {
         }
 
         await cloudSyncService.refreshStatus()
-        
+
         isLoading = false
     }
-    
+
     @MainActor
     private func refreshData() async {
         await loadData()
@@ -343,6 +346,7 @@ public struct HomeView: View {
 }
 
 #Preview {
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let locationService = LocationService()
     let photoService = PhotoService(dataService: dataService)

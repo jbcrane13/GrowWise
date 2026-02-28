@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 struct OnboardingNavigationView: View {
     @Binding var currentStep: OnboardingStep
@@ -12,32 +12,37 @@ struct OnboardingNavigationView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
-    
+
     private var isFirstStep: Bool {
         currentStep == OnboardingStep.allCases.first
     }
-    
+
     private var isLastStep: Bool {
         currentStep == OnboardingStep.allCases.last
     }
-    
+
     private var canProceed: Bool {
         switch currentStep {
         case .welcome:
-            return true
+            true
+
         case .skillAssessment:
-            return true // Skill level has a default
+            true // Skill level has a default
+
         case .goals:
-            return !userProfile.goals.isEmpty
+            !userProfile.goals.isEmpty
+
         case .location:
-            return true // Optional step
+            true // Optional step
+
         case .notifications:
-            return true // Optional step
+            true // Optional step
+
         case .completion:
-            return true
+            true
         }
     }
-    
+
     var body: some View {
         HStack(spacing: 16) {
             // Back button
@@ -49,9 +54,9 @@ struct OnboardingNavigationView: View {
                 }
                 .buttonStyle(OnboardingSecondaryButtonStyle())
             }
-            
+
             Spacer()
-            
+
             // Next/Finish button
             Button(isLastStep ? "Get Started" : "Continue") {
                 withAnimation(.easeInOut) {
@@ -67,7 +72,7 @@ struct OnboardingNavigationView: View {
         }
         .padding(.horizontal)
         .alert("Setup Error", isPresented: $showingError) {
-            Button("OK") { }
+            Button("OK") {}
         } message: {
             Text(errorMessage)
         }
@@ -76,18 +81,18 @@ struct OnboardingNavigationView: View {
     private func moveToStep(direction: StepDirection) {
         let allCases = OnboardingStep.allCases
         guard let currentIndex = allCases.firstIndex(of: currentStep) else { return }
-        
-        let newIndex: Int
-        switch direction {
+
+        let newIndex: Int = switch direction {
         case .next:
-            newIndex = min(currentIndex + 1, allCases.count - 1)
+            min(currentIndex + 1, allCases.count - 1)
+
         case .previous:
-            newIndex = max(currentIndex - 1, 0)
+            max(currentIndex - 1, 0)
         }
-        
+
         currentStep = allCases[newIndex]
     }
-    
+
     private func completeOnboarding() {
         Task {
             do {

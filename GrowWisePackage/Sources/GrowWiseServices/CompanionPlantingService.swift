@@ -5,31 +5,31 @@ import GrowWiseModels
 
 /// Represents the relationship between two plants
 public enum PlantCompatibility: String, CaseIterable, Sendable {
-    case companion      // Plants benefit each other
-    case neutral        // No particular effect
-    case incompatible   // Plants harm each other or compete
-    
+    case companion // Plants benefit each other
+    case neutral // No particular effect
+    case incompatible // Plants harm each other or compete
+
     public var displayName: String {
         switch self {
-        case .companion: return "Good Companions"
-        case .neutral: return "Neutral"
-        case .incompatible: return "Incompatible"
+        case .companion: "Good Companions"
+        case .neutral: "Neutral"
+        case .incompatible: "Incompatible"
         }
     }
-    
+
     public var iconName: String {
         switch self {
-        case .companion: return "heart.fill"
-        case .neutral: return "minus.circle"
-        case .incompatible: return "exclamationmark.triangle.fill"
+        case .companion: "heart.fill"
+        case .neutral: "minus.circle"
+        case .incompatible: "exclamationmark.triangle.fill"
         }
     }
-    
+
     public var colorName: String {
         switch self {
-        case .companion: return "green"
-        case .neutral: return "gray"
-        case .incompatible: return "red"
+        case .companion: "green"
+        case .neutral: "gray"
+        case .incompatible: "red"
         }
     }
 }
@@ -42,7 +42,7 @@ public struct CompanionPlantingInfo: Sendable, Identifiable {
     public let reason: String
     public let benefits: [String]?
     public let warnings: [String]?
-    
+
     public init(
         plantName: String,
         compatibility: PlantCompatibility,
@@ -66,7 +66,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
     public let recommendedCompanions: [String]
     public let incompatiblePlants: [String]
     public let warnings: [String]
-    
+
     public init(
         plantName: String,
         overallCompatibility: PlantCompatibility,
@@ -82,7 +82,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
         self.incompatiblePlants = incompatiblePlants
         self.warnings = warnings
     }
-    
+
     public var hasWarnings: Bool {
         !warnings.isEmpty || !incompatiblePlants.isEmpty
     }
@@ -94,26 +94,24 @@ public struct GardenCompatibilityAnalysis: Sendable {
 /// Uses a predefined database of plant compatibility relationships
 @MainActor
 @Observable public final class CompanionPlantingService {
-    
     // MARK: - Companion Planting Database
-    
+
     /// Predefined companion planting relationships loaded from JSON
     private let companionDatabase: [String: PlantCompatibilityProfile]
 
     public init() {
         guard let url = Bundle.module.url(forResource: "CompanionPlantingData", withExtension: "json"),
               let data = try? Data(contentsOf: url),
-              let decoded = try? JSONDecoder().decode([String: PlantCompatibilityProfile].self, from: data) else {
-            self.companionDatabase = [:]
+              let decoded = try? JSONDecoder().decode([String: PlantCompatibilityProfile].self, from: data)
+        else {
+            companionDatabase = [:]
             return
         }
-        self.companionDatabase = decoded
+        companionDatabase = decoded
     }
-    
 
-    
     // MARK: - Public Methods
-    
+
     /// Check compatibility between two specific plants
     public func checkCompatibility(
         plant1: String,
@@ -121,7 +119,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
     ) -> CompanionPlantingInfo {
         let normalized1 = normalizePlantName(plant1)
         let normalized2 = normalizePlantName(plant2)
-        
+
         // Look up plant1's profile
         guard let profile = companionDatabase[normalized1] else {
             return CompanionPlantingInfo(
@@ -130,10 +128,10 @@ public struct GardenCompatibilityAnalysis: Sendable {
                 reason: "No compatibility data available for \(plant1)"
             )
         }
-        
+
         // Check direct relationships
         let normalized2Key = normalized2
-        
+
         // Check if plant2 is in companions list
         if profile.companions.contains(normalized2Key) {
             return CompanionPlantingInfo(
@@ -143,7 +141,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
                 benefits: generateBenefits(for: normalized1, with: normalized2Key)
             )
         }
-        
+
         // Check if plant2 is in incompatibles list
         if profile.incompatibles.contains(normalized2Key) {
             return CompanionPlantingInfo(
@@ -153,7 +151,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
                 warnings: generateWarnings(for: normalized1, with: normalized2Key)
             )
         }
-        
+
         // Check reverse relationship (plant2's view of plant1)
         if let profile2 = companionDatabase[normalized2Key] {
             if profile2.incompatibles.contains(normalized1) {
@@ -173,7 +171,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
                 )
             }
         }
-        
+
         // Default to neutral
         return CompanionPlantingInfo(
             plantName: plant2,
@@ -181,7 +179,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
             reason: "No known positive or negative relationship"
         )
     }
-    
+
     /// Analyze how a plant would fit into an existing garden
     public func analyzeGardenCompatibility(
         plantName: String,
@@ -191,47 +189,49 @@ public struct GardenCompatibilityAnalysis: Sendable {
         var recommendedCompanions: [String] = []
         var incompatiblePlants: [String] = []
         var warnings: [String] = []
-        
+
         // Check compatibility with each existing plant
         for existingPlant in existingPlants {
             let info = checkCompatibility(plant1: plantName, plant2: existingPlant)
             relationships.append(info)
-            
+
             switch info.compatibility {
             case .companion:
                 if !recommendedCompanions.contains(existingPlant) {
                     recommendedCompanions.append(existingPlant)
                 }
+
             case .incompatible:
                 incompatiblePlants.append(existingPlant)
                 warnings.append("\(plantName) should not be planted near \(existingPlant)")
+
             case .neutral:
                 break
             }
         }
-        
+
         // Get additional companion recommendations from database
         let normalizedName = normalizePlantName(plantName)
         if let profile = companionDatabase[normalizedName] {
             for companion in profile.companions {
                 let companionName = denormalizePlantName(companion)
-                if !recommendedCompanions.contains(companionName) &&
-                   !existingPlants.contains(companionName) {
+                if !recommendedCompanions.contains(companionName),
+                   !existingPlants.contains(companionName)
+                {
                     recommendedCompanions.append(companionName)
                 }
             }
         }
-        
+
         // Determine overall compatibility
-        let overallCompatibility: PlantCompatibility
-        if !incompatiblePlants.isEmpty {
-            overallCompatibility = .incompatible
+        let overallCompatibility: PlantCompatibility = if !incompatiblePlants.isEmpty {
+            .incompatible
         } else if !recommendedCompanions.isEmpty {
-            overallCompatibility = .companion
+            .companion
         } else {
-            overallCompatibility = .neutral
+            .neutral
         }
-        
+
         return GardenCompatibilityAnalysis(
             plantName: plantName,
             overallCompatibility: overallCompatibility,
@@ -241,86 +241,86 @@ public struct GardenCompatibilityAnalysis: Sendable {
             warnings: warnings
         )
     }
-    
+
     /// Get recommended companion plants for a given plant
     public func getRecommendedCompanions(for plantName: String) -> [String] {
         let normalized = normalizePlantName(plantName)
         guard let profile = companionDatabase[normalized] else {
             return []
         }
-        
+
         return profile.companions.map { denormalizePlantName($0) }
     }
-    
+
     /// Get plants that should be avoided near the given plant
     public func getIncompatiblePlants(for plantName: String) -> [String] {
         let normalized = normalizePlantName(plantName)
         guard let profile = companionDatabase[normalized] else {
             return []
         }
-        
+
         return profile.incompatibles.map { denormalizePlantName($0) }
     }
-    
+
     /// Check if a plant name is in the companion database
     public func isPlantKnown(_ plantName: String) -> Bool {
         let normalized = normalizePlantName(plantName)
         return companionDatabase[normalized] != nil
     }
-    
+
     /// Get all plants in the companion database
     public func getAllKnownPlants() -> [String] {
-        return companionDatabase.keys.map { denormalizePlantName($0) }.sorted()
+        companionDatabase.keys.map { denormalizePlantName($0) }.sorted()
     }
-    
+
     // MARK: - Private Helpers
-    
+
     private func normalizePlantName(_ name: String) -> String {
-        return name.lowercased()
+        name.lowercased()
             .trimmingCharacters(in: .whitespaces)
             .replacingOccurrences(of: "s$", with: "", options: .regularExpression)
             .trimmingCharacters(in: .whitespaces)
     }
-    
+
     private func denormalizePlantName(_ normalized: String) -> String {
         guard !normalized.isEmpty else { return normalized }
         return normalized.prefix(1).uppercased() + normalized.dropFirst()
     }
-    
+
     private func generateBenefits(for plant1: String, with plant2: String) -> [String]? {
         var benefits: [String] = []
-        
+
         // Check if nitrogen fixation is involved
         let nitrogenFixers = ["bean", "pea"]
         if nitrogenFixers.contains(plant1) || nitrogenFixers.contains(plant2) {
             benefits.append("Nitrogen fixation improves soil fertility")
         }
-        
+
         // Check for pest repellent combinations
         let pestRepellentPairs = [
             ("marigold", "tomato"),
             ("basil", "tomato"),
             ("garlic", "rose"),
-            ("nasturtium", "cucumber")
+            ("nasturtium", "cucumber"),
         ]
-        if pestRepellentPairs.contains(where: { 
+        if pestRepellentPairs.contains(where: {
             ($0.0 == plant1 && $0.1 == plant2) || ($0.0 == plant2 && $0.1 == plant1)
         }) {
             benefits.append("Natural pest repellent relationship")
         }
-        
+
         // Check for "three sisters" pattern
         let threeSisters = ["corn", "bean", "squash"]
-        if threeSisters.contains(plant1) && threeSisters.contains(plant2) && plant1 != plant2 {
+        if threeSisters.contains(plant1), threeSisters.contains(plant2), plant1 != plant2 {
             benefits.append("Traditional 'Three Sisters' companion planting")
         }
-        
+
         return benefits.isEmpty ? nil : benefits
     }
-    
+
     private func generateWarnings(for plant1: String, with plant2: String) -> [String]? {
         var warnings: [String] = []
-        
+
         // Check for allelopathic relationships
         let allelopathicPlants = ["fennel", "black walnut"]
         if allelopathicPlants.contains(plant1) {
@@ -329,19 +329,19 @@ public struct GardenCompatibilityAnalysis: Sendable {
         if allelopathicPlants.contains(plant2) {
             warnings.append("\(plant2.capitalized) produces allelopathic compounds that inhibit growth")
         }
-        
+
         // Check for resource competition
         let heavyFeeders = ["tomato", "corn", "squash", "cucumber"]
-        if heavyFeeders.contains(plant1) && heavyFeeders.contains(plant2) && plant1 != plant2 {
+        if heavyFeeders.contains(plant1), heavyFeeders.contains(plant2), plant1 != plant2 {
             warnings.append("Both plants are heavy feeders - may compete for nutrients")
         }
-        
+
         // Check for disease transmission risk
         let nightshades = ["tomato", "potato", "pepper", "eggplant"]
-        if nightshades.contains(plant1) && nightshades.contains(plant2) && plant1 != plant2 {
+        if nightshades.contains(plant1), nightshades.contains(plant2), plant1 != plant2 {
             warnings.append("Both are nightshades - shared pests and diseases")
         }
-        
+
         return warnings.isEmpty ? nil : warnings
     }
 }
@@ -352,7 +352,7 @@ private struct PlantCompatibilityProfile: Codable, Sendable {
     let companions: [String]
     let incompatibles: [String]
     let reasons: [String: String]
-    
+
     init(
         companions: [String] = [],
         incompatibles: [String] = [],

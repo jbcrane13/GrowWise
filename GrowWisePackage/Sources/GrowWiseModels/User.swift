@@ -3,17 +3,17 @@ import SwiftData
 
 @Model
 public final class User {
-    public var id: UUID = UUID() // CloudKit: made optional or with default value
+    public var id = UUID() // CloudKit: made optional or with default value
     public var email: String? // CloudKit: made optional or with default value
     public var displayName: String? // CloudKit: made optional or with default value
-    public var skillLevel: GardeningSkillLevel = GardeningSkillLevel.beginner // CloudKit: made optional or with default value
-    
+    public var skillLevel = GardeningSkillLevel.beginner // CloudKit: made optional or with default value
+
     // Onboarding preferences
     public var preferredPlantTypes: [PlantType]? // CloudKit: made optional or with default value
     public var gardeningGoals: [GardeningGoal]? // CloudKit: made optional or with default value
-    public var timeCommitment: TimeCommitment = TimeCommitment.moderate // CloudKit: made optional or with default value
+    public var timeCommitment = TimeCommitment.moderate // CloudKit: made optional or with default value
     public var experienceYears: Int = 0 // CloudKit: made optional or with default value
-    
+
     // Location and climate
     public var hardinessZone: String? // CloudKit: made optional or with default value
     public var city: String? // CloudKit: made optional or with default value
@@ -21,17 +21,17 @@ public final class User {
     public var country: String? // CloudKit: made optional or with default value
     public var latitude: Double? // CloudKit: made optional or with default value
     public var longitude: Double? // CloudKit: made optional or with default value
-    
+
     public var reminderSettings: ReminderSettings? // CloudKit: made optional or with default value
-    public var measurementSystem: MeasurementSystem = MeasurementSystem.imperial // CloudKit: made optional or with default value
+    public var measurementSystem = MeasurementSystem.imperial // CloudKit: made optional or with default value
     public var language: String? // CloudKit: made optional or with default value
-    
+
     // Subscription and features
-    public var subscriptionTier: SubscriptionTier = SubscriptionTier.free // CloudKit: made optional or with default value
+    public var subscriptionTier = SubscriptionTier.free // CloudKit: made optional or with default value
     public var subscriptionExpiry: Date? // CloudKit: made optional or with default value
     public var aiDiagnosesUsed: Int = 0 // CloudKit: made optional or with default value
     public var lastDiagnosisReset: Date? // CloudKit: made optional or with default value
-    
+
     // Achievements and progress
     public var plantsGrown: Int = 0 // CloudKit: made optional or with default value
     public var plantsHarvested: Int = 0 // CloudKit: made optional or with default value
@@ -39,46 +39,46 @@ public final class User {
     public var achievementPoints: Int = 0 // CloudKit: made optional or with default value
     @Attribute(.transformable(by: "NSSecureUnarchiveFromDataTransformer"))
     public var completedTutorials: [String] = [] // CloudKit: made optional or with default value
-    
+
     // Relationships
     public var gardens: [Garden]? // CloudKit: made optional or with default value
     public var reminders: [PlantReminder]? // CloudKit: made optional or with default value
     public var journalEntries: [JournalEntry]? // CloudKit: made optional or with default value
-    
+
     // Metadata
     public var createdDate: Date = Foundation.Date() // CloudKit: made optional or with default value
     public var lastLoginDate: Date = Foundation.Date() // CloudKit: made optional or with default value
     public var lastModified: Date = Foundation.Date() // CloudKit: made optional or with default value
-    
+
     public init(
         email: String,
         displayName: String,
         skillLevel: GardeningSkillLevel = .beginner
     ) {
-        self.id = UUID()
+        id = UUID()
         self.email = email
         self.displayName = displayName
         self.skillLevel = skillLevel
-        self.preferredPlantTypes = []
-        self.gardeningGoals = []
-        self.timeCommitment = .moderate
-        self.experienceYears = 0
-        self.reminderSettings = ReminderSettings()
-        self.measurementSystem = .imperial
-        self.language = "en"
-        self.subscriptionTier = .free
-        self.aiDiagnosesUsed = 0
-        self.plantsGrown = 0
-        self.plantsHarvested = 0
-        self.streakDays = 0
-        self.achievementPoints = 0
-        self.completedTutorials = []
-        self.gardens = []
-        self.reminders = []
-        self.journalEntries = []
-        self.createdDate = Date()
-        self.lastLoginDate = Date()
-        self.lastModified = Date()
+        preferredPlantTypes = []
+        gardeningGoals = []
+        timeCommitment = .moderate
+        experienceYears = 0
+        reminderSettings = ReminderSettings()
+        measurementSystem = .imperial
+        language = "en"
+        subscriptionTier = .free
+        aiDiagnosesUsed = 0
+        plantsGrown = 0
+        plantsHarvested = 0
+        streakDays = 0
+        achievementPoints = 0
+        completedTutorials = []
+        gardens = []
+        reminders = []
+        journalEntries = []
+        createdDate = Date()
+        lastLoginDate = Date()
+        lastModified = Date()
     }
 }
 
@@ -89,22 +89,22 @@ public enum GardeningSkillLevel: String, CaseIterable, Codable, Sendable {
     case intermediate
     case advanced
     case expert
-    
+
     public var displayName: String {
         switch self {
-        case .beginner: return "Beginner"
-        case .intermediate: return "Intermediate"
-        case .advanced: return "Advanced"
-        case .expert: return "Expert"
+        case .beginner: "Beginner"
+        case .intermediate: "Intermediate"
+        case .advanced: "Advanced"
+        case .expert: "Expert"
         }
     }
-    
+
     public var description: String {
         switch self {
-        case .beginner: return "Just starting out"
-        case .intermediate: return "Some gardening experience"
-        case .advanced: return "Experienced gardener"
-        case .expert: return "Master gardener"
+        case .beginner: "Just starting out"
+        case .intermediate: "Some gardening experience"
+        case .advanced: "Experienced gardener"
+        case .expert: "Master gardener"
         }
     }
 }
@@ -120,47 +120,47 @@ public enum GardeningGoal: String, CaseIterable, Codable, Sendable {
     case costSavings
     case teachChildren
     case communityGardening
-    
+
     public var displayName: String {
         switch self {
-        case .growFood: return "Grow My Own Food"
-        case .beautifySpace: return "Beautify My Space"
-        case .learnSkills: return "Learn New Skills"
-        case .relaxation: return "Relaxation & Therapy"
-        case .sustainability: return "Environmental Sustainability"
-        case .airPurification: return "Improve Air Quality"
-        case .medicinalHerbs: return "Grow Medicinal Herbs"
-        case .costSavings: return "Save Money on Groceries"
-        case .teachChildren: return "Teach Children"
-        case .communityGardening: return "Community Involvement"
+        case .growFood: "Grow My Own Food"
+        case .beautifySpace: "Beautify My Space"
+        case .learnSkills: "Learn New Skills"
+        case .relaxation: "Relaxation & Therapy"
+        case .sustainability: "Environmental Sustainability"
+        case .airPurification: "Improve Air Quality"
+        case .medicinalHerbs: "Grow Medicinal Herbs"
+        case .costSavings: "Save Money on Groceries"
+        case .teachChildren: "Teach Children"
+        case .communityGardening: "Community Involvement"
         }
     }
 }
 
 public enum TimeCommitment: String, CaseIterable, Codable, Sendable {
-    case minimal    // < 30 min/week
-    case light      // 30-60 min/week
-    case moderate   // 1-3 hours/week
-    case heavy      // 3-6 hours/week
-    case intensive  // > 6 hours/week
-    
+    case minimal // < 30 min/week
+    case light // 30-60 min/week
+    case moderate // 1-3 hours/week
+    case heavy // 3-6 hours/week
+    case intensive // > 6 hours/week
+
     public var displayName: String {
         switch self {
-        case .minimal: return "Minimal (< 30 min/week)"
-        case .light: return "Light (30-60 min/week)"
-        case .moderate: return "Moderate (1-3 hours/week)"
-        case .heavy: return "Heavy (3-6 hours/week)"
-        case .intensive: return "Intensive (> 6 hours/week)"
+        case .minimal: "Minimal (< 30 min/week)"
+        case .light: "Light (30-60 min/week)"
+        case .moderate: "Moderate (1-3 hours/week)"
+        case .heavy: "Heavy (3-6 hours/week)"
+        case .intensive: "Intensive (> 6 hours/week)"
         }
     }
-    
+
     public var minutesPerWeek: Int {
         switch self {
-        case .minimal: return 15
-        case .light: return 45
-        case .moderate: return 120
-        case .heavy: return 270
-        case .intensive: return 420
+        case .minimal: 15
+        case .light: 45
+        case .moderate: 120
+        case .heavy: 270
+        case .intensive: 420
         }
     }
 }
@@ -168,11 +168,11 @@ public enum TimeCommitment: String, CaseIterable, Codable, Sendable {
 public enum MeasurementSystem: String, CaseIterable, Codable, Sendable {
     case imperial
     case metric
-    
+
     public var displayName: String {
         switch self {
-        case .imperial: return "Imperial (inches, feet, °F)"
-        case .metric: return "Metric (cm, meters, °C)"
+        case .imperial: "Imperial (inches, feet, °F)"
+        case .metric: "Metric (cm, meters, °C)"
         }
     }
 }
@@ -181,28 +181,28 @@ public enum SubscriptionTier: String, CaseIterable, Codable, Sendable {
     case free
     case premium
     case pro
-    
+
     public var displayName: String {
         switch self {
-        case .free: return "Free"
-        case .premium: return "Premium"
-        case .pro: return "Pro"
+        case .free: "Free"
+        case .premium: "Premium"
+        case .pro: "Pro"
         }
     }
-    
+
     public var monthlyPrice: Double {
         switch self {
-        case .free: return 0.0
-        case .premium: return 4.99
-        case .pro: return 9.99
+        case .free: 0.0
+        case .premium: 4.99
+        case .pro: 9.99
         }
     }
-    
+
     public var aiDiagnosesPerMonth: Int {
         switch self {
-        case .free: return 3
-        case .premium: return -1 // Unlimited
-        case .pro: return -1 // Unlimited
+        case .free: 3
+        case .premium: -1 // Unlimited
+        case .pro: -1 // Unlimited
         }
     }
 }
@@ -214,27 +214,26 @@ public final class ReminderSettings {
     public var enablePruningReminders: Bool? // CloudKit: made optional or with default value
     public var enableHarvestReminders: Bool? // CloudKit: made optional or with default value
     public var enableSeasonalReminders: Bool? // CloudKit: made optional or with default value
-    
+
     public var quietHoursStart: Date? // Time of day to stop notifications
-    public var quietHoursEnd: Date?   // Time of day to resume notifications
+    public var quietHoursEnd: Date? // Time of day to resume notifications
     public var weekendReminders: Bool? // CloudKit: made optional or with default value
-    
+
     public var pushNotifications: Bool? // CloudKit: made optional or with default value
     public var emailNotifications: Bool? // CloudKit: made optional or with default value
     public var inAppNotifications: Bool? // CloudKit: made optional or with default value
-    
+
     public var user: User?
-    
+
     public init() {
-        self.enableWateringReminders = true
-        self.enableFertilizingReminders = true
-        self.enablePruningReminders = true
-        self.enableHarvestReminders = true
-        self.enableSeasonalReminders = true
-        self.weekendReminders = true
-        self.pushNotifications = true
-        self.emailNotifications = false
-        self.inAppNotifications = true
+        enableWateringReminders = true
+        enableFertilizingReminders = true
+        enablePruningReminders = true
+        enableHarvestReminders = true
+        enableSeasonalReminders = true
+        weekendReminders = true
+        pushNotifications = true
+        emailNotifications = false
+        inAppNotifications = true
     }
 }
-

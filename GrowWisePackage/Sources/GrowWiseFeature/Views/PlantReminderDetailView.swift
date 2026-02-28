@@ -1,14 +1,14 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 public struct PlantReminderDetailView: View {
     let plant: Plant
     let reminderService: ReminderService
     let dataService: DataService
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     @State private var reminders: [PlantReminder] = []
     @State private var showingAddReminder = false
     @State private var selectedReminder: PlantReminder?
@@ -16,7 +16,7 @@ public struct PlantReminderDetailView: View {
     @State private var reminderToDelete: PlantReminder?
     @State private var showingError = false
     @State private var errorMessage = ""
-    
+
     public init(plant: Plant, reminderService: ReminderService, dataService: DataService) {
         self.plant = plant
         self.reminderService = reminderService
@@ -26,23 +26,23 @@ public struct PlantReminderDetailView: View {
     private var plantDisplayName: String {
         plant.name ?? "Unknown Plant"
     }
-    
+
     public var body: some View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 20) {
                     // Plant header
                     plantHeaderView
-                    
+
                     // Quick stats
                     quickStatsView
-                    
+
                     // Active reminders
                     activeRemindersSection
-                    
+
                     // Quick actions
                     quickActionsSection
-                    
+
                     // Suggestion section
                     if !suggestedReminders.isEmpty {
                         suggestionsSection
@@ -58,7 +58,7 @@ public struct PlantReminderDetailView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Add Reminder", systemImage: "plus") {
                         showingAddReminder = true
@@ -91,20 +91,20 @@ public struct PlantReminderDetailView: View {
                         deleteReminder(reminder)
                     }
                 }
-                Button("Cancel", role: .cancel) { }
+                Button("Cancel", role: .cancel) {}
             } message: {
                 Text("Are you sure you want to delete this reminder? This action cannot be undone.")
             }
             .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+                Button("OK") {}
             } message: {
                 Text(errorMessage)
             }
         }
     }
-    
+
     // MARK: - Plant Header View
-    
+
     private var plantHeaderView: some View {
         HStack(spacing: 16) {
             // Plant icon
@@ -116,27 +116,27 @@ public struct PlantReminderDetailView: View {
                     Circle()
                         .fill(plantColor.opacity(0.1))
                 )
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(plant.name ?? "Unknown Plant")
                     .font(.title2)
                     .fontWeight(.bold)
-                
+
                 Text(plant.scientificName ?? plant.plantType?.displayName ?? "Unknown Type")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
-                
+
                 HStack(spacing: 12) {
                     Label(plant.plantType?.displayName ?? "Unknown Type", systemImage: "leaf")
                         .font(.caption)
                         .foregroundColor(.secondary)
-                    
+
                     Label(plant.difficultyLevel?.displayName ?? "Unknown", systemImage: "star")
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
             }
-            
+
             Spacer()
         }
         .padding()
@@ -145,9 +145,9 @@ public struct PlantReminderDetailView: View {
                 .fill(Color(.secondarySystemGroupedBackground))
         )
     }
-    
+
     // MARK: - Quick Stats View
-    
+
     private var quickStatsView: some View {
         HStack(spacing: 16) {
             StatCard(
@@ -156,14 +156,14 @@ public struct PlantReminderDetailView: View {
                 icon: "bell.fill",
                 color: .blue
             )
-            
+
             StatCard(
                 title: "Overdue",
                 value: "\(overdueReminders.count)",
                 icon: "exclamationmark.triangle.fill",
                 color: .red
             )
-            
+
             StatCard(
                 title: "Today",
                 value: "\(todaysReminders.count)",
@@ -172,18 +172,18 @@ public struct PlantReminderDetailView: View {
             )
         }
     }
-    
+
     // MARK: - Active Reminders Section
-    
+
     private var activeRemindersSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Text("Active Reminders")
                     .font(.headline)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
+
                 Text("\(activeReminders.count)")
                     .font(.caption)
                     .fontWeight(.medium)
@@ -195,7 +195,7 @@ public struct PlantReminderDetailView: View {
                             .fill(Color(.tertiarySystemGroupedBackground))
                     )
             }
-            
+
             if activeReminders.isEmpty {
                 emptyRemindersView
             } else {
@@ -212,22 +212,22 @@ public struct PlantReminderDetailView: View {
             }
         }
     }
-    
+
     private var emptyRemindersView: some View {
         VStack(spacing: 12) {
             Image(systemName: "bell.badge")
                 .font(.largeTitle)
                 .foregroundColor(.secondary)
-            
+
             Text("No Active Reminders")
                 .font(.headline)
                 .foregroundColor(.secondary)
-            
+
             Text(verbatim: "Add a reminder to help you remember to care for \(plantDisplayName)")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
-            
+
             Button("Add First Reminder") {
                 showingAddReminder = true
             }
@@ -236,18 +236,18 @@ public struct PlantReminderDetailView: View {
         .padding(.vertical, 32)
         .frame(maxWidth: .infinity)
     }
-    
+
     // MARK: - Quick Actions Section
-    
+
     private var quickActionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Quick Actions")
                 .font(.headline)
                 .fontWeight(.semibold)
-            
+
             LazyVGrid(columns: [
                 GridItem(.flexible()),
-                GridItem(.flexible())
+                GridItem(.flexible()),
             ], spacing: 12) {
                 PlantDetailQuickActionButton(
                     title: "Water Now",
@@ -255,21 +255,21 @@ public struct PlantReminderDetailView: View {
                     color: .blue,
                     action: { completeWateringReminder() }
                 )
-                
+
                 PlantDetailQuickActionButton(
                     title: "Add Watering",
                     icon: "plus.circle",
                     color: .green,
                     action: { addWateringReminder() }
                 )
-                
+
                 PlantDetailQuickActionButton(
                     title: "Fertilize",
                     icon: "leaf.fill",
                     color: .orange,
                     action: { addFertilizingReminder() }
                 )
-                
+
                 PlantDetailQuickActionButton(
                     title: "Health Check",
                     icon: "magnifyingglass",
@@ -279,15 +279,15 @@ public struct PlantReminderDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Suggestions Section
-    
+
     private var suggestionsSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("Suggested Reminders")
                 .font(.headline)
                 .fontWeight(.semibold)
-            
+
             LazyVStack(spacing: 8) {
                 ForEach(suggestedReminders, id: \.type) { suggestion in
                     SuggestionCard(
@@ -298,60 +298,60 @@ public struct PlantReminderDetailView: View {
             }
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var activeReminders: [PlantReminder] {
-        reminders.filter { $0.isEnabled }
+        reminders.filter(\.isEnabled)
     }
-    
+
     private var overdueReminders: [PlantReminder] {
         activeReminders.filter { $0.nextDueDate < Date() }
     }
-    
+
     private var todaysReminders: [PlantReminder] {
         activeReminders.filter { Calendar.current.isDateInToday($0.nextDueDate) }
     }
-    
+
     private var suggestedReminders: [ReminderSuggestion] {
         // In a real implementation, this would be fetched from the reminder service
-        return []
+        []
     }
-    
+
     private var plantIcon: String {
         switch plant.plantType {
-        case .houseplant: return "house.fill"
-        case .succulent: return "circle.hexagongrid.fill"
-        case .herb: return "leaf.fill"
-        case .vegetable: return "carrot.fill"
-        case .flower: return "camera.macro"
-        case .fruit: return "apple.logo"
-        case .tree: return "tree.fill"
-        case .shrub: return "leaf.circle.fill"
-        case .none: return "questionmark.circle.fill"
+        case .houseplant: "house.fill"
+        case .succulent: "circle.hexagongrid.fill"
+        case .herb: "leaf.fill"
+        case .vegetable: "carrot.fill"
+        case .flower: "camera.macro"
+        case .fruit: "apple.logo"
+        case .tree: "tree.fill"
+        case .shrub: "leaf.circle.fill"
+        case .none: "questionmark.circle.fill"
         }
     }
-    
+
     private var plantColor: Color {
         switch plant.plantType {
-        case .houseplant, .herb, .shrub: return .green
-        case .succulent: return .mint
-        case .vegetable: return .orange
-        case .flower: return .pink
-        case .fruit: return .red
-        case .tree: return .brown
-        case .none: return .gray
+        case .houseplant, .herb, .shrub: .green
+        case .succulent: .mint
+        case .vegetable: .orange
+        case .flower: .pink
+        case .fruit: .red
+        case .tree: .brown
+        case .none: .gray
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func loadReminders() {
         // Get all reminders for this plant
         let allReminders = dataService.fetchActiveReminders()
         reminders = allReminders.filter { $0.plant?.id == plant.id }
     }
-    
+
     private func completeReminder(_ reminder: PlantReminder) {
         reminder.markCompleted()
 
@@ -391,24 +391,24 @@ public struct PlantReminderDetailView: View {
             }
         }
     }
-    
+
     private func deleteReminder(_ reminder: PlantReminder) {
         reminderService.cancelNotification(for: reminder)
         // In a real implementation, you would delete from the data service
         loadReminders()
     }
-    
+
     private func completeWateringReminder() {
         if let wateringReminder = activeReminders.first(where: { $0.reminderType == .watering }) {
             completeReminder(wateringReminder)
         }
     }
-    
+
     private func addWateringReminder() {
         // Set reminder type to watering and show add reminder sheet
         showingAddReminder = true
     }
-    
+
     private func addFertilizingReminder() {
         Task {
             do {
@@ -477,11 +477,11 @@ struct ReminderDetailCard: View {
     let onTap: () -> Void
     let onComplete: () -> Void
     let onToggle: () -> Void
-    
+
     private var isOverdue: Bool {
         reminder.nextDueDate < Date()
     }
-    
+
     var body: some View {
         HStack(spacing: 12) {
             // Toggle switch
@@ -492,29 +492,29 @@ struct ReminderDetailCard: View {
                     set: { _ in onToggle() }
                 )
             )
-            
+
             // Reminder info
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Image(systemName: reminder.reminderType.iconName)
                         .foregroundColor(isOverdue ? .red : .blue)
-                    
+
                     Text(reminder.reminderType.displayName)
                         .font(.headline)
                         .fontWeight(.medium)
                 }
-                
+
                 Text(formatNextDueDate(reminder.nextDueDate))
                     .font(.subheadline)
                     .foregroundColor(isOverdue ? .red : .secondary)
-                
+
                 Text("Every \(reminder.frequency.displayName.lowercased())")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             // Action buttons
             VStack(spacing: 8) {
                 Button(action: onComplete) {
@@ -522,7 +522,7 @@ struct ReminderDetailCard: View {
                         .font(.title3)
                         .foregroundColor(.green)
                 }
-                
+
                 Button(action: onTap) {
                     Image(systemName: "gear")
                         .font(.title3)
@@ -541,10 +541,10 @@ struct ReminderDetailCard: View {
         )
         .opacity(reminder.isEnabled ? 1.0 : 0.6)
     }
-    
+
     private func formatNextDueDate(_ date: Date) -> String {
         let formatter = DateFormatter()
-        
+
         if Calendar.current.isDateInToday(date) {
             formatter.timeStyle = .short
             return "Today at \(formatter.string(from: date))"
@@ -566,14 +566,14 @@ struct PlantDetailQuickActionButton: View {
     let icon: String
     let color: Color
     let action: () -> Void
-    
+
     var body: some View {
         Button(action: action) {
             VStack(spacing: 8) {
                 Image(systemName: icon)
                     .font(.title2)
                     .foregroundColor(color)
-                
+
                 Text(title)
                     .font(.caption)
                     .fontWeight(.medium)
@@ -593,30 +593,30 @@ struct PlantDetailQuickActionButton: View {
 struct SuggestionCard: View {
     let suggestion: ReminderSuggestion
     let onAccept: () -> Void
-    
+
     var body: some View {
         HStack(spacing: 12) {
             Image(systemName: suggestion.type.iconName)
                 .foregroundColor(.blue)
                 .frame(width: 24, height: 24)
-            
+
             VStack(alignment: .leading, spacing: 4) {
                 Text(suggestion.type.displayName)
                     .font(.headline)
                     .fontWeight(.medium)
-                
+
                 Text(suggestion.reason)
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .lineLimit(2)
-                
+
                 Text("Every \(suggestion.suggestedFrequencyDays) day\(suggestion.suggestedFrequencyDays == 1 ? "" : "s")")
                     .font(.caption)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             Button("Add") {
                 onAccept()
             }
@@ -631,15 +631,15 @@ struct SuggestionCard: View {
     }
 }
 
-// Placeholder for EditReminderView
+/// Placeholder for EditReminderView
 struct EditReminderView: View {
     let reminder: PlantReminder
     let reminderService: ReminderService
     let onSave: () -> Void
     let onDelete: (PlantReminder) -> Void
-    
+
     @Environment(\.dismiss) private var dismiss
-    
+
     var body: some View {
         NavigationStack {
             Text("Edit Reminder - Coming Soon")
@@ -649,9 +649,9 @@ struct EditReminderView: View {
                         Button("Cancel") { dismiss() }
                     }
                     ToolbarItem(placement: .primaryAction) {
-                        Button("Save") { 
+                        Button("Save") {
                             onSave()
-                            dismiss() 
+                            dismiss()
                         }
                     }
                 }
@@ -665,10 +665,11 @@ struct EditReminderView: View {
         plantType: PlantType.houseplant,
         difficultyLevel: DifficultyLevel.intermediate
     )
-    
+
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
-    
+
     PlantReminderDetailView(plant: plant, reminderService: reminderService, dataService: dataService)
 }

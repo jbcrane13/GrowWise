@@ -1,5 +1,5 @@
-import SwiftUI
 import GrowWiseServices
+import SwiftUI
 import UserNotifications
 
 public struct ReminderSettingsView: View {
@@ -8,37 +8,37 @@ public struct ReminderSettingsView: View {
 
     @Environment(\.dismiss) private var dismiss
     @Environment(NotificationService.self) private var notificationService
-    
+
     @State private var showingQuietHoursStart = false
     @State private var showingQuietHoursEnd = false
     @State private var showingDefaultTime = false
     @State private var tempQuietStart = Date()
     @State private var tempQuietEnd = Date()
     @State private var tempDefaultTime = Date()
-    
+
     public init(reminderService: ReminderService, reminderSettings: Binding<ReminderSettings>) {
         self.reminderService = reminderService
-        self._reminderSettings = reminderSettings
+        _reminderSettings = reminderSettings
     }
-    
+
     public var body: some View {
         NavigationStack {
             Form {
                 // Notification permissions
                 notificationPermissionsSection
-                
+
                 // Reminder types
                 reminderTypesSection
-                
+
                 // Default timing
                 defaultTimingSection
-                
+
                 // Quiet hours
                 quietHoursSection
-                
+
                 // Advanced features
                 advancedFeaturesSection
-                
+
                 // Notification management
                 notificationManagementSection
             }
@@ -50,7 +50,7 @@ public struct ReminderSettingsView: View {
                         dismiss()
                     }
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         saveSettings()
@@ -68,27 +68,27 @@ public struct ReminderSettingsView: View {
             }
         }
     }
-    
+
     // MARK: - Form Sections
-    
+
     private var notificationPermissionsSection: some View {
         Section {
             HStack {
                 VStack(alignment: .leading, spacing: 4) {
                     Text("Notifications")
                         .font(.headline)
-                    
+
                     Text(notificationStatusText)
                         .font(.caption)
                         .foregroundColor(.secondary)
                 }
-                
+
                 Spacer()
-                
+
                 notificationStatusIndicator
             }
             .padding(.vertical, 4)
-            
+
             if !notificationService.isEnabled {
                 Button("Enable Notifications") {
                     openNotificationSettings()
@@ -101,7 +101,7 @@ public struct ReminderSettingsView: View {
             Text("Notifications are required to receive plant care reminders. You can manage notification permissions in Settings.")
         }
     }
-    
+
     private var reminderTypesSection: some View {
         Section(content: {
             Toggle("Watering Reminders", isOn: $reminderSettings.enableWateringReminders)
@@ -113,13 +113,13 @@ public struct ReminderSettingsView: View {
             Text("Choose which types of plant care reminders you want to receive.")
         })
     }
-    
+
     private var defaultTimingSection: some View {
         Section(content: {
             HStack {
                 Text("Default Notification Time")
                 Spacer()
-                
+
                 Button(action: { showingDefaultTime = true }) {
                     Text(formatTime(reminderSettings.defaultNotificationTime ?? Date()))
                         .foregroundColor(.blue)
@@ -142,13 +142,13 @@ public struct ReminderSettingsView: View {
             )
         }
     }
-    
+
     private var quietHoursSection: some View {
         Section(content: {
             HStack {
                 Text("Start Time")
                 Spacer()
-                
+
                 if let quietStart = reminderSettings.quietHoursStart {
                     Button(action: { showingQuietHoursStart = true }) {
                         Text(formatTime(quietStart))
@@ -161,11 +161,11 @@ public struct ReminderSettingsView: View {
                     .foregroundColor(.blue)
                 }
             }
-            
+
             HStack {
                 Text("End Time")
                 Spacer()
-                
+
                 if let quietEnd = reminderSettings.quietHoursEnd {
                     Button(action: { showingQuietHoursEnd = true }) {
                         Text(formatTime(quietEnd))
@@ -178,7 +178,7 @@ public struct ReminderSettingsView: View {
                     .foregroundColor(.blue)
                 }
             }
-            
+
             if reminderSettings.quietHoursStart != nil || reminderSettings.quietHoursEnd != nil {
                 Button("Clear Quiet Hours") {
                     reminderSettings.quietHoursStart = nil
@@ -214,7 +214,7 @@ public struct ReminderSettingsView: View {
             )
         }
     }
-    
+
     private var advancedFeaturesSection: some View {
         Section {
             Toggle("Weather-Based Adjustments", isOn: $reminderSettings.enableWeatherBasedAdjustments)
@@ -224,18 +224,18 @@ public struct ReminderSettingsView: View {
             Text("When enabled, watering reminders will automatically adjust based on weather conditions.")
         }
     }
-    
+
     private var notificationManagementSection: some View {
         Section {
             NavigationLink("Pending Notifications") {
                 PendingNotificationsView()
             }
-            
+
             Button("Test Notification") {
                 sendTestNotification()
             }
             .foregroundColor(.blue)
-            
+
             Button("Clear All Notifications") {
                 clearAllNotifications()
             }
@@ -246,63 +246,68 @@ public struct ReminderSettingsView: View {
             Text("Manage and test your notification settings.")
         }
     }
-    
+
     // MARK: - Computed Properties
-    
+
     private var notificationStatusText: String {
         switch notificationService.authorizationStatus {
         case .authorized:
             return "Enabled"
+
         case .denied:
             return "Denied - Enable in Settings"
+
         case .notDetermined:
             return "Not requested"
+
         case .provisional:
             return "Provisional"
+
         case .ephemeral:
             return "Ephemeral"
+
         @unknown default:
             return "Unknown"
         }
     }
-    
+
     private var notificationStatusIndicator: some View {
         HStack(spacing: 4) {
             Circle()
                 .fill(notificationService.isEnabled ? Color.green : Color.red)
                 .frame(width: 8, height: 8)
-            
+
             Text(notificationService.isEnabled ? "ON" : "OFF")
                 .font(.caption)
                 .fontWeight(.medium)
                 .foregroundColor(notificationService.isEnabled ? .green : .red)
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func setupTempValues() {
         tempDefaultTime = reminderSettings.defaultNotificationTime ?? Date()
         tempQuietStart = reminderSettings.quietHoursStart ?? Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date()) ?? Date()
         tempQuietEnd = reminderSettings.quietHoursEnd ?? Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
     }
-    
+
     private func formatTime(_ date: Date) -> String {
         let formatter = DateFormatter()
         formatter.timeStyle = .short
         return formatter.string(from: date)
     }
-    
+
     private func saveSettings() {
         reminderService.updateReminderSettings(reminderSettings)
     }
-    
+
     private func openNotificationSettings() {
         if let settingsUrl = URL(string: UIApplication.openSettingsURLString) {
             UIApplication.shared.open(settingsUrl)
         }
     }
-    
+
     private func sendTestNotification() {
         Task {
             do {
@@ -312,20 +317,19 @@ public struct ReminderSettingsView: View {
                     date: Date().addingTimeInterval(5), // 5 seconds from now
                     identifier: "test_notification_\(UUID().uuidString)"
                 )
-                
+
                 // Provide feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-                
             } catch {
                 print("Failed to send test notification: \(error)")
             }
         }
     }
-    
+
     private func clearAllNotifications() {
         notificationService.clearAllNotifications()
-        
+
         // Provide feedback
         let impact = UIImpactFeedbackGenerator(style: .medium)
         impact.impactOccurred()
@@ -339,7 +343,7 @@ struct TimePickerSheet: View {
     @Binding var selectedTime: Date
     let onSave: () -> Void
     let onCancel: () -> Void
-    
+
     var body: some View {
         NavigationStack {
             VStack {
@@ -350,7 +354,7 @@ struct TimePickerSheet: View {
                 )
                 .gwWheelDatePickerStyle()
                 .labelsHidden()
-                
+
                 Spacer()
             }
             .padding()
@@ -360,7 +364,7 @@ struct TimePickerSheet: View {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save", action: onSave)
                         .fontWeight(.semibold)
@@ -375,7 +379,7 @@ struct TimePickerSheet: View {
 struct PendingNotificationsView: View {
     @Environment(NotificationService.self) private var notificationService
     @State private var pendingNotifications: [UNNotificationRequest] = []
-    
+
     var body: some View {
         List {
             if pendingNotifications.isEmpty {
@@ -383,11 +387,11 @@ struct PendingNotificationsView: View {
                     Image(systemName: "bell.slash")
                         .font(.largeTitle)
                         .foregroundColor(.secondary)
-                    
+
                     Text("No Pending Notifications")
                         .font(.headline)
                         .foregroundColor(.secondary)
-                    
+
                     Text("Your scheduled notifications will appear here")
                         .font(.subheadline)
                         .foregroundColor(.secondary)
@@ -400,13 +404,14 @@ struct PendingNotificationsView: View {
                     VStack(alignment: .leading, spacing: 8) {
                         Text(notification.content.title)
                             .font(.headline)
-                        
+
                         Text(notification.content.body)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-                        
+
                         if let trigger = notification.trigger as? UNCalendarNotificationTrigger,
-                           let nextDate = trigger.nextTriggerDate() {
+                           let nextDate = trigger.nextTriggerDate()
+                        {
                             Text("Scheduled: \(nextDate, style: .date) at \(nextDate, style: .time)")
                                 .font(.caption)
                                 .foregroundColor(.blue)
@@ -425,7 +430,7 @@ struct PendingNotificationsView: View {
             await loadPendingNotifications()
         }
     }
-    
+
     @MainActor
     private func loadPendingNotifications() async {
         let requests = await notificationService.getPendingNotifications()
@@ -434,6 +439,7 @@ struct PendingNotificationsView: View {
 }
 
 #Preview {
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)

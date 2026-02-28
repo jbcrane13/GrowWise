@@ -1,6 +1,6 @@
-import SwiftUI
 import GrowWiseModels
 import GrowWiseServices
+import SwiftUI
 
 public struct ReminderManagementView: View {
     @Environment(DataService.self) private var dataService
@@ -12,22 +12,22 @@ public struct ReminderManagementView: View {
     @State private var showingAddReminder = false
     @State private var showingReminderSettings = false
     @State private var searchText = ""
-    
+
     public init() {}
-    
+
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Header with settings button
                 headerView
-                
+
                 // Quick stats
                 statsCardView(service: reminderService)
-                
+
                 // Search bar
                 SearchBarView(text: $searchText, placeholder: "Search reminders...")
                     .padding(.horizontal)
-                
+
                 // Reminder sections
                 ScrollView {
                     LazyVStack(spacing: 16) {
@@ -54,11 +54,11 @@ public struct ReminderManagementView: View {
                         Button("Add Reminder", systemImage: "plus") {
                             showingAddReminder = true
                         }
-                        
+
                         Button("Settings", systemImage: "gear") {
                             showingReminderSettings = true
                         }
-                        
+
                         Button("Refresh", systemImage: "arrow.clockwise") {
                             Task {
                                 await refreshReminders()
@@ -90,36 +90,36 @@ public struct ReminderManagementView: View {
             }
         }
     }
-    
+
     // MARK: - Header View
-    
+
     private var headerView: some View {
         HStack {
             VStack(alignment: .leading) {
                 Text("Your Garden Care")
                     .font(.title2)
                     .fontWeight(.bold)
-                
+
                 Text("Stay on top of plant care")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
             }
-            
+
             Spacer()
-            
+
             // Notification status indicator
             notificationStatusView
         }
         .padding()
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var notificationStatusView: some View {
         HStack(spacing: 4) {
             Image(systemName: notificationService.isEnabled ? "bell.fill" : "bell.slash")
                 .foregroundColor(notificationService.isEnabled ? .green : .red)
                 .font(.caption)
-            
+
             Text(notificationService.isEnabled ? "On" : "Off")
                 .font(.caption2)
                 .fontWeight(.medium)
@@ -132,9 +132,9 @@ public struct ReminderManagementView: View {
                 .fill(notificationService.isEnabled ? Color.green.opacity(0.1) : Color.red.opacity(0.1))
         )
     }
-    
+
     // MARK: - Stats Card View
-    
+
     private func statsCardView(service: ReminderService) -> some View {
         HStack(spacing: 16) {
             ReminderStatCard(
@@ -143,14 +143,14 @@ public struct ReminderManagementView: View {
                 icon: "drop.fill",
                 color: .blue
             )
-            
+
             ReminderStatCard(
                 title: "Overdue",
                 count: service.getOverdueWateringReminders().count,
                 icon: "exclamationmark.triangle.fill",
                 color: .red
             )
-            
+
             ReminderStatCard(
                 title: "Total Plants",
                 count: ((try? dataService.plants.fetchAll()) ?? []).count,
@@ -160,9 +160,9 @@ public struct ReminderManagementView: View {
         }
         .padding()
     }
-    
+
     // MARK: - Reminder Sections
-    
+
     private func todaysRemindersSection(service: ReminderService) -> some View {
         ReminderSectionView(
             title: "Today's Care",
@@ -172,10 +172,10 @@ public struct ReminderManagementView: View {
             emptyMessage: "No care tasks for today"
         )
     }
-    
+
     private func overdueRemindersSection(service: ReminderService) -> some View {
         let overdueReminders = service.getOverdueWateringReminders()
-        
+
         return Group {
             if !overdueReminders.isEmpty {
                 ReminderSectionView(
@@ -189,13 +189,13 @@ public struct ReminderManagementView: View {
             }
         }
     }
-    
+
     private func upcomingRemindersSection(service: ReminderService) -> some View {
         let allReminders = service.getWateringReminders()
-        let upcomingReminders = allReminders.filter { 
+        let upcomingReminders = allReminders.filter {
             $0.nextDueDate > Date() && Calendar.current.isDate($0.nextDueDate, inSameDayAs: Date().addingTimeInterval(86400))
         }
-        
+
         return Group {
             if !upcomingReminders.isEmpty {
                 ReminderSectionView(
@@ -209,7 +209,7 @@ public struct ReminderManagementView: View {
             }
         }
     }
-    
+
     private func allPlantsSection(service: ReminderService) -> some View {
         PlantReminderGridView(
             plants: filteredPlants,
@@ -219,12 +219,12 @@ public struct ReminderManagementView: View {
             }
         )
     }
-    
+
     // MARK: - Helper Properties
-    
+
     private var filteredPlants: [Plant] {
         let plants = (try? dataService.plants.fetchAll()) ?? []
-        
+
         if searchText.isEmpty {
             return plants
         } else {
@@ -234,9 +234,9 @@ public struct ReminderManagementView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     private func refreshReminders() async {
         await notificationService.checkAuthorizationStatus()
         reminderSettings = reminderService.getReminderSettings()
@@ -250,17 +250,17 @@ struct ReminderStatCard: View {
     let count: Int
     let icon: String
     let color: Color
-    
+
     var body: some View {
         VStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.title2)
                 .foregroundColor(color)
-            
+
             Text("\(count)")
                 .font(.title2)
                 .fontWeight(.bold)
-            
+
             Text(title)
                 .font(.caption)
                 .foregroundColor(.secondary)
@@ -281,7 +281,7 @@ struct ReminderSectionView: View {
     let reminderService: ReminderService
     let emptyMessage: String
     let accentColor: Color
-    
+
     init(
         title: String,
         icon: String,
@@ -297,19 +297,19 @@ struct ReminderSectionView: View {
         self.emptyMessage = emptyMessage
         self.accentColor = accentColor
     }
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: icon)
                     .foregroundColor(accentColor)
-                
+
                 Text(title)
                     .font(.headline)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
-                
+
                 Text("\(reminders.count)")
                     .font(.caption)
                     .fontWeight(.medium)
@@ -321,7 +321,7 @@ struct ReminderSectionView: View {
                             .fill(Color(.tertiarySystemGroupedBackground))
                     )
             }
-            
+
             if reminders.isEmpty {
                 HStack {
                     Spacer()
@@ -329,7 +329,7 @@ struct ReminderSectionView: View {
                         Image(systemName: "checkmark.circle")
                             .font(.title2)
                             .foregroundColor(.green)
-                        
+
                         Text(emptyMessage)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
@@ -360,26 +360,26 @@ struct PlantReminderGridView: View {
     let plants: [Plant]
     let reminderService: ReminderService
     let onPlantSelected: (Plant) -> Void
-    
+
     private let columns = [
         GridItem(.flexible()),
-        GridItem(.flexible())
+        GridItem(.flexible()),
     ]
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
             HStack {
                 Image(systemName: "leaf.fill")
                     .foregroundColor(.green)
-                
+
                 Text("All Plants")
                     .font(.headline)
                     .fontWeight(.semibold)
-                
+
                 Spacer()
             }
             .padding(.horizontal)
-            
+
             LazyVGrid(columns: columns, spacing: 12) {
                 ForEach(plants, id: \.id) { plant in
                     PlantReminderCard(
@@ -395,6 +395,7 @@ struct PlantReminderGridView: View {
 }
 
 #Preview {
+    // swiftlint:disable:next force_try
     let dataService = try! DataService()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)

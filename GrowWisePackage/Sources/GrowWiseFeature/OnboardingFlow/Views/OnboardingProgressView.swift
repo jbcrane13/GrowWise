@@ -2,7 +2,7 @@ import SwiftUI
 
 struct OnboardingProgressView: View {
     let currentStep: OnboardingStep
-    
+
     var body: some View {
         VStack(spacing: 8) {
             // Progress bar
@@ -15,15 +15,15 @@ struct OnboardingProgressView: View {
                 }
             }
             .clipShape(RoundedRectangle(cornerRadius: 2))
-            
+
             // Step indicator
             HStack {
                 Text("\(currentStep.stepNumber + 1) of \(currentStep.totalSteps)")
                     .font(.caption)
                     .foregroundColor(.secondary)
-                
+
                 Spacer()
-                
+
                 Text(currentStep.title)
                     .font(.caption)
                     .fontWeight(.medium)

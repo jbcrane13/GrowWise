@@ -1,6 +1,6 @@
-import SwiftUI
-import PhotosUI
 import GrowWiseServices
+import PhotosUI
+import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
@@ -68,7 +68,8 @@ public struct PlantScannerView: View {
             Task {
                 #if canImport(UIKit)
                 if let data = try? await newValue.loadTransferable(type: Data.self),
-                   let image = UIImage(data: data) {
+                   let image = UIImage(data: data)
+                {
                     await diagnosticService.diagnose(image: image)
                 }
                 #endif

@@ -5,9 +5,9 @@ import UIKit
 import AppKit
 #endif
 
-/// Platform-agnostic image typealias
-/// - iOS/tvOS/watchOS: UIImage
-/// - macOS: NSImage
+// Platform-agnostic image typealias
+// - iOS/tvOS/watchOS: UIImage
+// - macOS: NSImage
 #if canImport(UIKit)
 public typealias PlatformImage = UIImage
 #elseif canImport(AppKit)

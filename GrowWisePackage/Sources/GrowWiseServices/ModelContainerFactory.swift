@@ -1,8 +1,8 @@
-import SwiftData
-import Foundation
-import os.log
-import GrowWiseModels
 import CloudKit
+import Foundation
+import GrowWiseModels
+import os.log
+import SwiftData
 
 /// Factory responsible for vending a valid `ModelContainer`.
 ///
@@ -27,7 +27,7 @@ public struct ModelContainerFactory {
         User.self,
         PlantReminder.self,
         JournalEntry.self,
-        SoilLog.self
+        SoilLog.self,
     ] as [any PersistentModel.Type])
 
     // MARK: - Factory Methods
@@ -41,7 +41,7 @@ public struct ModelContainerFactory {
     ) throws -> ModelContainer {
         let schema = Self.makeSchema()
         let modelConfiguration: ModelConfiguration
-        
+
         if isUITesting {
             modelConfiguration = ModelConfiguration(
                 schema: schema,
@@ -168,7 +168,7 @@ public struct ModelContainerFactory {
             User.self,
             PlantReminder.self,
             JournalEntry.self,
-            SoilLog.self
+            SoilLog.self,
         ] as [any PersistentModel.Type])
     }
 }

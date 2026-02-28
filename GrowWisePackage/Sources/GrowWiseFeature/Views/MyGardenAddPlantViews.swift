@@ -1,8 +1,8 @@
-import SwiftUI
-import SwiftData
-import PhotosUI
 import GrowWiseModels
 import GrowWiseServices
+import PhotosUI
+import SwiftData
+import SwiftUI
 
 struct AddPlantToGardenSheet: View {
     let selectedGarden: Garden?
@@ -11,7 +11,7 @@ struct AddPlantToGardenSheet: View {
     @Environment(PlantDatabaseService.self) private var plantDatabaseService
     @Environment(CompanionPlantingService.self) private var companionService
 
-    // Tab Selection
+    /// Tab Selection
     @State private var selectedTab: PlantAdditionTab = .newPlant
 
     // New Plant Form fields
@@ -41,23 +41,23 @@ struct AddPlantToGardenSheet: View {
     @State private var errorMessage = ""
     @State private var isSaving = false
     @State private var isLoading = false
-    
+
     private enum PlantAdditionTab: String, CaseIterable {
         case newPlant = "New Plant"
         case fromDatabase = "From Database"
     }
-    
+
     var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
                 // Tab Picker
                 tabPickerSection
-                
+
                 // Tab Content
                 TabView(selection: $selectedTab) {
                     newPlantTab
                         .tag(PlantAdditionTab.newPlant)
-                    
+
                     fromDatabaseTab
                         .tag(PlantAdditionTab.fromDatabase)
                 }
@@ -72,7 +72,7 @@ struct AddPlantToGardenSheet: View {
                     }
                     .disabled(isSaving)
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         Task {
@@ -83,7 +83,7 @@ struct AddPlantToGardenSheet: View {
                 }
             }
             .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+                Button("OK") {}
             } message: {
                 Text(errorMessage)
             }
@@ -115,7 +115,7 @@ struct AddPlantToGardenSheet: View {
             }
         }
     }
-    
+
     private var tabPickerSection: some View {
         HStack {
             ForEach(PlantAdditionTab.allCases, id: \.self) { tab in
@@ -128,7 +128,7 @@ struct AddPlantToGardenSheet: View {
                         Text(tab.rawValue)
                             .font(.subheadline)
                             .fontWeight(selectedTab == tab ? .semibold : .regular)
-                        
+
                         Rectangle()
                             .fill(selectedTab == tab ? Color.blue : Color.clear)
                             .frame(height: 2)
@@ -142,7 +142,7 @@ struct AddPlantToGardenSheet: View {
         .padding(.top, 8)
         .background(Color(.systemBackground))
     }
-    
+
     private var newPlantTab: some View {
         Form {
             if availableGardens.isEmpty {
@@ -159,12 +159,12 @@ struct AddPlantToGardenSheet: View {
                     }
                 }
             }
-            
+
             // Target Garden Section
             if !availableGardens.isEmpty {
                 Section("Target Garden") {
                     Picker("Garden", selection: $targetGarden) {
-                        if let selectedGarden = selectedGarden {
+                        if let selectedGarden {
                             Text(selectedGarden.name ?? "Selected Garden").tag(selectedGarden as Garden?)
                         } else {
                             Text("Choose Garden").tag(nil as Garden?)
@@ -179,7 +179,7 @@ struct AddPlantToGardenSheet: View {
                     }
                 }
             }
-            
+
             // Basic Information Section
             Section("Basic Information") {
                 TextField("Name", text: $plantName)
@@ -192,7 +192,7 @@ struct AddPlantToGardenSheet: View {
                     .autocorrectionDisabled()
                     .gwTextInputAutocapitalization(.none)
             }
-            
+
             // Plant Type and Difficulty Section
             Section("Plant Details") {
                 Picker("Plant Type", selection: $selectedPlantType) {
@@ -200,7 +200,7 @@ struct AddPlantToGardenSheet: View {
                         Text(type.displayName).tag(type)
                     }
                 }
-                
+
                 Picker("Difficulty Level", selection: $selectedDifficultyLevel) {
                     ForEach(DifficultyLevel.allCases, id: \.self) { level in
                         HStack {
@@ -214,7 +214,7 @@ struct AddPlantToGardenSheet: View {
                     }
                 }
             }
-            
+
             // Planting Information Section
             Section("Planting Information") {
                 DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
@@ -230,7 +230,7 @@ struct AddPlantToGardenSheet: View {
                 TextEditor(text: $notes)
                     .frame(minHeight: 80)
             }
-            
+
             // Photo Section
             Section("Photos") {
                 PhotosPicker(
@@ -244,7 +244,7 @@ struct AddPlantToGardenSheet: View {
                     }
                     .foregroundColor(.blue)
                 }
-                
+
                 if !selectedPhotos.isEmpty {
                     Text("\(selectedPhotos.count) photo(s) selected")
                         .font(.caption)
@@ -253,14 +253,14 @@ struct AddPlantToGardenSheet: View {
             }
         }
     }
-    
+
     private var fromDatabaseTab: some View {
         VStack(spacing: 0) {
             // Search Bar
             VStack(spacing: 8) {
                 SearchBarView(text: $searchText, placeholder: "Search plant database...")
                     .padding(.horizontal)
-                
+
                 if let garden = selectedGarden ?? targetGarden {
                     Text("Adding to: \(garden.name ?? "Selected Garden")")
                         .font(.caption)
@@ -270,12 +270,12 @@ struct AddPlantToGardenSheet: View {
             }
             .padding(.top)
             .background(Color(.systemGroupedBackground))
-            
+
             // Plants List
             Group {
                 if isLoading {
                     loadingView
-                } else if filteredPlants.isEmpty && !searchText.isEmpty {
+                } else if filteredPlants.isEmpty, !searchText.isEmpty {
                     emptySearchView
                 } else if filteredPlants.isEmpty {
                     emptyDatabaseView
@@ -291,7 +291,7 @@ struct AddPlantToGardenSheet: View {
             filterPlants()
         }
     }
-    
+
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -302,16 +302,16 @@ struct AddPlantToGardenSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var emptySearchView: some View {
         VStack(spacing: 20) {
             Image(systemName: "magnifyingglass")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
-            
+
             Text("No Plants Found")
                 .font(.headline)
-            
+
             Text("Try adjusting your search terms")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -320,16 +320,16 @@ struct AddPlantToGardenSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var emptyDatabaseView: some View {
         VStack(spacing: 20) {
             Image(systemName: "books.vertical")
                 .font(.system(size: 60))
                 .foregroundColor(.gray)
-            
+
             Text("Plant Database Empty")
                 .font(.headline)
-            
+
             Text("The plant database needs to be populated first")
                 .font(.subheadline)
                 .foregroundColor(.secondary)
@@ -338,7 +338,7 @@ struct AddPlantToGardenSheet: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var plantsListView: some View {
         ScrollView {
             LazyVStack(spacing: 12) {
@@ -356,16 +356,17 @@ struct AddPlantToGardenSheet: View {
         }
         .background(Color(.systemGroupedBackground))
     }
-    
+
     private var canSave: Bool {
         switch selectedTab {
         case .newPlant:
-            return !plantName.isEmpty
+            !plantName.isEmpty
+
         case .fromDatabase:
-            return false // Saving happens through customization sheet
+            false // Saving happens through customization sheet
         }
     }
-    
+
     private func setupInitialState() {
         targetGarden = selectedGarden
         availableGardens = (try? dataService.gardens.fetchAll()) ?? []
@@ -376,18 +377,19 @@ struct AddPlantToGardenSheet: View {
         guard !plantName.isEmpty,
               companionService.isPlantKnown(plantName),
               let garden,
-              let plants = garden.plants else {
+              let plants = garden.plants
+        else {
             compatibilityAnalysis = nil
             return
         }
 
-        let existingPlantNames = plants.compactMap { $0.name }
+        let existingPlantNames = plants.compactMap(\.name)
         compatibilityAnalysis = companionService.analyzeGardenCompatibility(
             plantName: plantName,
             existingPlants: existingPlantNames
         )
     }
-    
+
     @MainActor
     private func loadDatabasePlants() async {
         isLoading = true
@@ -410,7 +412,7 @@ struct AddPlantToGardenSheet: View {
 
         isLoading = false
     }
-    
+
     private func filterPlants() {
         if searchText.isEmpty {
             filteredPlants = databasePlants
@@ -418,48 +420,47 @@ struct AddPlantToGardenSheet: View {
             filteredPlants = plantDatabaseService.searchPlants(query: searchText)
         }
     }
-    
+
     @MainActor
     private func savePlant() async {
         guard selectedTab == .newPlant, !plantName.isEmpty else { return }
-        
+
         isSaving = true
-        
+
         do {
             // Process selected photos
             var processedPhotoURLs: [String] = []
             for item in selectedPhotos {
-                if (try? await item.loadTransferable(type: Data.self)) != nil {
+                if await (try? item.loadTransferable(type: Data.self)) != nil {
                     let photoURL = "photo_\(UUID().uuidString)"
                     processedPhotoURLs.append(photoURL)
                 }
             }
-            
+
             // Create the plant using DataService
             let newPlant = Plant(name: plantName, plantType: selectedPlantType, difficultyLevel: selectedDifficultyLevel, isUserPlant: true)
             newPlant.garden = selectedGarden ?? targetGarden
             try dataService.plants.add(newPlant)
             let plant = newPlant
-            
+
             // Update additional plant properties
             plant.scientificName = scientificName.isEmpty ? nil : scientificName
             plant.plantingDate = plantingDate
             plant.notes = notes.isEmpty ? nil : notes
             plant.photoURLs = processedPhotoURLs
             plant.isUserPlant = true
-            
+
             // Save the updated plant
             try dataService.updatePlant(plant)
-            
+
             NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
-            
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true
             isSaving = false
         }
     }
-    
+
     @MainActor
     private func saveCustomizedDatabasePlant(_ customizedPlant: Plant) async {
         do {
@@ -467,14 +468,13 @@ struct AddPlantToGardenSheet: View {
             customizedPlant.garden = selectedGarden ?? targetGarden
             customizedPlant.isUserPlant = true
             customizedPlant.plantingDate = customizedPlant.plantingDate ?? Date()
-            
+
             // Save the customized plant
             try dataService.updatePlant(customizedPlant)
-            
+
             selectedDatabasePlant = nil
             showingPlantCustomization = false
             dismiss()
-            
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true
@@ -487,7 +487,7 @@ struct AddPlantToGardenSheet: View {
 struct DatabasePlantRowView: View {
     let plant: Plant
     let onSelect: () -> Void
-    
+
     var body: some View {
         Button(action: onSelect) {
             HStack(spacing: 12) {
@@ -500,25 +500,25 @@ struct DatabasePlantRowView: View {
                             endPoint: .bottomTrailing
                         ))
                         .frame(width: 50, height: 50)
-                    
+
                     Image(systemName: plantTypeIcon)
                         .font(.title3)
                         .foregroundColor(.green)
                 }
-                
+
                 // Plant info
                 VStack(alignment: .leading, spacing: 4) {
                     Text(plant.name ?? "Unknown Plant")
                         .font(.headline)
                         .multilineTextAlignment(.leading)
-                    
+
                     if let scientificName = plant.scientificName, !scientificName.isEmpty {
                         Text(scientificName)
                             .font(.caption)
                             .foregroundColor(.secondary)
                             .italic()
                     }
-                    
+
                     HStack(spacing: 8) {
                         if let plantType = plant.plantType {
                             PlantTypeBadge(type: plantType)
@@ -528,7 +528,7 @@ struct DatabasePlantRowView: View {
                         }
                         Spacer()
                     }
-                    
+
                     if let notes = plant.notes, !notes.isEmpty {
                         Text(notes.prefix(100) + (notes.count > 100 ? "..." : ""))
                             .font(.caption)
@@ -536,9 +536,9 @@ struct DatabasePlantRowView: View {
                             .lineLimit(2)
                     }
                 }
-                
+
                 Spacer()
-                
+
                 Image(systemName: "chevron.right")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -550,18 +550,18 @@ struct DatabasePlantRowView: View {
         }
         .buttonStyle(PlainButtonStyle())
     }
-    
+
     private var plantTypeIcon: String {
         switch plant.plantType {
-        case .vegetable: return "carrot.fill"
-        case .herb: return "leaf.fill"
-        case .flower: return "rosette"
-        case .houseplant: return "house.fill"
-        case .fruit: return "apple.whole.fill"
-        case .succulent: return "circle.grid.3x3.fill"
-        case .tree: return "tree.fill"
-        case .shrub: return "leaf.circle.fill"
-        case .none: return "questionmark.circle.fill"
+        case .vegetable: "carrot.fill"
+        case .herb: "leaf.fill"
+        case .flower: "rosette"
+        case .houseplant: "house.fill"
+        case .fruit: "apple.whole.fill"
+        case .succulent: "circle.grid.3x3.fill"
+        case .tree: "tree.fill"
+        case .shrub: "leaf.circle.fill"
+        case .none: "questionmark.circle.fill"
         }
     }
 }
@@ -574,7 +574,7 @@ struct DatabasePlantCustomizationSheet: View {
     let dataService: DataService
     let onSave: (Plant) -> Void
     let onCancel: () -> Void
-    
+
     @State private var customPlantName: String
     @State private var customScientificName: String
     @State private var customNotes: String
@@ -589,11 +589,11 @@ struct DatabasePlantCustomizationSheet: View {
         self.dataService = dataService
         self.onSave = onSave
         self.onCancel = onCancel
-        self._customPlantName = State(initialValue: plant.name ?? "")
-        self._customScientificName = State(initialValue: plant.scientificName ?? "")
-        self._customNotes = State(initialValue: plant.notes ?? "")
+        _customPlantName = State(initialValue: plant.name ?? "")
+        _customScientificName = State(initialValue: plant.scientificName ?? "")
+        _customNotes = State(initialValue: plant.notes ?? "")
     }
-    
+
     var body: some View {
         NavigationStack {
             Form {
@@ -608,23 +608,23 @@ struct DatabasePlantCustomizationSheet: View {
                                     endPoint: .bottomTrailing
                                 ))
                                 .frame(width: 60, height: 60)
-                            
+
                             Image(systemName: plantTypeIcon)
                                 .font(.title2)
                                 .foregroundColor(.green)
                         }
-                        
+
                         VStack(alignment: .leading, spacing: 4) {
                             Text(plant.name ?? "Unknown Plant")
                                 .font(.headline)
-                            
+
                             if let scientificName = plant.scientificName, !scientificName.isEmpty {
                                 Text(scientificName)
                                     .font(.caption)
                                     .foregroundColor(.secondary)
                                     .italic()
                             }
-                            
+
                             HStack(spacing: 8) {
                                 if let plantType = plant.plantType {
                                     PlantTypeBadge(type: plantType)
@@ -634,30 +634,30 @@ struct DatabasePlantCustomizationSheet: View {
                                 }
                             }
                         }
-                        
+
                         Spacer()
                     }
                 }
-                
+
                 // Customization Section
                 Section("Customize Your Plant") {
                     TextField("Plant Name", text: $customPlantName)
                         .autocorrectionDisabled()
-                    
+
                     TextField("Scientific Name", text: $customScientificName)
                         .autocorrectionDisabled()
                         .gwTextInputAutocapitalization(.none)
                         .foregroundColor(.secondary)
-                    
+
                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
                 }
-                
+
                 // Notes Section
                 Section("Additional Notes") {
                     TextEditor(text: $customNotes)
                         .frame(minHeight: 100)
                 }
-                
+
                 // Photo Section
                 Section("Photos") {
                     PhotosPicker(
@@ -671,14 +671,14 @@ struct DatabasePlantCustomizationSheet: View {
                         }
                         .foregroundColor(.blue)
                     }
-                    
+
                     if !selectedPhotos.isEmpty {
                         Text("\(selectedPhotos.count) photo(s) selected")
                             .font(.caption)
                             .foregroundColor(.secondary)
                     }
                 }
-                
+
                 // Garden Info Section
                 if let garden = targetGarden {
                     Section("Garden") {
@@ -709,27 +709,27 @@ struct DatabasePlantCustomizationSheet: View {
                 }
             }
             .alert("Error", isPresented: $showingError) {
-                Button("OK") { }
+                Button("OK") {}
             } message: {
                 Text(errorMessage)
             }
         }
     }
-    
+
     private var plantTypeIcon: String {
         switch plant.plantType {
-        case .vegetable: return "carrot.fill"
-        case .herb: return "leaf.fill"
-        case .flower: return "rosette"
-        case .houseplant: return "house.fill"
-        case .fruit: return "apple.whole.fill"
-        case .succulent: return "circle.grid.3x3.fill"
-        case .tree: return "tree.fill"
-        case .shrub: return "leaf.circle.fill"
-        case .none: return "questionmark.circle.fill"
+        case .vegetable: "carrot.fill"
+        case .herb: "leaf.fill"
+        case .flower: "rosette"
+        case .houseplant: "house.fill"
+        case .fruit: "apple.whole.fill"
+        case .succulent: "circle.grid.3x3.fill"
+        case .tree: "tree.fill"
+        case .shrub: "leaf.circle.fill"
+        case .none: "questionmark.circle.fill"
         }
     }
-    
+
     @MainActor
     private func saveCustomizedPlant() async {
         do {
@@ -738,7 +738,7 @@ struct DatabasePlantCustomizationSheet: View {
             newPlant.garden = targetGarden
             try dataService.plants.add(newPlant)
             let customizedPlant = newPlant
-            
+
             // Copy relevant properties from database plant
             customizedPlant.scientificName = customScientificName.isEmpty ? plant.scientificName : customScientificName
             customizedPlant.sunlightRequirement = plant.sunlightRequirement
@@ -747,22 +747,21 @@ struct DatabasePlantCustomizationSheet: View {
             customizedPlant.plantingDate = plantingDate
             customizedPlant.notes = customNotes.isEmpty ? plant.notes : customNotes
             customizedPlant.isUserPlant = true
-            
+
             // Process photos
             var processedPhotoURLs: [String] = []
             for item in selectedPhotos {
-                if (try? await item.loadTransferable(type: Data.self)) != nil {
+                if await (try? item.loadTransferable(type: Data.self)) != nil {
                     let photoURL = "photo_\(UUID().uuidString)"
                     processedPhotoURLs.append(photoURL)
                 }
             }
             customizedPlant.photoURLs = processedPhotoURLs
-            
+
             // Save the customized plant
             try dataService.updatePlant(customizedPlant)
-            
+
             onSave(customizedPlant)
-            
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true

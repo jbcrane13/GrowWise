@@ -1,13 +1,14 @@
 #if canImport(UIKit)
-import SwiftUI
-import SwiftData
-import PhotosUI
 import GrowWiseModels
 import GrowWiseServices
+import PhotosUI
+import SwiftData
+import SwiftUI
 #if canImport(UIKit)
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
+
 typealias UIImage = NSImage
 #endif
 
@@ -15,9 +16,9 @@ public struct AddJournalEntryView: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
     @State private var plants: [Plant] = []
-    
+
     let photoService: PhotoService
-    
+
     // Form fields
     @State private var title = ""
     @State private var content = ""
@@ -25,7 +26,7 @@ public struct AddJournalEntryView: View {
     @State private var entryType: JournalEntryType = .observation
     @State private var tags: [String] = []
     @State private var newTag = ""
-    
+
     // Measurements
     @State private var heightMeasurement: String = ""
     @State private var widthMeasurement: String = ""
@@ -34,14 +35,14 @@ public struct AddJournalEntryView: View {
     @State private var soilMoisture: SoilMoisture?
     @State private var weatherCondition: WeatherCondition?
     @State private var plantMood: PlantMood?
-    
+
     // Care activities
     @State private var wateringAmount: String = ""
     @State private var fertilizer = ""
     @State private var fertilizerAmount = ""
     @State private var pruningNotes = ""
     @State private var pestObservations = ""
-    
+
     // Photos
     @State private var selectedPhotos: [PhotosPickerItem] = []
     @State private var capturedImages: [UIImage] = []
@@ -49,16 +50,16 @@ public struct AddJournalEntryView: View {
     @State private var isProcessingPhotos = false
     @State private var saveTask: Task<Void, Never>?
     @State private var photoTask: Task<Void, Never>?
-    
+
     // UI state
     @State private var showingAdvancedFields = false
     @State private var isPrivate = false
     @State private var isSaving = false
-    
+
     public init(photoService: PhotoService) {
         self.photoService = photoService
     }
-    
+
     public var body: some View {
         NavigationStack {
             Form {
@@ -71,31 +72,31 @@ public struct AddJournalEntryView: View {
                             ValidationService.shared.validateText(text, fieldName: "Title", minLength: 0, maxLength: 100)
                         }
                     )
-                    
+
                     Picker("Entry Type", selection: $entryType) {
                         ForEach(JournalEntryType.allCases, id: \.self) { type in
                             Label(type.displayName, systemImage: type.iconName)
                                 .tag(type)
                         }
                     }
-                    
+
                     Picker("Plant", selection: $selectedPlant) {
                         Text("Select a plant")
                             .tag(nil as Plant?)
-                        
+
                         ForEach(plants.filter { $0.isUserPlant ?? false }) { plant in
                             Text(plant.name ?? "Unknown Plant")
                                 .tag(plant as Plant?)
                         }
                     }
                 }
-                
+
                 // Content Section
                 Section("Notes") {
                     ZStack(alignment: .topLeading) {
                         TextEditor(text: $content)
                             .frame(minHeight: 100)
-                        
+
                         if content.isEmpty {
                             Text("How is your plant doing today?")
                                 .foregroundColor(.secondary)
@@ -112,7 +113,7 @@ public struct AddJournalEntryView: View {
                         }
                     }
                 }
-                
+
                 // Photos Section
                 Section("Photos") {
                     PhotosSection(
@@ -122,7 +123,7 @@ public struct AddJournalEntryView: View {
                         isProcessingPhotos: $isProcessingPhotos
                     )
                 }
-                
+
                 // Quick Measurements Section
                 Section("Quick Measurements") {
                     HStack {
@@ -135,7 +136,7 @@ public struct AddJournalEntryView: View {
                         Text("inches")
                             .foregroundColor(.secondary)
                     }
-                    
+
                     HStack {
                         ValidatedTextField(
                             "Temperature",
@@ -146,21 +147,21 @@ public struct AddJournalEntryView: View {
                         Text("°F")
                             .foregroundColor(.secondary)
                     }
-                    
+
                     Picker("Soil Moisture", selection: $soilMoisture) {
                         Text("Not specified")
                             .tag(nil as SoilMoisture?)
-                        
+
                         ForEach(SoilMoisture.allCases, id: \.self) { moisture in
                             Text(moisture.displayName)
                                 .tag(moisture as SoilMoisture?)
                         }
                     }
-                    
+
                     Picker("Plant Mood", selection: $plantMood) {
                         Text("Not specified")
                             .tag(nil as PlantMood?)
-                        
+
                         ForEach(PlantMood.allCases, id: \.self) { mood in
                             HStack {
                                 Text(mood.emoji)
@@ -170,7 +171,7 @@ public struct AddJournalEntryView: View {
                         }
                     }
                 }
-                
+
                 // Advanced Fields (Collapsible)
                 if showingAdvancedFields {
                     Section("Detailed Measurements") {
@@ -184,7 +185,7 @@ public struct AddJournalEntryView: View {
                             Text("inches")
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         HStack {
                             ValidatedTextField(
                                 "Humidity",
@@ -195,18 +196,18 @@ public struct AddJournalEntryView: View {
                             Text("%")
                                 .foregroundColor(.secondary)
                         }
-                        
+
                         Picker("Weather", selection: $weatherCondition) {
                             Text("Not specified")
                                 .tag(nil as WeatherCondition?)
-                            
+
                             ForEach(WeatherCondition.allCases, id: \.self) { weather in
                                 Label(weather.displayName, systemImage: weather.iconName)
                                     .tag(weather as WeatherCondition?)
                             }
                         }
                     }
-                    
+
                     Section("Care Activities") {
                         if entryType == .watering {
                             HStack {
@@ -220,33 +221,33 @@ public struct AddJournalEntryView: View {
                                     .foregroundColor(.secondary)
                             }
                         }
-                        
+
                         if entryType == .fertilizing {
                             ValidatedTextField(
                                 "Fertilizer type",
                                 text: $fertilizer,
                                 validation: { ValidationService.shared.validateText($0, fieldName: "Fertilizer", maxLength: 50) }
                             )
-                            
+
                             ValidatedTextField(
                                 "Amount used",
                                 text: $fertilizerAmount,
                                 validation: { ValidationService.shared.validateText($0, fieldName: "Amount", maxLength: 50) }
                             )
                         }
-                        
+
                         if entryType == .pruning {
                             TextField("Pruning notes", text: $pruningNotes, axis: .vertical)
-                                .lineLimit(2...4)
+                                .lineLimit(2 ... 4)
                         }
-                        
+
                         if entryType == .problemReport {
                             TextField("Pest observations", text: $pestObservations, axis: .vertical)
-                                .lineLimit(2...4)
+                                .lineLimit(2 ... 4)
                         }
                     }
                 }
-                
+
                 // Show/Hide Advanced Fields
                 Section {
                     Button {
@@ -262,12 +263,12 @@ public struct AddJournalEntryView: View {
                         }
                     }
                 }
-                
+
                 // Tags Section
                 Section("Tags") {
                     TagsSection(tags: $tags, newTag: $newTag)
                 }
-                
+
                 // Privacy Section
                 Section {
                     Toggle("Private Entry", isOn: $isPrivate)
@@ -284,12 +285,12 @@ public struct AddJournalEntryView: View {
                         dismiss()
                     }
                     .onDisappear {
-                saveTask?.cancel()
-                photoTask?.cancel()
-            }
-            .disabled(isSaving)
+                        saveTask?.cancel()
+                        photoTask?.cancel()
+                    }
+                    .disabled(isSaving)
                 }
-                
+
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
                         saveTask = Task {
@@ -324,14 +325,14 @@ public struct AddJournalEntryView: View {
             }
         }
     }
-    
+
     // MARK: - Helper Methods
-    
+
     @MainActor
     private func saveEntry() async {
         isSaving = true
         defer { isSaving = false }
-        
+
         do {
             // Create journal entry
             let entry = JournalEntry(
@@ -340,7 +341,7 @@ public struct AddJournalEntryView: View {
                 entryType: entryType,
                 plant: selectedPlant
             )
-            
+
             // Set measurements
             entry.heightMeasurement = Double(heightMeasurement)
             entry.widthMeasurement = Double(widthMeasurement)
@@ -349,18 +350,18 @@ public struct AddJournalEntryView: View {
             entry.soilMoisture = soilMoisture
             entry.weatherConditions = weatherCondition
             entry.mood = plantMood
-            
+
             // Set care activities
             entry.wateringAmount = Double(wateringAmount)
             entry.fertilizer = fertilizer.isEmpty ? nil : fertilizer
             entry.fertilizerAmount = fertilizerAmount.isEmpty ? nil : fertilizerAmount
             entry.pruningNotes = pruningNotes.isEmpty ? nil : pruningNotes
             entry.pestObservations = pestObservations.isEmpty ? nil : pestObservations
-            
+
             // Set tags and privacy
             entry.tags = tags
             entry.isPrivate = isPrivate
-            
+
             // Save photos if any
             if let plant = selectedPlant {
                 for image in capturedImages {
@@ -373,31 +374,32 @@ public struct AddJournalEntryView: View {
                     entry.addPhoto(url: photoMetadata.filePath)
                 }
             }
-            
+
             // Save using DataService
             try dataService.saveJournalEntry(entry)
-            
+
             dismiss()
         } catch {
             print("Failed to save journal entry: \(error)")
             // In production, show error alert
         }
     }
-    
+
     @MainActor
     private func processSelectedPhotos(_ items: [PhotosPickerItem]) async {
         guard !items.isEmpty else { return }
-        
+
         isProcessingPhotos = true
         defer { isProcessingPhotos = false }
-        
+
         for item in items {
             if let data = try? await item.loadTransferable(type: Data.self),
-               let image = UIImage(data: data) {
+               let image = UIImage(data: data)
+            {
                 capturedImages.append(image)
             }
         }
-        
+
         selectedPhotos.removeAll()
     }
 }
@@ -409,7 +411,7 @@ private struct PhotosSection: View {
     @Binding var capturedImages: [UIImage]
     @Binding var showingCamera: Bool
     @Binding var isProcessingPhotos: Bool
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -421,7 +423,7 @@ private struct PhotosSection: View {
                     Label("Choose Photos", systemImage: "photo.on.rectangle")
                 }
                 .buttonStyle(.bordered)
-                
+
                 Button {
                     showingCamera = true
                 } label: {
@@ -429,31 +431,31 @@ private struct PhotosSection: View {
                 }
                 .buttonStyle(.bordered)
             }
-            
+
             if isProcessingPhotos {
                 ProgressView("Processing photos...")
                     .font(.caption)
             }
-            
+
             if !capturedImages.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 8) {
                         ForEach(Array(capturedImages.enumerated()), id: \.offset) { index, image in
                             VStack {
                                 ZStack(alignment: .topTrailing) {
-                                #if canImport(UIKit)
-                                Image(uiImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 60, height: 60)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                #elseif canImport(AppKit)
-                                Image(nsImage: image)
-                                    .resizable()
-                                    .aspectRatio(contentMode: .fill)
-                                    .frame(width: 60, height: 60)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
-                                #endif
+                                    #if canImport(UIKit)
+                                    Image(uiImage: image)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 60, height: 60)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    #elseif canImport(AppKit)
+                                    Image(nsImage: image)
+                                        .resizable()
+                                        .aspectRatio(contentMode: .fill)
+                                        .frame(width: 60, height: 60)
+                                        .clipShape(RoundedRectangle(cornerRadius: 8))
+                                    #endif
                                     Button {
                                         capturedImages.remove(at: index)
                                     } label: {
@@ -468,7 +470,7 @@ private struct PhotosSection: View {
                     }
                     .padding(.horizontal, 4)
                 }
-                
+
                 Text("\(capturedImages.count) photo\(capturedImages.count == 1 ? "" : "s") selected")
                     .font(.caption)
                     .foregroundColor(.secondary)
@@ -480,7 +482,7 @@ private struct PhotosSection: View {
 private struct TagsSection: View {
     @Binding var tags: [String]
     @Binding var newTag: String
-    
+
     var body: some View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
@@ -489,20 +491,20 @@ private struct TagsSection: View {
                     .onSubmit {
                         addTag()
                     }
-                
+
                 Button("Add", action: addTag)
                     .disabled(newTag.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty)
             }
-            
+
             if !tags.isEmpty {
                 LazyVGrid(columns: [
-                    GridItem(.adaptive(minimum: 80))
+                    GridItem(.adaptive(minimum: 80)),
                 ], spacing: 8) {
                     ForEach(tags, id: \.self) { tag in
                         HStack(spacing: 4) {
                             Text("#\(tag)")
                                 .font(.caption)
-                            
+
                             Button {
                                 tags.removeAll { $0 == tag }
                             } label: {
@@ -520,10 +522,10 @@ private struct TagsSection: View {
             }
         }
     }
-    
+
     private func addTag() {
         let trimmedTag = newTag.trimmingCharacters(in: .whitespacesAndNewlines)
-        if !trimmedTag.isEmpty && !tags.contains(trimmedTag) {
+        if !trimmedTag.isEmpty, !tags.contains(trimmedTag) {
             tags.append(trimmedTag)
             newTag = ""
         }
@@ -547,34 +549,34 @@ private struct CameraView: View {
 private struct CameraPickerView: UIViewControllerRepresentable {
     let onImageCaptured: (UIImage) -> Void
     @Environment(\.dismiss) private var dismiss
-    
+
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
         picker.sourceType = .camera
         picker.delegate = context.coordinator
         return picker
     }
-    
+
     func updateUIViewController(_ uiViewController: UIImagePickerController, context: Context) {}
-    
+
     func makeCoordinator() -> Coordinator {
         Coordinator(self)
     }
-    
+
     class Coordinator: NSObject, UIImagePickerControllerDelegate, UINavigationControllerDelegate {
         let parent: CameraPickerView
-        
+
         init(_ parent: CameraPickerView) {
             self.parent = parent
         }
-        
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey : Any]) {
+
+        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
             if let image = info[.originalImage] as? UIImage {
                 parent.onImageCaptured(image)
             }
             parent.dismiss()
         }
-        
+
         func imagePickerControllerDidCancel(_ picker: UIImagePickerController) {
             parent.dismiss()
         }
@@ -587,8 +589,8 @@ private struct CameraPickerView: UIViewControllerRepresentable {
         .padding()
 }
 #else
-import SwiftUI
 import GrowWiseServices
+import SwiftUI
 
 public struct AddJournalEntryView: View {
     let photoService: PhotoService

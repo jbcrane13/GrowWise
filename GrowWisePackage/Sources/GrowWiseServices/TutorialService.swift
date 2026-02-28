@@ -1,53 +1,55 @@
 import Foundation
-import SwiftData
 import GrowWiseModels
+import SwiftData
 
 @MainActor
 @Observable public final class TutorialService {
     private let dataService: DataService
-    
+
     public init(dataService: DataService) {
         self.dataService = dataService
     }
-    
+
     // MARK: - Tutorial Management
-    
+
     public func getAllTutorials() -> [TutorialTopic] {
-        return TutorialContent.allTutorials
+        TutorialContent.allTutorials
     }
-    
+
     public func getTutorial(by id: String) -> TutorialTopic? {
-        return TutorialContent.allTutorials.first { $0.id == id }
+        TutorialContent.allTutorials.first { $0.id == id }
     }
-    
+
     public func getTutorialsForSkillLevel(_ skillLevel: GardeningSkillLevel) -> [TutorialTopic] {
-        return TutorialContent.allTutorials.filter { tutorial in
+        TutorialContent.allTutorials.filter { tutorial in
             switch skillLevel {
             case .beginner:
-                return tutorial.difficultyLevel == .beginner
+                tutorial.difficultyLevel == .beginner
+
             case .intermediate:
-                return tutorial.difficultyLevel == .beginner || tutorial.difficultyLevel == .intermediate
+                tutorial.difficultyLevel == .beginner || tutorial.difficultyLevel == .intermediate
+
             case .advanced, .expert:
-                return true // Advanced and expert users can see all tutorials
+                true // Advanced and expert users can see all tutorials
             }
         }
     }
-    
+
     public func getRecommendedTutorials(for user: User) -> [TutorialTopic] {
         let skillLevel = user.skillLevel
         let userGardenType = "container" // Default garden type since User model doesn't have this field yet
-        
+
         return getTutorialsForSkillLevel(skillLevel)
             .filter { tutorial in
                 // Prioritize tutorials relevant to user's garden type
                 tutorial.relevantGardenTypes.contains(userGardenType) ||
-                tutorial.relevantGardenTypes.contains("all")
+                    tutorial.relevantGardenTypes.contains("all")
             }
             .sorted { $0.estimatedDuration < $1.estimatedDuration }
     }
-    
+
     // MARK: - Progress Tracking
-    
+
     public func markStepComplete(tutorialId: String, stepIndex: Int) {
         let key = "tutorial_\(tutorialId)_step_\(stepIndex)"
         try? KeychainManager.shared.storeBool(true, for: key)
@@ -55,29 +57,29 @@ import GrowWiseModels
             try? KeychainManager.shared.store(dateData, for: "\(key)_completed_date")
         }
     }
-    
+
     public func isStepCompleted(tutorialId: String, stepIndex: Int) -> Bool {
         let key = "tutorial_\(tutorialId)_step_\(stepIndex)"
         return (try? KeychainManager.shared.retrieveBool(for: key)) ?? false
     }
-    
+
     public func getTutorialProgress(tutorialId: String) -> TutorialProgress {
         guard let tutorial = getTutorial(by: tutorialId) else {
             return TutorialProgress(tutorialId: tutorialId, completedSteps: 0, totalSteps: 0, isCompleted: false)
         }
-        
-        let completedSteps = tutorial.steps.enumerated().filter { index, _ in
+
+        let completedSteps = tutorial.steps.enumerated().count(where: { index, _ in
             isStepCompleted(tutorialId: tutorialId, stepIndex: index)
-        }.count
-        
+        })
+
         let isCompleted = completedSteps == tutorial.steps.count
-        
+
         if isCompleted {
             if let dateData = try? JSONEncoder().encode(Date()) {
                 try? KeychainManager.shared.store(dateData, for: "tutorial_\(tutorialId)_completed")
             }
         }
-        
+
         return TutorialProgress(
             tutorialId: tutorialId,
             completedSteps: completedSteps,
@@ -85,32 +87,32 @@ import GrowWiseModels
             isCompleted: isCompleted
         )
     }
-    
+
     public func resetTutorialProgress(tutorialId: String) {
         guard let tutorial = getTutorial(by: tutorialId) else { return }
-        
-        for index in 0..<tutorial.steps.count {
+
+        for index in 0 ..< tutorial.steps.count {
             let key = "tutorial_\(tutorialId)_step_\(index)"
             try? KeychainManager.shared.delete(for: key)
             try? KeychainManager.shared.delete(for: "\(key)_completed_date")
         }
-        
+
         try? KeychainManager.shared.delete(for: "tutorial_\(tutorialId)_completed")
     }
-    
+
     // MARK: - Analytics
-    
+
     public func getTutorialAnalytics() -> TutorialAnalytics {
         let allTutorials = getAllTutorials()
         let completedTutorials = allTutorials.filter { tutorial in
             getTutorialProgress(tutorialId: tutorial.id).isCompleted
         }
-        
+
         let totalSteps = allTutorials.reduce(0) { $0 + $1.steps.count }
         let completedSteps = allTutorials.reduce(0) { total, tutorial in
             total + getTutorialProgress(tutorialId: tutorial.id).completedSteps
         }
-        
+
         return TutorialAnalytics(
             totalTutorials: allTutorials.count,
             completedTutorials: completedTutorials.count,
@@ -123,7 +125,7 @@ import GrowWiseModels
 
 // MARK: - Tutorial Content
 
-public struct TutorialContent {
+public enum TutorialContent {
     public static let allTutorials: [TutorialTopic] = [
         // Tutorial 1: Getting Started with Indoor Plants
         TutorialTopic(
@@ -145,11 +147,11 @@ public struct TutorialContent {
                     tips: [
                         "Pothos (Golden Pothos) tolerates low light and infrequent watering",
                         "Snake Plants can survive in almost any light condition",
-                        "ZZ Plants are drought-tolerant and thrive on neglect"
+                        "ZZ Plants are drought-tolerant and thrive on neglect",
                     ],
                     commonMistakes: [
                         "Starting with high-maintenance plants like fiddle leaf figs",
-                        "Buying too many plants at once"
+                        "Buying too many plants at once",
                     ]
                 ),
                 TutorialStep(
@@ -160,11 +162,11 @@ public struct TutorialContent {
                     tips: [
                         "East and north-facing windows provide gentle morning light",
                         "Use sheer curtains to filter intense afternoon sun",
-                        "Rotate plants weekly for even growth"
+                        "Rotate plants weekly for even growth",
                     ],
                     commonMistakes: [
                         "Placing plants in dark corners",
-                        "Putting plants in direct, harsh sunlight"
+                        "Putting plants in direct, harsh sunlight",
                     ]
                 ),
                 TutorialStep(
@@ -175,11 +177,11 @@ public struct TutorialContent {
                     tips: [
                         "Stick your finger 1-2 inches into the soil",
                         "Water thoroughly until it drains from the bottom",
-                        "Empty saucers after 30 minutes to prevent root rot"
+                        "Empty saucers after 30 minutes to prevent root rot",
                     ],
                     commonMistakes: [
                         "Watering on a fixed schedule",
-                        "Giving plants just a little water frequently"
+                        "Giving plants just a little water frequently",
                     ]
                 ),
                 TutorialStep(
@@ -190,16 +192,16 @@ public struct TutorialContent {
                     tips: [
                         "Check plants every weekend at the same time",
                         "Keep a simple plant care journal or use the GrowWise app",
-                        "Take photos to track growth progress"
+                        "Take photos to track growth progress",
                     ],
                     commonMistakes: [
                         "Neglecting plants for weeks at a time",
-                        "Overcomplicating the care routine"
+                        "Overcomplicating the care routine",
                     ]
-                )
+                ),
             ]
         ),
-        
+
         // Tutorial 2: Watering Your Plants Correctly
         TutorialTopic(
             id: "watering-correctly",
@@ -220,11 +222,11 @@ public struct TutorialContent {
                     tips: [
                         "Check soil moisture with your finger - stick it 1-2 inches deep",
                         "Learn your plants' specific water requirements",
-                        "Observe leaf color and texture for hydration clues"
+                        "Observe leaf color and texture for hydration clues",
                     ],
                     commonMistakes: [
                         "Watering on a fixed schedule regardless of plant needs",
-                        "Assuming all plants need the same amount of water"
+                        "Assuming all plants need the same amount of water",
                     ]
                 ),
                 TutorialStep(
@@ -235,11 +237,11 @@ public struct TutorialContent {
                     tips: [
                         "Use a watering can with a rose attachment for gentle watering",
                         "Water slowly to allow soil to absorb moisture",
-                        "Consider drip irrigation for consistent, efficient watering"
+                        "Consider drip irrigation for consistent, efficient watering",
                     ],
                     commonMistakes: [
                         "Watering leaves instead of soil",
-                        "Watering too quickly, causing runoff"
+                        "Watering too quickly, causing runoff",
                     ]
                 ),
                 TutorialStep(
@@ -250,11 +252,11 @@ public struct TutorialContent {
                     tips: [
                         "Avoid watering during the heat of the day",
                         "Evening watering can promote fungal diseases",
-                        "Adjust frequency based on weather conditions"
+                        "Adjust frequency based on weather conditions",
                     ],
                     commonMistakes: [
                         "Watering during midday heat",
-                        "Not adjusting watering schedule for weather changes"
+                        "Not adjusting watering schedule for weather changes",
                     ]
                 ),
                 TutorialStep(
@@ -265,16 +267,16 @@ public struct TutorialContent {
                     tips: [
                         "Yellow leaves often indicate overwatering",
                         "Wilting in morning coolness suggests underwatering",
-                        "Check soil moisture before assuming water problems"
+                        "Check soil moisture before assuming water problems",
                     ],
                     commonMistakes: [
                         "Overwatering when plants show stress",
-                        "Ignoring environmental factors affecting water needs"
+                        "Ignoring environmental factors affecting water needs",
                     ]
-                )
+                ),
             ]
         ),
-        
+
         // Tutorial 3: Understanding Light Requirements
         TutorialTopic(
             id: "light-requirements",
@@ -295,11 +297,11 @@ public struct TutorialContent {
                     tips: [
                         "Track sunlight in your garden area throughout the day",
                         "Consider seasonal changes in sun patterns",
-                        "Note the difference between direct and filtered light"
+                        "Note the difference between direct and filtered light",
                     ],
                     commonMistakes: [
                         "Estimating light conditions without proper observation",
-                        "Not accounting for seasonal sun changes"
+                        "Not accounting for seasonal sun changes",
                     ]
                 ),
                 TutorialStep(
@@ -310,11 +312,11 @@ public struct TutorialContent {
                     tips: [
                         "Use a garden journal to track light patterns",
                         "Consider shadows from buildings, trees, and fences",
-                        "Note morning vs. afternoon sun quality"
+                        "Note morning vs. afternoon sun quality",
                     ],
                     commonMistakes: [
                         "Only checking light at one time of day",
-                        "Forgetting about seasonal changes in sun angle"
+                        "Forgetting about seasonal changes in sun angle",
                     ]
                 ),
                 TutorialStep(
@@ -325,11 +327,11 @@ public struct TutorialContent {
                     tips: [
                         "Read plant tags carefully for light requirements",
                         "Group plants with similar light needs together",
-                        "Consider using shade cloth for sun protection if needed"
+                        "Consider using shade cloth for sun protection if needed",
                     ],
                     commonMistakes: [
                         "Planting sun-loving plants in shade",
-                        "Not utilizing partial shade areas effectively"
+                        "Not utilizing partial shade areas effectively",
                     ]
                 ),
                 TutorialStep(
@@ -340,16 +342,16 @@ public struct TutorialContent {
                     tips: [
                         "Use shade cloth or umbrellas for temporary shade",
                         "Prune nearby branches to increase light",
-                        "Choose heat-tolerant varieties for intense sun areas"
+                        "Choose heat-tolerant varieties for intense sun areas",
                     ],
                     commonMistakes: [
                         "Not protecting plants from intense afternoon sun",
-                        "Giving up on areas with challenging light conditions"
+                        "Giving up on areas with challenging light conditions",
                     ]
-                )
+                ),
             ]
         ),
-        
+
         // Tutorial 4: Soil and Fertilizing Basics
         TutorialTopic(
             id: "soil-fertilizing-basics",
@@ -370,11 +372,11 @@ public struct TutorialContent {
                     tips: [
                         "Look for mixes containing perlite or vermiculite for drainage",
                         "Choose organic potting mixes with compost",
-                        "Avoid mixes that are too heavy or water-retentive"
+                        "Avoid mixes that are too heavy or water-retentive",
                     ],
                     commonMistakes: [
                         "Using regular garden soil in containers",
-                        "Buying the cheapest potting mix available"
+                        "Buying the cheapest potting mix available",
                     ]
                 ),
                 TutorialStep(
@@ -385,11 +387,11 @@ public struct TutorialContent {
                     tips: [
                         "N-P-K numbers on fertilizer show the ratio of main nutrients",
                         "Balanced fertilizers (like 10-10-10) work for most plants",
-                        "Organic options include compost, worm castings, and fish emulsion"
+                        "Organic options include compost, worm castings, and fish emulsion",
                     ],
                     commonMistakes: [
                         "Over-fertilizing, which can burn plants",
-                        "Using only chemical fertilizers without organic matter"
+                        "Using only chemical fertilizers without organic matter",
                     ]
                 ),
                 TutorialStep(
@@ -400,11 +402,11 @@ public struct TutorialContent {
                     tips: [
                         "Dilute liquid fertilizer to half the recommended strength",
                         "Water plants before fertilizing to prevent root burn",
-                        "Reduce or stop fertilizing in winter when growth slows"
+                        "Reduce or stop fertilizing in winter when growth slows",
                     ],
                     commonMistakes: [
                         "Fertilizing too frequently or with too strong concentration",
-                        "Fertilizing dry or stressed plants"
+                        "Fertilizing dry or stressed plants",
                     ]
                 ),
                 TutorialStep(
@@ -415,16 +417,16 @@ public struct TutorialContent {
                     tips: [
                         "Yellow lower leaves often indicate nitrogen deficiency",
                         "Brown leaf tips suggest over-fertilization or salt buildup",
-                        "Flush soil with water if you suspect over-fertilization"
+                        "Flush soil with water if you suspect over-fertilization",
                     ],
                     commonMistakes: [
                         "Assuming all yellowing is from under-fertilizing",
-                        "Not adjusting feeding based on plant's needs"
+                        "Not adjusting feeding based on plant's needs",
                     ]
-                )
+                ),
             ]
         ),
-        
+
         // Tutorial 5: Common Plant Problems and Solutions
         TutorialTopic(
             id: "plant-problems-solutions",
@@ -445,11 +447,11 @@ public struct TutorialContent {
                     tips: [
                         "Old lower leaves naturally yellow and drop - this is normal",
                         "Multiple yellow leaves often indicate overwatering",
-                        "Check soil moisture before assuming the cause"
+                        "Check soil moisture before assuming the cause",
                     ],
                     commonMistakes: [
                         "Panicking over one or two yellow leaves",
-                        "Immediately increasing watering for yellow leaves"
+                        "Immediately increasing watering for yellow leaves",
                     ]
                 ),
                 TutorialStep(
@@ -460,11 +462,11 @@ public struct TutorialContent {
                     tips: [
                         "Check under leaves regularly for tiny moving dots (spider mites)",
                         "White cottony masses indicate mealybugs",
-                        "Wipe leaves with alcohol-soaked cotton swabs for small infestations"
+                        "Wipe leaves with alcohol-soaked cotton swabs for small infestations",
                     ],
                     commonMistakes: [
                         "Using harsh chemicals on indoor plants",
-                        "Not isolating infested plants"
+                        "Not isolating infested plants",
                     ]
                 ),
                 TutorialStep(
@@ -475,11 +477,11 @@ public struct TutorialContent {
                     tips: [
                         "Use filtered or distilled water for sensitive plants",
                         "Group plants together to increase humidity",
-                        "Trim brown tips with clean scissors just into healthy tissue"
+                        "Trim brown tips with clean scissors just into healthy tissue",
                     ],
                     commonMistakes: [
                         "Cutting entire leaves instead of just brown tips",
-                        "Not addressing the underlying cause"
+                        "Not addressing the underlying cause",
                     ]
                 ),
                 TutorialStep(
@@ -490,15 +492,15 @@ public struct TutorialContent {
                     tips: [
                         "Check if roots are circling the bottom of the pot",
                         "Most plants slow growth in fall and winter naturally",
-                        "Gradually move plants to brighter locations if needed"
+                        "Gradually move plants to brighter locations if needed",
                     ],
                     commonMistakes: [
                         "Repotting every time growth slows",
-                        "Forcing growth during dormant seasons"
+                        "Forcing growth during dormant seasons",
                     ]
-                )
+                ),
             ]
-        )
+        ),
     ]
 }
 
@@ -515,7 +517,7 @@ public struct TutorialTopic: Identifiable, Codable, Sendable, Hashable {
     public let relevantGardenTypes: [String]
     public let imageURL: String
     public let steps: [TutorialStep]
-    
+
     public init(id: String, title: String, subtitle: String, description: String, difficultyLevel: DifficultyLevel, estimatedDuration: Int, category: TutorialCategory, relevantGardenTypes: [String], imageURL: String, steps: [TutorialStep]) {
         self.id = id
         self.title = title
@@ -538,9 +540,9 @@ public struct TutorialStep: Identifiable, Codable, Sendable, Hashable {
     public let duration: Int // minutes
     public let tips: [String]
     public let commonMistakes: [String]
-    
+
     public init(title: String, content: String, imageURL: String, duration: Int, tips: [String], commonMistakes: [String]) {
-        self.id = UUID()
+        id = UUID()
         self.title = title
         self.content = content
         self.imageURL = imageURL
@@ -551,19 +553,19 @@ public struct TutorialStep: Identifiable, Codable, Sendable, Hashable {
 }
 
 public enum TutorialCategory: String, CaseIterable, Codable, Sendable {
-    case planning = "planning"
-    case preparation = "preparation"
-    case care = "care"
-    case environment = "environment"
-    case problemSolving = "problemSolving"
-    
+    case planning
+    case preparation
+    case care
+    case environment
+    case problemSolving
+
     public var displayName: String {
         switch self {
-        case .planning: return "Garden Planning"
-        case .preparation: return "Soil & Setup"
-        case .care: return "Plant Care"
-        case .environment: return "Environment"
-        case .problemSolving: return "Problem Solving"
+        case .planning: "Garden Planning"
+        case .preparation: "Soil & Setup"
+        case .care: "Plant Care"
+        case .environment: "Environment"
+        case .problemSolving: "Problem Solving"
         }
     }
 }
@@ -573,12 +575,12 @@ public struct TutorialProgress: Codable {
     public let completedSteps: Int
     public let totalSteps: Int
     public let isCompleted: Bool
-    
+
     public var progressPercentage: Double {
         guard totalSteps > 0 else { return 0 }
         return Double(completedSteps) / Double(totalSteps) * 100
     }
-    
+
     public init(tutorialId: String, completedSteps: Int, totalSteps: Int, isCompleted: Bool) {
         self.tutorialId = tutorialId
         self.completedSteps = completedSteps
@@ -593,7 +595,7 @@ public struct TutorialAnalytics: Codable {
     public let totalSteps: Int
     public let completedSteps: Int
     public let completionRate: Double
-    
+
     public init(totalTutorials: Int, completedTutorials: Int, totalSteps: Int, completedSteps: Int, completionRate: Double) {
         self.totalTutorials = totalTutorials
         self.completedTutorials = completedTutorials
