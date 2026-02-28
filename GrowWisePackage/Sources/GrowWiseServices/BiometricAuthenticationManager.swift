@@ -1,5 +1,5 @@
-import LocalAuthentication
 import Foundation
+import LocalAuthentication
 import Security
 #if canImport(UIKit)
 import UIKit
@@ -8,25 +8,24 @@ import UIKit
 /// BiometricAuthenticationManager handles Face ID/Touch ID authentication
 @MainActor
 @Observable public final class BiometricAuthenticationManager: BiometricAuthenticationProtocol {
-    
     // MARK: - Singleton
-    
+
     public static let shared = BiometricAuthenticationManager()
-    
+
     // MARK: - Published Properties
-    
+
     public private(set) var isAuthenticated = false
     public private(set) var biometricType: LABiometryType = .none
     public private(set) var canUseBiometrics = false
     public private(set) var isAuthenticating = false
-    
+
     // MARK: - Properties
-    
+
     private let context = LAContext()
     private var keychainStorage: KeychainStorageProtocol?
-    
+
     // MARK: - Error Types
-    
+
     public enum BiometricError: LocalizedError {
         case biometricsNotAvailable
         case biometricsNotEnrolled
@@ -40,43 +39,54 @@ import UIKit
         case invalidContext
         case notInteractive
         case unknown(String)
-        
+
         public var errorDescription: String? {
             switch self {
             case .biometricsNotAvailable:
-                return "Biometric authentication is not available on this device"
+                "Biometric authentication is not available on this device"
+
             case .biometricsNotEnrolled:
-                return "No biometric data is enrolled. Please set up Face ID or Touch ID in Settings"
+                "No biometric data is enrolled. Please set up Face ID or Touch ID in Settings"
+
             case .authenticationFailed:
-                return "Authentication failed. Please try again"
+                "Authentication failed. Please try again"
+
             case .userCancelled:
-                return "Authentication was cancelled"
+                "Authentication was cancelled"
+
             case .userFallback:
-                return "Please use your passcode"
+                "Please use your passcode"
+
             case .systemCancel:
-                return "Authentication was cancelled by the system"
+                "Authentication was cancelled by the system"
+
             case .passcodeNotSet:
-                return "Device passcode is not set"
+                "Device passcode is not set"
+
             case .lockout:
-                return "Too many failed attempts. Please try again later"
+                "Too many failed attempts. Please try again later"
+
             case .appCancel:
-                return "Authentication was cancelled by the app"
+                "Authentication was cancelled by the app"
+
             case .invalidContext:
-                return "Invalid authentication context"
+                "Invalid authentication context"
+
             case .notInteractive:
-                return "Authentication requires user interaction"
-            case .unknown(let message):
-                return message
+                "Authentication requires user interaction"
+
+            case let .unknown(message):
+                message
             }
         }
     }
-    
+
     // MARK: - Initialization
-    
+
     private init() {
         checkBiometricAvailability()
         setupNotifications()
-        
+
         // Register self with dependency container after initialization
         Task { @MainActor in
             AuthenticationDependencyContainer.shared.setBiometricAuthentication(self)
@@ -84,85 +94,89 @@ import UIKit
             self.keychainStorage = AuthenticationDependencyContainer.shared.keychainStorage
         }
     }
-    
+
     // MARK: - Dependency Injection
-    
+
     /// Set the keychain storage provider
     public func setKeychainStorage(_ storage: KeychainStorageProtocol) {
-        self.keychainStorage = storage
+        keychainStorage = storage
     }
-    
+
     // MARK: - Public Methods
-    
+
     /// Check if biometric authentication is available
     public func checkBiometricAvailability() {
         var error: NSError?
         canUseBiometrics = context.canEvaluatePolicy(.deviceOwnerAuthenticationWithBiometrics, error: &error)
-        
+
         if canUseBiometrics {
             biometricType = context.biometryType
         } else {
             biometricType = .none
-            
-            if let error = error {
+
+            if let error {
                 print("Biometric availability check failed: \(error.localizedDescription)")
             }
         }
     }
-    
+
     /// Get the name of the available biometric type
     public var biometricTypeName: String {
         switch biometricType {
         case .faceID:
             return "Face ID"
+
         case .touchID:
             return "Touch ID"
+
         case .opticID:
             if #available(iOS 17.0, *) {
                 return "Optic ID"
             } else {
                 return "Biometric Authentication"
             }
+
         case .none:
             return "None"
+
         @unknown default:
             return "Unknown"
         }
     }
-    
+
     /// Authenticate using biometrics
     public func authenticateWithBiometrics(reason: String? = nil) async throws {
         guard canUseBiometrics else {
             throw BiometricError.biometricsNotAvailable
         }
-        
+
         guard !isAuthenticating else {
             return // Already authenticating
         }
-        
+
         isAuthenticating = true
         defer { isAuthenticating = false }
-        
+
         let authReason = reason ?? "Authenticate to access your secure data"
-        
+
         do {
             let context = LAContext()
             context.localizedFallbackTitle = "Use Passcode"
             context.localizedCancelTitle = "Cancel"
-            
+
             // Set timeout for authentication
             context.touchIDAuthenticationAllowableReuseDuration = 10
-            
+
             let success = try await context.evaluatePolicy(
                 .deviceOwnerAuthenticationWithBiometrics,
                 localizedReason: authReason
             )
-            
+
             if success {
                 await MainActor.run {
                     self.isAuthenticated = true
                 }
-                
+
                 // Store authentication timestamp
                 try? keychainStorage?.storeString(
                     ISO8601DateFormatter().string(from: Date()),
@@ -177,31 +191,31 @@ import UIKit
             throw BiometricError.unknown(error.localizedDescription)
         }
     }
-    
+
     /// Authenticate with device passcode as fallback
     public func authenticateWithPasscode(reason: String? = nil) async throws {
         guard !isAuthenticating else {
             return
         }
-        
+
         isAuthenticating = true
         defer { isAuthenticating = false }
-        
+
         let authReason = reason ?? "Enter your passcode to access secure data"
-        
+
         do {
             let context = LAContext()
-            
+
             let success = try await context.evaluatePolicy(
                 .deviceOwnerAuthentication,
                 localizedReason: authReason
             )
-            
+
             if success {
                 await MainActor.run {
                     self.isAuthenticated = true
                 }
-                
+
                 // Store authentication timestamp
                 try? keychainStorage?.storeString(
                     ISO8601DateFormatter().string(from: Date()),
@@ -216,34 +230,34 @@ import UIKit
             throw BiometricError.unknown(error.localizedDescription)
         }
     }
-    
+
     /// Logout and clear authentication
     public func logout() {
         isAuthenticated = false
         try? keychainStorage?.delete(for: "last_biometric_auth")
         try? keychainStorage?.delete(for: "last_passcode_auth")
     }
-    
+
     /// Check if user is still authenticated (with timeout)
     public func checkAuthenticationStatus(timeoutMinutes: Int = 5) -> Bool {
         guard isAuthenticated else { return false }
-        
+
         // Check last authentication time
         if let lastAuthString = try? keychainStorage?.retrieveString(for: "last_biometric_auth"),
-           let lastAuthDate = ISO8601DateFormatter().date(from: lastAuthString) {
-            
+           let lastAuthDate = ISO8601DateFormatter().date(from: lastAuthString)
+        {
             let timeSinceAuth = Date().timeIntervalSince(lastAuthDate)
             let timeoutSeconds = TimeInterval(timeoutMinutes * 60)
-            
+
             if timeSinceAuth > timeoutSeconds {
                 isAuthenticated = false
                 return false
             }
         }
-        
+
         return isAuthenticated
     }
-    
+
     /// Request biometric authentication for sensitive operations
     public func protectOperation<T>(
         reason: String,
@@ -252,7 +266,7 @@ import UIKit
         try await authenticateWithBiometrics(reason: reason)
         return try await operation()
     }
-    
+
     /// Enable biometric protection for Keychain items
     public func storeWithBiometricProtection(_ data: Data, for key: String) throws {
         let query: [String: Any] = [
@@ -260,25 +274,25 @@ import UIKit
             kSecAttrService as String: "com.growwiser.app",
             kSecAttrAccount as String: key,
             kSecValueData as String: data,
-            kSecAttrAccessControl as String: createAccessControl()
+            kSecAttrAccessControl as String: createAccessControl(),
         ]
-        
+
         // Delete existing item if it exists
         SecItemDelete(query as CFDictionary)
-        
+
         // Add new item with biometric protection
         let status = SecItemAdd(query as CFDictionary, nil)
-        
+
         guard status == errSecSuccess else {
             throw BiometricError.unknown("Failed to store in keychain: \(status)")
         }
     }
-    
+
     /// Retrieve biometric-protected Keychain item
     public func retrieveWithBiometricProtection(for key: String) async throws -> Data {
         // First authenticate
         try await authenticateWithBiometrics(reason: "Authenticate to access secure data")
-        
+
         // Then retrieve
         let query: [String: Any] = [
             kSecClass as String: kSecClassGenericPassword,
@@ -286,28 +300,28 @@ import UIKit
             kSecAttrAccount as String: key,
             kSecReturnData as String: true,
             kSecMatchLimit as String: kSecMatchLimitOne,
-            kSecUseAuthenticationContext as String: context
+            kSecUseAuthenticationContext as String: context,
         ]
-        
+
         var item: CFTypeRef?
         let status = SecItemCopyMatching(query as CFDictionary, &item)
-        
+
         guard status == errSecSuccess else {
             if status == errSecItemNotFound {
                 throw BiometricError.unknown("Item not found in keychain")
             }
             throw BiometricError.unknown("Failed to retrieve from keychain: \(status)")
         }
-        
+
         guard let data = item as? Data else {
             throw BiometricError.unknown("Unexpected data format in keychain")
         }
-        
+
         return data
     }
-    
+
     // MARK: - Private Methods
-    
+
     private func createAccessControl() -> SecAccessControl {
         let access = SecAccessControlCreateWithFlags(
             nil,
@@ -317,36 +331,47 @@ import UIKit
         )
         return access!
     }
-    
+
     private func handleLAError(_ error: LAError) -> BiometricError {
         switch error.code {
         case .authenticationFailed:
-            return .authenticationFailed
+            .authenticationFailed
+
         case .userCancel:
-            return .userCancelled
+            .userCancelled
+
         case .userFallback:
-            return .userFallback
+            .userFallback
+
         case .systemCancel:
-            return .systemCancel
+            .systemCancel
+
         case .passcodeNotSet:
-            return .passcodeNotSet
+            .passcodeNotSet
+
         case .biometryNotAvailable:
-            return .biometricsNotAvailable
+            .biometricsNotAvailable
+
         case .biometryNotEnrolled:
-            return .biometricsNotEnrolled
+            .biometricsNotEnrolled
+
         case .biometryLockout:
-            return .lockout
+            .lockout
+
         case .appCancel:
-            return .appCancel
+            .appCancel
+
         case .invalidContext:
-            return .invalidContext
+            .invalidContext
+
         case .notInteractive:
-            return .notInteractive
+            .notInteractive
+
         default:
-            return .unknown(error.localizedDescription)
+            .unknown(error.localizedDescription)
         }
     }
-    
+
     private func setupNotifications() {
         // Listen for app lifecycle events
         #if canImport(UIKit)
@@ -364,7 +389,7 @@ import UIKit
             object: nil
         )
         #endif
-        
+
         #if canImport(UIKit)
         NotificationCenter.default.addObserver(
             self,
@@ -381,7 +406,7 @@ import UIKit
         )
         #endif
     }
-    
+
     @objc private func handleAppDidEnterBackground() {
         // Consider logging out on background for high security
         // For now, just mark the time
@@ -390,7 +415,7 @@ import UIKit
             for: "app_backgrounded_time"
         )
     }
-    
+
     @objc private func handleAppWillEnterForeground() {
         // Check if we need to re-authenticate
         if isAuthenticated {
@@ -401,7 +426,7 @@ import UIKit
                 }
             }
         }
-        
+
         // Refresh biometric availability
         checkBiometricAvailability()
     }
@@ -415,34 +440,34 @@ public struct BiometricAuthenticationView: View {
     @State private var authManager = BiometricAuthenticationManager.shared
     @State private var showError = false
     @State private var errorMessage = ""
-    
+
     let onSuccess: () -> Void
     let onCancel: (() -> Void)?
-    
+
     public init(onSuccess: @escaping () -> Void, onCancel: (() -> Void)? = nil) {
         self.onSuccess = onSuccess
         self.onCancel = onCancel
     }
-    
+
     public var body: some View {
         VStack(spacing: 32) {
             // Icon
             Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
                 .font(.system(size: 64))
                 .foregroundColor(.blue)
-            
+
             // Title
             Text("Authentication Required")
                 .font(.title)
                 .fontWeight(.semibold)
-            
+
             // Description
             Text("Use \(authManager.biometricTypeName) to access your secure data")
                 .font(.body)
                 .foregroundColor(.secondary)
                 .multilineTextAlignment(.center)
                 .padding(.horizontal)
-            
+
             // Buttons
             VStack(spacing: 16) {
                 Button(action: authenticate) {
@@ -454,7 +479,7 @@ public struct BiometricAuthenticationView: View {
                         } else {
                             Image(systemName: authManager.biometricType == .faceID ? "faceid" : "touchid")
                         }
-                        
+
                         Text("Authenticate")
                     }
                     .frame(maxWidth: .infinity)
@@ -464,7 +489,7 @@ public struct BiometricAuthenticationView: View {
                     .cornerRadius(10)
                 }
                 .disabled(authManager.isAuthenticating)
-                
+
                 if !authManager.canUseBiometrics {
                     Button(action: authenticateWithPasscode) {
                         Text("Use Passcode")
@@ -475,8 +500,8 @@ public struct BiometricAuthenticationView: View {
                             .cornerRadius(10)
                     }
                 }
-                
-                if let onCancel = onCancel {
+
+                if let onCancel {
                     Button(action: onCancel) {
                         Text("Cancel")
                             .foregroundColor(.red)
@@ -501,7 +526,7 @@ public struct BiometricAuthenticationView: View {
             }
         }
     }
-    
+
     private func authenticate() {
         Task {
             do {
@@ -517,7 +542,7 @@ public struct BiometricAuthenticationView: View {
             }
         }
     }
-    
+
     private func authenticateWithPasscode() {
         Task {
             do {
@@ -540,9 +565,9 @@ public struct BiometricAuthenticationView: View {
 public struct BiometricProtectionModifier: ViewModifier {
     @State private var authManager = BiometricAuthenticationManager.shared
     @State private var showAuthView = false
-    
+
     let requireAuthentication: Bool
-    
+
     public func body(content: Content) -> some View {
         ZStack {
             if authManager.isAuthenticated || !requireAuthentication {
@@ -557,7 +582,7 @@ public struct BiometricProtectionModifier: ViewModifier {
             }
         }
         .onAppear {
-            if requireAuthentication && !authManager.isAuthenticated {
+            if requireAuthentication, !authManager.isAuthenticated {
                 showAuthView = true
             }
         }
