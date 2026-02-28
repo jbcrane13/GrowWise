@@ -1,0 +1,58 @@
+name: Validate AGENTS.md
+
+on:
+  push:
+    paths:
+      - "AGENTS.md"
+      - "GrowWisePackage/**"
+      - ".github/workflows/validate-agents-md.yml"
+  pull_request:
+    paths:
+      - "AGENTS.md"
+      - "GrowWisePackage/**"
+
+jobs:
+  validate:
+    name: Validate AGENTS.md Commands
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Validate build command from AGENTS.md
+        run: |
+          echo "Validating: xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator build"
+          xcodebuild \
+            -workspace GrowWise.xcworkspace \
+            -scheme GrowWise \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            build \
+            CODE_SIGNING_ALLOWED=NO \
+            | tail -5
+
+      - name: Validate test command from AGENTS.md
+        run: |
+          echo "Validating: cd GrowWisePackage && swift test"
+          cd GrowWisePackage
+          swift test --list-tests | head -10
+          echo "Test listing succeeded — AGENTS.md test command is valid"
+
+      - name: Check AGENTS.md is not stale
+        run: |
+          # Warn if AGENTS.md hasn't been updated in over 30 days
+          LAST_MODIFIED=$(git log -1 --format="%ct" -- AGENTS.md)
+          NOW=$(date +%s)
+          DAYS_OLD=$(( (NOW - LAST_MODIFIED) / 86400 ))
+
+          echo "AGENTS.md was last modified ${DAYS_OLD} days ago."
+
+          if [ "$DAYS_OLD" -gt 30 ]; then
+            echo "WARNING: AGENTS.md is ${DAYS_OLD} days old. Consider reviewing for accuracy."
+            echo "## AGENTS.md Freshness Warning" >> $GITHUB_STEP_SUMMARY
+            echo "AGENTS.md was last updated ${DAYS_OLD} days ago. Review for accuracy." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "AGENTS.md is up to date."
+          fi

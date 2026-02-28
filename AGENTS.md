@@ -66,7 +66,51 @@ xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator
 # Tests
 cd GrowWisePackage && swift test
 swift test --filter GrowWiseServicesTests
+
+# Lint (SwiftLint — must pass before commit)
+swiftlint lint --strict --config .swiftlint.yml
+swiftlint lint --fix --config .swiftlint.yml   # auto-fix
+
+# Format (SwiftFormat — must pass before commit)
+swiftformat --lint --config .swiftformat GrowWisePackage/Sources GrowWise   # check
+swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise          # fix
+
+# Install quality git hooks (one-time per clone)
+./scripts/install-hooks.sh
 ```
+
+## TOOLING & QUALITY GATES
+- **SwiftLint** — `.swiftlint.yml` in root. Run before every commit.
+- **SwiftFormat** — `.swiftformat` in root. Run before every commit.
+- **Pre-commit hooks** — `./scripts/install-hooks.sh` to install chained hooks (beads + quality).
+- **CI** — `.github/workflows/ci.yml` runs lint, format, tests, tech debt scan, large file check.
+- **Skills** — `.factory/skills/` contains `ios-swift-development` and `beads-issue-workflow` skills.
+
+## ENVIRONMENT SETUP
+See `.env.example` for required Apple developer account configuration.
+No runtime secrets needed for local development — all secrets managed via iOS Keychain on-device.
+
+## ARCHITECTURE DIAGRAMS
+See `docs/architecture/diagrams/app-architecture.md` for Mermaid diagrams covering:
+- Package structure
+- Data flow (MV pattern)
+- Security architecture
+- CloudKit sync flow
+- Service dependencies
+
+## LOGGING & SECURITY
+- **Never use `print()`** — use `OSLog.Logger` with privacy annotations.
+- All user PII must use `.private` or `.sensitive` privacy level.
+- Security events must go through `AuditLogger`.
+- See `docs/security/log-scrubbing.md` for full redaction guidelines.
+
+## TECH DEBT TRACKING
+TODOs and FIXMEs must reference a beads issue:
+```swift
+// TODO(GW-123): description of what needs doing
+// FIXME(GW-456): description of the problem
+```
+Unlinked TODOs are flagged in CI (`tech-debt` job in `.github/workflows/ci.yml`).
 
 ## Landing the Plane (Session Completion)
 

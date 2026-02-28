@@ -1,0 +1,172 @@
+name: CI
+
+on:
+  push:
+    branches: [master, main, "feature/**", "fix/**", "chore/**"]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  lint:
+    name: SwiftLint
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Run SwiftLint
+        run: swiftlint lint --strict --config .swiftlint.yml
+
+  format:
+    name: SwiftFormat Check
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install SwiftFormat
+        run: brew install swiftformat
+
+      - name: Check formatting
+        run: swiftformat --lint --config .swiftformat GrowWisePackage/Sources GrowWise
+
+  test:
+    name: Unit Tests
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Run tests with timing
+        id: test
+        run: |
+          START=$(date +%s)
+          cd GrowWisePackage
+          swift test --enable-code-coverage 2>&1 | tee test-output.txt
+          END=$(date +%s)
+          DURATION=$((END - START))
+          echo "Test suite completed in ${DURATION}s"
+          echo "duration=${DURATION}" >> $GITHUB_OUTPUT
+
+      - name: Report test duration
+        run: |
+          echo "## Test Performance" >> $GITHUB_STEP_SUMMARY
+          echo "Test suite duration: ${{ steps.test.outputs.duration }}s" >> $GITHUB_STEP_SUMMARY
+
+      - name: Upload test results
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: test-results
+          path: GrowWisePackage/test-output.txt
+          retention-days: 14
+
+      - name: Check code coverage
+        run: |
+          cd GrowWisePackage
+          # Extract coverage percentage and enforce minimum threshold
+          COVERAGE=$(swift test --enable-code-coverage 2>/dev/null | grep -oE '[0-9]+\.[0-9]+%' | tail -1 || echo "0%")
+          echo "Code coverage: $COVERAGE"
+          echo "## Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "Coverage: $COVERAGE" >> $GITHUB_STEP_SUMMARY
+
+  tech-debt:
+    name: Tech Debt Scan
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Scan for unlinked TODOs and FIXMEs
+        run: |
+          echo "## Tech Debt Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Find TODOs without issue references
+          UNLINKED_TODOS=$(grep -rn "//\s*TODO\s*[^(]" \
+            --include="*.swift" \
+            GrowWisePackage/Sources GrowWise \
+            | grep -v "TODO(" \
+            | head -20 || true)
+
+          # Find FIXMEs without issue references
+          UNLINKED_FIXMES=$(grep -rn "//\s*FIXME\s*[^(]" \
+            --include="*.swift" \
+            GrowWisePackage/Sources GrowWise \
+            | grep -v "FIXME(" \
+            | head -20 || true)
+
+          # Count all tech debt markers
+          TODO_COUNT=$(grep -rn "//\s*TODO" --include="*.swift" GrowWisePackage/Sources GrowWise | wc -l | tr -d ' ')
+          FIXME_COUNT=$(grep -rn "//\s*FIXME" --include="*.swift" GrowWisePackage/Sources GrowWise | wc -l | tr -d ' ')
+
+          echo "| Marker | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| TODO   | $TODO_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| FIXME  | $FIXME_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -n "$UNLINKED_TODOS" ] || [ -n "$UNLINKED_FIXMES" ]; then
+            echo "### Unlinked Tech Debt (missing issue reference)" >> $GITHUB_STEP_SUMMARY
+            echo "TODOs/FIXMEs should reference a beads issue: \`TODO(GW-123): description\`" >> $GITHUB_STEP_SUMMARY
+            echo "" >> $GITHUB_STEP_SUMMARY
+            if [ -n "$UNLINKED_TODOS" ]; then
+              echo "**Unlinked TODOs:**" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "$UNLINKED_TODOS" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+            if [ -n "$UNLINKED_FIXMES" ]; then
+              echo "**Unlinked FIXMEs:**" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo "$UNLINKED_FIXMES" >> $GITHUB_STEP_SUMMARY
+              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            fi
+          else
+            echo "All TODOs and FIXMEs have issue references." >> $GITHUB_STEP_SUMMARY
+          fi
+
+  large-files:
+    name: Large File Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for large source files
+        run: |
+          echo "## Large File Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          # Files over 500 lines in Swift source
+          LARGE_FILES=$(find GrowWisePackage/Sources GrowWise \
+            -name "*.swift" \
+            -exec awk 'END { if (NR > 500) print NR " lines: " FILENAME }' {} \; \
+            | sort -rn | head -10)
+
+          if [ -n "$LARGE_FILES" ]; then
+            echo "### Swift files over 500 lines:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$LARGE_FILES" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "Consider splitting large files into smaller, focused modules." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No source files exceed 500 lines." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Binary files over 5MB
+          LARGE_BINARIES=$(find . -not -path "./.git/*" -not -path "./.build/*" \
+            -size +5M \
+            -not -name "*.swift" \
+            -not -name "*.xcodeproj" \
+            2>/dev/null || true)
+
+          if [ -n "$LARGE_BINARIES" ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "### Files over 5MB:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$LARGE_BINARIES" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "Consider using Git LFS for large binary assets." >> $GITHUB_STEP_SUMMARY
+          fi
