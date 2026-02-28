@@ -24,6 +24,25 @@ public final class PlantRepository {
         }
     }
     
+    @discardableResult
+    public func create(
+        name: String,
+        type: PlantType,
+        difficultyLevel: DifficultyLevel = .beginner,
+        garden: Garden? = nil
+    ) throws -> Plant {
+        let plant = Plant(name: name, plantType: type, difficultyLevel: difficultyLevel)
+
+        if let garden = garden {
+            plant.garden = garden
+            garden.plants = (garden.plants ?? []) + [plant]
+        }
+
+        context.insert(plant)
+        try context.save()
+        return plant
+    }
+
     public func delete(_ plant: Plant) throws {
         context.delete(plant)
         do {
@@ -32,7 +51,41 @@ public final class PlantRepository {
             throw PlantError.saveFailed(error)
         }
     }
-    
+
+    public func update(_ plant: Plant) throws {
+        try context.save()
+    }
+
+    public func fetchPaginated(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) throws -> [Plant] {
+        var descriptor = FetchDescriptor<Plant>(
+            sortBy: [SortDescriptor(\.name)]
+        )
+        descriptor.fetchLimit = min(limit, 50)
+        descriptor.fetchOffset = offset
+
+        if let garden = garden {
+            let gardenId = garden.id
+            descriptor.predicate = #Predicate<Plant> { plant in
+                plant.garden?.id == gardenId
+            }
+        }
+
+        return try context.fetch(descriptor)
+    }
+
+    public func fetchDatabasePage(offset: Int, limit: Int) throws -> [Plant] {
+        var descriptor = FetchDescriptor<Plant>(
+            predicate: #Predicate<Plant> { plant in
+                plant.garden == nil || plant.garden?.user == nil
+            },
+            sortBy: [SortDescriptor(\.name)]
+        )
+        descriptor.fetchLimit = min(limit, 50)
+        descriptor.fetchOffset = offset
+
+        return try context.fetch(descriptor)
+    }
+
     public func search(query: String, limit: Int = 20) throws -> [Plant] {
         let trimmedQuery = query.trimmingCharacters(in: .whitespacesAndNewlines)
         if trimmedQuery.isEmpty { return [] }
