@@ -50,15 +50,15 @@ import GrowWiseModels
     
     public func markStepComplete(tutorialId: String, stepIndex: Int) {
         let key = "tutorial_\(tutorialId)_step_\(stepIndex)"
-        try? KeychainManager.shared.storeBool(true, for: key)
+        try? KeychainService.shared.storeBool(true, for: key)
         if let dateData = try? JSONEncoder().encode(Date()) {
-            try? KeychainManager.shared.store(dateData, for: "\(key)_completed_date")
+            try? KeychainService.shared.store(dateData, for: "\(key)_completed_date")
         }
     }
     
     public func isStepCompleted(tutorialId: String, stepIndex: Int) -> Bool {
         let key = "tutorial_\(tutorialId)_step_\(stepIndex)"
-        return (try? KeychainManager.shared.retrieveBool(for: key)) ?? false
+        return (try? KeychainService.shared.retrieveBool(for: key)) ?? false
     }
     
     public func getTutorialProgress(tutorialId: String) -> TutorialProgress {
@@ -74,7 +74,7 @@ import GrowWiseModels
         
         if isCompleted {
             if let dateData = try? JSONEncoder().encode(Date()) {
-                try? KeychainManager.shared.store(dateData, for: "tutorial_\(tutorialId)_completed")
+                try? KeychainService.shared.store(dateData, for: "tutorial_\(tutorialId)_completed")
             }
         }
         
@@ -91,11 +91,11 @@ import GrowWiseModels
         
         for index in 0..<tutorial.steps.count {
             let key = "tutorial_\(tutorialId)_step_\(index)"
-            try? KeychainManager.shared.delete(for: key)
-            try? KeychainManager.shared.delete(for: "\(key)_completed_date")
+            try? KeychainService.shared.delete(for: key)
+            try? KeychainService.shared.delete(for: "\(key)_completed_date")
         }
         
-        try? KeychainManager.shared.delete(for: "tutorial_\(tutorialId)_completed")
+        try? KeychainService.shared.delete(for: "tutorial_\(tutorialId)_completed")
     }
     
     // MARK: - Analytics
