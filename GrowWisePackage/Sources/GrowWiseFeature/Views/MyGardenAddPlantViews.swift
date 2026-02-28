@@ -41,6 +41,7 @@ struct AddPlantToGardenSheet: View {
     @State private var errorMessage = ""
     @State private var isSaving = false
     @State private var isLoading = false
+    @State private var showingCreateGarden = false
     
     private enum PlantAdditionTab: String, CaseIterable {
         case newPlant = "New Plant"
@@ -114,6 +115,11 @@ struct AddPlantToGardenSheet: View {
                 )
             }
         }
+        .sheet(isPresented: $showingCreateGarden, onDismiss: {
+            setupInitialState()
+        }) {
+            CreateGardenSheet()
+        }
     }
     
     private var tabPickerSection: some View {
@@ -152,8 +158,7 @@ struct AddPlantToGardenSheet: View {
                             .font(.subheadline)
                             .foregroundColor(.secondary)
                         Button("Create a Garden") {
-                            // Dismiss this sheet and trigger create garden flow via notification
-                            NotificationCenter.default.post(name: Notification.Name("ShowCreateGardenFromAddPlant"), object: nil)
+                            showingCreateGarden = true
                         }
                         .buttonStyle(.bordered)
                     }
@@ -368,7 +373,13 @@ struct AddPlantToGardenSheet: View {
     
     private func setupInitialState() {
         targetGarden = selectedGarden
-        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            availableGardens = try dataService.gardens.fetchAll()
+        } catch {
+            errorMessage = "Could not load gardens: \(error.localizedDescription)"
+            showingError = true
+            availableGardens = []
+        }
     }
 
     private func updateCompatibilityAnalysis() {
@@ -450,9 +461,9 @@ struct AddPlantToGardenSheet: View {
             
             // Save the updated plant
             try dataService.updatePlant(plant)
-            
-            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
-            
+
+            dismiss()
+
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true

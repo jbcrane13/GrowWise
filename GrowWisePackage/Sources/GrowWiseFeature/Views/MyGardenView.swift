@@ -17,7 +17,10 @@ public struct MyGardenView: View {
     @State private var isLoading = true
     @State private var selectedSortOption: SortOption = .name
     @State private var showingCreateGarden = false // Added per instruction
-    
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
+
     public init() {}
     
     public var body: some View {
@@ -83,14 +86,10 @@ public struct MyGardenView: View {
             .onChange(of: selectedSortOption) { _, _ in
                 sortPlants()
             }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowCreateGardenFromAddPlant"))) { _ in
-                showingAddPlant = false
-                showingCreateGarden = true
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
-                Task { await loadData() }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PlantCreated"))) { _ in
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") { }
+            } message: {
+                Text(alertMessage)
             }
         }
     }
@@ -277,16 +276,30 @@ public struct MyGardenView: View {
     @MainActor
     private func loadData() async {
         isLoading = true
-        
+
         // Load gardens
-        gardens = (try? dataService.gardens.fetchAll()) ?? []
-        
+        do {
+            gardens = try dataService.gardens.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load gardens: \(error.localizedDescription)"
+            showAlert = true
+            gardens = []
+        }
+
         // Load all user plants
-        plants = (try? dataService.plants.fetchAll()) ?? []
-        
+        do {
+            plants = try dataService.plants.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load plants: \(error.localizedDescription)"
+            showAlert = true
+            plants = []
+        }
+
         // Sort plants
         sortPlants()
-        
+
         isLoading = false
     }
     
@@ -470,7 +483,6 @@ struct CreateGardenSheet: View {
         do {
             let garden = Garden(name: name.trimmingCharacters(in: .whitespacesAndNewlines), gardenType: type, isIndoor: isIndoor)
             try dataService.gardens.add(garden)
-            NotificationCenter.default.post(name: Notification.Name("GardenCreated"), object: nil)
             dismiss()
         } catch {
             errorMessage = "Failed to create garden: \(error.localizedDescription)"
@@ -490,6 +502,9 @@ struct AssignGardenSheet: View {
     @State private var selectedGarden: Garden?
     @State private var isSaving = false
     @State private var saveTask: Task<Void, Never>?
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     var body: some View {
         NavigationStack {
@@ -515,11 +530,23 @@ struct AssignGardenSheet: View {
             }
             .task { load() }
             .onDisappear { saveTask?.cancel() }
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") { }
+            } message: {
+                Text(alertMessage)
+            }
         }
     }
 
     private func load() {
-        gardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            gardens = try dataService.gardens.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load gardens: \(error.localizedDescription)"
+            showAlert = true
+            gardens = []
+        }
         selectedGarden = plant.garden
     }
 
@@ -534,8 +561,9 @@ struct AssignGardenSheet: View {
             try dataService.updatePlant(plant)
             dismiss()
         } catch {
-            // Silent failure handler - could show alert if desired
-            dismiss()
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
         isSaving = false
     }

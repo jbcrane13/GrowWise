@@ -527,7 +527,6 @@ struct PlantDetailView: View {
                     careActionMessage = "Failed to record \(type.displayName.lowercased()). Please try again."
                     showingCareSuccess = true
                 }
-                print("Failed to perform care action: \(error)")
             }
         }
     }
@@ -540,7 +539,10 @@ struct PlantDetailView: View {
                     dismiss()
                 }
             } catch {
-                print("Failed to delete plant: \(error)")
+                await MainActor.run {
+                    careActionMessage = "Failed to delete plant: \(error.localizedDescription)"
+                    showingCareSuccess = true
+                }
             }
         }
     }

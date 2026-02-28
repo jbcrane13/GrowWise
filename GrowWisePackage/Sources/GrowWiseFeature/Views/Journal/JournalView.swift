@@ -21,6 +21,9 @@ public struct JournalView: View {
     @State private var isLoadingMore = false
     @State private var visibleEntryCount = 20
     @State private var filteredCache: [JournalEntry]?
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
     public init() {}
     
@@ -177,6 +180,11 @@ public struct JournalView: View {
             .onChange(of: searchText) { _, _ in
                 filteredCache = nil
             }
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") { }
+            } message: {
+                Text(alertMessage)
+            }
         }
     }
     
@@ -196,7 +204,14 @@ public struct JournalView: View {
     // MARK: - Data Loading
     
     private func loadInitialData() {
-        plants = (try? dataService.plants.fetchAll()) ?? []
+        do {
+            plants = try dataService.plants.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load plants: \(error.localizedDescription)"
+            showAlert = true
+            plants = []
+        }
         loadFilteredData(reset: true)
     }
     

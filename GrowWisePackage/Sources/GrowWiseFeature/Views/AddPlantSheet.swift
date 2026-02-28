@@ -152,7 +152,13 @@ public struct AddPlantSheet: View {
     }
 
     private func loadGardens() {
-        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            availableGardens = try dataService.gardens.fetchAll()
+        } catch {
+            errorMessage = "Could not load gardens: \(error.localizedDescription)"
+            showingError = true
+            availableGardens = []
+        }
     }
     
     private func updateCompatibilityAnalysis() {
@@ -198,8 +204,6 @@ public struct AddPlantSheet: View {
 
             newPlant.garden = selectedGarden
             modelContext.insert(newPlant)
-            
-            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true

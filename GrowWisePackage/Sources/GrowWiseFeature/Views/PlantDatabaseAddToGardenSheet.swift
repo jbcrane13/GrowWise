@@ -178,7 +178,13 @@ struct AddPlantToGardenFromDatabaseSheet: View {
     }
     
     private func loadData() {
-        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            availableGardens = try dataService.gardens.fetchAll()
+        } catch {
+            errorMessage = "Could not load gardens: \(error.localizedDescription)"
+            showingError = true
+            availableGardens = []
+        }
         if availableGardens.count == 1 {
             selectedGarden = availableGardens.first
         }
@@ -208,7 +214,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             
             // Save the plant
             try dataService.updatePlant(userPlant)
-            
+
             // Create a journal entry for planting
             _ = try dataService.createJournalEntry(
                 title: "Added \(userPlant.name ?? "plant") to garden",
@@ -216,10 +222,9 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 type: .planting,
                 plant: userPlant
             )
-            
-            
-            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
-            
+
+            dismiss()
+
         } catch {
             isLoading = false
             errorMessage = "Failed to add plant: \(error.localizedDescription)"

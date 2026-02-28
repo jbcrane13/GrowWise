@@ -86,7 +86,10 @@ public struct HomeView: View {
             .sheet(isPresented: $showingAddPlant) {
                 AddPlantSheet()
             }
-            .sheet(isPresented: $showingCreateGarden) {
+            .sheet(isPresented: $showingCreateGarden, onDismiss: {
+                Task { await loadData() }
+                showGardenCreatedToast = true
+            }) {
                 CreateGardenSheet()
             }
             .refreshable {
@@ -95,9 +98,6 @@ public struct HomeView: View {
             .task {
                 await loadData()
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
-            showGardenCreatedToast = true
         }
         .overlay(alignment: .bottom) {
             if showGardenCreatedToast {

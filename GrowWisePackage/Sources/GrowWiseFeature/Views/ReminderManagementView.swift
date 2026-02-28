@@ -12,6 +12,10 @@ public struct ReminderManagementView: View {
     @State private var showingAddReminder = false
     @State private var showingReminderSettings = false
     @State private var searchText = ""
+    @State private var cachedPlants: [Plant] = []
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
     public init() {}
     
@@ -87,7 +91,24 @@ public struct ReminderManagementView: View {
                 if reminderSettings == nil {
                     reminderSettings = reminderService.getReminderSettings()
                 }
+                loadPlants()
             }
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") { }
+            } message: {
+                Text(alertMessage)
+            }
+        }
+    }
+
+    private func loadPlants() {
+        do {
+            cachedPlants = try dataService.plants.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load plants: \(error.localizedDescription)"
+            showAlert = true
+            cachedPlants = []
         }
     }
     
@@ -153,7 +174,7 @@ public struct ReminderManagementView: View {
             
             ReminderStatCard(
                 title: "Total Plants",
-                count: ((try? dataService.plants.fetchAll()) ?? []).count,
+                count: cachedPlants.count,
                 icon: "leaf.fill",
                 color: .green
             )
@@ -223,13 +244,11 @@ public struct ReminderManagementView: View {
     // MARK: - Helper Properties
     
     private var filteredPlants: [Plant] {
-        let plants = (try? dataService.plants.fetchAll()) ?? []
-        
         if searchText.isEmpty {
-            return plants
+            return cachedPlants
         } else {
             let lowercasedSearch = searchText.lowercased()
-            return plants.filter { plant in
+            return cachedPlants.filter { plant in
                 (plant.name ?? "").lowercased().contains(lowercasedSearch)
             }
         }
@@ -240,6 +259,7 @@ public struct ReminderManagementView: View {
     private func refreshReminders() async {
         await notificationService.checkAuthorizationStatus()
         reminderSettings = reminderService.getReminderSettings()
+        loadPlants()
     }
 }
 

@@ -13,6 +13,9 @@ public struct RemindersListView: View {
     @State private var selectedReminder: PlantReminder?
     @State private var showingDeleteAlert = false
     @State private var reminderToDelete: PlantReminder?
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     public init() {}
 
@@ -43,6 +46,11 @@ public struct RemindersListView: View {
             }
         } message: {
             Text("Are you sure you want to delete this reminder?")
+        }
+        .alert(alertTitle, isPresented: $showAlert) {
+            Button("OK") { }
+        } message: {
+            Text(alertMessage)
         }
         .accessibilityIdentifier("remindersListView")
     }
@@ -142,7 +150,9 @@ public struct RemindersListView: View {
                 await loadReminders()
             }
         } catch {
-            print("Failed to complete reminder: \(error)")
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
     }
 
@@ -153,7 +163,9 @@ public struct RemindersListView: View {
                 await loadReminders()
             }
         } catch {
-            print("Failed to delete reminder: \(error)")
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
     }
 

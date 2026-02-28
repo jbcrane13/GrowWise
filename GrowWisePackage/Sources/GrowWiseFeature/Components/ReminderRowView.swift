@@ -12,6 +12,9 @@ public struct ReminderRowView: View {
     
     @State private var isCompleting = false
     @State private var showingSnoozeOptions = false
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
     
     public init(reminder: PlantReminder, reminderService: ReminderService) {
         self.reminder = reminder
@@ -99,8 +102,13 @@ public struct ReminderRowView: View {
                     snoozeReminder(for: duration)
                 }
             }
-            
+
             Button("Cancel", role: .cancel) { }
+        }
+        .alert(alertTitle, isPresented: $showAlert) {
+            Button("OK") { }
+        } message: {
+            Text(alertMessage)
         }
         .opacity(reminder.isEnabled ? 1.0 : 0.6)
     }
@@ -203,8 +211,10 @@ public struct ReminderRowView: View {
             } catch {
                 await MainActor.run {
                     isCompleting = false
+                    alertTitle = "Action Failed"
+                    alertMessage = error.localizedDescription
+                    showAlert = true
                 }
-                print("Failed to complete reminder: \(error)")
             }
         }
     }
@@ -222,7 +232,11 @@ public struct ReminderRowView: View {
                 impact.impactOccurred()
                 
             } catch {
-                print("Failed to reschedule reminder: \(error)")
+                await MainActor.run {
+                    alertTitle = "Action Failed"
+                    alertMessage = error.localizedDescription
+                    showAlert = true
+                }
             }
         }
     }
