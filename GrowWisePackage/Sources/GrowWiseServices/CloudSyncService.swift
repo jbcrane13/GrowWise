@@ -187,6 +187,11 @@ import os
         }
         
         guard let publicDatabase else { throw CloudKitError.operationFailed("CloudKit unavailable") }
+        
+        // Note: Simple fetch-increment-save pattern.
+        // For a high-traffic app, this would need CKModifyRecordsOperation with
+        // .serverRecordChanged resolution policy to handle concurrent likes.
+        // For this app's scale, this simple approach is acceptable.
         do {
             let record = try await publicDatabase.record(for: recordID)
             let currentLikes = record["likeCount"] as? Int ?? 0
@@ -194,6 +199,13 @@ import os
 
             try await publicDatabase.save(record)
             logger.info("Liked garden: \(garden.name)")
+        } catch let error as CKError where error.code == .serverRecordChanged {
+            // Basic conflict resolution: try once more with the latest server record
+            guard let serverRecord = error.serverRecord else { throw CloudKitError.operationFailed("Conflict resolution failed") }
+            let currentLikes = serverRecord["likeCount"] as? Int ?? 0
+            serverRecord["likeCount"] = currentLikes + 1
+            try await publicDatabase.save(serverRecord)
+            logger.info("Liked garden after conflict resolution: \(garden.name)")
         } catch {
             logger.error("Failed to like garden: \(error.localizedDescription)")
             throw CloudKitError.operationFailed(error.localizedDescription)
@@ -204,12 +216,18 @@ import os
     public func incrementViewCount(for garden: PublicGarden) async {
         guard let recordID = garden.recordID, let publicDatabase else { return }
 
+        // Note: Simple fetch-increment-save pattern with basic conflict resolution.
         do {
             let record = try await publicDatabase.record(for: recordID)
             let currentViews = record["viewCount"] as? Int ?? 0
             record["viewCount"] = currentViews + 1
 
             try await publicDatabase.save(record)
+        } catch let error as CKError where error.code == .serverRecordChanged {
+            guard let serverRecord = error.serverRecord else { return }
+            let currentViews = serverRecord["viewCount"] as? Int ?? 0
+            serverRecord["viewCount"] = currentViews + 1
+            try? await publicDatabase.save(serverRecord)
         } catch {
             logger.error("Failed to increment view count: \(error.localizedDescription)")
         }
