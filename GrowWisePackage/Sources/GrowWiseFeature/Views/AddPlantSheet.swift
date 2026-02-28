@@ -141,7 +141,7 @@ public struct AddPlantSheet: View {
                     CompanionDetailsSheet(analysis: analysis)
                 }
             }
-            .onAppear {
+            .task {
                 loadGardens()
             }
             .accessibilityIdentifier("addPlantSheet")
@@ -152,7 +152,13 @@ public struct AddPlantSheet: View {
     }
 
     private func loadGardens() {
-        availableGardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            availableGardens = try dataService.gardens.fetchAll()
+        } catch {
+            errorMessage = "Could not load gardens: \(error.localizedDescription)"
+            showingError = true
+            availableGardens = []
+        }
     }
 
     private func updateCompatibilityAnalysis() {
@@ -199,8 +205,6 @@ public struct AddPlantSheet: View {
 
             newPlant.garden = selectedGarden
             modelContext.insert(newPlant)
-
-            NotificationCenter.default.post(name: Notification.Name("PlantCreated"), object: nil)
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true
@@ -269,7 +273,7 @@ struct CompanionPlantingSection: View {
                                     .padding(.vertical, 4)
                                     .background(Color.green.opacity(0.2))
                                     .foregroundColor(.green)
-                                    .cornerRadius(8)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                         }
                     }
@@ -421,7 +425,7 @@ struct FlowLayout: Layout {
                 x += size.width + spacing
             }
 
-            size = CGSize(width: maxWidth, height: y + lineHeight)
+            self.size = CGSize(width: maxWidth, height: y + lineHeight)
         }
     }
 }

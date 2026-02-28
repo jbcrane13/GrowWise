@@ -44,9 +44,7 @@ import UserNotifications
         guard let notificationCenter else { return false }
         do {
             let granted = try await notificationCenter.requestAuthorization(options: [.alert, .badge, .sound])
-            await MainActor.run {
-                self.isAuthorized = granted
-            }
+            self.isAuthorized = granted
             return granted
         } catch {
             print("Failed to request notification permissions: \(error)")
@@ -58,20 +56,16 @@ import UserNotifications
         guard let notificationCenter else { return }
         Task {
             let settings = await notificationCenter.notificationSettings()
-            await MainActor.run {
-                self.authorizationStatus = settings.authorizationStatus
-                self.isAuthorized = settings.authorizationStatus == .authorized
-            }
+            self.authorizationStatus = settings.authorizationStatus
+            self.isAuthorized = settings.authorizationStatus == .authorized
         }
     }
 
     public func checkAuthorizationStatus() async {
         guard let notificationCenter else { return }
         let settings = await notificationCenter.notificationSettings()
-        await MainActor.run {
-            self.authorizationStatus = settings.authorizationStatus
-            self.isAuthorized = settings.authorizationStatus == .authorized
-        }
+        self.authorizationStatus = settings.authorizationStatus
+        self.isAuthorized = settings.authorizationStatus == .authorized
     }
 
     // MARK: - Scheduling Notifications
@@ -103,10 +97,7 @@ import UserNotifications
 
     private func updateBadgeCount() async {
         let pendingCount = await getPendingNotificationsCount()
-        await MainActor.run {
-            self.badgeCount = pendingCount
-        }
-
+        self.badgeCount = pendingCount
         try? await notificationCenter?.setBadgeCount(pendingCount)
     }
 

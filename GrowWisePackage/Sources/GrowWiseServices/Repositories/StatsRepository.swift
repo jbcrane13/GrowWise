@@ -58,4 +58,28 @@ public final class StatsRepository {
         descriptor.predicate = #Predicate<Plant> { $0.isUserPlant == false || $0.isUserPlant == nil }
         return (try? context.fetchCount(descriptor)) ?? 0
     }
+
+    /// Compute gardening stats using predicate-based counting instead of full-table scan.
+    public func getGardeningStats() -> GardeningStats {
+        let totalPlants = getPlantCount()
+
+        // Use fetchCount with a predicate for healthy plants instead of loading all plants.
+        // SwiftData #Predicate requires the full enum type for comparison.
+        let healthyStatus = HealthStatus.healthy
+        var healthyDescriptor = FetchDescriptor<Plant>()
+        healthyDescriptor.predicate = #Predicate<Plant> { plant in
+            plant.healthStatus == healthyStatus
+        }
+        let healthyPlants = (try? context.fetchCount(healthyDescriptor)) ?? 0
+
+        let activeReminders = getReminderCount(activeOnly: true)
+        let totalJournalEntries = getJournalEntryCount()
+
+        return GardeningStats(
+            totalPlants: totalPlants,
+            healthyPlants: healthyPlants,
+            activeReminders: activeReminders,
+            totalJournalEntries: totalJournalEntries
+        )
+    }
 }

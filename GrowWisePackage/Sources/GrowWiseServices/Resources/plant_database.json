@@ -1,0 +1,512 @@
+[
+  {
+    "name": "Tomato",
+    "scientificName": "Solanum lycopersicum",
+    "type": "vegetable",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "medium",
+    "description": "Popular warm-season vegetable that produces nutritious fruits",
+    "careInstructions": [
+      "Plant after last frost",
+      "Provide support with stakes or cages",
+      "Water consistently",
+      "Fertilize regularly during growing season"
+    ],
+    "companionPlants": ["Basil", "Oregano", "Parsley", "Marigold"]
+  },
+  {
+    "name": "Lettuce",
+    "scientificName": "Lactuca sativa",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "daily",
+    "space": "small",
+    "description": "Cool-season leafy green that's easy to grow and harvest",
+    "careInstructions": [
+      "Plant in cool weather",
+      "Keep soil moist",
+      "Harvest outer leaves first",
+      "Succession plant every 2 weeks"
+    ],
+    "companionPlants": ["Carrots", "Radishes", "Chives"]
+  },
+  {
+    "name": "Carrot",
+    "scientificName": "Daucus carota",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Root vegetable that grows well in deep, loose soil",
+    "careInstructions": [
+      "Direct sow seeds",
+      "Thin seedlings to prevent crowding",
+      "Keep soil consistently moist",
+      "Harvest in 70-80 days"
+    ],
+    "companionPlants": ["Lettuce", "Chives", "Leeks"]
+  },
+  {
+    "name": "Bell Pepper",
+    "scientificName": "Capsicum annuum",
+    "type": "vegetable",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "medium",
+    "description": "Warm-season vegetable producing sweet, colorful peppers",
+    "careInstructions": [
+      "Start indoors 8-10 weeks before last frost",
+      "Transplant after soil warms",
+      "Provide consistent moisture",
+      "Support with stakes if needed"
+    ],
+    "companionPlants": ["Basil", "Oregano", "Tomatoes"]
+  },
+  {
+    "name": "Spinach",
+    "scientificName": "Spinacia oleracea",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "daily",
+    "space": "small",
+    "description": "Nutritious cool-season leafy green",
+    "careInstructions": [
+      "Plant in cool weather",
+      "Keep soil moist",
+      "Harvest young leaves",
+      "Bolt in hot weather"
+    ],
+    "companionPlants": ["Lettuce", "Radishes", "Peas"]
+  },
+  {
+    "name": "Zucchini",
+    "scientificName": "Cucurbita pepo",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "large",
+    "description": "Prolific summer squash that produces abundantly through the season",
+    "careInstructions": [
+      "Direct sow after last frost",
+      "Needs ample space to sprawl",
+      "Harvest when 6-8 inches long for best flavor",
+      "Check daily \u2014 squash grow fast"
+    ],
+    "companionPlants": ["Nasturtium", "Beans", "Corn"]
+  },
+  {
+    "name": "Cucumber",
+    "scientificName": "Cucumis sativus",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "daily",
+    "space": "medium",
+    "description": "Fast-growing vine vegetable that thrives in warm weather",
+    "careInstructions": [
+      "Plant after soil warms to 60\u00b0F",
+      "Train vines on a trellis to save space",
+      "Water deeply and consistently",
+      "Harvest when firm and dark green"
+    ],
+    "companionPlants": ["Beans", "Peas", "Radishes"]
+  },
+  {
+    "name": "Kale",
+    "scientificName": "Brassica oleracea var. sabellica",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Hardy superfood leafy green that withstands frost and cold temperatures",
+    "careInstructions": [
+      "Plant in early spring or fall",
+      "Flavor improves after frost",
+      "Harvest outer leaves from bottom up",
+      "Very cold-hardy \u2014 grows in winter in mild climates"
+    ],
+    "companionPlants": ["Beets", "Herbs", "Onions"]
+  },
+  {
+    "name": "Basil",
+    "scientificName": "Ocimum basilicum",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "daily",
+    "space": "small",
+    "description": "Aromatic herb perfect for cooking and companion planting",
+    "careInstructions": [
+      "Plant after last frost",
+      "Pinch flowers to encourage leaf growth",
+      "Water at base to prevent leaf diseases",
+      "Harvest regularly"
+    ],
+    "companionPlants": ["Tomatoes", "Peppers", "Oregano"]
+  },
+  {
+    "name": "Oregano",
+    "scientificName": "Origanum vulgare",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Hardy perennial herb with strong flavor",
+    "careInstructions": [
+      "Plant in well-draining soil",
+      "Drought tolerant once established",
+      "Trim back after flowering",
+      "Divide plants every 3-4 years"
+    ],
+    "companionPlants": ["Tomatoes", "Peppers", "Basil"]
+  },
+  {
+    "name": "Parsley",
+    "scientificName": "Petroselinum crispum",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Versatile biennial herb rich in vitamins",
+    "careInstructions": [
+      "Soak seeds before planting",
+      "Keep soil consistently moist",
+      "Harvest outer stems first",
+      "Overwinters in mild climates"
+    ],
+    "companionPlants": ["Tomatoes", "Carrots", "Chives"]
+  },
+  {
+    "name": "Chives",
+    "scientificName": "Allium schoenoprasum",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Perennial herb with mild onion flavor and pretty purple flowers",
+    "careInstructions": [
+      "Very easy to grow",
+      "Cut like grass for harvest",
+      "Flowers are edible",
+      "Divide clumps every few years"
+    ],
+    "companionPlants": ["Carrots", "Tomatoes", "Lettuce"]
+  },
+  {
+    "name": "Rosemary",
+    "scientificName": "Salvia rosmarinus",
+    "type": "herb",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Woody perennial herb with needle-like leaves and pine-like fragrance",
+    "careInstructions": [
+      "Plant in well-draining soil",
+      "Very drought tolerant once established",
+      "Prune lightly after flowering",
+      "Protect from hard frost"
+    ],
+    "companionPlants": ["Sage", "Thyme", "Lavender"]
+  },
+  {
+    "name": "Mint",
+    "scientificName": "Mentha spicata",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "daily",
+    "space": "small",
+    "description": "Fast-growing aromatic herb that spreads readily and repels pests",
+    "careInstructions": [
+      "Grow in containers to prevent spreading",
+      "Keep soil consistently moist",
+      "Harvest regularly to encourage growth",
+      "Can grow in partial shade"
+    ],
+    "companionPlants": ["Tomatoes", "Cabbage", "Carrots"]
+  },
+  {
+    "name": "Thyme",
+    "scientificName": "Thymus vulgaris",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Low-growing perennial herb with tiny fragrant leaves perfect for culinary use",
+    "careInstructions": [
+      "Plant in well-draining soil",
+      "Excellent drought tolerance once established",
+      "Trim after flowering to keep compact",
+      "Overwinters well in most climates"
+    ],
+    "companionPlants": ["Rosemary", "Cabbage", "Strawberries"]
+  },
+  {
+    "name": "Cilantro",
+    "scientificName": "Coriandrum sativum",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Fast-growing herb used in cooking worldwide; leaves are cilantro, seeds are coriander",
+    "careInstructions": [
+      "Direct sow in cool weather \u2014 bolts quickly in heat",
+      "Succession plant every 2-3 weeks for continuous harvest",
+      "Allow some to bolt and self-seed",
+      "Keep soil evenly moist"
+    ],
+    "companionPlants": ["Tomatoes", "Peppers", "Spinach"]
+  },
+  {
+    "name": "Marigold",
+    "scientificName": "Tagetes",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Bright annual flowers that deter garden pests and attract beneficial insects",
+    "careInstructions": [
+      "Direct sow after last frost",
+      "Deadhead for continuous blooms",
+      "Very heat tolerant",
+      "Self-seeds readily"
+    ],
+    "companionPlants": ["Tomatoes", "Peppers", "Beans"]
+  },
+  {
+    "name": "Sunflower",
+    "scientificName": "Helianthus annuus",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "large",
+    "description": "Tall annual flowers that track the sun and produce edible seeds",
+    "careInstructions": [
+      "Direct sow in spring after frost",
+      "Support tall varieties with stakes",
+      "Deep watering encourages strong roots",
+      "Harvest seeds when dried on stalk"
+    ],
+    "companionPlants": ["Corn", "Beans", "Squash"]
+  },
+  {
+    "name": "Lavender",
+    "scientificName": "Lavandula angustifolia",
+    "type": "flower",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Fragrant perennial shrub prized for aromatherapy, culinary use, and pollinator attraction",
+    "careInstructions": [
+      "Plant in well-draining alkaline soil",
+      "Excellent drought tolerance once established",
+      "Prune by one-third after first bloom to encourage bushiness",
+      "Harvest flower spikes just before fully open for drying"
+    ],
+    "companionPlants": ["Rosemary", "Thyme", "Sage"]
+  },
+  {
+    "name": "Rose",
+    "scientificName": "Rosa",
+    "type": "flower",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "medium",
+    "description": "Classic flowering shrub beloved for its fragrant blooms and elegant form",
+    "careInstructions": [
+      "Plant in fertile, well-draining soil with at least 6 hours of sun",
+      "Water at the base to prevent fungal disease on leaves",
+      "Deadhead spent blooms to encourage reblooming",
+      "Prune in early spring to shape and remove dead wood"
+    ],
+    "companionPlants": ["Lavender", "Marigold", "Garlic"]
+  },
+  {
+    "name": "Petunia",
+    "scientificName": "Petunia \u00d7 atkinsiana",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "daily",
+    "space": "small",
+    "description": "Prolific blooming annual with trumpet-shaped flowers in a wide range of colors",
+    "careInstructions": [
+      "Plant after last frost in full sun",
+      "Water consistently \u2014 they wilt quickly when dry",
+      "Deadhead regularly or pinch stems to prevent legginess",
+      "Fertilize monthly for best bloom performance"
+    ],
+    "companionPlants": ["Marigolds", "Basil", "Vegetables"]
+  },
+  {
+    "name": "Pothos",
+    "scientificName": "Epipremnum aureum",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Easy-care trailing vine perfect for beginners; one of the most forgiving houseplants",
+    "careInstructions": [
+      "Tolerates low to medium light",
+      "Water when top inch of soil is dry",
+      "Trim to maintain shape and propagate cuttings",
+      "Propagates easily in a glass of water"
+    ],
+    "companionPlants": ["Snake Plant", "ZZ Plant"]
+  },
+  {
+    "name": "Snake Plant",
+    "scientificName": "Dracaena trifasciata",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "fullShade",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Extremely low-maintenance upright plant that tolerates neglect and low light",
+    "careInstructions": [
+      "Tolerates very low light conditions",
+      "Water sparingly \u2014 overwatering is the main risk",
+      "Allow soil to dry completely between waterings",
+      "Propagates from leaf cuttings or division"
+    ],
+    "companionPlants": ["ZZ Plant", "Pothos"]
+  },
+  {
+    "name": "Spider Plant",
+    "scientificName": "Chlorophytum comosum",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "medium",
+    "description": "Fast-growing plant that produces cascading baby plantlets on long runners",
+    "careInstructions": [
+      "Bright, indirect light preferred",
+      "Keep soil evenly moist but not soggy",
+      "Allow plantlets to root in soil or water",
+      "Non-toxic to pets and children"
+    ],
+    "companionPlants": ["Pothos", "Peace Lily"]
+  },
+  {
+    "name": "Monstera",
+    "scientificName": "Monstera deliciosa",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Iconic tropical plant with large split leaves, also known as Swiss cheese plant",
+    "careInstructions": [
+      "Bright, indirect light brings out best leaf fenestration",
+      "Water when top 2 inches of soil are dry",
+      "Provide a moss pole or trellis for climbing support",
+      "Wipe leaves with a damp cloth to remove dust"
+    ],
+    "companionPlants": ["Pothos", "Bird of Paradise"]
+  },
+  {
+    "name": "Peace Lily",
+    "scientificName": "Spathiphyllum wallisii",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "fullShade",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Elegant low-light plant that blooms with white spathes and purifies indoor air",
+    "careInstructions": [
+      "Tolerates deep shade \u2014 great for bathrooms and offices",
+      "Water when leaves just begin to droop slightly",
+      "Mist leaves or use a humidifier for best growth",
+      "Toxic to pets \u2014 keep out of reach of cats and dogs"
+    ],
+    "companionPlants": ["Snake Plant", "Spider Plant"]
+  },
+  {
+    "name": "Strawberry",
+    "scientificName": "Fragaria \u00d7 ananassa",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "daily",
+    "space": "medium",
+    "description": "Sweet berries perfect for containers or garden beds",
+    "careInstructions": [
+      "Plant in spring",
+      "Keep soil consistently moist",
+      "Remove runners for larger fruit",
+      "Harvest when fully red"
+    ],
+    "companionPlants": ["Thyme", "Borage", "Lettuce"]
+  },
+  {
+    "name": "Aloe Vera",
+    "scientificName": "Aloe barbadensis",
+    "type": "succulent",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Medicinal succulent with healing gel in leaves",
+    "careInstructions": [
+      "Bright light",
+      "Well-draining soil",
+      "Water deeply but infrequently",
+      "Harvest outer leaves for gel"
+    ],
+    "companionPlants": ["Jade Plant", "Echeveria"]
+  },
+  {
+    "name": "Jade Plant",
+    "scientificName": "Crassula ovata",
+    "type": "succulent",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Popular succulent with thick, glossy leaves",
+    "careInstructions": [
+      "Bright light",
+      "Water when soil is dry",
+      "Can develop into small tree",
+      "Propagates from leaf or stem cuttings"
+    ],
+    "companionPlants": ["Aloe Vera", "String of Pearls"]
+  },
+  {
+    "name": "Echeveria",
+    "scientificName": "Echeveria elegans",
+    "type": "succulent",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Rosette-forming succulent with beautiful symmetry",
+    "careInstructions": [
+      "Bright light",
+      "Well-draining soil",
+      "Water at soil level",
+      "Produces colorful flower spikes"
+    ],
+    "companionPlants": ["Sedum", "Jade Plant"]
+  }
+]

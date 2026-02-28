@@ -131,13 +131,6 @@ struct OnboardingNavigationView: View {
                 // Mark onboarding as completed (persist for presentation logic)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
-                // Also store in Keychain as backup (non-critical — UserDefaults is primary)
-                do {
-                    try KeychainManager.shared.storeBool(true, for: "hasCompletedOnboarding")
-                } catch {
-                    // UserDefaults already persisted, so this is non-critical
-                }
-
                 await MainActor.run {
                     isCompleted = true
                 }
@@ -149,35 +142,21 @@ struct OnboardingNavigationView: View {
     }
 
     private func saveUserPreferences(user: User) async {
-        // Save goals and interests securely in Keychain.
-        // These are supplementary preferences — failures are logged but don't block onboarding
-        // since the User record is already persisted in SwiftData.
-        do {
-            let goalsData = try JSONEncoder().encode(userProfile.goals.map(\.rawValue))
-            try KeychainManager.shared.store(goalsData, for: "userGardeningGoals")
-        } catch {
-            // Non-critical: goals are stored on User model in SwiftData
+        // Save supplementary preferences to UserDefaults.
+        // These are non-critical — the User record is already persisted in SwiftData.
+        if let goalsData = try? JSONEncoder().encode(userProfile.goals.map(\.rawValue)) {
+            UserDefaults.standard.set(goalsData, forKey: "userGardeningGoals")
         }
 
-        do {
-            let interestsData = try JSONEncoder().encode(userProfile.interests.map(\.rawValue))
-            try KeychainManager.shared.store(interestsData, for: "userPlantInterests")
-        } catch {
-            // Non-critical: interests are supplementary
+        if let interestsData = try? JSONEncoder().encode(userProfile.interests.map(\.rawValue)) {
+            UserDefaults.standard.set(interestsData, forKey: "userPlantInterests")
         }
 
-        do {
-            try KeychainManager.shared.storeString(userProfile.gardenType.rawValue, for: "userGardenType")
-            try KeychainManager.shared.storeString(userProfile.spaceSize.rawValue, for: "userSpaceSize")
-        } catch {
-            // Non-critical: garden preferences are supplementary
-        }
+        UserDefaults.standard.set(userProfile.gardenType.rawValue, forKey: "userGardenType")
+        UserDefaults.standard.set(userProfile.spaceSize.rawValue, forKey: "userSpaceSize")
 
-        do {
-            let timeData = try JSONEncoder().encode(userProfile.preferredNotificationTime)
-            try KeychainManager.shared.store(timeData, for: "userPreferredNotificationTime")
-        } catch {
-            // Non-critical: notification time preference is supplementary
+        if let timeData = try? JSONEncoder().encode(userProfile.preferredNotificationTime) {
+            UserDefaults.standard.set(timeData, forKey: "userPreferredNotificationTime")
         }
 
         // Set up notifications if permission granted

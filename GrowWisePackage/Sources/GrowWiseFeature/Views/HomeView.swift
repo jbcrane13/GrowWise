@@ -53,7 +53,7 @@ public struct HomeView: View {
                         .padding()
                         .frame(maxWidth: .infinity)
                         .background(Color(.systemGray6))
-                        .cornerRadius(12)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
 
                     // Quick Stats
@@ -86,7 +86,10 @@ public struct HomeView: View {
             .sheet(isPresented: $showingAddPlant) {
                 AddPlantSheet()
             }
-            .sheet(isPresented: $showingCreateGarden) {
+            .sheet(isPresented: $showingCreateGarden, onDismiss: {
+                Task { await loadData() }
+                showGardenCreatedToast = true
+            }) {
                 CreateGardenSheet()
             }
             .refreshable {
@@ -95,9 +98,6 @@ public struct HomeView: View {
             .task {
                 await loadData()
             }
-        }
-        .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
-            showGardenCreatedToast = true
         }
         .overlay(alignment: .bottom) {
             if showGardenCreatedToast {
@@ -113,7 +113,7 @@ public struct HomeView: View {
                 }
                 .padding()
                 .background(.ultraThinMaterial)
-                .cornerRadius(12)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
                 .padding()
                 .transition(.move(edge: .bottom).combined(with: .opacity))
                 .task {
@@ -138,7 +138,7 @@ public struct HomeView: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .accessibilityIdentifier("weather_loading")
         } else if let locationError = locationService.error {
             HStack(spacing: 12) {
@@ -156,7 +156,7 @@ public struct HomeView: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .accessibilityIdentifier("weather_error")
         } else if !locationService.hasLocationPermission {
             HStack(spacing: 12) {
@@ -174,7 +174,7 @@ public struct HomeView: View {
             .padding()
             .frame(maxWidth: .infinity, alignment: .leading)
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .accessibilityIdentifier("weather_no_permission")
         }
     }
@@ -204,7 +204,7 @@ public struct HomeView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .accessibilityIdentifier("homeCloudSyncSection")
     }
 
@@ -229,7 +229,7 @@ public struct HomeView: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(Array(upcomingReminders.prefix(3)), id: \.id) { reminder in
@@ -259,7 +259,7 @@ public struct HomeView: View {
                     .padding()
                     .frame(maxWidth: .infinity)
                     .background(Color(.systemGray6))
-                    .cornerRadius(8)
+                    .clipShape(RoundedRectangle(cornerRadius: 8))
             } else {
                 LazyVStack(spacing: 8) {
                     ForEach(Array(recentJournalEntries.prefix(3)), id: \.id) { entry in

@@ -11,11 +11,10 @@ public struct MainAppView: View {
     // Services injected from GrowWiseApp via environment
     @Environment(LocationService.self) private var locationService
     @Environment(NotificationService.self) private var notificationService
-    @Environment(PerformanceMonitor.self) private var performanceMonitor
     @Environment(CloudSyncService.self) private var cloudSyncService
 
     // DataService initialized asynchronously in this view, then injected to children
-    @State private var dataService: DataService?
+    @State private var dataService: DataService? = nil
     @State private var featureServices: FeatureServices?
     @State private var selectedTab: TabSelection = .home
     @State private var isInitializing = true
@@ -159,12 +158,11 @@ public struct MainAppView: View {
         isInitializing = true
         initializationError = nil
 
-        // Fast path for UI testing — skip performance monitoring and background work
-        // to allow XCTest quiescence detection to succeed.
+        // Fast path for UI testing
         if ProcessInfo.processInfo.arguments.contains("--uitesting") {
             let service = await DataService.makeAsync()
-            dataService = service
-            featureServices = FeatureServices(
+            self.dataService = service
+            self.featureServices = FeatureServices(
                 reminderService: ReminderService(dataService: service, notificationService: notificationService),
                 photoService: PhotoService(dataService: service),
                 plantDatabaseService: PlantDatabaseService(dataService: service),
@@ -176,22 +174,12 @@ public struct MainAppView: View {
             return
         }
 
-        // Start tracking app launch
-        performanceMonitor.recordAppLaunchStart()
-
-        // Log memory state before initialization
-        let memoryBefore = performanceMonitor.currentMemoryUsage
-        let pressureBefore = performanceMonitor.memoryPressureLevel
-        print("[Init] Memory before DataService: \(String(format: "%.1fMB", memoryBefore))")
-        print("[Init] Memory pressure: \(pressureBefore.description)")
-
         initializationStage = "Initializing database..."
         let initStartTime = CFAbsoluteTimeGetCurrent()
 
-        print("[Init] Using async background initialization...")
         let service = await DataService.makeAsync()
-        dataService = service
-        featureServices = FeatureServices(
+        self.dataService = service
+        self.featureServices = FeatureServices(
             reminderService: ReminderService(dataService: service, notificationService: notificationService),
             photoService: PhotoService(dataService: service),
             plantDatabaseService: PlantDatabaseService(dataService: service),
@@ -208,18 +196,7 @@ public struct MainAppView: View {
         }
 
         let initDuration = CFAbsoluteTimeGetCurrent() - initStartTime
-        let memoryAfter = performanceMonitor.currentMemoryUsage
-        let memoryDelta = memoryAfter - memoryBefore
-
-        print("[Init] Memory after DataService: \(String(format: "%.1fMB", memoryAfter))")
-        print("[Init] Memory delta: \(String(format: "%.1fMB", memoryDelta))")
         print("[Init] DataService initialized in \(String(format: "%.3fs", initDuration))")
-
-        // Log storage configuration
-        print("[Init] Storage configuration: persistent=true, allowsSave=true")
-
-        // Performance breakdown logging
-        print("[Init] Performance: init=\(String(format: "%.3fs", initDuration)), total=\(String(format: "%.3fs", initDuration))")
 
         let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
 
@@ -227,13 +204,8 @@ public struct MainAppView: View {
             // Warm cache in background
             initializationStage = "Loading data..."
             Task.detached(priority: .utility) { [service] in
-                await MainActor.run {
-                    print("[Init] Starting cache warming...")
-                }
                 let warmingStart = CFAbsoluteTimeGetCurrent()
-
                 await service.warmCache()
-
                 let warmingDuration = CFAbsoluteTimeGetCurrent() - warmingStart
                 await MainActor.run {
                     let stats = service.getCacheStats()
@@ -242,14 +214,6 @@ public struct MainAppView: View {
                 }
             }
         }
-
-        // Complete app launch tracking
-        performanceMonitor.recordAppLaunchComplete()
-
-        // Log performance report
-        let report = performanceMonitor.generatePerformanceReport()
-        print("[Init] App launch complete in \(String(format: "%.3fs", report.appLaunchTime))")
-        print("[Init] Performance score: \(String(format: "%.1f", report.performanceScore))/100")
 
         if !isUITesting {
             // Defer non-critical initialization
@@ -269,23 +233,10 @@ public struct MainAppView: View {
             return
         }
 
-        let memoryBefore = performanceMonitor.currentMemoryUsage
-        print("[Seed] Memory before database seeding: \(String(format: "%.1fMB", memoryBefore))")
-
         do {
             try await plantDatabaseService.seedPlantDatabase()
         } catch {
             print("[Seed] Seeding encountered errors: \(error.localizedDescription)")
-        }
-
-        let memoryAfter = performanceMonitor.currentMemoryUsage
-        let memoryUsedBySeed = memoryAfter - memoryBefore
-
-        print("[Seed] Memory after seeding: \(String(format: "%.1fMB", memoryAfter))")
-        print("[Seed] Memory used by seeding: \(String(format: "%.1fMB", memoryUsedBySeed))")
-
-        if memoryUsedBySeed > 5 {
-            print("[Seed] WARNING: Seeding used \(String(format: "%.1fMB", memoryUsedBySeed)) - more than expected (5MB threshold)")
         }
     }
 }

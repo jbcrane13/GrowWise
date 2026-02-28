@@ -20,7 +20,7 @@ public struct SearchBarView: View {
         onSearchButtonClicked: (() -> Void)? = nil,
         onCancelButtonClicked: (() -> Void)? = nil
     ) {
-        _text = text
+        self._text = text
         self.placeholder = placeholder
         self.onSearchButtonClicked = onSearchButtonClicked
         self.onCancelButtonClicked = onCancelButtonClicked
@@ -35,7 +35,7 @@ public struct SearchBarView: View {
             }
         }
         .background(Color(.systemGray6))
-        .cornerRadius(10)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .onChange(of: isSearchFieldFocused) { _, newValue in
             withAnimation(.easeInOut(duration: 0.2)) {
                 isEditing = newValue
@@ -85,7 +85,7 @@ public struct SearchBarView: View {
                 .foregroundColor(.secondary)
                 .font(.system(size: 16))
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 
     private var cancelButton: some View {
@@ -117,8 +117,8 @@ public struct PlantSearchBarView: View {
         selectedFilter: Binding<PlantSearchFilter?> = .constant(nil),
         onFilterChanged: ((PlantSearchFilter?) -> Void)? = nil
     ) {
-        _text = text
-        _selectedFilter = selectedFilter
+        self._text = text
+        self._selectedFilter = selectedFilter
         self.onFilterChanged = onFilterChanged
     }
 
@@ -164,7 +164,7 @@ public struct PlantSearchBarView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(6)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 
@@ -202,16 +202,12 @@ public enum PlantSearchFilter: CaseIterable {
         switch self {
         case let .plantType(type):
             type.displayName
-
         case let .difficulty(level):
             level.displayName
-
         case let .sunlight(level):
             level.displayName
-
         case let .watering(frequency):
             frequency.displayName
-
         case let .healthStatus(status):
             status.displayName
         }
@@ -221,16 +217,12 @@ public enum PlantSearchFilter: CaseIterable {
         switch self {
         case .plantType:
             "Plant Type"
-
         case .difficulty:
             "Difficulty"
-
         case .sunlight:
             "Sunlight"
-
         case .watering:
             "Watering"
-
         case .healthStatus:
             "Health"
         }
@@ -327,19 +319,14 @@ struct PlantFilterSheet: View {
         switch (filter, selectedFilter) {
         case let (.plantType(a), .plantType(b)):
             return a == b
-
         case let (.difficulty(a), .difficulty(b)):
             return a == b
-
         case let (.sunlight(a), .sunlight(b)):
             return a == b
-
         case let (.watering(a), .watering(b)):
             return a == b
-
         case let (.healthStatus(a), .healthStatus(b)):
             return a == b
-
         default:
             return false
         }
@@ -370,9 +357,9 @@ public struct SearchSuggestionsView: View {
                             .padding(.vertical, 6)
                             .background(Color(.systemGray6))
                             .foregroundColor(.primary)
-                            .cornerRadius(16)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal)

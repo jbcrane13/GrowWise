@@ -83,8 +83,8 @@ public struct PlantReminderCard: View {
                     )
             )
         }
-        .buttonStyle(PlainButtonStyle())
-        .onAppear {
+        .buttonStyle(.plain)
+        .task {
             loadWateringReminders()
         }
         .sheet(isPresented: $showingReminderDetail) {
@@ -102,28 +102,20 @@ public struct PlantReminderCard: View {
         switch plant.plantType {
         case .houseplant:
             "house.fill"
-
         case .succulent:
             "circle.hexagongrid.fill"
-
         case .herb:
             "leaf.fill"
-
         case .vegetable:
             "carrot.fill"
-
         case .flower:
             "camera.macro"
-
         case .fruit:
             "apple.logo"
-
         case .tree:
             "tree.fill"
-
         case .shrub:
             "leaf.circle.fill"
-
         case .none:
             "questionmark.circle.fill"
         }
@@ -133,28 +125,20 @@ public struct PlantReminderCard: View {
         switch plant.plantType {
         case .houseplant:
             .green
-
         case .succulent:
             .mint
-
         case .herb:
             .green
-
         case .vegetable:
             .orange
-
         case .flower:
             .pink
-
         case .fruit:
             .red
-
         case .tree:
             .brown
-
         case .shrub:
             .green
-
         case .none:
             .gray
         }
@@ -291,18 +275,33 @@ public struct PlantReminderCard: View {
         wateringReminders = reminderService.getWateringReminders(for: plant)
     }
 
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return f
+    }()
+
+    private static let dayNameFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "EEEE"
+        return f
+    }()
+
+    private static let shortDateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .short
+        f.timeStyle = .short
+        return f
+    }()
+
     private func formatNextWateringDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
         let calendar = Calendar.current
 
         if calendar.isDateInToday(date) {
-            formatter.timeStyle = .short
-            formatter.dateStyle = .none
-            return "Today at \(formatter.string(from: date))"
+            return "Today at \(Self.timeOnlyFormatter.string(from: date))"
         } else if calendar.isDateInTomorrow(date) {
-            formatter.timeStyle = .short
-            formatter.dateStyle = .none
-            return "Tomorrow at \(formatter.string(from: date))"
+            return "Tomorrow at \(Self.timeOnlyFormatter.string(from: date))"
         } else if calendar.isDateInYesterday(date) {
             return "Yesterday (Overdue)"
         } else {
@@ -311,15 +310,10 @@ public struct PlantReminderCard: View {
             if daysDifference < 0 {
                 return "\(abs(daysDifference)) days overdue"
             } else if daysDifference <= 7 {
-                formatter.dateFormat = "EEEE"
-                let dayName = formatter.string(from: date)
-                formatter.timeStyle = .short
-                formatter.dateStyle = .none
-                return "\(dayName) at \(formatter.string(from: date))"
+                let dayName = Self.dayNameFormatter.string(from: date)
+                return "\(dayName) at \(Self.timeOnlyFormatter.string(from: date))"
             } else {
-                formatter.dateStyle = .short
-                formatter.timeStyle = .short
-                return formatter.string(from: date)
+                return Self.shortDateTimeFormatter.string(from: date)
             }
         }
     }
@@ -353,8 +347,7 @@ public struct PlantReminderCard: View {
         difficultyLevel: DifficultyLevel.intermediate
     )
 
-    // swiftlint:disable:next force_try
-    let dataService = try! DataService()
+    let dataService = DataService.createFallback()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
 

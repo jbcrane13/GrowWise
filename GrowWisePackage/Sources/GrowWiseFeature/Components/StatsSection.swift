@@ -72,7 +72,7 @@ public struct StatCard: View {
         }
         .padding(12)
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
         .accessibilityHint("Displays the number of \(title.lowercased())")

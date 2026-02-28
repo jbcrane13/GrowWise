@@ -51,7 +51,7 @@ public struct PlantScannerView: View {
                         .frame(maxWidth: .infinity, alignment: .leading)
                         .padding()
                         .background(Color(.systemGray6))
-                        .cornerRadius(12)
+                        .clipShape(RoundedRectangle(cornerRadius: 12))
                     }
 
                     if let error = diagnosticService.lastError {

@@ -24,14 +24,7 @@ let package = Package(
         ),
     ],
     dependencies: [
-        .package(
-            url: "https://github.com/getsentry/sentry-cocoa",
-            from: "8.40.0"
-        ),
-        .package(
-            url: "https://github.com/amplitude/Amplitude-Swift",
-            from: "1.10.0"
-        ),
+        // Add dependencies if needed
     ],
     targets: [
         // Core feature module - main app views and navigation
@@ -50,13 +43,9 @@ let package = Package(
         // Services for external integrations
         .target(
             name: "GrowWiseServices",
-            dependencies: [
-                "GrowWiseModels",
-                .product(name: "Sentry", package: "sentry-cocoa"),
-                .product(name: "AmplitudeSwift", package: "Amplitude-Swift"),
-            ],
+            dependencies: ["GrowWiseModels"],
             exclude: ["AGENTS.md"],
-            resources: [.process("CompanionPlantingData.json")]
+            resources: [.process("Resources")]
         ),
         
         // Tests
@@ -73,35 +62,11 @@ let package = Package(
             dependencies: ["GrowWiseServices"],
             exclude: [
                 "AGENTS.md",
-                "AuditLoggerTests.swift",
-                "AuditSecurityTests.swift",
-                "BiometricAuthenticationManagerTests.swift",
                 "DataServiceNilSelfTests.swift",
                 "DataServiceStorageConfigurationTests.swift",
                 "DataServiceTests.swift",
                 "DataTransformationServiceTests.swift",
-                "EncryptionServiceTests.swift",
-                "JWTSecurityTests.swift",
-                "JWTValidationIntegrationTests.swift",
-                "JWTValidatorTests.swift",
-                "KeychainAuditIntegrationTests.swift",
-                "KeychainIntegrationTests.swift",
-                "KeychainManagerRateLimitingTests.swift",
-                "KeychainSecurityTests.swift",
-                "KeychainStorageServiceTests.swift",
-                "KeyRotationManagerTests.swift",
-                "LegacyEncryptionMigrationServiceTests.swift",
-                "MigrationIntegrityServiceTests.swift",
-                "MigrationSecurityTests.swift",
                 "NotificationServiceTests.swift",
-                "PerformanceMonitorMemoryTests.swift",
-                "PerformanceTests.swift",
-                "RateLimiterTests.swift",
-                "RateLimitingSecurityTests.swift",
-                "SecureEnclaveKeyManagerTests.swift",
-                "SecureEnclaveSecurityTests.swift",
-                "SecurityTestSuite.swift",
-                "TokenManagementServiceTests.swift",
                 "ValidationServiceTests.swift"
             ]
         ),

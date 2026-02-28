@@ -55,21 +55,6 @@ public struct PlantDatabaseView: View {
         }
         // Native SwiftUI search bar with built-in debouncing
         .searchable(text: $searchText, prompt: "Search plants...")
-        .onChange(of: searchText) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedPlantType) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedDifficulty) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedSunlight) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedSortOption) { _, _ in
-            filterAndSortPlants()
-        }
     }
 
     private var activeFiltersSection: some View {
@@ -142,30 +127,17 @@ public struct PlantDatabaseView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "magnifyingglass.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.gray)
-
-            VStack(spacing: 8) {
-                Text("No Plants Found")
-                    .font(.headline)
-
-                Text("Try adjusting your search or filters to find plants.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
-            if hasActiveFilters {
-                Button("Clear Filters") {
-                    clearAllFilters()
-                }
-                .buttonStyle(.borderedProminent)
+        Group {
+            if !searchText.isEmpty {
+                ContentUnavailableView.search(text: searchText)
+            } else {
+                ContentUnavailableView(
+                    "No Plants Found",
+                    systemImage: "magnifyingglass.circle",
+                    description: Text("Try adjusting your filters to find plants.")
+                )
             }
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var sortMenuButton: some View {
@@ -234,7 +206,6 @@ public struct PlantDatabaseView: View {
         switch selectedSortOption {
         case .name:
             plants.sorted { ($0.name ?? "") < ($1.name ?? "") }
-
         case .difficulty:
             plants.sorted {
                 if $0.difficultyLevel != $1.difficultyLevel {
@@ -242,7 +213,6 @@ public struct PlantDatabaseView: View {
                 }
                 return ($0.name ?? "") < ($1.name ?? "")
             }
-
         case .plantType:
             plants.sorted {
                 if $0.plantType != $1.plantType {
@@ -250,7 +220,6 @@ public struct PlantDatabaseView: View {
                 }
                 return ($0.name ?? "") < ($1.name ?? "")
             }
-
         case .sunlightRequirement:
             plants.sorted {
                 if $0.sunlightRequirement != $1.sunlightRequirement {
@@ -265,10 +234,6 @@ public struct PlantDatabaseView: View {
         selectedPlantType = nil
         selectedDifficulty = nil
         selectedSunlight = nil
-    }
-
-    private func filterAndSortPlants() {
-        // The filteredPlants computed property handles this
     }
 
     @MainActor
@@ -350,9 +315,9 @@ struct DatabasePlantCardView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 
     private func sunlightShorthand(_ sunlight: SunlightLevel) -> String {
@@ -367,7 +332,7 @@ struct DatabasePlantCardView: View {
     private func wateringShorthand(_ watering: WateringFrequency) -> String {
         switch watering {
         case .daily: "Daily"
-        case .everyOtherDay: "2x/week"
+        case .everyOtherDay: "3-4x/week"
         case .twiceWeekly: "2x/week"
         case .weekly: "Weekly"
         case .biweekly: "Bi-weekly"
@@ -432,7 +397,7 @@ struct FilterTag: View {
         .padding(.vertical, 4)
         .background(color.opacity(0.2))
         .foregroundColor(color)
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -628,7 +593,7 @@ struct PlantDatabaseDetailView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private var descriptionSection: some View {
@@ -673,7 +638,7 @@ struct PlantDatabaseDetailView: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color.blue)
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding()
         .background(Color(.systemBackground))
     }
@@ -758,6 +723,22 @@ struct PlantTypeIcon: View {
     }
 }
 
+/// PlantType extension removed - already defined in SkillAssessmentView.swift
+extension PlantType {
+    var color: Color {
+        switch self {
+        case .houseplant: .green
+        case .succulent: .mint
+        case .flower: .pink
+        case .vegetable: .orange
+        case .herb: .green
+        case .tree: .brown
+        case .shrub: .green
+        case .fruit: .red
+        }
+    }
+}
+
 enum GrowWiseError: LocalizedError {
     case dataServiceError
 
@@ -788,9 +769,6 @@ enum DatabaseSortOption: CaseIterable {
 }
 
 #Preview {
-    // swiftlint:disable force_try
-    let dataService = try! DataService()
-    // swiftlint:enable force_try
     PlantDatabaseView()
-        .environment(dataService)
+        .environment(DataService.createFallback())
 }

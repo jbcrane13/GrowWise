@@ -542,21 +542,28 @@ struct ReminderDetailCard: View {
         .opacity(reminder.isEnabled ? 1.0 : 0.6)
     }
 
-    private func formatNextDueDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
 
+    private static let dateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
+    private func formatNextDueDate(_ date: Date) -> String {
         if Calendar.current.isDateInToday(date) {
-            formatter.timeStyle = .short
-            return "Today at \(formatter.string(from: date))"
+            "Today at \(Self.timeOnlyFormatter.string(from: date))"
         } else if Calendar.current.isDateInTomorrow(date) {
-            formatter.timeStyle = .short
-            return "Tomorrow at \(formatter.string(from: date))"
+            "Tomorrow at \(Self.timeOnlyFormatter.string(from: date))"
         } else if Calendar.current.isDateInYesterday(date) {
-            return "Yesterday (Overdue)"
+            "Yesterday (Overdue)"
         } else {
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .short
-            return formatter.string(from: date)
+            Self.dateTimeFormatter.string(from: date)
         }
     }
 }
@@ -666,8 +673,7 @@ struct EditReminderView: View {
         difficultyLevel: DifficultyLevel.intermediate
     )
 
-    // swiftlint:disable:next force_try
-    let dataService = try! DataService()
+    let dataService = DataService.createFallback()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
 

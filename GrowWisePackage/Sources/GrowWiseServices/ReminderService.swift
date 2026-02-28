@@ -260,22 +260,16 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch reminderType {
         case .watering:
             await adjustWateringForWeather(baseDate: baseDate, plant: plant)
-
         case .fertilizing:
             adjustFertilizingForWeather(baseDate: baseDate)
-
         case .pruning:
             adjustPruningForWeather(baseDate: baseDate)
-
         case .pestControl:
             adjustPestCheckForWeather(baseDate: baseDate)
-
         case .harvest:
             baseDate // Harvest timing usually doesn't adjust for weather
-
         case .repotting, .planting, .inspection, .soilTest, .mulching:
             baseDate // These tasks don't typically adjust for weather
-
         case .custom:
             baseDate
         }
@@ -441,34 +435,27 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch plant.plantType {
         case .none:
             return true
-
         case .houseplant:
             // Indoor plants don't need seasonal pruning or pest checks as frequently
             return task.type != .pruning || task.season != .fall
-
         case .succulent:
             // Succulents need less frequent watering
             if task.type == .watering {
                 return task.season != .winter
             }
             return true
-
         case .herb, .vegetable:
             // Most tasks are relevant for edible plants
             return true
-
         case .flower:
             // Flowers benefit from deadheading (pruning) during growing season
             return true
-
         case .fruit:
             // Fruit plants need all seasonal care
             return true
-
         case .tree, .shrub:
             // Trees and shrubs need all seasonal care
             return true
-
         @unknown default:
             // Handle any future PlantType cases
             return true
@@ -639,34 +626,24 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch type {
         case .watering:
             return "Water \(plantName)"
-
         case .fertilizing:
             return "Fertilize \(plantName)"
-
         case .pruning:
             return "Prune \(plantName)"
-
         case .pestControl:
             return "Check \(plantName) for pests"
-
         case .harvest:
             return "Harvest \(plantName)"
-
         case .repotting:
             return "Repot \(plantName)"
-
         case .planting:
             return "Plant \(plantName)"
-
         case .inspection:
             return "Inspect \(plantName)"
-
         case .soilTest:
             return "Test soil for \(plantName)"
-
         case .mulching:
             return "Mulch around \(plantName)"
-
         case .custom:
             return "Care for \(plantName)"
         }
@@ -678,34 +655,24 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch type {
         case .watering:
             return "Check soil moisture and water \(plantName) if needed. Water slowly at soil level."
-
         case .fertilizing:
             return "Apply appropriate fertilizer to \(plantName) according to plant needs."
-
         case .pruning:
             return "Inspect \(plantName) and prune dead, damaged, or overgrown parts."
-
         case .pestControl:
             return "Examine \(plantName) leaves and stems for signs of pests or disease."
-
         case .harvest:
             return "Check \(plantName) for ripe fruits, vegetables, or herbs ready to harvest."
-
         case .repotting:
             return "Check if \(plantName) needs repotting - look for roots growing through drainage holes."
-
         case .planting:
             return "Plant \(plantName) in prepared soil with proper spacing."
-
         case .inspection:
             return "Perform general health inspection of \(plantName) for any issues."
-
         case .soilTest:
             return "Test soil pH and nutrients for \(plantName)'s growing area."
-
         case .mulching:
             return "Apply or refresh mulch around \(plantName) to retain moisture."
-
         case .custom:
             return "Perform scheduled care task for \(plantName)."
         }
@@ -725,34 +692,24 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
             } else {
                 3
             }
-
         case .fertilizing:
             28
-
         case .pruning:
             60
-
         case .pestControl:
             7
-
         case .harvest:
             14
-
         case .repotting:
             365 // Once per year
-
         case .planting:
             180 // Seasonal
-
         case .inspection:
             7 // Weekly
-
         case .soilTest:
             365 // Annual
-
         case .mulching:
             120 // 3-4 times per year
-
         case .custom:
             7
         }
@@ -762,34 +719,24 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch type {
         case .watering:
             "Regular watering schedule helps maintain consistent soil moisture"
-
         case .fertilizing:
             "Monthly fertilizing supports healthy growth and flowering"
-
         case .pruning:
             "Regular pruning promotes bushier growth and removes dead material"
-
         case .pestControl:
             "Weekly pest checks allow for early detection and treatment"
-
         case .harvest:
             "Regular harvest encourages continued production"
-
         case .repotting:
             "Annual repotting ensures adequate root space and fresh soil"
-
         case .planting:
             "Proper timing ensures successful plant establishment"
-
         case .inspection:
             "Regular inspection allows early detection of problems"
-
         case .soilTest:
             "Annual soil testing helps maintain optimal growing conditions"
-
         case .mulching:
             "Mulching conserves moisture and suppresses weeds"
-
         case .custom:
             "Custom care routine for optimal plant health"
         }
@@ -799,34 +746,24 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch type {
         case .watering:
             .high
-
         case .fertilizing:
             .medium
-
         case .pruning:
             .low
-
         case .pestControl:
             .medium
-
         case .harvest:
             .high
-
         case .repotting:
             .low
-
         case .planting:
             .high
-
         case .inspection:
             .medium
-
         case .soilTest:
             .low
-
         case .mulching:
             .low
-
         case .custom:
             .medium
         }
@@ -837,13 +774,10 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         switch month {
         case 3 ... 5:
             return .spring
-
         case 6 ... 8:
             return .summer
-
         case 9 ... 11:
             return .fall
-
         default:
             return .winter
         }
@@ -914,16 +848,12 @@ public enum ReminderError: Error, LocalizedError {
         switch self {
         case .invalidReminderType:
             "Invalid reminder type specified"
-
         case .plantNotFound:
             "Plant not found for reminder"
-
         case .notificationPermissionDenied:
             "Notification permission denied"
-
         case .invalidFrequency:
             "Invalid reminder frequency"
-
         case .invalidTime:
             "Invalid notification time"
         }
@@ -966,22 +896,22 @@ extension ReminderService {
         enabled: Bool
     ) {
         for type in reminderTypes {
-            try? KeychainManager.shared.storeBool(enabled, for: "notification_\(type.rawValue)_enabled")
+            UserDefaults.standard.set(enabled, forKey: "notification_\(type.rawValue)_enabled")
         }
     }
 
     public func isNotificationEnabled(for type: ReminderType) -> Bool {
-        (try? KeychainManager.shared.retrieveBool(for: "notification_\(type.rawValue)_enabled")) ?? false
+        UserDefaults.standard.bool(forKey: "notification_\(type.rawValue)_enabled")
     }
 
     public func setDefaultNotificationTime(_ time: Date) {
         if let timeData = try? JSONEncoder().encode(time) {
-            try? KeychainManager.shared.store(timeData, for: "default_notification_time")
+            UserDefaults.standard.set(timeData, forKey: "default_notification_time")
         }
     }
 
     public func getDefaultNotificationTime() -> Date {
-        if let timeData = try? KeychainManager.shared.retrieve(for: "default_notification_time"),
+        if let timeData = UserDefaults.standard.data(forKey: "default_notification_time"),
            let time = try? JSONDecoder().decode(Date.self, from: timeData)
         {
             return time
@@ -995,21 +925,21 @@ extension ReminderService {
     // MARK: - Reminder Settings
 
     public func updateReminderSettings(_ settings: ReminderSettings) {
-        try? KeychainManager.shared.storeBool(settings.enableWateringReminders, for: "enable_watering_reminders")
-        try? KeychainManager.shared.storeBool(settings.enableFertilizingReminders, for: "enable_fertilizing_reminders")
-        try? KeychainManager.shared.storeBool(settings.enablePestControlReminders, for: "enable_pest_control_reminders")
-        try? KeychainManager.shared.storeBool(settings.enableWeatherBasedAdjustments, for: "enable_weather_adjustments")
+        UserDefaults.standard.set(settings.enableWateringReminders, forKey: "enable_watering_reminders")
+        UserDefaults.standard.set(settings.enableFertilizingReminders, forKey: "enable_fertilizing_reminders")
+        UserDefaults.standard.set(settings.enablePestControlReminders, forKey: "enable_pest_control_reminders")
+        UserDefaults.standard.set(settings.enableWeatherBasedAdjustments, forKey: "enable_weather_adjustments")
 
         if let quietStart = settings.quietHoursStart,
            let startData = try? JSONEncoder().encode(quietStart)
         {
-            try? KeychainManager.shared.store(startData, for: "quiet_hours_start")
+            UserDefaults.standard.set(startData, forKey: "quiet_hours_start")
         }
 
         if let quietEnd = settings.quietHoursEnd,
            let endData = try? JSONEncoder().encode(quietEnd)
         {
-            try? KeychainManager.shared.store(endData, for: "quiet_hours_end")
+            UserDefaults.standard.set(endData, forKey: "quiet_hours_end")
         }
 
         if let defaultTime = settings.defaultNotificationTime {
@@ -1019,29 +949,29 @@ extension ReminderService {
 
     public func getReminderSettings() -> ReminderSettings {
         let quietStart: Date? = {
-            if let data = try? KeychainManager.shared.retrieve(for: "quiet_hours_start") {
+            if let data = UserDefaults.standard.data(forKey: "quiet_hours_start") {
                 return try? JSONDecoder().decode(Date.self, from: data)
             }
             return nil
         }()
         let quietEnd: Date? = {
-            if let data = try? KeychainManager.shared.retrieve(for: "quiet_hours_end") {
+            if let data = UserDefaults.standard.data(forKey: "quiet_hours_end") {
                 return try? JSONDecoder().decode(Date.self, from: data)
             }
             return nil
         }()
         let defaultTime: Date? = {
-            if let data = try? KeychainManager.shared.retrieve(for: "default_notification_time") {
+            if let data = UserDefaults.standard.data(forKey: "default_notification_time") {
                 return try? JSONDecoder().decode(Date.self, from: data)
             }
             return nil
         }()
 
         return ReminderSettings(
-            enableWateringReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_watering_reminders")) ?? false,
-            enableFertilizingReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_fertilizing_reminders")) ?? false,
-            enablePestControlReminders: (try? KeychainManager.shared.retrieveBool(for: "enable_pest_control_reminders")) ?? false,
-            enableWeatherBasedAdjustments: (try? KeychainManager.shared.retrieveBool(for: "enable_weather_adjustments")) ?? false,
+            enableWateringReminders: UserDefaults.standard.bool(forKey: "enable_watering_reminders"),
+            enableFertilizingReminders: UserDefaults.standard.bool(forKey: "enable_fertilizing_reminders"),
+            enablePestControlReminders: UserDefaults.standard.bool(forKey: "enable_pest_control_reminders"),
+            enableWeatherBasedAdjustments: UserDefaults.standard.bool(forKey: "enable_weather_adjustments"),
             quietHoursStart: quietStart,
             quietHoursEnd: quietEnd,
             defaultNotificationTime: defaultTime ?? getDefaultNotificationTime()
@@ -1055,7 +985,9 @@ extension ReminderService {
         try await notificationService.scheduleReminderNotification(for: reminder)
     }
 
-    /// Cancel notification for a reminder
+    /// Cancel notification for a reminder.
+    /// Kept synchronous because all call sites (toggleReminder, deleteReminder) are
+    /// non-async functions; the fire-and-forget Task is intentional here.
     public func cancelNotification(for reminder: PlantReminder) {
         Task {
             await notificationService.cancelReminderNotification(for: reminder.id)

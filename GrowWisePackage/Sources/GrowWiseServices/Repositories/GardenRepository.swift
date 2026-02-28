@@ -10,8 +10,16 @@ public final class GardenRepository {
         self.context = context
     }
 
-    public func fetchAll() throws -> [Garden] {
-        let descriptor = FetchDescriptor<Garden>()
+    public func fetchAll(offset: Int = 0, limit: Int = 20) throws -> [Garden] {
+        let clampedOffset = max(0, offset)
+        let clampedLimit = max(1, min(limit, 50))
+
+        var descriptor = FetchDescriptor<Garden>(
+            sortBy: [SortDescriptor(\.name)]
+        )
+        descriptor.fetchLimit = clampedLimit
+        descriptor.fetchOffset = clampedOffset
+
         return try context.fetch(descriptor)
     }
 
@@ -22,6 +30,20 @@ public final class GardenRepository {
         } catch {
             throw GardenError.saveFailed(error)
         }
+    }
+
+    @discardableResult
+    public func create(name: String, type: GardenType, isIndoor: Bool, user: User?) throws -> Garden {
+        let garden = Garden(name: name, gardenType: type, isIndoor: isIndoor)
+
+        if let user {
+            garden.user = user
+            user.gardens = (user.gardens ?? []) + [garden]
+        }
+
+        context.insert(garden)
+        try context.save()
+        return garden
     }
 
     public func delete(_ garden: Garden) throws {

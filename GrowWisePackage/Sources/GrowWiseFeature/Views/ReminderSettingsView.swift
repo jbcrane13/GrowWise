@@ -18,7 +18,7 @@ public struct ReminderSettingsView: View {
 
     public init(reminderService: ReminderService, reminderSettings: Binding<ReminderSettings>) {
         self.reminderService = reminderService
-        _reminderSettings = reminderSettings
+        self._reminderSettings = reminderSettings
     }
 
     public var body: some View {
@@ -59,11 +59,8 @@ public struct ReminderSettingsView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .onAppear {
-                setupTempValues()
-            }
-            // Using .task for automatic cancellation of async authorization check
             .task {
+                setupTempValues()
                 await notificationService.checkAuthorizationStatus()
             }
         }
@@ -253,19 +250,14 @@ public struct ReminderSettingsView: View {
         switch notificationService.authorizationStatus {
         case .authorized:
             return "Enabled"
-
         case .denied:
             return "Denied - Enable in Settings"
-
         case .notDetermined:
             return "Not requested"
-
         case .provisional:
             return "Provisional"
-
         case .ephemeral:
             return "Ephemeral"
-
         @unknown default:
             return "Unknown"
         }
@@ -292,10 +284,14 @@ public struct ReminderSettingsView: View {
         tempQuietEnd = reminderSettings.quietHoursEnd ?? Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
     }
 
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
     private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.timeFormatter.string(from: date)
     }
 
     private func saveSettings() {
@@ -321,6 +317,7 @@ public struct ReminderSettingsView: View {
                 // Provide feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
+
             } catch {
                 print("Failed to send test notification: \(error)")
             }
@@ -439,8 +436,7 @@ struct PendingNotificationsView: View {
 }
 
 #Preview {
-    // swiftlint:disable:next force_try
-    let dataService = try! DataService()
+    let dataService = DataService.createFallback()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     let settings = ReminderSettings()

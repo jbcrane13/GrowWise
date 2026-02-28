@@ -13,6 +13,9 @@ public struct RemindersListView: View {
     @State private var selectedReminder: PlantReminder?
     @State private var showingDeleteAlert = false
     @State private var reminderToDelete: PlantReminder?
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     public init() {}
 
@@ -44,23 +47,20 @@ public struct RemindersListView: View {
         } message: {
             Text("Are you sure you want to delete this reminder?")
         }
+        .alert(alertTitle, isPresented: $showAlert) {
+            Button("OK") {}
+        } message: {
+            Text(alertMessage)
+        }
         .accessibilityIdentifier("remindersListView")
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            Image(systemName: "bell.slash")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            Text("No Reminders")
-                .font(.title2)
-                .fontWeight(.semibold)
-            Text("Add your first reminder to keep track of your plant care tasks")
-                .font(.subheadline)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal)
-        }
+        ContentUnavailableView(
+            "No Reminders",
+            systemImage: "bell.slash",
+            description: Text("Add your first reminder to keep track of your plant care tasks.")
+        )
         .accessibilityLabel("No reminders available. Add your first reminder to keep track of your plant care tasks")
     }
 
@@ -142,7 +142,9 @@ public struct RemindersListView: View {
                 await loadReminders()
             }
         } catch {
-            print("Failed to complete reminder: \(error)")
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
     }
 
@@ -153,7 +155,9 @@ public struct RemindersListView: View {
                 await loadReminders()
             }
         } catch {
-            print("Failed to delete reminder: \(error)")
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
     }
 
@@ -238,6 +242,19 @@ struct HomeReminderRowView: View {
         return .blue
     }
 
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
+    private static let dateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
     private var dueDateText: String {
         let calendar = Calendar.current
         let now = Date()
@@ -245,18 +262,11 @@ struct HomeReminderRowView: View {
         if reminder.nextDueDate < now {
             return "Overdue"
         } else if calendar.isDateInToday(reminder.nextDueDate) {
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            return "Today at \(formatter.string(from: reminder.nextDueDate))"
+            return "Today at \(Self.timeOnlyFormatter.string(from: reminder.nextDueDate))"
         } else if calendar.isDateInTomorrow(reminder.nextDueDate) {
-            let formatter = DateFormatter()
-            formatter.timeStyle = .short
-            return "Tomorrow at \(formatter.string(from: reminder.nextDueDate))"
+            return "Tomorrow at \(Self.timeOnlyFormatter.string(from: reminder.nextDueDate))"
         } else {
-            let formatter = DateFormatter()
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .short
-            return formatter.string(from: reminder.nextDueDate)
+            return Self.dateTimeFormatter.string(from: reminder.nextDueDate)
         }
     }
 

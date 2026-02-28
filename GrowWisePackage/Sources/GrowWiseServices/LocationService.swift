@@ -30,7 +30,8 @@ import WeatherKit
     override public init() {
         super.init()
         locationManager.delegate = self
-        locationManager.desiredAccuracy = kCLLocationAccuracyBest
+        // Hardiness zones span ~100 km bands; kilometer accuracy is sufficient and saves battery
+        locationManager.desiredAccuracy = kCLLocationAccuracyKilometer
         authorizationStatus = locationManager.authorizationStatus
     }
 

@@ -361,10 +361,10 @@ public enum SubscriptionError: LocalizedError, Sendable {
     }
 }
 
-// MARK: - Paywall View Model
+// MARK: - Paywall State
 
 @MainActor
-@Observable public final class PaywallViewModel {
+@Observable public final class PaywallState {
     public let service: SubscriptionService
 
     public var selectedProduct: Product?

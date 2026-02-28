@@ -24,6 +24,25 @@ public final class PlantRepository {
         }
     }
 
+    @discardableResult
+    public func create(
+        name: String,
+        type: PlantType,
+        difficultyLevel: DifficultyLevel = .beginner,
+        garden: Garden? = nil
+    ) throws -> Plant {
+        let plant = Plant(name: name, plantType: type, difficultyLevel: difficultyLevel)
+
+        if let garden {
+            plant.garden = garden
+            garden.plants = (garden.plants ?? []) + [plant]
+        }
+
+        context.insert(plant)
+        try context.save()
+        return plant
+    }
+
     public func delete(_ plant: Plant) throws {
         context.delete(plant)
         do {
@@ -31,6 +50,40 @@ public final class PlantRepository {
         } catch {
             throw PlantError.saveFailed(error)
         }
+    }
+
+    public func update(_ plant: Plant) throws {
+        try context.save()
+    }
+
+    public func fetchPaginated(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) throws -> [Plant] {
+        var descriptor = FetchDescriptor<Plant>(
+            sortBy: [SortDescriptor(\.name)]
+        )
+        descriptor.fetchLimit = min(limit, 50)
+        descriptor.fetchOffset = offset
+
+        if let garden {
+            let gardenId = garden.id
+            descriptor.predicate = #Predicate<Plant> { plant in
+                plant.garden?.id == gardenId
+            }
+        }
+
+        return try context.fetch(descriptor)
+    }
+
+    public func fetchDatabasePage(offset: Int, limit: Int) throws -> [Plant] {
+        var descriptor = FetchDescriptor<Plant>(
+            predicate: #Predicate<Plant> { plant in
+                plant.garden == nil || plant.garden?.user == nil
+            },
+            sortBy: [SortDescriptor(\.name)]
+        )
+        descriptor.fetchLimit = min(limit, 50)
+        descriptor.fetchOffset = offset
+
+        return try context.fetch(descriptor)
     }
 
     public func search(query: String, limit: Int = 20) throws -> [Plant] {
@@ -89,31 +142,24 @@ public final class PlantRepository {
             predicate = #Predicate<Plant> { plant in
                 plant.plantType == t && plant.difficultyLevel == d && plant.sunlightRequirement == s
             }
-
         case (let t?, let d?, nil):
             predicate = #Predicate<Plant> { plant in
                 plant.plantType == t && plant.difficultyLevel == d
             }
-
         case (let t?, nil, let s?):
             predicate = #Predicate<Plant> { plant in
                 plant.plantType == t && plant.sunlightRequirement == s
             }
-
         case (nil, let d?, let s?):
             predicate = #Predicate<Plant> { plant in
                 plant.difficultyLevel == d && plant.sunlightRequirement == s
             }
-
         case (let t?, nil, nil):
             predicate = #Predicate<Plant> { plant in plant.plantType == t }
-
         case (nil, let d?, nil):
             predicate = #Predicate<Plant> { plant in plant.difficultyLevel == d }
-
         case (nil, nil, let s?):
             predicate = #Predicate<Plant> { plant in plant.sunlightRequirement == s }
-
         default:
             predicate = #Predicate<Plant> { _ in true }
         }

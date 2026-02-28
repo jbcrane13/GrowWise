@@ -95,7 +95,7 @@ public struct WeatherSection: View {
         }
         .padding(16)
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityIdentifier("weather_section")
         .accessibilityElement(children: .combine)
         .accessibilityLabel(weatherAccessibilityLabel)

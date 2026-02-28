@@ -22,10 +22,7 @@ public struct AddReminderView: View {
     @State private var isCreating = false
     @State private var saveTask: Task<Void, Never>?
     @State private var errorMessage: String?
-
-    private var plants: [Plant] {
-        (try? dataService.plants.fetchAll()) ?? []
-    }
+    @State private var plants: [Plant] = []
 
     public init(reminderService: ReminderService, dataService: DataService) {
         self.reminderService = reminderService
@@ -54,6 +51,13 @@ public struct AddReminderView: View {
                 customContentSection
             }
             .navigationTitle("Add Reminder")
+            .task {
+                do {
+                    plants = try dataService.plants.fetchAll()
+                } catch {
+                    errorMessage = "Could not load plants: \(error.localizedDescription)"
+                }
+            }
             .onDisappear {
                 saveTask?.cancel()
             }
@@ -291,28 +295,20 @@ public struct AddReminderView: View {
         switch freq {
         case .daily:
             return "every day"
-
         case .everyOtherDay:
             return "every other day"
-
         case .twiceWeekly:
             return "twice a week"
-
         case .weekly:
             return "once a week"
-
         case .biweekly:
             return "every 2 weeks"
-
         case .monthly:
             return "once a month"
-
         case .custom:
             return "every \(customDays) day\(customDays == 1 ? "" : "s")"
-
         case .once:
             return "one time only"
-
         default:
             return freq.displayName.lowercased()
         }
@@ -394,6 +390,7 @@ public struct AddReminderView: View {
                     isCreating = false
                     dismiss()
                 }
+
             } catch {
                 await MainActor.run {
                     isCreating = false
@@ -483,8 +480,7 @@ struct PlantPickerView: View {
 }
 
 #Preview {
-    // swiftlint:disable:next force_try
-    let dataService = try! DataService()
+    let dataService = DataService.createFallback()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
 

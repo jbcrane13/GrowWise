@@ -17,6 +17,9 @@ public struct MyGardenView: View {
     @State private var isLoading = true
     @State private var selectedSortOption: SortOption = .name
     @State private var showingCreateGarden = false // Added per instruction
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     public init() {}
 
@@ -83,14 +86,10 @@ public struct MyGardenView: View {
             .onChange(of: selectedSortOption) { _, _ in
                 sortPlants()
             }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("ShowCreateGardenFromAddPlant"))) { _ in
-                showingAddPlant = false
-                showingCreateGarden = true
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("GardenCreated"))) { _ in
-                Task { await loadData() }
-            }
-            .onReceive(NotificationCenter.default.publisher(for: Notification.Name("PlantCreated"))) { _ in
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") {}
+            } message: {
+                Text(alertMessage)
             }
         }
     }
@@ -139,7 +138,7 @@ public struct MyGardenView: View {
                     NavigationLink(value: plant) {
                         PlantCardView(plant: plant)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
@@ -157,21 +156,11 @@ public struct MyGardenView: View {
     }
 
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "leaf.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.gray)
-
-            VStack(spacing: 8) {
-                Text(emptyStateTitle)
-                    .font(.headline)
-
-                Text(emptyStateMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-
+        ContentUnavailableView {
+            Label(emptyStateTitle, systemImage: "leaf.circle")
+        } description: {
+            Text(emptyStateMessage)
+        } actions: {
             Button("Add Your First Plant") {
                 showingAddPlant = true
             }
@@ -182,8 +171,6 @@ public struct MyGardenView: View {
             }
             .buttonStyle(.bordered)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
 
     private var sortMenuButton: some View {
@@ -279,10 +266,24 @@ public struct MyGardenView: View {
         isLoading = true
 
         // Load gardens
-        gardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            gardens = try dataService.gardens.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load gardens: \(error.localizedDescription)"
+            showAlert = true
+            gardens = []
+        }
 
         // Load all user plants
-        plants = (try? dataService.plants.fetchAll()) ?? []
+        do {
+            plants = try dataService.plants.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load plants: \(error.localizedDescription)"
+            showAlert = true
+            plants = []
+        }
 
         // Sort plants
         sortPlants()
@@ -299,17 +300,14 @@ public struct MyGardenView: View {
         switch selectedSortOption {
         case .name:
             plants.sort { ($0.name ?? "") < ($1.name ?? "") }
-
         case .dateAdded:
             plants.sort { ($0.plantingDate ?? Date.distantPast) > ($1.plantingDate ?? Date.distantPast) }
-
         case .healthStatus:
             plants.sort { plant1, plant2 in
                 let health1 = plant1.healthStatus?.rawValue ?? "zzz"
                 let health2 = plant2.healthStatus?.rawValue ?? "zzz"
                 return health1 < health2
             }
-
         case .wateringSchedule:
             plants.sort { ($0.wateringFrequency?.days ?? 0) < ($1.wateringFrequency?.days ?? 0) }
         }
@@ -332,7 +330,7 @@ struct GardenChip: View {
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.blue : Color(.systemGray5))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(16)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
@@ -417,7 +415,7 @@ struct FilterChip: View {
                 .frame(maxWidth: .infinity)
                 .background(isSelected ? Color.blue : Color(.systemGray6))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }
@@ -473,7 +471,6 @@ struct CreateGardenSheet: View {
         do {
             let garden = Garden(name: name.trimmingCharacters(in: .whitespacesAndNewlines), gardenType: type, isIndoor: isIndoor)
             try dataService.gardens.add(garden)
-            NotificationCenter.default.post(name: Notification.Name("GardenCreated"), object: nil)
             dismiss()
         } catch {
             errorMessage = "Failed to create garden: \(error.localizedDescription)"
@@ -493,6 +490,9 @@ struct AssignGardenSheet: View {
     @State private var selectedGarden: Garden?
     @State private var isSaving = false
     @State private var saveTask: Task<Void, Never>?
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     var body: some View {
         NavigationStack {
@@ -518,11 +518,23 @@ struct AssignGardenSheet: View {
             }
             .task { load() }
             .onDisappear { saveTask?.cancel() }
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") {}
+            } message: {
+                Text(alertMessage)
+            }
         }
     }
 
     private func load() {
-        gardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            gardens = try dataService.gardens.fetchAll()
+        } catch {
+            alertTitle = "Error"
+            alertMessage = "Could not load gardens: \(error.localizedDescription)"
+            showAlert = true
+            gardens = []
+        }
         selectedGarden = plant.garden
     }
 
@@ -537,16 +549,16 @@ struct AssignGardenSheet: View {
             try dataService.updatePlant(plant)
             dismiss()
         } catch {
-            // Silent failure handler - could show alert if desired
-            dismiss()
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
         isSaving = false
     }
 }
 
 #Preview {
-    // swiftlint:disable:next force_try
-    let dataService = try! DataService()
+    let dataService = DataService.createFallback()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
     let photoService = PhotoService(dataService: dataService)

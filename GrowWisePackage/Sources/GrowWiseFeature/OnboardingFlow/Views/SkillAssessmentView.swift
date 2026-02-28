@@ -122,7 +122,7 @@ struct SkillLevelCard: View {
                     .stroke(Color.adaptiveGreen, lineWidth: isSelected ? 2 : 0)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .accessibilityLabel(level.displayName)
     }
 }
@@ -152,7 +152,7 @@ struct InterestTag: View {
             )
             .foregroundColor(isSelected ? .white : .primary)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 

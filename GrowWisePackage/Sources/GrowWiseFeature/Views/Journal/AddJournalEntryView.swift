@@ -55,6 +55,9 @@ public struct AddJournalEntryView: View {
     @State private var showingAdvancedFields = false
     @State private var isPrivate = false
     @State private var isSaving = false
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     public init(photoService: PhotoService) {
         self.photoService = photoService
@@ -276,7 +279,14 @@ public struct AddJournalEntryView: View {
             }
             .navigationTitle("New Journal Entry")
             .task {
-                plants = (try? dataService.plants.fetchAll()) ?? [].filter { $0.isUserPlant ?? false }
+                do {
+                    plants = try dataService.plants.fetchAll().filter { $0.isUserPlant ?? false }
+                } catch {
+                    alertTitle = "Error"
+                    alertMessage = "Could not load plants: \(error.localizedDescription)"
+                    showAlert = true
+                    plants = []
+                }
             }
             .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
@@ -322,6 +332,11 @@ public struct AddJournalEntryView: View {
                         .background(.regularMaterial)
                         .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
+            }
+            .alert(alertTitle, isPresented: $showAlert) {
+                Button("OK") {}
+            } message: {
+                Text(alertMessage)
             }
         }
     }
@@ -380,8 +395,9 @@ public struct AddJournalEntryView: View {
 
             dismiss()
         } catch {
-            print("Failed to save journal entry: \(error)")
-            // In production, show error alert
+            alertTitle = "Action Failed"
+            alertMessage = error.localizedDescription
+            showAlert = true
         }
     }
 
@@ -487,7 +503,7 @@ private struct TagsSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 TextField("Add tag", text: $newTag)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .textFieldStyle(.roundedBorder)
                     .onSubmit {
                         addTag()
                     }

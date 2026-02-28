@@ -12,6 +12,9 @@ public struct ReminderRowView: View {
 
     @State private var isCompleting = false
     @State private var showingSnoozeOptions = false
+    @State private var showAlert = false
+    @State private var alertTitle = ""
+    @State private var alertMessage = ""
 
     public init(reminder: PlantReminder, reminderService: ReminderService) {
         self.reminder = reminder
@@ -102,6 +105,11 @@ public struct ReminderRowView: View {
 
             Button("Cancel", role: .cancel) {}
         }
+        .alert(alertTitle, isPresented: $showAlert) {
+            Button("OK") {}
+        } message: {
+            Text(alertMessage)
+        }
         .opacity(reminder.isEnabled ? 1.0 : 0.6)
     }
 
@@ -119,13 +127,10 @@ public struct ReminderRowView: View {
         switch reminder.priority {
         case .low:
             return .gray
-
         case .medium:
             return .blue
-
         case .high:
             return .orange
-
         case .critical:
             return .red
         }
@@ -150,23 +155,29 @@ public struct ReminderRowView: View {
         )
     }
 
-    private var dueDateText: String {
-        let formatter = DateFormatter()
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return f
+    }()
 
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .short
+        f.timeStyle = .none
+        return f
+    }()
+
+    private var dueDateText: String {
         if Calendar.current.isDateInToday(reminder.nextDueDate) {
-            formatter.dateStyle = .none
-            formatter.timeStyle = .short
-            return "Today \(formatter.string(from: reminder.nextDueDate))"
+            "Today \(Self.timeOnlyFormatter.string(from: reminder.nextDueDate))"
         } else if Calendar.current.isDateInYesterday(reminder.nextDueDate) {
-            return "Yesterday"
+            "Yesterday"
         } else if Calendar.current.isDateInTomorrow(reminder.nextDueDate) {
-            formatter.dateStyle = .none
-            formatter.timeStyle = .short
-            return "Tomorrow \(formatter.string(from: reminder.nextDueDate))"
+            "Tomorrow \(Self.timeOnlyFormatter.string(from: reminder.nextDueDate))"
         } else {
-            formatter.dateStyle = .short
-            formatter.timeStyle = .none
-            return formatter.string(from: reminder.nextDueDate)
+            Self.dateOnlyFormatter.string(from: reminder.nextDueDate)
         }
     }
 
@@ -202,11 +213,14 @@ public struct ReminderRowView: View {
                 await MainActor.run {
                     isCompleting = false
                 }
+
             } catch {
                 await MainActor.run {
                     isCompleting = false
+                    alertTitle = "Action Failed"
+                    alertMessage = error.localizedDescription
+                    showAlert = true
                 }
-                print("Failed to complete reminder: \(error)")
             }
         }
     }
@@ -222,8 +236,13 @@ public struct ReminderRowView: View {
                 // Provide feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
+
             } catch {
-                print("Failed to reschedule reminder: \(error)")
+                await MainActor.run {
+                    alertTitle = "Action Failed"
+                    alertMessage = error.localizedDescription
+                    showAlert = true
+                }
             }
         }
     }
@@ -245,8 +264,7 @@ public struct ReminderRowView: View {
         plant: plant
     )
 
-    // swiftlint:disable:next force_try
-    let dataService = try! DataService()
+    let dataService = DataService.createFallback()
     let notificationService = NotificationService()
     let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
 
