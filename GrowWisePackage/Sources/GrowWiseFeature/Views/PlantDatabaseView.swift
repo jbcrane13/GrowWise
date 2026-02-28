@@ -754,21 +754,7 @@ struct PlantTypeIcon: View {
     }
 }
 
-// PlantType extension removed - already defined in SkillAssessmentView.swift
-extension PlantType {
-    var color: Color {
-        switch self {
-        case .houseplant: return .green
-        case .succulent: return .mint
-        case .flower: return .pink
-        case .vegetable: return .orange
-        case .herb: return .green
-        case .tree: return .brown
-        case .shrub: return .green
-        case .fruit: return .red
-        }
-    }
-}
+
 
 enum GrowWiseError: LocalizedError {
     case dataServiceError
