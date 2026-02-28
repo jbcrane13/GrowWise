@@ -155,23 +155,29 @@ public struct ReminderRowView: View {
         )
     }
     
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return f
+    }()
+
+    private static let dateOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .short
+        f.timeStyle = .none
+        return f
+    }()
+
     private var dueDateText: String {
-        let formatter = DateFormatter()
-        
         if Calendar.current.isDateInToday(reminder.nextDueDate) {
-            formatter.dateStyle = .none
-            formatter.timeStyle = .short
-            return "Today \(formatter.string(from: reminder.nextDueDate))"
+            return "Today \(Self.timeOnlyFormatter.string(from: reminder.nextDueDate))"
         } else if Calendar.current.isDateInYesterday(reminder.nextDueDate) {
             return "Yesterday"
         } else if Calendar.current.isDateInTomorrow(reminder.nextDueDate) {
-            formatter.dateStyle = .none
-            formatter.timeStyle = .short
-            return "Tomorrow \(formatter.string(from: reminder.nextDueDate))"
+            return "Tomorrow \(Self.timeOnlyFormatter.string(from: reminder.nextDueDate))"
         } else {
-            formatter.dateStyle = .short
-            formatter.timeStyle = .none
-            return formatter.string(from: reminder.nextDueDate)
+            return Self.dateOnlyFormatter.string(from: reminder.nextDueDate)
         }
     }
     

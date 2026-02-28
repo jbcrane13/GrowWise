@@ -542,21 +542,28 @@ struct ReminderDetailCard: View {
         .opacity(reminder.isEnabled ? 1.0 : 0.6)
     }
     
+    private static let timeOnlyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
+    private static let dateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        f.timeStyle = .short
+        return f
+    }()
+
     private func formatNextDueDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        
         if Calendar.current.isDateInToday(date) {
-            formatter.timeStyle = .short
-            return "Today at \(formatter.string(from: date))"
+            return "Today at \(Self.timeOnlyFormatter.string(from: date))"
         } else if Calendar.current.isDateInTomorrow(date) {
-            formatter.timeStyle = .short
-            return "Tomorrow at \(formatter.string(from: date))"
+            return "Tomorrow at \(Self.timeOnlyFormatter.string(from: date))"
         } else if Calendar.current.isDateInYesterday(date) {
             return "Yesterday (Overdue)"
         } else {
-            formatter.dateStyle = .medium
-            formatter.timeStyle = .short
-            return formatter.string(from: date)
+            return Self.dateTimeFormatter.string(from: date)
         }
     }
 }

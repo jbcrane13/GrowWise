@@ -58,7 +58,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                                 Text(garden.name ?? "Unnamed Garden").tag(garden as Garden?)
                             }
                         }
-                        .pickerStyle(MenuPickerStyle())
+                        .pickerStyle(.menu)
                     } header: {
                         Text("Garden")
                     } footer: {
@@ -84,7 +84,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                                 .tag(status)
                         }
                     }
-                    .pickerStyle(SegmentedPickerStyle())
+                    .pickerStyle(.segmented)
                 } header: {
                     Text("Health Status")
                 }
@@ -162,7 +162,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                     ProgressView("Adding to garden...")
                         .padding()
                         .background(Color(.systemBackground))
-                        .cornerRadius(10)
+                        .clipShape(RoundedRectangle(cornerRadius: 10))
                         .shadow(radius: 5)
                 }
             }
@@ -171,12 +171,12 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             } message: {
                 Text(errorMessage)
             }
-            .onAppear {
+            .task {
                 loadData()
             }
         }
     }
-    
+
     private func loadData() {
         do {
             availableGardens = try dataService.gardens.fetchAll()

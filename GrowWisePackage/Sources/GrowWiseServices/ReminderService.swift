@@ -983,7 +983,9 @@ extension ReminderService {
         try await notificationService.scheduleReminderNotification(for: reminder)
     }
     
-    /// Cancel notification for a reminder
+    /// Cancel notification for a reminder.
+    /// Kept synchronous because all call sites (toggleReminder, deleteReminder) are
+    /// non-async functions; the fire-and-forget Task is intentional here.
     public func cancelNotification(for reminder: PlantReminder) {
         Task {
             await notificationService.cancelReminderNotification(for: reminder.id)

@@ -59,11 +59,8 @@ public struct ReminderSettingsView: View {
                     .fontWeight(.semibold)
                 }
             }
-            .onAppear {
-                setupTempValues()
-            }
-            // Using .task for automatic cancellation of async authorization check
             .task {
+                setupTempValues()
                 await notificationService.checkAuthorizationStatus()
             }
         }
@@ -287,10 +284,14 @@ public struct ReminderSettingsView: View {
         tempQuietEnd = reminderSettings.quietHoursEnd ?? Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
     }
     
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
     private func formatTime(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.timeFormatter.string(from: date)
     }
     
     private func saveSettings() {

@@ -42,14 +42,18 @@ public struct CompactReminderRow: View {
         .accessibilityHint("Tap to view reminder details")
     }
 
+    private static let timeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.timeStyle = .short
+        return f
+    }()
+
     private var accessibilityLabel: String {
         var label = "\(reminder.title) reminder"
         if let plant = reminder.plant {
             label += " for \(plant.name ?? "Unknown Plant")"
         }
-        let timeFormatter = DateFormatter()
-        timeFormatter.timeStyle = .short
-        label += ", due at \(timeFormatter.string(from: reminder.nextDueDate))"
+        label += ", due at \(Self.timeFormatter.string(from: reminder.nextDueDate))"
         return label
     }
 }

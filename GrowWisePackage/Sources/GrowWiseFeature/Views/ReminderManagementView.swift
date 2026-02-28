@@ -87,7 +87,7 @@ public struct ReminderManagementView: View {
                     )
                 }
             }
-            .onAppear {
+            .task {
                 if reminderSettings == nil {
                     reminderSettings = reminderService.getReminderSettings()
                 }

@@ -141,7 +141,7 @@ public struct AddPlantSheet: View {
                     CompanionDetailsSheet(analysis: analysis)
                 }
             }
-            .onAppear {
+            .task {
                 loadGardens()
             }
             .accessibilityIdentifier("addPlantSheet")

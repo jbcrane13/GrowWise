@@ -81,7 +81,7 @@ public struct JournalView: View {
                             Text(order.displayName).tag(order)
                         }
                     }
-                    .pickerStyle(SegmentedPickerStyle())
+                    .pickerStyle(.segmented)
                     
                     Spacer()
                 }
@@ -90,7 +90,7 @@ public struct JournalView: View {
                 
                 // Journal entries list with pagination
                 if journalEntries.isEmpty {
-                    EmptyJournalView(hasEntries: !journalEntries.isEmpty)
+                    emptyJournalView
                 } else {
                     List {
                         ForEach(paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate), id: \.self) { date in
@@ -113,7 +113,7 @@ public struct JournalView: View {
                                     .foregroundColor(.primary)
                             }
                         }
-                        
+
                         // Load more button
                         if hasMoreData {
                             HStack {
@@ -134,7 +134,7 @@ public struct JournalView: View {
                             .listRowInsets(EdgeInsets())
                         }
                     }
-                    .listStyle(InsetGroupedListStyle())
+                    .listStyle(.insetGrouped)
                 }
             }
             .navigationTitle("Plant Journal")
@@ -164,6 +164,7 @@ public struct JournalView: View {
                 loadInitialData()
             }
             .onChange(of: searchText) { _, _ in
+                filteredCache = nil
                 loadFilteredData(reset: true)
             }
             .onChange(of: selectedPlant) { _, _ in
@@ -177,9 +178,6 @@ public struct JournalView: View {
             }
 
             .searchable(text: $searchText, prompt: "Search journal entries...")
-            .onChange(of: searchText) { _, _ in
-                filteredCache = nil
-            }
             .alert(alertTitle, isPresented: $showAlert) {
                 Button("OK") { }
             } message: {
@@ -189,11 +187,23 @@ public struct JournalView: View {
     }
     
     // MARK: - Computed Properties
-    
-    
-    
-    
-    
+
+    private var emptyJournalView: some View {
+        Group {
+            if !searchText.isEmpty {
+                ContentUnavailableView.search(text: searchText)
+            } else {
+                ContentUnavailableView(
+                    "Start Your Plant Journal",
+                    systemImage: "book.closed",
+                    description: Text("Document your plant care journey with photos and notes.")
+                )
+            }
+        }
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(Color(.systemGroupedBackground))
+    }
+
     private var paginatedGroupedEntries: [String: [JournalEntry]] {
         Dictionary(grouping: journalEntries) { entry in
             formatDateForGrouping(entry.entryDate)
@@ -287,28 +297,34 @@ public struct JournalView: View {
         }
     }
     
+    private static let groupingKeyFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateFormat = "yyyy-MM-dd"
+        return f
+    }()
+
+    private static let sectionDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .medium
+        return f
+    }()
+
     private func formatSectionDate(_ dateString: String) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        
-        guard let date = formatter.date(from: dateString) else {
+        guard let date = Self.groupingKeyFormatter.date(from: dateString) else {
             return dateString
         }
-        
+
         if Calendar.current.isDateInToday(date) {
             return "Today"
         } else if Calendar.current.isDateInYesterday(date) {
             return "Yesterday"
         } else {
-            formatter.dateStyle = .medium
-            return formatter.string(from: date)
+            return Self.sectionDateFormatter.string(from: date)
         }
     }
-    
+
     private func formatDateForGrouping(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateFormat = "yyyy-MM-dd"
-        return formatter.string(from: date)
+        Self.groupingKeyFormatter.string(from: date)
     }
     
     private func sortGroupsByDate(_ lhs: String, _ rhs: String) -> Bool {
@@ -343,43 +359,7 @@ private struct JournalFilterChip: View {
                 )
                 .foregroundColor(isSelected ? .white : .primary)
         }
-        .buttonStyle(PlainButtonStyle())
-    }
-}
-
-private struct EmptyJournalView: View {
-    let hasEntries: Bool
-    
-    var body: some View {
-        VStack(spacing: 20) {
-            Image(systemName: hasEntries ? "magnifyingglass" : "book.closed")
-                .font(.system(size: 60))
-                .foregroundColor(.secondary)
-            
-            VStack(spacing: 8) {
-                Text(hasEntries ? "No entries found" : "Start Your Plant Journal")
-                    .font(.title2)
-                    .fontWeight(.semibold)
-                
-                Text(hasEntries ? 
-                     "Try adjusting your search or filters to find entries." :
-                     "Document your plant care journey with photos and notes."
-                )
-                .font(.body)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-                .padding(.horizontal, 40)
-            }
-            
-            if !hasEntries {
-                Button("Add Your First Entry") {
-                    // This will be handled by the parent view
-                }
-                .buttonStyle(.borderedProminent)
-            }
-        }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .buttonStyle(.plain)
     }
 }
 

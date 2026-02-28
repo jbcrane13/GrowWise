@@ -62,9 +62,7 @@ import os
         guard let privateContainer else { return .couldNotDetermine }
         do {
             let status = try await privateContainer.accountStatus()
-            await MainActor.run {
-                self.accountStatus = status
-            }
+            self.accountStatus = status
             return status
         } catch {
             logger.error("Failed to check account status: \(error.localizedDescription)")
@@ -82,15 +80,9 @@ import os
             throw CloudKitError.accountNotAvailable
         }
         
-        await MainActor.run {
-            isLoadingPublicGardens = true
-        }
-        defer {
-            Task { @MainActor in
-                isLoadingPublicGardens = false
-            }
-        }
-        
+        isLoadingPublicGardens = true
+        defer { isLoadingPublicGardens = false }
+
         // Create a CKRecord for the public garden
         let record = CKRecord(recordType: "PublicGarden")
         record["name"] = garden.name
@@ -122,15 +114,9 @@ import os
         limit: Int = 50,
         cursor: CKQueryOperation.Cursor? = nil
     ) async throws -> ([PublicGarden], CKQueryOperation.Cursor?) {
-        await MainActor.run {
-            isLoadingPublicGardens = true
-            publicDatabaseError = nil
-        }
-        defer {
-            Task { @MainActor in
-                isLoadingPublicGardens = false
-            }
-        }
+        isLoadingPublicGardens = true
+        publicDatabaseError = nil
+        defer { isLoadingPublicGardens = false }
         
         let query = CKQuery(recordType: "PublicGarden", predicate: NSPredicate(value: true))
         
@@ -164,17 +150,13 @@ import os
                 }
             }
             
-            await MainActor.run {
-                self.publicGardens = gardens
-            }
-            
+            self.publicGardens = gardens
+
             logger.info("Fetched \(gardens.count) public gardens")
             return (gardens, newCursor)
         } catch {
             let errorMessage = error.localizedDescription
-            await MainActor.run {
-                self.publicDatabaseError = errorMessage
-            }
+            self.publicDatabaseError = errorMessage
             logger.error("Failed to fetch public gardens: \(errorMessage)")
             throw CloudKitError.fetchFailed(errorMessage)
         }

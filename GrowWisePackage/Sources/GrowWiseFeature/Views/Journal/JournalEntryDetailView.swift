@@ -55,7 +55,7 @@ public struct JournalEntryDetailView: View {
                         if isEditing {
                             TextField("Entry title", text: $editTitle)
                                 .font(.title2)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .textFieldStyle(.roundedBorder)
                         } else if !entry.title.isEmpty {
                             Text(entry.title)
                                 .font(.title2)
@@ -112,7 +112,7 @@ public struct JournalEntryDetailView: View {
                         if isEditing {
                             TextField("Entry content", text: $editContent, axis: .vertical)
                                 .lineLimit(5...10)
-                                .textFieldStyle(RoundedBorderTextFieldStyle())
+                                .textFieldStyle(.roundedBorder)
                         } else if !entry.content.isEmpty {
                             Text(entry.content)
                                 .font(.body)
@@ -311,11 +311,15 @@ public struct JournalEntryDetailView: View {
         }
     }
     
+    private static let fullDateFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .full
+        f.timeStyle = .short
+        return f
+    }()
+
     private func formatFullDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .full
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.fullDateFormatter.string(from: date)
     }
 }
 
@@ -357,7 +361,7 @@ private struct PhotosGallerySection: View {
                                     .stroke(Color(.systemGray4), lineWidth: 1)
                             )
                         }
-                        .buttonStyle(PlainButtonStyle())
+                        .buttonStyle(.plain)
                     }
                 }
                 .padding(.horizontal, 4)
@@ -538,7 +542,7 @@ private struct TagsSection: View {
             if isEditing {
                 HStack {
                     TextField("Add tag", text: $newTag)
-                        .textFieldStyle(RoundedBorderTextFieldStyle())
+                        .textFieldStyle(.roundedBorder)
                         .onSubmit {
                             addTag()
                         }
@@ -633,11 +637,15 @@ private struct MetadataSection: View {
         .clipShape(RoundedRectangle(cornerRadius: 10))
     }
     
+    private static let shortDateTimeFormatter: DateFormatter = {
+        let f = DateFormatter()
+        f.dateStyle = .short
+        f.timeStyle = .short
+        return f
+    }()
+
     private func formatDate(_ date: Date) -> String {
-        let formatter = DateFormatter()
-        formatter.dateStyle = .short
-        formatter.timeStyle = .short
-        return formatter.string(from: date)
+        Self.shortDateTimeFormatter.string(from: date)
     }
 }
 
