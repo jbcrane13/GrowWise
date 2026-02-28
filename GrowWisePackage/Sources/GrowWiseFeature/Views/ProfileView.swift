@@ -66,7 +66,7 @@ public struct ProfileView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
 
             Button {
                 showShareComingSoon = true
@@ -135,7 +135,7 @@ public struct ProfileView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .accessibilityIdentifier("profile_subscription_active")
     }
 
@@ -210,7 +210,7 @@ public struct ProfileView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
     private func planCard(
@@ -245,7 +245,7 @@ public struct ProfileView: View {
             }
             .padding()
             .background(isSelected ? Color.green : Color(.systemBackground))
-            .cornerRadius(10)
+            .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(isSelected ? Color.green : Color(.systemGray4), lineWidth: 1.5)

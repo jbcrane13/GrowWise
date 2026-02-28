@@ -132,7 +132,7 @@ struct GoalCard: View {
                     .stroke(Color.adaptiveGreen, lineWidth: isSelected ? 2 : 0)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .accessibilityLabel(goal.displayName)
     }
 }
@@ -160,7 +160,7 @@ struct GardenTypeButton: View {
             )
             .foregroundColor(isSelected ? .white : .primary)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 
@@ -191,7 +191,7 @@ struct SpaceSizeRow: View {
             }
             .padding(.vertical, 8)
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 

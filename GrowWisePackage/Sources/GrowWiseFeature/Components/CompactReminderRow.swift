@@ -36,7 +36,7 @@ public struct CompactReminderRow: View {
         .padding(.vertical, 8)
         .padding(.horizontal, 12)
         .background(Color(.systemGray6))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
         .accessibilityElement(children: .combine)
         .accessibilityLabel(accessibilityLabel)
         .accessibilityHint("Tap to view reminder details")

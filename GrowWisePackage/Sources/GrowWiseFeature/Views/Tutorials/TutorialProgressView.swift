@@ -140,7 +140,7 @@ public struct TutorialProgressView: View {
                         Text(filter.displayName).tag(filter)
                     }
                 }
-                .pickerStyle(SegmentedPickerStyle())
+                .pickerStyle(.segmented)
                 .frame(width: 200)
             }
             
@@ -321,7 +321,7 @@ struct CategoryProgressCard: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -354,7 +354,7 @@ struct TutorialProgressRow: View {
                         .padding(.vertical, 2)
                         .background(difficultyColor.opacity(0.2))
                         .foregroundColor(difficultyColor)
-                        .cornerRadius(4)
+                        .clipShape(RoundedRectangle(cornerRadius: 4))
                     
                     Text("\(tutorial.estimatedDuration) min")
                         .font(.caption2)
@@ -382,7 +382,7 @@ struct TutorialProgressRow: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var statusColor: Color {

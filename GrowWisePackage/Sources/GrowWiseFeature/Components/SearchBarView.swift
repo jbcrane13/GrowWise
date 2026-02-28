@@ -35,7 +35,7 @@ public struct SearchBarView: View {
             }
         }
         .background(Color(.systemGray6))
-        .cornerRadius(10)
+        .clipShape(RoundedRectangle(cornerRadius: 10))
         .onChange(of: isSearchFieldFocused) { oldValue, newValue in
             withAnimation(.easeInOut(duration: 0.2)) {
                 isEditing = newValue
@@ -85,7 +85,7 @@ public struct SearchBarView: View {
                 .foregroundColor(.secondary)
                 .font(.system(size: 16))
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
     
     private var cancelButton: some View {
@@ -164,7 +164,7 @@ public struct PlantSearchBarView: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(Color.blue.opacity(0.1))
-        .cornerRadius(6)
+        .clipShape(RoundedRectangle(cornerRadius: 6))
     }
 }
 
@@ -357,9 +357,9 @@ public struct SearchSuggestionsView: View {
                             .padding(.vertical, 6)
                             .background(Color(.systemGray6))
                             .foregroundColor(.primary)
-                            .cornerRadius(16)
+                            .clipShape(RoundedRectangle(cornerRadius: 16))
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                 }
             }
             .padding(.horizontal)

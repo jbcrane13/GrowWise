@@ -412,7 +412,7 @@ struct PlantDetailView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
     }
     
@@ -462,7 +462,7 @@ struct PlantDetailView: View {
                 .padding()
                 .background(color.opacity(0.1))
                 .foregroundColor(color)
-                .cornerRadius(12)
+                .clipShape(RoundedRectangle(cornerRadius: 12))
             }
             .disabled(isLoading)
         }
@@ -578,7 +578,7 @@ struct PlantDetailView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
     
@@ -617,7 +617,7 @@ struct PlantDetailView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(8)
+            .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }

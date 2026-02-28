@@ -138,13 +138,13 @@ public struct MyGardenView: View {
                     NavigationLink(value: plant) {
                         PlantCardView(plant: plant)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                 }
             }
             .padding()
         }
     }
-    
+
     private var loadingView: some View {
         VStack(spacing: 16) {
             ProgressView()
@@ -156,33 +156,21 @@ public struct MyGardenView: View {
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "leaf.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.gray)
-            
-            VStack(spacing: 8) {
-                Text(emptyStateTitle)
-                    .font(.headline)
-                
-                Text(emptyStateMessage)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            
+        ContentUnavailableView {
+            Label(emptyStateTitle, systemImage: "leaf.circle")
+        } description: {
+            Text(emptyStateMessage)
+        } actions: {
             Button("Add Your First Plant") {
                 showingAddPlant = true
             }
             .buttonStyle(.borderedProminent)
-            
+
             Button("Create Garden") {
                 showingCreateGarden = true
             }
             .buttonStyle(.bordered)
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private var sortMenuButton: some View {
@@ -342,7 +330,7 @@ struct GardenChip: View {
                 .padding(.vertical, 6)
                 .background(isSelected ? Color.blue : Color(.systemGray5))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(16)
+                .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
@@ -427,7 +415,7 @@ struct FilterChip: View {
                 .frame(maxWidth: .infinity)
                 .background(isSelected ? Color.blue : Color(.systemGray6))
                 .foregroundColor(isSelected ? .white : .primary)
-                .cornerRadius(8)
+                .clipShape(RoundedRectangle(cornerRadius: 8))
         }
     }
 }

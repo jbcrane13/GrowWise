@@ -83,7 +83,7 @@ public struct PlantReminderCard: View {
                     )
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
         .task {
             loadWateringReminders()
         }

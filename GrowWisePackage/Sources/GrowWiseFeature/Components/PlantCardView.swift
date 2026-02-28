@@ -25,7 +25,7 @@ public struct PlantCardView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(16)
+        .clipShape(RoundedRectangle(cornerRadius: 16))
         .shadow(color: .black.opacity(0.05), radius: 4, x: 0, y: 2)
     }
     
@@ -135,7 +135,7 @@ public struct PlantCardView: View {
                 Image(systemName: "ellipsis")
                     .foregroundColor(.secondary)
             }
-            .buttonStyle(PlainButtonStyle())
+            .buttonStyle(.plain)
         }
     }
     
@@ -207,7 +207,7 @@ struct HealthStatusBadge: View {
         .padding(.horizontal, 8)
         .padding(.vertical, 4)
         .background(statusColor.opacity(0.1))
-        .cornerRadius(8)
+        .clipShape(RoundedRectangle(cornerRadius: 8))
     }
     
     private var statusColor: Color {
@@ -281,9 +281,9 @@ struct QuickActionButton: View {
             .padding(.vertical, 4)
             .background(color.opacity(0.1))
             .foregroundColor(color)
-            .cornerRadius(6)
+            .clipShape(RoundedRectangle(cornerRadius: 6))
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 
@@ -298,7 +298,7 @@ struct PlantTypeBadge: View {
             .padding(.vertical, 2)
             .background(Color.blue.opacity(0.2))
             .foregroundColor(.blue)
-            .cornerRadius(4)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 }
 
@@ -313,7 +313,7 @@ struct DifficultyBadge: View {
             .padding(.vertical, 2)
             .background(backgroundColor)
             .foregroundColor(.white)
-            .cornerRadius(4)
+            .clipShape(RoundedRectangle(cornerRadius: 4))
     }
     
     private var backgroundColor: Color {

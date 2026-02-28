@@ -501,7 +501,7 @@ private struct TagsSection: View {
         VStack(alignment: .leading, spacing: 8) {
             HStack {
                 TextField("Add tag", text: $newTag)
-                    .textFieldStyle(RoundedBorderTextFieldStyle())
+                    .textFieldStyle(.roundedBorder)
                     .onSubmit {
                         addTag()
                     }

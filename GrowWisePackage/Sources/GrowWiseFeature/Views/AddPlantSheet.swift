@@ -272,7 +272,7 @@ struct CompanionPlantingSection: View {
                                     .padding(.vertical, 4)
                                     .background(Color.green.opacity(0.2))
                                     .foregroundColor(.green)
-                                    .cornerRadius(8)
+                                    .clipShape(RoundedRectangle(cornerRadius: 8))
                             }
                         }
                     }

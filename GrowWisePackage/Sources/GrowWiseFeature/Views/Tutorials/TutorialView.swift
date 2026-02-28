@@ -105,7 +105,7 @@ public struct TutorialView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var tutorialListSection: some View {
@@ -127,7 +127,7 @@ public struct TutorialView: View {
                     NavigationLink(value: tutorial) {
                         TutorialRowView(tutorial: tutorial, tutorialService: tutorialService)
                     }
-                    .buttonStyle(PlainButtonStyle())
+                    .buttonStyle(.plain)
                 }
             }
         }
@@ -169,7 +169,7 @@ struct CategoryChip: View {
             .padding(.vertical, 8)
             .background(isSelected ? Color.blue : Color(.systemGray5))
             .foregroundColor(isSelected ? .white : .primary)
-            .cornerRadius(16)
+            .clipShape(RoundedRectangle(cornerRadius: 16))
         }
     }
 }
@@ -230,7 +230,7 @@ struct FeaturedTutorialCard: View {
                         .padding(.vertical, 4)
                         .background(Color.green.opacity(0.2))
                         .foregroundColor(.green)
-                        .cornerRadius(8)
+                        .clipShape(RoundedRectangle(cornerRadius: 8))
                 }
             }
             .padding()
@@ -241,13 +241,13 @@ struct FeaturedTutorialCard: View {
                     endPoint: .bottomTrailing
                 )
             )
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
             .overlay(
                 RoundedRectangle(cornerRadius: 12)
                     .stroke(Color.green.opacity(0.3), lineWidth: 1)
             )
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
 }
 
@@ -298,7 +298,7 @@ struct TutorialRowView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
     
     private var difficultyColor: Color {

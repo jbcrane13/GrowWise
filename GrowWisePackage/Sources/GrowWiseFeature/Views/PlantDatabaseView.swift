@@ -55,21 +55,6 @@ public struct PlantDatabaseView: View {
         }
         // Native SwiftUI search bar with built-in debouncing
         .searchable(text: $searchText, prompt: "Search plants...")
-        .onChange(of: searchText) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedPlantType) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedDifficulty) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedSunlight) { _, _ in
-            filterAndSortPlants()
-        }
-        .onChange(of: selectedSortOption) { _, _ in
-            filterAndSortPlants()
-        }
     }
     
     private var activeFiltersSection: some View {
@@ -142,30 +127,17 @@ public struct PlantDatabaseView: View {
     }
     
     private var emptyStateView: some View {
-        VStack(spacing: 20) {
-            Image(systemName: "magnifyingglass.circle")
-                .font(.system(size: 60))
-                .foregroundColor(.gray)
-            
-            VStack(spacing: 8) {
-                Text("No Plants Found")
-                    .font(.headline)
-                
-                Text("Try adjusting your search or filters to find plants.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            
-            if hasActiveFilters {
-                Button("Clear Filters") {
-                    clearAllFilters()
-                }
-                .buttonStyle(.borderedProminent)
+        Group {
+            if !searchText.isEmpty {
+                ContentUnavailableView.search(text: searchText)
+            } else {
+                ContentUnavailableView(
+                    "No Plants Found",
+                    systemImage: "magnifyingglass.circle",
+                    description: Text("Try adjusting your filters to find plants.")
+                )
             }
         }
-        .padding()
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
     }
     
     private var sortMenuButton: some View {
@@ -263,10 +235,6 @@ public struct PlantDatabaseView: View {
         selectedSunlight = nil
     }
     
-    private func filterAndSortPlants() {
-        // The filteredPlants computed property handles this
-    }
-    
     @MainActor
     private func loadDatabasePlants() async {
         isLoading = true
@@ -346,11 +314,11 @@ struct DatabasePlantCardView: View {
             }
             .padding()
             .background(Color(.systemGray6))
-            .cornerRadius(12)
+            .clipShape(RoundedRectangle(cornerRadius: 12))
         }
-        .buttonStyle(PlainButtonStyle())
+        .buttonStyle(.plain)
     }
-    
+
     private func sunlightShorthand(_ sunlight: SunlightLevel) -> String {
         switch sunlight {
         case .fullSun: return "Full Sun"
@@ -363,7 +331,7 @@ struct DatabasePlantCardView: View {
     private func wateringShorthand(_ watering: WateringFrequency) -> String {
         switch watering {
         case .daily: return "Daily"
-        case .everyOtherDay: return "2x/week"
+        case .everyOtherDay: return "3-4x/week"
         case .twiceWeekly: return "2x/week"
         case .weekly: return "Weekly"
         case .biweekly: return "Bi-weekly"
@@ -428,7 +396,7 @@ struct FilterTag: View {
         .padding(.vertical, 4)
         .background(color.opacity(0.2))
         .foregroundColor(color)
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 }
 
@@ -624,9 +592,9 @@ struct PlantDatabaseDetailView: View {
         }
         .padding()
         .background(Color(.systemGray6))
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
     }
-    
+
     private var descriptionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             Text("About This Plant")
@@ -669,7 +637,7 @@ struct PlantDatabaseDetailView: View {
         .frame(maxWidth: .infinity)
         .padding()
         .background(Color.blue)
-        .cornerRadius(12)
+        .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding()
         .background(Color(.systemBackground))
     }
