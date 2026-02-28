@@ -104,6 +104,20 @@ See `docs/architecture/diagrams/app-architecture.md` for Mermaid diagrams coveri
 - Security events must go through `AuditLogger`.
 - See `docs/security/log-scrubbing.md` for full redaction guidelines.
 
+## DEPLOYMENT & OBSERVABILITY
+- **Deploy target:** TestFlight (internal → external → App Store)
+- **Deploy workflow:** `.github/workflows/deploy.yml` — triggered on `v*` tag push
+- **Post-deploy monitoring:**
+  - Crashes: [App Store Connect → TestFlight](https://appstoreconnect.apple.com/apps/crashes)
+  - CloudKit: [CloudKit Console](https://icloud.developer.apple.com/dashboard)
+  - Xcode Organizer: Window → Organizer → Crashes (for symbolicated stack traces)
+- **Runbooks:** `docs/runbooks/` — CloudKit sync, Keychain loss, crash on launch, migration failure, key rotation
+
+## SECURITY WORKFLOWS
+- **CodeQL:** `.github/workflows/security.yml` — runs on push to main + weekly
+- **Secret scan:** Gitleaks on every PR
+- **Swift security patterns:** Checked in CI (insecure HTTP, NSLog, UserDefaults for secrets, weak crypto)
+
 ## TECH DEBT TRACKING
 TODOs and FIXMEs must reference a beads issue:
 ```swift

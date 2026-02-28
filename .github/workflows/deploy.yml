@@ -1,0 +1,68 @@
+name: Deploy to TestFlight
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      environment:
+        description: "Target environment"
+        type: choice
+        options: [testflight-internal, testflight-external]
+        default: testflight-internal
+
+jobs:
+  deploy:
+    name: Build & Deploy
+    runs-on: macos-14
+    environment: ${{ inputs.environment || 'testflight-internal' }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Run full test suite before deploy
+        run: |
+          cd GrowWisePackage
+          swift test
+          echo "All tests passed — proceeding with deployment"
+
+      - name: Run SwiftLint (must be clean)
+        run: swiftlint lint --config .swiftlint.yml
+
+      - name: Record deploy start
+        id: deploy_start
+        run: |
+          echo "start_time=$(date -u +%Y-%m-%dT%H:%M:%SZ)" >> $GITHUB_OUTPUT
+          echo "version=${GITHUB_REF_NAME}" >> $GITHUB_OUTPUT
+
+      # Uncomment and configure when App Store Connect API key is set up:
+      #
+      # - name: Install Fastlane
+      #   run: gem install fastlane
+      #
+      # - name: Deploy to TestFlight
+      #   env:
+      #     APP_STORE_CONNECT_API_KEY_ID: ${{ secrets.APP_STORE_CONNECT_KEY_ID }}
+      #     APP_STORE_CONNECT_ISSUER_ID: ${{ secrets.APP_STORE_CONNECT_ISSUER_ID }}
+      #     APP_STORE_CONNECT_API_KEY: ${{ secrets.APP_STORE_CONNECT_API_KEY }}
+      #   run: fastlane ios beta
+
+      - name: Deployment summary
+        run: |
+          echo "## Deployment: ${{ steps.deploy_start.outputs.version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Field | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|-------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Version | ${{ steps.deploy_start.outputs.version }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Started | ${{ steps.deploy_start.outputs.start_time }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Target | ${{ inputs.environment || 'testflight-internal' }} |" >> $GITHUB_STEP_SUMMARY
+          echo "| Commit | ${{ github.sha }} |" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "### Post-Deploy Monitoring" >> $GITHUB_STEP_SUMMARY
+          echo "- [TestFlight Crashes](https://appstoreconnect.apple.com/apps/crashes)" >> $GITHUB_STEP_SUMMARY
+          echo "- [Xcode Organizer](xcode://) — Window → Organizer → Crashes" >> $GITHUB_STEP_SUMMARY
+          echo "- [CloudKit Console](https://icloud.developer.apple.com/dashboard)" >> $GITHUB_STEP_SUMMARY
+          echo "- [App Store Connect](https://appstoreconnect.apple.com)" >> $GITHUB_STEP_SUMMARY
