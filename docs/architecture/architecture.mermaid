@@ -1,0 +1,134 @@
+%% GrowWise iOS Architecture
+%% Module dependency graph and service flow
+
+graph TD
+    subgraph App["GrowWise App Shell"]
+        CultivationApp["CultivationApp<br/>(Entry Point)"]
+    end
+
+    subgraph Feature["GrowWiseFeature"]
+        direction TB
+        Views["Views<br/>HomeView, MyGardenView,<br/>JournalView, ProfileView,<br/>PlantDatabaseView, TutorialsView"]
+        Onboarding["Onboarding Flow<br/>SkillAssessment, LocationSetup,<br/>GardeningGoals"]
+        Components["Components<br/>WeatherCard, StatsWidget,<br/>ReminderRow, ValidatedTextField"]
+    end
+
+    subgraph Services["GrowWiseServices"]
+        direction TB
+
+        subgraph Core["Core Services"]
+            DataService["DataService<br/>(@Observable, @MainActor)<br/>SwiftData CRUD"]
+            ReminderService["ReminderService<br/>Weather-adjusted reminders"]
+            NotificationService["NotificationService<br/>UNUserNotification"]
+            LocationService["LocationService<br/>CLLocationManager,<br/>Hardiness zones"]
+        end
+
+        subgraph Data["Data & Sync"]
+            CloudSync["CloudSyncService<br/>CKContainer<br/>iCloud private DB"]
+            PlantDB["PlantDatabaseService<br/>Curated plant catalog"]
+            CompanionPlanting["CompanionPlantingService<br/>JSON resource"]
+            Repositories["Repositories<br/>PlantRepository, GardenRepository,<br/>JournalRepository, StatsRepository,<br/>UserRepository, ReminderRepository"]
+        end
+
+        subgraph Security["Security Layer"]
+            Keychain["KeychainManager<br/>Keychain CRUD"]
+            KSS["KeychainStorageService<br/>Structured storage"]
+            Encryption["EncryptionService<br/>AES-256-GCM"]
+            SecureEnclave["SecureEnclaveKeyManager<br/>Hardware-backed keys"]
+            KeyRotation["KeyRotationManager"]
+            Biometric["BiometricAuthenticationManager<br/>Face ID / Touch ID"]
+            JWT["JWTValidator /<br/>TokenManagementService"]
+            AuditLog["AuditLogger"]
+        end
+
+        subgraph Observability["Observability"]
+            ObsService["ObservabilityService<br/>Sentry SDK"]
+            Analytics["AnalyticsService<br/>Amplitude SDK"]
+            PerfMon["PerformanceMonitor"]
+        end
+
+        subgraph Support["Support Services"]
+            TutorialService["TutorialService"]
+            PhotoService["PhotoService"]
+            Validation["ValidationService"]
+            Subscription["SubscriptionService"]
+            FeatureFlags["FeatureFlagService"]
+            Migration["MigrationIntegrityService /<br/>LegacyEncryptionMigrationService"]
+        end
+    end
+
+    subgraph Models["GrowWiseModels"]
+        Plant["Plant"]
+        Garden["Garden"]
+        User["User"]
+        PlantReminder["PlantReminder"]
+        JournalEntry["JournalEntry"]
+        SoilLog["SoilLog"]
+    end
+
+    subgraph External["External Systems"]
+        CloudKit["Apple CloudKit<br/>(iCloud private DB)"]
+        KeychainOS["iOS Keychain"]
+        SecureEnclaveHW["Secure Enclave<br/>(Hardware)"]
+        UNNotifications["UNUserNotification<br/>Center"]
+        CLLocation["CoreLocation"]
+        SentryCloud["Sentry.io"]
+        AmplitudeCloud["Amplitude"]
+    end
+
+    %% App shell -> Feature
+    CultivationApp --> Views
+    CultivationApp --> Onboarding
+
+    %% Feature -> Services (via @Environment injection)
+    Views --> DataService
+    Views --> ReminderService
+    Views --> LocationService
+    Views --> PlantDB
+    Views --> TutorialService
+    Views --> PhotoService
+    Views --> Subscription
+    Views --> CompanionPlanting
+    Onboarding --> LocationService
+    Onboarding --> DataService
+
+    %% Feature -> Models (read model properties)
+    Views --> Plant
+    Views --> Garden
+    Views --> JournalEntry
+
+    %% Services internal dependencies
+    DataService --> Repositories
+    Repositories --> Models
+    ReminderService --> NotificationService
+    ReminderService --> LocationService
+    CloudSync --> DataService
+    KSS --> Keychain
+    Encryption --> SecureEnclave
+    KeyRotation --> Encryption
+    KeyRotation --> KSS
+
+    %% Services -> External
+    CloudSync --> CloudKit
+    Keychain --> KeychainOS
+    SecureEnclave --> SecureEnclaveHW
+    NotificationService --> UNNotifications
+    LocationService --> CLLocation
+    ObsService --> SentryCloud
+    Analytics --> AmplitudeCloud
+
+    %% Styling
+    classDef app fill:#E8F5E9,stroke:#2E7D32
+    classDef feature fill:#E3F2FD,stroke:#1565C0
+    classDef service fill:#FFF3E0,stroke:#E65100
+    classDef model fill:#F3E5F5,stroke:#6A1B9A
+    classDef external fill:#ECEFF1,stroke:#546E7A
+
+    class CultivationApp app
+    class Views,Onboarding,Components feature
+    class DataService,ReminderService,NotificationService,LocationService,CloudSync,PlantDB,CompanionPlanting,Repositories service
+    class Keychain,KSS,Encryption,SecureEnclave,KeyRotation,Biometric,JWT,AuditLog service
+    class ObsService,Analytics,PerfMon service
+    class TutorialService,PhotoService,Validation,Subscription,FeatureFlags,Migration service
+    class Plant,Garden,User,PlantReminder,JournalEntry,SoilLog model
+    class CloudKit,KeychainOS,SecureEnclaveHW,UNNotifications,CLLocation,SentryCloud,AmplitudeCloud external

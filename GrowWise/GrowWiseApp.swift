@@ -10,6 +10,8 @@ struct CultivationApp: App {
     @State private var notificationService = NotificationService()
     @State private var performanceMonitor = PerformanceMonitor()
     @State private var cloudSyncService = CloudSyncService()
+    @State private var observability = ObservabilityService.shared
+    @State private var analytics = AnalyticsService.shared
 
     init() {
         let launchArgs = ProcessInfo.processInfo.arguments
@@ -46,6 +48,13 @@ struct CultivationApp: App {
             Task { @MainActor in
                 AuthenticationInitializer.initialize()
             }
+
+            // Initialize observability (Sentry) and analytics (Amplitude)
+            // DSNs/keys are resolved from environment variables or Xcode scheme
+            let isDev = launchEnv["GROWWISE_ENV"] == "development"
+            let env = isDev ? "development" : "production"
+            ObservabilityService.shared.configure(environment: env)
+            AnalyticsService.shared.configure(isDevelopment: isDev)
         }
     }
 
@@ -56,6 +65,8 @@ struct CultivationApp: App {
                 .environment(notificationService)
                 .environment(performanceMonitor)
                 .environment(cloudSyncService)
+                .environment(observability)
+                .environment(analytics)
         }
     }
 

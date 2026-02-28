@@ -24,7 +24,14 @@ let package = Package(
         ),
     ],
     dependencies: [
-        // Add dependencies if needed
+        .package(
+            url: "https://github.com/getsentry/sentry-cocoa",
+            from: "8.40.0"
+        ),
+        .package(
+            url: "https://github.com/amplitude/Amplitude-Swift",
+            from: "1.10.0"
+        ),
     ],
     targets: [
         // Core feature module - main app views and navigation
@@ -43,7 +50,11 @@ let package = Package(
         // Services for external integrations
         .target(
             name: "GrowWiseServices",
-            dependencies: ["GrowWiseModels"],
+            dependencies: [
+                "GrowWiseModels",
+                .product(name: "Sentry", package: "sentry-cocoa"),
+                .product(name: "AmplitudeSwift", package: "Amplitude-Swift"),
+            ],
             exclude: ["AGENTS.md"],
             resources: [.process("CompanionPlantingData.json")]
         ),
