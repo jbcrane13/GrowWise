@@ -4,6 +4,17 @@
 **Commit:** $(git rev-parse --short HEAD 2026-02-27 2>/dev/null || echo "Unknown")
 **Branch:** $(git rev-parse --abbrev-ref HEAD 2026-02-27 2>/dev/null || echo "Unknown")
 
+## Agent Readiness
+
+Before starting work, read **`docs/agent-readiness/README.md`** (when it exists). It describes the current readiness level, coding conventions introduced by previous sessions (TODO format, log scrubbing rules, lint config, etc.), and which skill files to use for common agent tasks.
+
+| Resource | Location | Purpose |
+|----------|----------|---------|
+| Agent Readiness | `docs/agent-readiness/README.md` | Current readiness score, conventions, key files — **read first** |
+| Skills | `.factory/skills/` | Reusable agent skill definitions |
+| Droids | `.factory/droids/` | Agent droid configurations |
+| Session Reports | `docs/agent-readiness/NN-*.md` | Per-session change reports |
+
 ## OVERVIEW
 GrowWise is an iOS gardening companion app (iOS 17+) using Swift 6 strict concurrency, SwiftData with CloudKit sync, and SwiftUI. It features a heavy custom security layer (Keychain, AES-256-GCM, Secure Enclave) alongside standard gardening tracking and journal features.
 
