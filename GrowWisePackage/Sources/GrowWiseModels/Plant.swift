@@ -32,11 +32,15 @@ public final class Plant {
     public var gardenLocation: String? // CloudKit: made optional or with default value
     public var containerType: ContainerType? // CloudKit: made optional or with default value
 
-    // Relationships
+    /// Relationships
     public var garden: Garden? // CloudKit: made optional or with default value
-    public var reminders: [PlantReminder]? // CloudKit: made optional or with default value
-    public var journalEntries: [JournalEntry]? // CloudKit: made optional or with default value
-    public var companionPlants: [Plant]? // CloudKit: made optional or with default value
+    @Relationship(deleteRule: .cascade, inverse: \PlantReminder.plant)
+    public var reminders: [PlantReminder]?
+    @Relationship(deleteRule: .cascade, inverse: \JournalEntry.plant)
+    public var journalEntries: [JournalEntry]?
+    public var companionPlants: [String]?
+    @Relationship(deleteRule: .cascade, inverse: \SoilLog.plant)
+    public var soilLogs: [SoilLog]?
 
     public init(
         name: String,
@@ -58,7 +62,8 @@ public final class Plant {
         photoURLs = []
         reminders = []
         journalEntries = []
-        companionPlants = []
+        companionPlants = [] as [String]
+        soilLogs = []
     }
 }
 

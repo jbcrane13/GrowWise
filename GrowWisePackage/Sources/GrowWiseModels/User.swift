@@ -22,7 +22,8 @@ public final class User {
     public var latitude: Double? // CloudKit: made optional or with default value
     public var longitude: Double? // CloudKit: made optional or with default value
 
-    public var reminderSettings: ReminderSettings? // CloudKit: made optional or with default value
+    @Relationship(deleteRule: .cascade, inverse: \ReminderSettings.user)
+    public var reminderSettings: ReminderSettings?
     public var measurementSystem = MeasurementSystem.imperial // CloudKit: made optional or with default value
     public var language: String? // CloudKit: made optional or with default value
 
@@ -37,13 +38,15 @@ public final class User {
     public var plantsHarvested: Int = 0 // CloudKit: made optional or with default value
     public var streakDays: Int = 0 // CloudKit: made optional or with default value
     public var achievementPoints: Int = 0 // CloudKit: made optional or with default value
-    @Attribute(.transformable(by: "NSSecureUnarchiveFromDataTransformer"))
-    public var completedTutorials: [String] = [] // CloudKit: made optional or with default value
+    public var completedTutorials: [String] = []
 
-    // Relationships
-    public var gardens: [Garden]? // CloudKit: made optional or with default value
-    public var reminders: [PlantReminder]? // CloudKit: made optional or with default value
-    public var journalEntries: [JournalEntry]? // CloudKit: made optional or with default value
+    /// Relationships
+    @Relationship(deleteRule: .nullify, inverse: \Garden.user)
+    public var gardens: [Garden]?
+    @Relationship(deleteRule: .nullify, inverse: \PlantReminder.user)
+    public var reminders: [PlantReminder]?
+    @Relationship(deleteRule: .nullify, inverse: \JournalEntry.user)
+    public var journalEntries: [JournalEntry]?
 
     // Metadata
     public var createdDate: Date = Foundation.Date() // CloudKit: made optional or with default value
