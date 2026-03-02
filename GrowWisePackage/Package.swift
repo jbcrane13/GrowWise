@@ -26,7 +26,7 @@ let package = Package(
     dependencies: [
         .package(
             url: "https://github.com/getsentry/sentry-cocoa",
-            from: "8.40.0"
+            from: "9.5.1"
         ),
         .package(
             url: "https://github.com/amplitude/Amplitude-Swift",
