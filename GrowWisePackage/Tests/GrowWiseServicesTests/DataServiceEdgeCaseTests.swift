@@ -584,13 +584,14 @@ struct DataServiceEdgeCaseTests {
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Sunflower", type: .flower, garden: garden)
 
-        let pastDue = Date().addingTimeInterval(-7200) // 2 hours ago
+        // Use start of today + 1 hr to guarantee it's within today's active window regardless of test time
+        let dueDate = Calendar.current.startOfDay(for: Date()).addingTimeInterval(3600)
         let reminder = try service.createReminder(
             title: "Water Sunflower",
-            message: "Past due",
+            message: "Active today",
             type: .watering,
             frequency: .daily,
-            dueDate: pastDue,
+            dueDate: dueDate,
             plant: plant
         )
 

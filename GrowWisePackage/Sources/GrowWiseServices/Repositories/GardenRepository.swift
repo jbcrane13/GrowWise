@@ -46,6 +46,15 @@ public final class GardenRepository {
         return garden
     }
 
+    public func update(_ garden: Garden) throws {
+        garden.lastModified = Date()
+        do {
+            try context.save()
+        } catch {
+            throw GardenError.saveFailed(error)
+        }
+    }
+
     public func delete(_ garden: Garden) throws {
         context.delete(garden)
         do {
