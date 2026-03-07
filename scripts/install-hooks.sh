@@ -1,43 +1,39 @@
 #!/usr/bin/env sh
-# Install quality check git hooks for GrowWise
-# This script chains SwiftLint/SwiftFormat quality checks with the existing beads hook.
-#
+# Install git hooks for GrowWise
 # Usage: ./scripts/install-hooks.sh
 
 set -e
 
-HOOK_DIR="$(git rev-parse --git-dir)/hooks"
-SCRIPTS_HOOK="scripts/hooks/pre-commit-quality"
+SCRIPT_DIR="$(cd "$(dirname "$0")" && pwd)"
+PROJECT_ROOT="$(dirname "$SCRIPT_DIR")"
+HOOKS_DIR="$PROJECT_ROOT/.git/hooks"
 
-# Verify tools are available
-if ! command -v swiftlint >/dev/null 2>&1; then
-    echo "ERROR: swiftlint not found. Install with: brew install swiftlint"
-    exit 1
+echo "Installing git hooks..."
+
+# Copy the pre-commit-quality hook
+if [ -f "$SCRIPT_DIR/hooks/pre-commit-quality" ]; then
+    cp "$SCRIPT_DIR/hooks/pre-commit-quality" "$HOOKS_DIR/pre-commit-quality"
+else
+    echo "WARNING: pre-commit-quality not found"
 fi
+chmod +x "$HOOKS_DIR/pre-commit-quality" 2>/dev/null || true
 
-if ! command -v swiftformat >/dev/null 2>&1; then
-    echo "ERROR: swiftformat not found. Install with: brew install swiftformat"
-    exit 1
+# Copy the pre-push-quality hook
+if [ -f "$SCRIPT_DIR/hooks/pre-push-quality" ]; then
+    cp "$SCRIPT_DIR/hooks/pre-push-quality" "$HOOKS_DIR/pre-push-quality"
+else
+    echo "WARNING: pre-push-quality not found"
 fi
+chmod +x "$HOOKS_DIR/pre-push-quality" 2>/dev/null || true
 
-# Install the quality pre-commit hook
-# The beads hook already exists — we wrap it to also run quality checks
-CURRENT_HOOK="$HOOK_DIR/pre-commit"
-QUALITY_HOOK="$HOOK_DIR/pre-commit-quality"
-
-# Copy quality hook script
-cp "$SCRIPTS_HOOK" "$QUALITY_HOOK"
-chmod +x "$QUALITY_HOOK"
-
-# If the current pre-commit is a beads shim, wrap it
-if grep -q "bd-shim\|beads" "$CURRENT_HOOK" 2>/dev/null; then
-    echo "Detected beads pre-commit hook — creating chained wrapper..."
-    mv "$CURRENT_HOOK" "$HOOK_DIR/pre-commit-beads"
-
-    cat > "$CURRENT_HOOK" << 'EOF'
+# Update the main pre-commit hook to chain quality checks
+if grep -q "pre-commit-quality" "$HOOKS_DIR/pre-commit" 2>/dev/null; then
+    echo "  pre-commit already chains quality hooks"
+else
+    cat > "$HOOKS_DIR/pre-commit" << 'EOF'
 #!/usr/bin/env sh
 # GrowWise chained pre-commit hook
-# Runs: beads export → quality checks (SwiftLint + SwiftFormat)
+# Runs: beads sync → quality checks (SwiftLint + SwiftFormat)
 
 HOOK_DIR="$(dirname "$0")"
 
@@ -51,15 +47,38 @@ if [ -f "$HOOK_DIR/pre-commit-quality" ]; then
     "$HOOK_DIR/pre-commit-quality" "$@" || exit 1
 fi
 EOF
-    chmod +x "$CURRENT_HOOK"
-    echo "Chained hook installed at $CURRENT_HOOK"
-else
-    echo "Installing quality hook at $CURRENT_HOOK"
-    cp "$SCRIPTS_HOOK" "$CURRENT_HOOK"
-    chmod +x "$CURRENT_HOOK"
+    chmod +x "$HOOKS_DIR/pre-commit"
+    echo "  Updated pre-commit hook"
 fi
 
+# Update the main pre-push hook to chain quality checks
+if grep -q "pre-push-quality" "$HOOKS_DIR/pre-push" 2>/dev/null; then
+    echo "  pre-push already chains quality hooks"
+else
+    cat > "$HOOKS_DIR/pre-push" << 'EOF'
+#!/usr/bin/env sh
+# GrowWise chained pre-push hook
+# Runs: beads sync → build verification
+
+HOOK_DIR="$(dirname "$0")"
+
+# 1. Run beads hook
+if command -v bd >/dev/null 2>&1; then
+    export BD_GIT_HOOK=1
+    bd hooks run pre-push "$@"
+    _bd_exit=$?; if [ $_bd_exit -ne 0 ]; then exit $_bd_exit; fi
+fi
+
+# 2. Run build verification
+if [ -f "$HOOK_DIR/pre-push-quality" ]; then
+    "$HOOK_DIR/pre-push-quality" "$@" || exit 1
+fi
+EOF
+    chmod +x "$HOOKS_DIR/pre-push"
+    echo "  Updated pre-push hook"
+fi
+
+echo "✓ Git hooks installed"
 echo ""
-echo "Quality hooks installed successfully."
-echo "  - SwiftLint will run on every commit"
-echo "  - SwiftFormat will verify formatting on every commit"
+echo "Pre-commit runs: beads sync → SwiftLint → SwiftFormat"
+echo "Pre-push runs: beads sync → build verification"
