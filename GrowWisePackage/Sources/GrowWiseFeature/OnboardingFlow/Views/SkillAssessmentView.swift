@@ -6,77 +6,75 @@ struct SkillAssessmentView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 28) {
                 // Header
+                OnboardingStepHeader(
+                    icon: "graduationcap.fill",
+                    iconColor: Color.botanicalForest,
+                    title: "What's your experience?",
+                    subtitle: "We'll personalize your plant recommendations\nand care guides to match your skill level."
+                )
+
+                // Skill level cards
                 VStack(spacing: 12) {
-                    Image(systemName: "brain.head.profile")
-                        .font(.system(size: 50))
-                        .foregroundColor(.adaptiveGreen)
-
-                    Text("What's your gardening experience?")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
-
-                    Text("This helps us personalize your experience and recommend the right plants for you.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding(.top)
-
-                // Skill level options
-                VStack(spacing: 16) {
                     ForEach(GardeningSkillLevel.allCases, id: \.self) { level in
                         SkillLevelCard(
                             level: level,
                             isSelected: userProfile.skillLevel == level,
                             action: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
                                     userProfile.skillLevel = level
                                 }
                             }
                         )
+                        .accessibilityIdentifier("onboarding_skill_\(level.rawValue)")
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
 
-                // Additional interests
+                // Interest tags — shown for intermediate and above
                 if userProfile.skillLevel != .beginner {
-                    VStack(alignment: .leading, spacing: 12) {
+                    VStack(alignment: .leading, spacing: 14) {
                         Text("What interests you most?")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color.botanicalForest)
+                            .padding(.horizontal, 24)
 
-                        LazyVGrid(columns: Array(repeating: GridItem(.flexible(), spacing: 8), count: 2), spacing: 8) {
+                        LazyVGrid(
+                            columns: Array(repeating: GridItem(.flexible(), spacing: 10), count: 2),
+                            spacing: 10
+                        ) {
                             ForEach(PlantType.allCases, id: \.self) { plantType in
                                 InterestTag(
                                     plantType: plantType,
                                     isSelected: userProfile.interests.contains(plantType),
                                     action: {
-                                        if userProfile.interests.contains(plantType) {
-                                            userProfile.interests.remove(plantType)
-                                        } else {
-                                            userProfile.interests.insert(plantType)
+                                        withAnimation(.spring(duration: 0.25, bounce: 0.2)) {
+                                            if userProfile.interests.contains(plantType) {
+                                                userProfile.interests.remove(plantType)
+                                            } else {
+                                                userProfile.interests.insert(plantType)
+                                            }
                                         }
                                     }
                                 )
+                                .accessibilityIdentifier("onboarding_interest_\(plantType.rawValue)")
                             }
                         }
+                        .padding(.horizontal, 24)
                     }
-                    .padding(.horizontal)
                     .transition(.opacity.combined(with: .move(edge: .bottom)))
                 }
 
-                // Bottom spacer for navigation buttons
-                Spacer(minLength: 80)
+                Spacer(minLength: 100)
             }
-            .padding()
+            .padding(.top, 8)
         }
-        .animation(.easeInOut, value: userProfile.skillLevel)
+        .animation(.spring(duration: 0.4), value: userProfile.skillLevel)
     }
 }
+
+// MARK: - Skill Level Card
 
 struct SkillLevelCard: View {
     let level: GardeningSkillLevel
@@ -86,46 +84,91 @@ struct SkillLevelCard: View {
     var body: some View {
         Button(action: action) {
             HStack(spacing: 16) {
-                // Icon
-                Image(systemName: level.iconName)
-                    .font(.title2)
-                    .foregroundColor(isSelected ? .white : .adaptiveGreen)
-                    .frame(width: 32, height: 32)
+                // Icon container
+                ZStack {
+                    RoundedRectangle(cornerRadius: 12)
+                        .fill(isSelected ? Color.white.opacity(0.22) : Color.botanicalMint.opacity(0.35))
+                        .frame(width: 52, height: 52)
+
+                    Image(systemName: level.iconName)
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundColor(isSelected ? .white : Color.botanicalForest)
+                }
 
                 // Content
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.displayName)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .foregroundColor(isSelected ? .white : .primary)
+                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .foregroundColor(isSelected ? .white : Color.botanicalForest)
 
                     Text(level.description)
-                        .font(.subheadline)
-                        .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
-                        .multilineTextAlignment(.leading)
+                        .font(.system(size: 13, design: .rounded))
+                        .foregroundColor(isSelected ? .white.opacity(0.82) : Color.secondary)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
                 }
 
                 Spacer()
 
-                // Selection indicator
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundColor(isSelected ? .white : .gray)
+                // Selection badge
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? Color.white.opacity(0.25) : Color.clear)
+                        .frame(width: 24, height: 24)
+                        .overlay(
+                            Circle()
+                                .stroke(
+                                    isSelected ? Color.white.opacity(0.6) : Color.botanicalSage.opacity(0.5),
+                                    lineWidth: 1.5
+                                )
+                        )
+
+                    if isSelected {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 11, weight: .bold))
+                            .foregroundColor(.white)
+                    }
+                }
             }
-            .padding()
+            .padding(16)
             .background(
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(isSelected ? Color.adaptiveSelectionBackground : Color.adaptiveCardBackground)
+                RoundedRectangle(cornerRadius: 18)
+                    .fill(
+                        isSelected
+                            ? LinearGradient(
+                                colors: [Color.botanicalForest, Color.botanicalLeaf.opacity(0.85)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            : LinearGradient(
+                                colors: [Color.white, Color.white],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                    )
+                    .shadow(
+                        color: isSelected
+                            ? Color.botanicalForest.opacity(0.30)
+                            : Color.black.opacity(0.06),
+                        radius: isSelected ? 12 : 8,
+                        y: isSelected ? 4 : 2
+                    )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.adaptiveGreen, lineWidth: isSelected ? 2 : 0)
+                RoundedRectangle(cornerRadius: 18)
+                    .stroke(
+                        isSelected ? Color.clear : Color.botanicalSage.opacity(0.20),
+                        lineWidth: 1
+                    )
             )
+            .scaleEffect(isSelected ? 1.01 : 1.0)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(level.displayName)
     }
 }
+
+// MARK: - Interest Tag
 
 struct InterestTag: View {
     let plantType: PlantType
@@ -134,29 +177,56 @@ struct InterestTag: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 6) {
+            HStack(spacing: 8) {
                 Image(systemName: plantType.iconName)
-                    .font(.caption2)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(isSelected ? .white : Color.botanicalForest)
 
                 Text(plantType.displayName)
-                    .font(.caption2)
-                    .fontWeight(.medium)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(isSelected ? .white : Color.botanicalForest)
                     .lineLimit(1)
             }
-            .padding(.horizontal, 10)
-            .padding(.vertical, 6)
-            .frame(maxWidth: .infinity, minHeight: 32)
+            .padding(.horizontal, 14)
+            .padding(.vertical, 10)
+            .frame(maxWidth: .infinity, minHeight: 42)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color.adaptiveSelectionBackground : Color.adaptiveTertiaryBackground)
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(
+                        isSelected
+                            ? Color.botanicalForest
+                            : Color.white
+                    )
+                    .shadow(color: Color.black.opacity(0.05), radius: 4, y: 1)
             )
-            .foregroundColor(isSelected ? .white : .primary)
+            .overlay(
+                RoundedRectangle(cornerRadius: 12)
+                    .stroke(
+                        isSelected ? Color.clear : Color.botanicalSage.opacity(0.30),
+                        lineWidth: 1
+                    )
+            )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(plantType.displayName)
     }
 }
 
-/// Flexible layout for tags
+// MARK: - Skill Level Extensions
+
+extension GardeningSkillLevel {
+    var iconName: String {
+        switch self {
+        case .beginner: "sprout.fill"
+        case .intermediate: "leaf.fill"
+        case .advanced: "tree"
+        case .expert: "tree.fill"
+        }
+    }
+}
+
+// MARK: - Flexible View (unchanged utility)
+
 struct FlexibleView<Data: Collection, Content: View>: View where Data.Element: Hashable {
     let data: Data
     let spacing: CGFloat
@@ -226,11 +296,10 @@ struct FlexibleViewLayout<Data: Collection, Content: View>: View where Data.Elem
     }
 
     func estimateWidth(for element: Data.Element) -> CGFloat {
-        // Rough estimation for tag width
         if let plantType = element as? PlantType {
-            return CGFloat(plantType.displayName.count * 8) + 40 // Icon + padding
+            return CGFloat(plantType.displayName.count * 8) + 40
         }
-        return 100 // Default fallback
+        return 100
     }
 }
 
@@ -251,19 +320,9 @@ struct SizePreferenceKey: PreferenceKey {
     static func reduce(value: inout CGSize, nextValue: () -> CGSize) {}
 }
 
-/// Extensions for skill level and plant type
-extension GardeningSkillLevel {
-    var iconName: String {
-        switch self {
-        case .beginner: "sprout.circle"
-        case .intermediate: "leaf"
-        case .advanced: "tree"
-        case .expert: "tree.fill"
-        }
-    }
-}
-
 #Preview {
-    SkillAssessmentView(userProfile: .constant(UserProfile()))
-        .padding()
+    ZStack {
+        Color.botanicalCream.ignoresSafeArea()
+        SkillAssessmentView(userProfile: .constant(UserProfile()))
+    }
 }

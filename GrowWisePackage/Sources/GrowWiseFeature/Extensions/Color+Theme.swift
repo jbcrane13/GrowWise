@@ -26,6 +26,23 @@ extension Color {
         Color(.tertiarySystemBackground)
     }
 
+    // MARK: - Botanical Design System
+
+    /// Deep forest green — primary brand color
+    static let botanicalForest = Color(red: 0.176, green: 0.420, blue: 0.310)
+    /// Vibrant growth green — interactive / accent
+    static let botanicalLeaf = Color(red: 0.322, green: 0.718, blue: 0.533)
+    /// Soft mint — light accent / backgrounds
+    static let botanicalMint = Color(red: 0.718, green: 0.894, blue: 0.780)
+    /// Warm cream — page background
+    static let botanicalCream = Color(red: 0.965, green: 0.957, blue: 0.937)
+    /// Earthy brown — warmth accent
+    static let botanicalEarth = Color(red: 0.498, green: 0.337, blue: 0.224)
+    /// Harvest gold — highlight accent
+    static let botanicalGold = Color(red: 0.918, green: 0.773, blue: 0.416)
+    /// Soft sage — secondary text / icon backgrounds
+    static let botanicalSage = Color(red: 0.576, green: 0.722, blue: 0.576)
+
     /// Initialize a color that adapts to light/dark mode
     init(light: Color, dark: Color) {
         #if canImport(UIKit)

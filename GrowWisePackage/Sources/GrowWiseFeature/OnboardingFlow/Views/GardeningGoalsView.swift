@@ -6,34 +6,26 @@ struct GardeningGoalsView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 28) {
                 // Header
-                VStack(spacing: 12) {
-                    Image(systemName: "target")
-                        .font(.system(size: 50))
-                        .foregroundColor(.adaptiveGreen)
+                OnboardingStepHeader(
+                    icon: "scope",
+                    iconColor: Color.botanicalForest,
+                    title: "What brings you\nto gardening?",
+                    subtitle: "Select everything that resonates. We'll tailor your experience to match your vision."
+                )
 
-                    Text("What are your gardening goals?")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
-
-                    Text("Select all that interest you. We'll personalize your experience based on your goals.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding(.top)
-
-                // Goals grid
-                LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 16) {
+                // Goal cards grid
+                LazyVGrid(
+                    columns: Array(repeating: GridItem(.flexible(), spacing: 12), count: 2),
+                    spacing: 12
+                ) {
                     ForEach(GardeningGoal.allCases) { goal in
                         GoalCard(
                             goal: goal,
                             isSelected: userProfile.goals.contains(goal),
                             action: {
-                                withAnimation(.easeInOut(duration: 0.2)) {
+                                withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
                                     if userProfile.goals.contains(goal) {
                                         userProfile.goals.remove(goal)
                                     } else {
@@ -42,60 +34,76 @@ struct GardeningGoalsView: View {
                                 }
                             }
                         )
+                        .accessibilityIdentifier("onboarding_goal_\(goal.rawValue)")
                     }
                 }
-                .padding(.horizontal)
+                .padding(.horizontal, 24)
 
-                // Space and garden type selection
-                VStack(spacing: 16) {
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("What type of garden do you have?")
-                            .font(.headline)
-                            .fontWeight(.semibold)
+                // Garden type selection
+                VStack(alignment: .leading, spacing: 14) {
+                    SectionLabel(text: "What type of garden?")
 
-                        ScrollView(.horizontal, showsIndicators: false) {
-                            HStack(spacing: 12) {
-                                ForEach(GardenType.allCases, id: \.self) { gardenType in
-                                    GardenTypeButton(
-                                        gardenType: gardenType,
-                                        isSelected: userProfile.gardenType == gardenType,
-                                        action: {
+                    ScrollView(.horizontal, showsIndicators: false) {
+                        HStack(spacing: 10) {
+                            ForEach(GardenType.allCases, id: \.self) { gardenType in
+                                GardenTypeChip(
+                                    gardenType: gardenType,
+                                    isSelected: userProfile.gardenType == gardenType,
+                                    action: {
+                                        withAnimation(.spring(duration: 0.25)) {
                                             userProfile.gardenType = gardenType
                                         }
-                                    )
-                                }
-                            }
-                            .padding(.horizontal)
-                        }
-                    }
-
-                    VStack(alignment: .leading, spacing: 8) {
-                        Text("How much space do you have?")
-                            .font(.headline)
-                            .fontWeight(.semibold)
-
-                        VStack(spacing: 8) {
-                            ForEach(SpaceSize.allCases, id: \.self) { size in
-                                SpaceSizeRow(
-                                    size: size,
-                                    isSelected: userProfile.spaceSize == size,
-                                    action: {
-                                        userProfile.spaceSize = size
                                     }
                                 )
+                                .accessibilityIdentifier("onboarding_gardentype_\(gardenType.rawValue)")
                             }
+                        }
+                        .padding(.horizontal, 24)
+                    }
+                }
+
+                // Space size
+                VStack(alignment: .leading, spacing: 14) {
+                    SectionLabel(text: "How much space do you have?")
+
+                    VStack(spacing: 8) {
+                        ForEach(SpaceSize.allCases, id: \.self) { size in
+                            SpaceSizeRow(
+                                size: size,
+                                isSelected: userProfile.spaceSize == size,
+                                action: {
+                                    withAnimation(.spring(duration: 0.25)) {
+                                        userProfile.spaceSize = size
+                                    }
+                                }
+                            )
+                            .padding(.horizontal, 24)
+                            .accessibilityIdentifier("onboarding_space_\(size.rawValue)")
                         }
                     }
                 }
-                .padding(.horizontal)
 
-                // Bottom spacer for navigation buttons
-                Spacer(minLength: 80)
+                Spacer(minLength: 100)
             }
-            .padding()
+            .padding(.top, 8)
         }
     }
 }
+
+// MARK: - Section Label
+
+private struct SectionLabel: View {
+    let text: String
+
+    var body: some View {
+        Text(text)
+            .font(.system(size: 16, weight: .semibold, design: .rounded))
+            .foregroundColor(Color.botanicalForest)
+            .padding(.horizontal, 24)
+    }
+}
+
+// MARK: - Goal Card
 
 struct GoalCard: View {
     let goal: GardeningGoal
@@ -105,64 +113,113 @@ struct GoalCard: View {
     var body: some View {
         Button(action: action) {
             VStack(spacing: 12) {
-                Image(systemName: goal.icon)
-                    .font(.title2)
-                    .foregroundColor(isSelected ? .white : .adaptiveGreen)
+                // Icon
+                ZStack {
+                    Circle()
+                        .fill(isSelected ? Color.white.opacity(0.22) : goal.accentColor.opacity(0.15))
+                        .frame(width: 52, height: 52)
 
-                Text(goal.displayName)
-                    .font(.headline)
-                    .fontWeight(.semibold)
-                    .foregroundColor(isSelected ? .white : .primary)
-                    .multilineTextAlignment(.center)
+                    Image(systemName: goal.icon)
+                        .font(.system(size: 22, weight: .medium))
+                        .foregroundColor(isSelected ? .white : goal.accentColor)
+                }
 
-                Text(goal.description)
-                    .font(.caption)
-                    .foregroundColor(isSelected ? .white.opacity(0.9) : .secondary)
-                    .multilineTextAlignment(.center)
-                    .lineLimit(2)
+                VStack(spacing: 4) {
+                    Text(goal.displayName)
+                        .font(.system(size: 14, weight: .semibold, design: .rounded))
+                        .foregroundColor(isSelected ? .white : Color.botanicalForest)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+
+                    Text(goal.description)
+                        .font(.system(size: 11, design: .rounded))
+                        .foregroundColor(isSelected ? .white.opacity(0.80) : Color.secondary)
+                        .multilineTextAlignment(.center)
+                        .lineLimit(2)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer(minLength: 0)
             }
-            .padding()
-            .frame(maxWidth: .infinity, minHeight: 120)
+            .padding(14)
+            .frame(maxWidth: .infinity, minHeight: 130)
             .background(
-                RoundedRectangle(cornerRadius: 16)
-                    .fill(isSelected ? Color.adaptiveSelectionBackground : Color.adaptiveCardBackground)
+                RoundedRectangle(cornerRadius: 20)
+                    .fill(
+                        isSelected
+                            ? LinearGradient(
+                                colors: [goal.accentColor, goal.accentColor.opacity(0.75)],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                            : LinearGradient(
+                                colors: [Color.white, Color.white],
+                                startPoint: .topLeading,
+                                endPoint: .bottomTrailing
+                            )
+                    )
+                    .shadow(
+                        color: isSelected
+                            ? goal.accentColor.opacity(0.35)
+                            : Color.black.opacity(0.06),
+                        radius: isSelected ? 10 : 6,
+                        y: isSelected ? 4 : 2
+                    )
             )
             .overlay(
-                RoundedRectangle(cornerRadius: 16)
-                    .stroke(Color.adaptiveGreen, lineWidth: isSelected ? 2 : 0)
+                RoundedRectangle(cornerRadius: 20)
+                    .stroke(
+                        isSelected ? Color.clear : Color.botanicalSage.opacity(0.18),
+                        lineWidth: 1
+                    )
             )
+            .scaleEffect(isSelected ? 1.02 : 1.0)
         }
         .buttonStyle(.plain)
         .accessibilityLabel(goal.displayName)
     }
 }
 
-struct GardenTypeButton: View {
+// MARK: - Garden Type Chip
+
+struct GardenTypeChip: View {
     let gardenType: GardenType
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 8) {
+            HStack(spacing: 7) {
                 Image(systemName: gardenType.iconName)
-                    .font(.caption)
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundColor(isSelected ? .white : Color.botanicalForest)
 
                 Text(gardenType.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .foregroundColor(isSelected ? .white : Color.botanicalForest)
             }
             .padding(.horizontal, 16)
             .padding(.vertical, 10)
             .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(isSelected ? Color.adaptiveSelectionBackground : Color.adaptiveTertiaryBackground)
+                Capsule()
+                    .fill(isSelected ? Color.botanicalForest : Color.white)
+                    .shadow(color: Color.black.opacity(0.07), radius: 4, y: 1)
             )
-            .foregroundColor(isSelected ? .white : .primary)
+            .overlay(
+                Capsule()
+                    .stroke(
+                        isSelected ? Color.clear : Color.botanicalSage.opacity(0.30),
+                        lineWidth: 1
+                    )
+            )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel(gardenType.displayName)
     }
 }
+
+// MARK: - Space Size Row
 
 struct SpaceSizeRow: View {
     let size: SpaceSize
@@ -171,31 +228,68 @@ struct SpaceSizeRow: View {
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 12) {
-                Image(systemName: isSelected ? "checkmark.circle.fill" : "circle")
-                    .font(.title3)
-                    .foregroundColor(isSelected ? .adaptiveGreen : .gray)
+            HStack(spacing: 14) {
+                // Icon box
+                ZStack {
+                    RoundedRectangle(cornerRadius: 10)
+                        .fill(isSelected ? Color.botanicalForest : Color.botanicalMint.opacity(0.30))
+                        .frame(width: 40, height: 40)
 
+                    Image(systemName: size.icon)
+                        .font(.system(size: 16, weight: .medium))
+                        .foregroundColor(isSelected ? .white : Color.botanicalForest)
+                }
+
+                // Labels
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(size.displayName)
-                        .font(.subheadline)
-                        .fontWeight(.medium)
-                        .foregroundColor(.primary)
+                    HStack(spacing: 6) {
+                        Text(size.displayName)
+                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .foregroundColor(Color.botanicalForest)
 
-                    Text(size.description)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
+                        Text("·")
+                            .foregroundColor(Color.secondary)
+
+                        Text(size.subtitle)
+                            .font(.system(size: 13, design: .rounded))
+                            .foregroundColor(Color.secondary)
+                    }
                 }
 
                 Spacer()
+
+                // Check indicator
+                if isSelected {
+                    Image(systemName: "checkmark.circle.fill")
+                        .font(.system(size: 20))
+                        .foregroundColor(Color.botanicalLeaf)
+                } else {
+                    Circle()
+                        .stroke(Color.botanicalSage.opacity(0.4), lineWidth: 1.5)
+                        .frame(width: 20, height: 20)
+                }
             }
-            .padding(.vertical, 8)
+            .padding(14)
+            .background(
+                RoundedRectangle(cornerRadius: 14)
+                    .fill(isSelected ? Color.botanicalMint.opacity(0.25) : Color.white)
+                    .shadow(color: Color.black.opacity(0.05), radius: 5, y: 2)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: 14)
+                    .stroke(
+                        isSelected ? Color.botanicalLeaf.opacity(0.5) : Color.botanicalSage.opacity(0.18),
+                        lineWidth: 1
+                    )
+            )
         }
         .buttonStyle(.plain)
+        .accessibilityLabel("\(size.displayName), \(size.subtitle)")
     }
 }
 
-/// Extensions
+// MARK: - GardenType Extensions
+
 extension GardenType {
     var iconName: String {
         switch self {
@@ -212,6 +306,8 @@ extension GardenType {
 }
 
 #Preview {
-    GardeningGoalsView(userProfile: .constant(UserProfile()))
-        .padding()
+    ZStack {
+        Color.botanicalCream.ignoresSafeArea()
+        GardeningGoalsView(userProfile: .constant(UserProfile()))
+    }
 }

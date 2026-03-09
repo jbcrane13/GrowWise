@@ -12,6 +12,7 @@ struct OnboardingNavigationView: View {
 
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var isSaving = false
 
     private var isFirstStep: Bool {
         currentStep == OnboardingStep.allCases.first
@@ -23,54 +24,136 @@ struct OnboardingNavigationView: View {
 
     private var canProceed: Bool {
         switch currentStep {
-        case .welcome:
+        case .welcome, .skillAssessment, .location, .notifications, .completion:
             true
-
-        case .skillAssessment:
-            true // Skill level has a default
-
         case .goals:
             !userProfile.goals.isEmpty
+        }
+    }
 
-        case .location:
-            true // Optional step
-
-        case .notifications:
-            true // Optional step
-
-        case .completion:
-            true
+    private var nextLabel: String {
+        switch currentStep {
+        case .welcome: "Get Started"
+        case .completion: "Start Growing"
+        default: "Continue"
         }
     }
 
     var body: some View {
-        HStack(spacing: 16) {
-            // Back button
-            if !isFirstStep {
-                Button("Back") {
-                    withAnimation(.easeInOut) {
-                        moveToStep(direction: .previous)
-                    }
-                }
-                .buttonStyle(OnboardingSecondaryButtonStyle())
-            }
+        VStack(spacing: 0) {
+            // Separator line
+            Divider()
+                .overlay(
+                    currentStep == .welcome
+                        ? Color.white.opacity(0.15)
+                        : Color.botanicalSage.opacity(0.20)
+                )
 
-            Spacer()
-
-            // Next/Finish button
-            Button(isLastStep ? "Get Started" : "Continue") {
-                withAnimation(.easeInOut) {
-                    if isLastStep {
-                        completeOnboarding()
-                    } else {
-                        moveToStep(direction: .next)
+            HStack(spacing: 12) {
+                // Back button
+                if !isFirstStep {
+                    Button {
+                        withAnimation(.spring(duration: 0.4, bounce: 0.05)) {
+                            moveToStep(direction: .previous)
+                        }
+                    } label: {
+                        Image(systemName: "chevron.left")
+                            .font(.system(size: 16, weight: .semibold))
+                            .foregroundColor(
+                                currentStep == .welcome
+                                    ? .white.opacity(0.9)
+                                    : Color.botanicalForest
+                            )
+                            .frame(width: 50, height: 50)
+                            .background(
+                                Circle()
+                                    .fill(
+                                        currentStep == .welcome
+                                            ? Color.white.opacity(0.15)
+                                            : Color.white
+                                    )
+                                    .shadow(
+                                        color: Color.black.opacity(0.08),
+                                        radius: 6,
+                                        y: 2
+                                    )
+                            )
+                            .overlay(
+                                Circle()
+                                    .stroke(
+                                        currentStep == .welcome
+                                            ? Color.white.opacity(0.25)
+                                            : Color.botanicalSage.opacity(0.25),
+                                        lineWidth: 1
+                                    )
+                            )
                     }
+                    .accessibilityLabel("Back")
+                    .accessibilityIdentifier("onboarding_nav_back")
                 }
+
+                // Next / Finish button
+                Button {
+                    withAnimation(.spring(duration: 0.4, bounce: 0.05)) {
+                        if isLastStep {
+                            completeOnboarding()
+                        } else {
+                            moveToStep(direction: .next)
+                        }
+                    }
+                } label: {
+                    HStack(spacing: 8) {
+                        if isSaving {
+                            ProgressView()
+                                .scaleEffect(0.85)
+                                .tint(.white)
+                        }
+
+                        Text(isSaving ? "Setting up…" : nextLabel)
+                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+
+                        if !isSaving && !isLastStep && currentStep != .welcome {
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 14, weight: .semibold))
+                        }
+                    }
+                    .foregroundColor(.white)
+                    .frame(maxWidth: .infinity, minHeight: 50)
+                    .background(
+                        RoundedRectangle(cornerRadius: 16)
+                            .fill(
+                                canProceed
+                                    ? LinearGradient(
+                                        colors: [Color.botanicalForest, Color.botanicalLeaf],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                                    : LinearGradient(
+                                        colors: [Color.botanicalSage.opacity(0.4), Color.botanicalSage.opacity(0.3)],
+                                        startPoint: .leading,
+                                        endPoint: .trailing
+                                    )
+                            )
+                            .shadow(
+                                color: canProceed ? Color.botanicalForest.opacity(0.25) : .clear,
+                                radius: 8,
+                                y: 3
+                            )
+                    )
+                }
+                .disabled(!canProceed || isSaving)
+                .accessibilityLabel(nextLabel)
+                .accessibilityIdentifier("onboarding_nav_next")
             }
-            .buttonStyle(OnboardingPrimaryButtonStyle())
-            .disabled(!canProceed)
+            .padding(.horizontal, 20)
+            .padding(.top, 12)
+            .padding(.bottom, 8)
         }
-        .padding(.horizontal)
+        .background(
+            currentStep == .welcome
+                ? Color.clear
+                : Color.botanicalCream
+        )
         .alert("Setup Error", isPresented: $showingError) {
             Button("OK") {}
         } message: {
@@ -85,7 +168,6 @@ struct OnboardingNavigationView: View {
         let newIndex: Int = switch direction {
         case .next:
             min(currentIndex + 1, allCases.count - 1)
-
         case .previous:
             max(currentIndex - 1, 0)
         }
@@ -94,28 +176,21 @@ struct OnboardingNavigationView: View {
     }
 
     private func completeOnboarding() {
+        isSaving = true
         Task {
             do {
-                // Email and display name validation will be added when user authentication is implemented
-                // For now, we use placeholder values
                 let email = "user@example.com"
                 let displayName = "Gardener"
 
-                // Validate email for future use
                 let emailValidation = ValidationService.shared.validateEmail(email)
-
                 guard emailValidation.isValid else {
-                    errorMessage = emailValidation.errorMessage ?? "Invalid email address"
-                    showingError = true
+                    await showError(emailValidation.errorMessage ?? "Invalid email address")
                     return
                 }
 
-                // Validate display name for future use
                 let nameValidation = ValidationService.shared.validateName(displayName)
-
                 guard nameValidation.isValid else {
-                    errorMessage = nameValidation.errorMessage ?? "Invalid display name"
-                    showingError = true
+                    await showError(nameValidation.errorMessage ?? "Invalid display name")
                     return
                 }
 
@@ -125,41 +200,38 @@ struct OnboardingNavigationView: View {
                     skillLevel: userProfile.skillLevel
                 )
 
-                // Save additional preferences (non-critical — log failures but don't block onboarding)
                 await saveUserPreferences(user: user)
-
-                // Mark onboarding as completed (persist for presentation logic)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
                 await MainActor.run {
+                    isSaving = false
                     isCompleted = true
                 }
             } catch {
-                errorMessage = "Failed to complete setup: \(error.localizedDescription)"
-                showingError = true
+                await showError("Failed to complete setup: \(error.localizedDescription)")
             }
         }
     }
 
+    @MainActor
+    private func showError(_ message: String) {
+        isSaving = false
+        errorMessage = message
+        showingError = true
+    }
+
     private func saveUserPreferences(user: User) async {
-        // Save supplementary preferences to UserDefaults.
-        // These are non-critical — the User record is already persisted in SwiftData.
         if let goalsData = try? JSONEncoder().encode(userProfile.goals.map(\.rawValue)) {
             UserDefaults.standard.set(goalsData, forKey: "userGardeningGoals")
         }
-
         if let interestsData = try? JSONEncoder().encode(userProfile.interests.map(\.rawValue)) {
             UserDefaults.standard.set(interestsData, forKey: "userPlantInterests")
         }
-
         UserDefaults.standard.set(userProfile.gardenType.rawValue, forKey: "userGardenType")
         UserDefaults.standard.set(userProfile.spaceSize.rawValue, forKey: "userSpaceSize")
-
         if let timeData = try? JSONEncoder().encode(userProfile.preferredNotificationTime) {
             UserDefaults.standard.set(timeData, forKey: "userPreferredNotificationTime")
         }
-
-        // Set up notifications if permission granted
         if userProfile.hasNotificationPermission {
             notificationService.setupNotificationCategories()
         }
@@ -171,49 +243,16 @@ enum StepDirection {
     case previous
 }
 
-// MARK: - Button Styles
-
-struct OnboardingPrimaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .fontWeight(.semibold)
-            .foregroundColor(.white)
-            .frame(minWidth: 120, minHeight: 50)
-            .background(
-                RoundedRectangle(cornerRadius: 25)
-                    .fill(Color.adaptiveSelectionBackground)
-                    .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            )
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
-    }
-}
-
-struct OnboardingSecondaryButtonStyle: ButtonStyle {
-    func makeBody(configuration: Configuration) -> some View {
-        configuration.label
-            .font(.headline)
-            .fontWeight(.medium)
-            .foregroundColor(.adaptiveGreen)
-            .frame(minWidth: 80, minHeight: 50)
-            .background(
-                RoundedRectangle(cornerRadius: 25)
-                    .stroke(Color.adaptiveGreen, lineWidth: 2)
-                    .background(
-                        RoundedRectangle(cornerRadius: 25)
-                            .fill(Color.clear)
-                    )
-                    .scaleEffect(configuration.isPressed ? 0.95 : 1.0)
-            )
-            .animation(.easeInOut(duration: 0.1), value: configuration.isPressed)
-    }
-}
-
 #Preview {
-    OnboardingNavigationView(
-        currentStep: .constant(.skillAssessment),
-        userProfile: .constant(UserProfile()),
-        isCompleted: .constant(false)
-    )
-    .padding()
+    ZStack {
+        Color.botanicalCream.ignoresSafeArea()
+        VStack {
+            Spacer()
+            OnboardingNavigationView(
+                currentStep: .constant(.goals),
+                userProfile: .constant(UserProfile()),
+                isCompleted: .constant(false)
+            )
+        }
+    }
 }

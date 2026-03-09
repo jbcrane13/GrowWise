@@ -1,119 +1,180 @@
 import SwiftUI
 
 struct WelcomeStepView: View {
+    @State private var logoVisible = false
+    @State private var featuresVisible = false
+
     var body: some View {
-        VStack(spacing: 24) {
+        VStack(spacing: 0) {
+            Spacer(minLength: 48)
+
+            // Brand hero
+            brandHero
+                .opacity(logoVisible ? 1 : 0)
+                .offset(y: logoVisible ? 0 : 28)
+
             Spacer()
 
-            // App icon and branding
-            VStack(spacing: 16) {
-                Image(systemName: "leaf.fill")
-                    .font(.system(size: 80))
-                    .foregroundStyle(
+            // Feature cards
+            featureCards
+                .opacity(featuresVisible ? 1 : 0)
+                .offset(y: featuresVisible ? 0 : 20)
+
+            Spacer(minLength: 100)
+        }
+        .onAppear {
+            withAnimation(.spring(duration: 0.75, bounce: 0.1).delay(0.1)) {
+                logoVisible = true
+            }
+            withAnimation(.spring(duration: 0.65, bounce: 0.05).delay(0.45)) {
+                featuresVisible = true
+            }
+        }
+    }
+
+    // MARK: - Brand Hero
+
+    private var brandHero: some View {
+        VStack(spacing: 22) {
+            // Logo mark
+            ZStack {
+                // Outer glow ring
+                Circle()
+                    .fill(Color.white.opacity(0.08))
+                    .frame(width: 130, height: 130)
+
+                // Mid ring
+                Circle()
+                    .fill(Color.white.opacity(0.12))
+                    .frame(width: 108, height: 108)
+
+                // Core circle
+                Circle()
+                    .fill(
                         LinearGradient(
-                            colors: [.adaptiveGreen, Color(light: .blue, dark: Color(red: 0.3, green: 0.6, blue: 1.0))],
+                            colors: [
+                                Color.white.opacity(0.25),
+                                Color.white.opacity(0.10),
+                            ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         )
                     )
+                    .frame(width: 88, height: 88)
+                    .overlay(
+                        Circle()
+                            .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                    )
 
-                Text("GrowWise")
-                    .font(.largeTitle)
-                    .fontWeight(.bold)
-                    .foregroundColor(.primary)
+                // Leaf icon
+                Image(systemName: "leaf.fill")
+                    .font(.system(size: 40, weight: .medium))
+                    .foregroundStyle(
+                        LinearGradient(
+                            colors: [.white, Color.botanicalMint],
+                            startPoint: .top,
+                            endPoint: .bottom
+                        )
+                    )
+            }
 
-                Text("Your Personal Gardening Companion")
-                    .font(.title2)
-                    .fontWeight(.medium)
-                    .foregroundColor(.secondary)
+            // App name + tagline
+            VStack(spacing: 10) {
+                Text("Cultivation")
+                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .foregroundColor(.white)
+                    .tracking(-0.5)
+
+                Text("Your garden, beautifully managed")
+                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .foregroundColor(.white.opacity(0.75))
                     .multilineTextAlignment(.center)
             }
-
-            Spacer()
-
-            // Feature highlights
-            VStack(spacing: 20) {
-                WelcomeFeatureRow(
-                    icon: "calendar.badge.clock",
-                    title: "Smart Reminders",
-                    description: "Never forget to water your plants again"
-                )
-
-                WelcomeFeatureRow(
-                    icon: "book.pages",
-                    title: "Expert Guidance",
-                    description: "Learn from comprehensive plant care guides"
-                )
-
-                WelcomeFeatureRow(
-                    icon: "camera.fill",
-                    title: "Garden Journal",
-                    description: "Track your garden's progress with photos"
-                )
-
-                WelcomeFeatureRow(
-                    icon: "cloud.sun.fill",
-                    title: "Weather Integration",
-                    description: "Get personalized care tips based on your climate"
-                )
-            }
-            .padding(.horizontal)
-
-            Spacer()
-
-            // Getting started message
-            VStack(spacing: 8) {
-                Text("Let's get your garden started!")
-                    .font(.headline)
-                    .fontWeight(.semibold)
-
-                Text("We'll help you set up your profile and preferences")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.horizontal)
-
-            Spacer()
         }
-        .padding()
+    }
+
+    // MARK: - Feature Cards
+
+    private var featureCards: some View {
+        VStack(spacing: 10) {
+            ForEach(welcomeFeatures, id: \.title) { feature in
+                WelcomeFeatureRow(
+                    icon: feature.icon,
+                    title: feature.title,
+                    subtitle: feature.subtitle,
+                    accentColor: feature.color
+                )
+            }
+        }
+        .padding(.horizontal, 24)
+    }
+
+    private var welcomeFeatures: [(icon: String, title: String, subtitle: String, color: Color)] {
+        [
+            ("drop.fill", "Smart Watering", "Personalized schedules for every plant", Color.botanicalLeaf),
+            ("book.pages.fill", "10,000+ Plant Guides", "Expert care for any species", Color(red: 0.275, green: 0.565, blue: 0.898)),
+            ("camera.fill", "Visual Garden Journal", "Track growth with photos & notes", Color.botanicalEarth),
+            ("cloud.sun.fill", "Live Weather Tips", "Care advice based on your climate", Color.botanicalGold),
+        ]
     }
 }
+
+// MARK: - Feature Row
 
 struct WelcomeFeatureRow: View {
     let icon: String
     let title: String
-    let description: String
+    let subtitle: String
+    let accentColor: Color
 
     var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title2)
-                .foregroundColor(.adaptiveGreen)
-                .frame(width: 32, height: 32)
+        HStack(spacing: 14) {
+            // Icon bubble
+            ZStack {
+                RoundedRectangle(cornerRadius: 12)
+                    .fill(accentColor.opacity(0.18))
+                    .frame(width: 44, height: 44)
 
-            VStack(alignment: .leading, spacing: 4) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundColor(accentColor)
+            }
+
+            // Text
+            VStack(alignment: .leading, spacing: 2) {
                 Text(title)
-                    .font(.headline)
-                    .fontWeight(.semibold)
+                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .foregroundColor(.white)
 
-                Text(description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
+                Text(subtitle)
+                    .font(.system(size: 13, weight: .regular, design: .rounded))
+                    .foregroundColor(.white.opacity(0.65))
             }
 
             Spacer()
         }
-        .padding()
+        .padding(.horizontal, 16)
+        .padding(.vertical, 12)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color.adaptiveCardBackground)
+            RoundedRectangle(cornerRadius: 16)
+                .fill(Color.white.opacity(0.10))
+                .overlay(
+                    RoundedRectangle(cornerRadius: 16)
+                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
+                )
         )
     }
 }
 
 #Preview {
-    WelcomeStepView()
-        .padding()
+    ZStack {
+        LinearGradient(
+            colors: [Color.botanicalForest, Color(red: 0.094, green: 0.235, blue: 0.188)],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+        .ignoresSafeArea()
+
+        WelcomeStepView()
+    }
 }

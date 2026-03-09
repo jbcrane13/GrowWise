@@ -8,137 +8,116 @@ struct LocationSetupView: View {
 
     var body: some View {
         ScrollView {
-            VStack(spacing: 24) {
+            VStack(spacing: 28) {
                 // Header
-                VStack(spacing: 12) {
-                    Image(systemName: "location.fill")
-                        .font(.system(size: 50))
-                        .foregroundColor(.adaptiveGreen)
+                OnboardingStepHeader(
+                    icon: "location.fill",
+                    iconColor: Color.botanicalLeaf,
+                    title: "Know your\ngarden's climate",
+                    subtitle: "Location lets us give you weather-aware care\ntips and seasonal planting guidance."
+                )
 
-                    Text("Help us know your location")
-                        .font(.title2)
-                        .fontWeight(.bold)
-                        .multilineTextAlignment(.center)
-
-                    Text("We'll use this to provide weather updates, planting recommendations, and determine your hardiness zone.")
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                        .padding(.horizontal)
-                }
-                .padding(.top)
-
-                // Location benefits
-                VStack(spacing: 16) {
-                    LocationBenefitRow(
-                        icon: "thermometer.sun.fill",
-                        title: "Weather-Based Care Tips",
-                        description: "Get personalized watering and care advice based on your local weather"
-                    )
-
-                    LocationBenefitRow(
-                        icon: "map.fill",
-                        title: "Hardiness Zone Detection",
-                        description: "Know which plants will thrive in your climate"
-                    )
-
-                    LocationBenefitRow(
-                        icon: "calendar.badge.clock",
-                        title: "Seasonal Reminders",
-                        description: "Receive timely notifications for planting and harvesting"
-                    )
-
-                    LocationBenefitRow(
-                        icon: "exclamationmark.triangle.fill",
-                        title: "Weather Alerts",
-                        description: "Get warned about frost, heat waves, and storms"
-                    )
-                }
-                .padding(.horizontal)
-
-                // Current location status
+                // Permission state
                 VStack(spacing: 16) {
                     if locationService.hasLocationPermission {
-                        VStack(spacing: 8) {
-                            HStack {
-                                Image(systemName: "checkmark.circle.fill")
-                                    .foregroundColor(.adaptiveGreen)
-                                Text("Location access granted")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
-                            }
+                        PermissionGrantedBadge(message: "Location access granted")
+                            .padding(.horizontal, 24)
 
-                            if let zone = locationService.hardinessZone {
+                        if let zone = locationService.hardinessZone {
+                            HStack(spacing: 10) {
+                                Image(systemName: "map.fill")
+                                    .font(.system(size: 14, weight: .medium))
+                                    .foregroundColor(Color.botanicalForest)
+
                                 Text("Hardiness Zone: \(zone)")
-                                    .font(.subheadline)
-                                    .foregroundColor(.secondary)
+                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .foregroundColor(Color.botanicalForest)
                             }
+                            .padding(.horizontal, 24)
                         }
-                        .padding()
-                        .background(
-                            RoundedRectangle(cornerRadius: 12)
-                                .fill(Color.green.opacity(0.1))
-                        )
                     } else {
-                        VStack(spacing: 12) {
-                            Button(action: requestLocation) {
-                                HStack {
-                                    if isRequesting {
-                                        ProgressView()
-                                            .scaleEffect(0.8)
-                                    } else {
-                                        Image(systemName: "location.circle.fill")
-                                            .font(.title3)
-                                    }
-
-                                    Text(isRequesting ? "Requesting..." : "Enable Location Services")
-                                        .font(.headline)
-                                        .fontWeight(.semibold)
+                        // CTA button
+                        Button(action: requestLocation) {
+                            HStack(spacing: 10) {
+                                if isRequesting {
+                                    ProgressView()
+                                        .scaleEffect(0.85)
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "location.circle.fill")
+                                        .font(.system(size: 18, weight: .medium))
                                 }
-                                .foregroundColor(.white)
-                                .frame(maxWidth: .infinity, minHeight: 50)
-                                .background(
-                                    RoundedRectangle(cornerRadius: 12)
-                                        .fill(Color.green)
-                                )
-                            }
-                            .disabled(isRequesting)
-                            .accessibilityLabel("Enable Location Services")
-                            .accessibilityIdentifier("onboarding_location_enable")
 
-                            Button("Skip for Now") {
-                                userProfile.hasLocationPermission = false
+                                Text(isRequesting ? "Requesting Access…" : "Enable Location Services")
+                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                             }
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
+                            .foregroundColor(.white)
+                            .frame(maxWidth: .infinity, minHeight: 54)
+                            .background(
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.botanicalForest, Color.botanicalLeaf],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .shadow(color: Color.botanicalForest.opacity(0.30), radius: 10, y: 4)
+                            )
                         }
+                        .disabled(isRequesting)
+                        .padding(.horizontal, 24)
+                        .accessibilityLabel("Enable Location Services")
+                        .accessibilityIdentifier("onboarding_location_enable")
+
+                        Button("Skip for Now") {
+                            userProfile.hasLocationPermission = false
+                        }
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.secondary)
+                        .accessibilityIdentifier("onboarding_location_skip")
                     }
                 }
-                .padding(.horizontal)
+
+                // Benefits list
+                VStack(spacing: 14) {
+                    BenefitRow(
+                        icon: "thermometer.sun.fill",
+                        iconColor: Color.botanicalGold,
+                        title: "Weather-Based Care Tips",
+                        description: "Personalized watering and care advice based on your local conditions"
+                    )
+                    BenefitRow(
+                        icon: "map.fill",
+                        iconColor: Color.botanicalLeaf,
+                        title: "Hardiness Zone Detection",
+                        description: "Instantly know which plants thrive in your climate"
+                    )
+                    BenefitRow(
+                        icon: "calendar.badge.clock",
+                        iconColor: Color(red: 0.275, green: 0.565, blue: 0.898),
+                        title: "Seasonal Reminders",
+                        description: "Timely alerts for planting, harvesting, and frost preparation"
+                    )
+                    BenefitRow(
+                        icon: "exclamationmark.triangle.fill",
+                        iconColor: Color(red: 0.922, green: 0.420, blue: 0.310),
+                        title: "Extreme Weather Alerts",
+                        description: "Early warnings for frost, heat waves, and storms"
+                    )
+                }
+                .padding(.horizontal, 24)
 
                 // Privacy note
-                VStack(spacing: 8) {
-                    HStack {
-                        Image(systemName: "lock.shield.fill")
-                            .font(.caption)
-                            .foregroundColor(.adaptiveGreen)
+                PrivacyNote(
+                    icon: "lock.shield.fill",
+                    text: "Location is used only for gardening features and is never shared with third parties."
+                )
+                .padding(.horizontal, 24)
 
-                        Text("Your privacy matters")
-                            .font(.caption)
-                            .fontWeight(.semibold)
-                    }
-
-                    Text("Location data is used only for gardening features and never shared with third parties.")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                        .multilineTextAlignment(.center)
-                }
-                .padding(.horizontal)
-
-                // Bottom spacer for navigation buttons
-                Spacer(minLength: 80)
+                Spacer(minLength: 100)
             }
-            .padding()
+            .padding(.top, 8)
         }
         .onAppear {
             userProfile.hasLocationPermission = locationService.hasLocationPermission
@@ -161,35 +140,9 @@ struct LocationSetupView: View {
     }
 }
 
-struct LocationBenefitRow: View {
-    let icon: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.adaptiveGreen)
-                .frame(width: 32, height: 32)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
-            }
-
-            Spacer()
-        }
-    }
-}
-
 #Preview {
-    LocationSetupView(userProfile: .constant(UserProfile()))
-        .padding()
+    ZStack {
+        Color.botanicalCream.ignoresSafeArea()
+        LocationSetupView(userProfile: .constant(UserProfile()))
+    }
 }

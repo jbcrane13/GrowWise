@@ -7,170 +7,129 @@ struct NotificationPermissionView: View {
     @State private var isRequesting = false
 
     var body: some View {
-        VStack(spacing: 24) {
-            // Header
-            VStack(spacing: 12) {
-                Image(systemName: "bell.badge.fill")
-                    .font(.system(size: 50))
-                    .foregroundColor(.adaptiveGreen)
-
-                Text("Stay connected to your garden")
-                    .font(.title2)
-                    .fontWeight(.bold)
-                    .multilineTextAlignment(.center)
-
-                Text("Enable notifications to get timely reminders and important updates about your plants.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-                    .padding(.horizontal)
-            }
-
-            Spacer()
-
-            // Notification benefits
-            VStack(spacing: 16) {
-                NotificationBenefitRow(
-                    icon: "drop.fill",
-                    title: "Watering Reminders",
-                    description: "Never forget to water your plants again"
+        ScrollView {
+            VStack(spacing: 28) {
+                // Header
+                OnboardingStepHeader(
+                    icon: "bell.badge.fill",
+                    iconColor: Color(red: 0.922, green: 0.596, blue: 0.200),
+                    title: "Never miss a\ncare moment",
+                    subtitle: "Timely reminders keep your plants thriving\nand your garden on schedule."
                 )
 
-                NotificationBenefitRow(
-                    icon: "scissors",
-                    title: "Care Alerts",
-                    description: "Get reminded when it's time to prune, fertilize, or repot"
-                )
+                // Permission state
+                VStack(spacing: 16) {
+                    if notificationService.isAuthorized {
+                        PermissionGrantedBadge(message: "Notifications enabled")
+                            .padding(.horizontal, 24)
 
-                NotificationBenefitRow(
-                    icon: "exclamationmark.triangle.fill",
-                    title: "Weather Warnings",
-                    description: "Protect your plants from frost, heat waves, and storms"
-                )
+                        // Time preference picker
+                        VStack(spacing: 10) {
+                            Text("Best time for reminders?")
+                                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                .foregroundColor(Color.botanicalForest)
 
-                NotificationBenefitRow(
-                    icon: "calendar.badge.plus",
-                    title: "Seasonal Tips",
-                    description: "Learn about seasonal gardening tasks and opportunities"
-                )
-
-                NotificationBenefitRow(
-                    icon: "heart.text.square.fill",
-                    title: "Plant Health Updates",
-                    description: "Get notified if we detect potential issues with your plants"
-                )
-            }
-            .padding(.horizontal)
-
-            Spacer()
-
-            // Notification time preference
-            if notificationService.isAuthorized {
-                VStack(spacing: 12) {
-                    Text("When would you like to receive reminders?")
-                        .font(.headline)
-                        .fontWeight(.semibold)
-
-                    DatePicker(
-                        "Preferred Time",
-                        selection: $userProfile.preferredNotificationTime,
-                        displayedComponents: .hourAndMinute
-                    )
-                    .gwWheelDatePickerStyle()
-                    .labelsHidden()
-                    .frame(maxHeight: 120)
-                }
-                .padding()
-                .background(
-                    RoundedRectangle(cornerRadius: 12)
-                        .fill(Color(.secondarySystemBackground))
-                )
-                .padding(.horizontal)
-            }
-
-            Spacer()
-
-            // Permission button
-            VStack(spacing: 16) {
-                if notificationService.isAuthorized {
-                    VStack(spacing: 8) {
-                        HStack {
-                            Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.adaptiveGreen)
-                            Text("Notifications enabled")
-                                .font(.headline)
-                                .fontWeight(.semibold)
+                            DatePicker(
+                                "Preferred Time",
+                                selection: $userProfile.preferredNotificationTime,
+                                displayedComponents: .hourAndMinute
+                            )
+                            .gwWheelDatePickerStyle()
+                            .labelsHidden()
+                            .frame(maxHeight: 120)
                         }
+                        .padding(18)
+                        .background(
+                            RoundedRectangle(cornerRadius: 16)
+                                .fill(Color.white)
+                                .shadow(color: Color.black.opacity(0.06), radius: 8, y: 2)
+                        )
+                        .padding(.horizontal, 24)
 
-                        Text("You can adjust notification settings anytime in the app settings.")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
-                            .multilineTextAlignment(.center)
-                    }
-                    .padding()
-                    .background(
-                        RoundedRectangle(cornerRadius: 12)
-                            .fill(Color.adaptiveGreenBackground)
-                    )
-                } else {
-                    VStack(spacing: 12) {
+                    } else {
+                        // CTA button
                         Button(action: requestNotifications) {
-                            HStack {
+                            HStack(spacing: 10) {
                                 if isRequesting {
                                     ProgressView()
-                                        .scaleEffect(0.8)
+                                        .scaleEffect(0.85)
+                                        .tint(.white)
                                 } else {
                                     Image(systemName: "bell.circle.fill")
-                                        .font(.title3)
+                                        .font(.system(size: 18, weight: .medium))
                                 }
 
-                                Text(isRequesting ? "Requesting..." : "Enable Notifications")
-                                    .font(.headline)
-                                    .fontWeight(.semibold)
+                                Text(isRequesting ? "Requesting Access…" : "Enable Notifications")
+                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
                             }
                             .foregroundColor(.white)
-                            .frame(maxWidth: .infinity, minHeight: 50)
+                            .frame(maxWidth: .infinity, minHeight: 54)
                             .background(
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.adaptiveSelectionBackground)
+                                RoundedRectangle(cornerRadius: 16)
+                                    .fill(
+                                        LinearGradient(
+                                            colors: [Color.botanicalForest, Color.botanicalLeaf],
+                                            startPoint: .leading,
+                                            endPoint: .trailing
+                                        )
+                                    )
+                                    .shadow(color: Color.botanicalForest.opacity(0.30), radius: 10, y: 4)
                             )
                         }
                         .disabled(isRequesting)
+                        .padding(.horizontal, 24)
                         .accessibilityLabel("Enable Notifications")
                         .accessibilityIdentifier("onboarding_notifications_enable")
 
                         Button("Maybe Later") {
                             userProfile.hasNotificationPermission = false
                         }
-                        .font(.subheadline)
-                        .foregroundColor(.secondary)
+                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .foregroundColor(Color.secondary)
+                        .accessibilityIdentifier("onboarding_notifications_skip")
                     }
                 }
-            }
-            .padding(.horizontal)
 
-            Spacer()
-
-            // Quiet hours info
-            VStack(spacing: 8) {
-                HStack {
-                    Image(systemName: "moon.fill")
-                        .font(.caption)
-                        .foregroundColor(.adaptiveGreen)
-
-                    Text("Respect your schedule")
-                        .font(.caption)
-                        .fontWeight(.semibold)
+                // Benefits
+                VStack(spacing: 14) {
+                    BenefitRow(
+                        icon: "drop.fill",
+                        iconColor: Color(red: 0.275, green: 0.565, blue: 0.898),
+                        title: "Watering Reminders",
+                        description: "Smart schedules tailored to each plant's needs"
+                    )
+                    BenefitRow(
+                        icon: "scissors",
+                        iconColor: Color.botanicalLeaf,
+                        title: "Care Alerts",
+                        description: "Timely reminders to prune, fertilize, or repot"
+                    )
+                    BenefitRow(
+                        icon: "exclamationmark.triangle.fill",
+                        iconColor: Color(red: 0.922, green: 0.420, blue: 0.310),
+                        title: "Weather Warnings",
+                        description: "Protect plants from frost, heat waves, and storms"
+                    )
+                    BenefitRow(
+                        icon: "calendar.badge.plus",
+                        iconColor: Color.botanicalGold,
+                        title: "Seasonal Tips",
+                        description: "Learn what to plant, harvest, and prepare each season"
+                    )
                 }
+                .padding(.horizontal, 24)
 
-                Text("You can set quiet hours to avoid notifications during sleep or work time.")
-                    .font(.caption2)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
+                // Quiet hours note
+                PrivacyNote(
+                    icon: "moon.fill",
+                    text: "You can set quiet hours so reminders never interrupt your sleep or work."
+                )
+                .padding(.horizontal, 24)
+
+                Spacer(minLength: 100)
             }
-            .padding(.horizontal)
+            .padding(.top, 8)
         }
-        .padding()
         .onAppear {
             userProfile.hasNotificationPermission = notificationService.isAuthorized
         }
@@ -192,35 +151,9 @@ struct NotificationPermissionView: View {
     }
 }
 
-struct NotificationBenefitRow: View {
-    let icon: String
-    let title: String
-    let description: String
-
-    var body: some View {
-        HStack(spacing: 16) {
-            Image(systemName: icon)
-                .font(.title3)
-                .foregroundColor(.adaptiveGreen)
-                .frame(width: 32, height: 32)
-
-            VStack(alignment: .leading, spacing: 4) {
-                Text(title)
-                    .font(.subheadline)
-                    .fontWeight(.semibold)
-
-                Text(description)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.leading)
-            }
-
-            Spacer()
-        }
-    }
-}
-
 #Preview {
-    NotificationPermissionView(userProfile: .constant(UserProfile()))
-        .padding()
+    ZStack {
+        Color.botanicalCream.ignoresSafeArea()
+        NotificationPermissionView(userProfile: .constant(UserProfile()))
+    }
 }

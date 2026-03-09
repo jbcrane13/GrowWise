@@ -19,21 +19,22 @@ public struct OnboardingView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                // Background gradient that adapts to appearance mode
-                LinearGradient(
-                    colors: [
-                        Color.adaptiveGreenBackground,
-                        Color(light: Color.blue.opacity(0.1), dark: Color.blue.opacity(0.15)),
-                    ],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-                .ignoresSafeArea()
+                // Warm cream background for all steps except welcome
+                if currentStep == .welcome {
+                    welcomeBackground
+                } else {
+                    Color.botanicalCream
+                        .ignoresSafeArea()
+                }
 
                 VStack(spacing: 0) {
-                    // Progress indicator
-                    OnboardingProgressView(currentStep: currentStep)
-                        .padding(.top)
+                    // Progress indicator (hidden on welcome)
+                    if currentStep != .welcome {
+                        OnboardingProgressView(currentStep: currentStep)
+                            .padding(.top, 8)
+                            .padding(.bottom, 4)
+                            .transition(.opacity.combined(with: .move(edge: .top)))
+                    }
 
                     // Main content
                     TabView(selection: $currentStep) {
@@ -56,7 +57,7 @@ public struct OnboardingView: View {
                             .tag(OnboardingStep.completion)
                     }
                     .gwPagingTabStyle(indexDisplayMode: .never)
-                    .animation(.easeInOut, value: currentStep)
+                    .animation(.spring(duration: 0.45, bounce: 0.05), value: currentStep)
 
                     // Navigation buttons
                     OnboardingNavigationView(
@@ -64,7 +65,7 @@ public struct OnboardingView: View {
                         userProfile: $userProfile,
                         isCompleted: $isCompleted
                     )
-                    .padding(.bottom)
+                    .padding(.bottom, 16)
                 }
             }
         }
@@ -72,10 +73,47 @@ public struct OnboardingView: View {
         .gwNavigationBarHidden(true)
         .onChange(of: isCompleted) { _, completed in
             if completed {
-                onCompleted?() // Update parent state when embedded in a branch
-                dismiss() // Also works when presented as a sheet
+                onCompleted?()
+                dismiss()
             }
         }
+    }
+
+    private var welcomeBackground: some View {
+        ZStack {
+            // Base gradient
+            LinearGradient(
+                colors: [
+                    Color.botanicalForest,
+                    Color(red: 0.118, green: 0.306, blue: 0.235),
+                    Color(red: 0.094, green: 0.235, blue: 0.188),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            // Organic decorative orbs
+            GeometryReader { geo in
+                Circle()
+                    .fill(Color.botanicalLeaf.opacity(0.25))
+                    .frame(width: 320, height: 320)
+                    .blur(radius: 80)
+                    .offset(x: -60, y: -80)
+
+                Circle()
+                    .fill(Color.botanicalMint.opacity(0.15))
+                    .frame(width: 240, height: 240)
+                    .blur(radius: 60)
+                    .offset(x: geo.size.width - 100, y: 120)
+
+                Circle()
+                    .fill(Color.botanicalGold.opacity(0.12))
+                    .frame(width: 180, height: 180)
+                    .blur(radius: 50)
+                    .offset(x: 60, y: geo.size.height - 200)
+            }
+        }
+        .ignoresSafeArea()
     }
 }
 
@@ -91,12 +129,12 @@ public enum OnboardingStep: String, CaseIterable {
 
     var title: String {
         switch self {
-        case .welcome: "Welcome to GrowWise"
-        case .skillAssessment: "Your Gardening Experience"
-        case .goals: "Your Gardening Goals"
-        case .location: "Your Location"
-        case .notifications: "Stay Connected"
-        case .completion: "You're All Set!"
+        case .welcome: "Welcome"
+        case .skillAssessment: "Experience"
+        case .goals: "Goals"
+        case .location: "Location"
+        case .notifications: "Reminders"
+        case .completion: "All Set"
         }
     }
 
@@ -136,21 +174,21 @@ public enum GardeningGoal: String, CaseIterable, Identifiable {
         switch self {
         case .growFood: "Grow My Own Food"
         case .beautifySpace: "Beautify My Space"
-        case .learnSkills: "Learn Gardening Skills"
+        case .learnSkills: "Learn Gardening"
         case .relaxation: "Relaxation & Therapy"
         case .sustainability: "Sustainable Living"
-        case .healingGarden: "Create a Healing Garden"
+        case .healingGarden: "Healing Garden"
         }
     }
 
     var description: String {
         switch self {
-        case .growFood: "Fresh vegetables, herbs, and fruits"
+        case .growFood: "Fresh vegetables, herbs & fruits"
         case .beautifySpace: "Flowers and decorative plants"
         case .learnSkills: "Master gardening techniques"
         case .relaxation: "Peaceful gardening activities"
         case .sustainability: "Eco-friendly practices"
-        case .healingGarden: "Plants for wellness and meditation"
+        case .healingGarden: "Plants for wellness & meditation"
         }
     }
 
@@ -164,22 +202,43 @@ public enum GardeningGoal: String, CaseIterable, Identifiable {
         case .healingGarden: "heart.fill"
         }
     }
+
+    var accentColor: Color {
+        switch self {
+        case .growFood: Color(red: 0.922, green: 0.596, blue: 0.200)
+        case .beautifySpace: Color(red: 0.780, green: 0.420, blue: 0.820)
+        case .learnSkills: Color(red: 0.275, green: 0.565, blue: 0.898)
+        case .relaxation: Color.botanicalForest
+        case .sustainability: Color.botanicalLeaf
+        case .healingGarden: Color(red: 0.882, green: 0.380, blue: 0.459)
+        }
+    }
 }
 
 public enum SpaceSize: String, CaseIterable {
-    case tiny // Windowsill, small containers
-    case small // Balcony, small patio
-    case medium // Small yard, large patio
-    case large // Large yard, multiple beds
-    case acreage // Farm or large property
+    case tiny
+    case small
+    case medium
+    case large
+    case acreage
 
     var displayName: String {
         switch self {
-        case .tiny: "Tiny (Windowsill/Indoor)"
-        case .small: "Small (Balcony/Patio)"
-        case .medium: "Medium (Small Yard)"
-        case .large: "Large (Large Yard)"
-        case .acreage: "Acreage (Farm/Estate)"
+        case .tiny: "Tiny"
+        case .small: "Small"
+        case .medium: "Medium"
+        case .large: "Large"
+        case .acreage: "Acreage"
+        }
+    }
+
+    var subtitle: String {
+        switch self {
+        case .tiny: "Windowsill / Indoor"
+        case .small: "Balcony / Patio"
+        case .medium: "Small Yard"
+        case .large: "Large Yard"
+        case .acreage: "Farm / Estate"
         }
     }
 
@@ -190,6 +249,16 @@ public enum SpaceSize: String, CaseIterable {
         case .medium: "Raised beds and medium-sized gardens"
         case .large: "Multiple garden areas and diverse plantings"
         case .acreage: "Large-scale gardening and farming"
+        }
+    }
+
+    var icon: String {
+        switch self {
+        case .tiny: "house.fill"
+        case .small: "building.fill"
+        case .medium: "rectangle.split.3x1.fill"
+        case .large: "square.grid.2x2.fill"
+        case .acreage: "map.fill"
         }
     }
 }
