@@ -39,76 +39,187 @@ public struct AddPlantSheet: View {
 
     public var body: some View {
         NavigationStack {
-            Form {
-                Section("Basic Information") {
-                    TextField("Plant Name", text: $plantName)
-                        .accessibilityLabel("Plant name text field")
-                        .onChange(of: plantName) { _, _ in
-                            updateCompatibilityAnalysis()
-                        }
-                    TextField("Scientific Name (Optional)", text: $scientificName)
-                        .accessibilityLabel("Scientific name text field")
-                }
+            ZStack {
+                CultivationTheme.Colors.backgroundSecondary
+                    .ignoresSafeArea()
 
-                Section("Plant Details") {
-                    Picker("Type", selection: $selectedPlantType) {
-                        ForEach(PlantType.allCases, id: \.self) { type in
-                            Text(type.rawValue.capitalized).tag(type)
-                        }
-                    }
-                    .accessibilityLabel("Plant type picker")
+                ScrollView {
+                    VStack(spacing: CultivationTheme.Spacing.sectionGap) {
+                        // Drag handle
+                        Capsule()
+                            .fill(CultivationTheme.Colors.cardBorder)
+                            .frame(width: 36, height: 4)
+                            .padding(.top, 8)
 
-                    Picker("Difficulty", selection: $selectedDifficultyLevel) {
-                        ForEach(DifficultyLevel.allCases, id: \.self) { level in
-                            Text(level.rawValue.capitalized).tag(level)
-                        }
-                    }
-                    .accessibilityLabel("Difficulty level picker")
-                }
+                        // Basic Information
+                        formSection(title: "Basic Information") {
+                            VStack(spacing: 12) {
+                                styledTextField(
+                                    placeholder: "Plant Name",
+                                    text: $plantName,
+                                    systemImage: "leaf.fill",
+                                    color: CultivationTheme.Colors.brandLeaf,
+                                    accessibilityID: "addplant_textfield_name"
+                                )
+                                .onChange(of: plantName) { _, _ in
+                                    updateCompatibilityAnalysis()
+                                }
 
-                Section("Planting Information") {
-                    DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
-                        .accessibilityLabel("Planting date picker")
+                                Divider()
+                                    .background(CultivationTheme.Colors.divider)
 
-                    if !availableGardens.isEmpty {
-                        Picker("Garden", selection: $selectedGarden) {
-                            Text("Select Garden").tag(nil as Garden?)
-                            ForEach(availableGardens) { garden in
-                                Text(garden.name ?? "Unnamed Garden").tag(garden as Garden?)
+                                styledTextField(
+                                    placeholder: "Scientific Name (Optional)",
+                                    text: $scientificName,
+                                    systemImage: "text.magnifyingglass",
+                                    color: CultivationTheme.Colors.brandSage,
+                                    accessibilityID: "addplant_textfield_scientificname"
+                                )
                             }
                         }
-                        .accessibilityLabel("Garden selection picker")
-                        .onChange(of: selectedGarden) { _, _ in
-                            updateCompatibilityAnalysis()
+
+                        // Plant Type — GlassPill chips
+                        formSection(title: "Plant Type") {
+                            VStack(alignment: .leading, spacing: 10) {
+                                ScrollView(.horizontal, showsIndicators: false) {
+                                    HStack(spacing: 8) {
+                                        ForEach(PlantType.allCases, id: \.self) { type in
+                                            GlassPill(
+                                                label: type.rawValue.capitalized,
+                                                isSelected: selectedPlantType == type,
+                                                accessibilityID: "addplant_pill_type_\(type.rawValue)"
+                                            ) {
+                                                selectedPlantType = type
+                                            }
+                                        }
+                                    }
+                                }
+
+                                Divider()
+                                    .background(CultivationTheme.Colors.divider)
+
+                                // Difficulty
+                                HStack {
+                                    IconBubble(systemName: "star.fill", color: CultivationTheme.Colors.brandGold, size: 28, iconSize: 13)
+                                    Text("Difficulty")
+                                        .font(.system(.subheadline, design: .rounded))
+                                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                                    Spacer()
+                                    Picker("", selection: $selectedDifficultyLevel) {
+                                        ForEach(DifficultyLevel.allCases, id: \.self) { level in
+                                            Text(level.rawValue.capitalized).tag(level)
+                                        }
+                                    }
+                                    .pickerStyle(.menu)
+                                    .accessibilityIdentifier("addplant_picker_difficulty")
+                                }
+                            }
                         }
-                    }
-                }
 
-                // Companion Planting Section
-                if let analysis = compatibilityAnalysis, !plantName.isEmpty {
-                    CompanionPlantingSection(analysis: analysis, showDetails: $showCompanionDetails)
-                }
+                        // Planting Information
+                        formSection(title: "Planting Information") {
+                            VStack(spacing: 12) {
+                                HStack {
+                                    IconBubble(systemName: "calendar", color: CultivationTheme.Colors.brandForest, size: 28, iconSize: 13)
+                                    DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
+                                        .font(.system(.subheadline, design: .rounded))
+                                        .accessibilityIdentifier("addplant_datepicker_plantingdate")
+                                }
 
-                Section("Notes") {
-                    TextEditor(text: $notes)
-                        .frame(height: 100)
-                        .accessibilityLabel("Plant notes text editor")
-                }
+                                if !availableGardens.isEmpty {
+                                    Divider()
+                                        .background(CultivationTheme.Colors.divider)
 
-                Section("Photos") {
-                    PhotosPicker(
-                        selection: $selectedPhotos,
-                        maxSelectionCount: 5,
-                        matching: .images
-                    ) {
-                        Label("Add Photos", systemImage: "photo.on.rectangle.angled")
-                    }
-                    .accessibilityLabel("Add plant photos button")
+                                    HStack {
+                                        IconBubble(systemName: "location.fill", color: CultivationTheme.Colors.brandLeaf, size: 28, iconSize: 13)
+                                        Picker("Garden", selection: $selectedGarden) {
+                                            Text("Select Garden").tag(nil as Garden?)
+                                            ForEach(availableGardens) { garden in
+                                                Text(garden.name ?? "Unnamed Garden").tag(garden as Garden?)
+                                            }
+                                        }
+                                        .pickerStyle(.menu)
+                                        .accessibilityIdentifier("addplant_picker_garden")
+                                        .onChange(of: selectedGarden) { _, _ in
+                                            updateCompatibilityAnalysis()
+                                        }
+                                    }
+                                }
+                            }
+                        }
 
-                    if !photoURLs.isEmpty {
-                        Text("\(photoURLs.count) photo(s) selected")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                        // Companion Planting (conditional)
+                        if let analysis = compatibilityAnalysis, !plantName.isEmpty {
+                            CompanionPlantingSection(analysis: analysis, showDetails: $showCompanionDetails)
+                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                        }
+
+                        // Notes
+                        formSection(title: "Notes") {
+                            HStack(alignment: .top, spacing: 10) {
+                                IconBubble(systemName: "note.text", color: CultivationTheme.Colors.brandSage, size: 28, iconSize: 13)
+                                    .padding(.top, 2)
+
+                                TextEditor(text: $notes)
+                                    .frame(minHeight: 80)
+                                    .font(.system(.body))
+                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                                    .scrollContentBackground(.hidden)
+                                    .background(Color.clear)
+                                    .accessibilityIdentifier("addplant_texteditor_notes")
+                                    .overlay(alignment: .topLeading) {
+                                        if notes.isEmpty {
+                                            Text("Add notes about this plant...")
+                                                .font(.system(.body))
+                                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                                                .allowsHitTesting(false)
+                                        }
+                                    }
+                            }
+                        }
+
+                        // Photos
+                        formSection(title: "Photos") {
+                            PhotosPicker(
+                                selection: $selectedPhotos,
+                                maxSelectionCount: 5,
+                                matching: .images
+                            ) {
+                                HStack(spacing: 10) {
+                                    IconBubble(systemName: "photo.on.rectangle.angled", color: CultivationTheme.Colors.brandLeaf, size: 28, iconSize: 13)
+                                    Text("Add Photos")
+                                        .font(.system(.subheadline, design: .rounded))
+                                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                    Spacer()
+                                    if !photoURLs.isEmpty {
+                                        Text("\(photoURLs.count) selected")
+                                            .font(.system(.caption, design: .rounded))
+                                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                                    }
+                                }
+                            }
+                            .accessibilityIdentifier("addplant_button_addphotos")
+                        }
+
+                        // Save Button
+                        Button {
+                            saveTask = Task { await savePlant() }
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isSaving {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "plus.circle.fill")
+                                }
+                                Text(isSaving ? "Saving..." : "Add Plant")
+                            }
+                        }
+                        .buttonStyle(GradientButtonStyle(isDisabled: plantName.isEmpty || isSaving))
+                        .disabled(plantName.isEmpty || isSaving)
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                        .accessibilityIdentifier("addplant_button_save")
+                        .padding(.bottom, 24)
                     }
                 }
             }
@@ -119,16 +230,7 @@ public struct AddPlantSheet: View {
                     Button("Cancel") {
                         dismiss()
                     }
-                }
-
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Save") {
-                        saveTask = Task {
-                            await savePlant()
-                        }
-                    }
-                    .disabled(plantName.isEmpty || isSaving)
-                    .accessibilityHint("Saves the plant to your garden")
+                    .accessibilityIdentifier("addplant_button_cancel")
                 }
             }
             .alert("Error", isPresented: $showingError) {
@@ -150,6 +252,43 @@ public struct AddPlantSheet: View {
             }
         }
     }
+
+    // MARK: - Form Section Builder
+
+    @ViewBuilder
+    private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .sectionLabelStyle()
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+
+            content()
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .glassCard()
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+        }
+    }
+
+    // MARK: - Styled Text Field
+
+    @ViewBuilder
+    private func styledTextField(
+        placeholder: String,
+        text: Binding<String>,
+        systemImage: String,
+        color: Color,
+        accessibilityID: String
+    ) -> some View {
+        HStack(spacing: 10) {
+            IconBubble(systemName: systemImage, color: color, size: 28, iconSize: 13)
+            TextField(placeholder, text: text)
+                .font(.system(.body))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                .accessibilityIdentifier(accessibilityID)
+        }
+    }
+
+    // MARK: - Data Methods
 
     private func loadGardens() {
         do {
@@ -221,7 +360,10 @@ struct CompanionPlantingSection: View {
     @Binding var showDetails: Bool
 
     var body: some View {
-        Section {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Companion Planting")
+                .sectionLabelStyle()
+
             VStack(alignment: .leading, spacing: 12) {
                 HStack {
                     Image(systemName: analysis.overallCompatibility.iconName)
@@ -242,6 +384,8 @@ struct CompanionPlantingSection: View {
                         showDetails = true
                     }
                     .font(.caption)
+                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .accessibilityIdentifier("addplant_button_companiondetails")
                 }
 
                 if analysis.hasWarnings {
@@ -253,33 +397,32 @@ struct CompanionPlantingSection: View {
                                     .font(.caption)
                                 Text(warning)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
                             }
                         }
                     }
                 }
 
                 if !analysis.recommendedCompanions.isEmpty {
-                    VStack(alignment: .leading, spacing: 4) {
+                    VStack(alignment: .leading, spacing: 6) {
                         Text("Good companions for this garden:")
                             .font(.caption)
-                            .foregroundColor(.secondary)
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
                         FlowLayout(spacing: 4) {
                             ForEach(analysis.recommendedCompanions.prefix(5), id: \.self) { companion in
-                                Text(companion)
-                                    .font(.caption)
-                                    .padding(.horizontal, 8)
-                                    .padding(.vertical, 4)
-                                    .background(Color.green.opacity(0.2))
-                                    .foregroundColor(.green)
-                                    .clipShape(RoundedRectangle(cornerRadius: 8))
+                                GlassPill(
+                                    label: companion,
+                                    isSelected: false,
+                                    accessibilityID: "addplant_pill_companion_\(companion)"
+                                ) {}
                             }
                         }
                     }
                 }
             }
-            .padding(.vertical, 4)
+            .padding(CultivationTheme.Spacing.cardPadding)
+            .glassCard()
         }
     }
 
@@ -351,7 +494,7 @@ struct CompanionDetailsSheet: View {
                                 }
                                 Text(relationship.reason)
                                     .font(.caption)
-                                    .foregroundColor(.secondary)
+                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
                             }
                             .padding(.vertical, 2)
                         }
@@ -365,6 +508,7 @@ struct CompanionDetailsSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("companiondetails_button_done")
                 }
             }
         }

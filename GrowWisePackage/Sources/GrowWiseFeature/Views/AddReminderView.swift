@@ -31,24 +31,65 @@ public struct AddReminderView: View {
 
     public var body: some View {
         NavigationStack {
-            Form {
-                // Plant selection
-                plantSelectionSection
+            ZStack {
+                CultivationTheme.Colors.backgroundSecondary
+                    .ignoresSafeArea()
 
-                // Reminder type
-                reminderTypeSection
+                ScrollView {
+                    VStack(spacing: CultivationTheme.Spacing.sectionGap) {
+                        // Drag handle
+                        Capsule()
+                            .fill(CultivationTheme.Colors.cardBorder)
+                            .frame(width: 36, height: 4)
+                            .padding(.top, 8)
 
-                // Frequency settings
-                frequencySection
+                        plantSelectionSection
+                        reminderTypeSection
+                        frequencySection
+                        timingSection
+                        prioritySection
+                        customContentSection
 
-                // Timing settings
-                timingSection
+                        // Save Button
+                        Button {
+                            createReminder()
+                        } label: {
+                            HStack(spacing: 8) {
+                                if isCreating {
+                                    ProgressView()
+                                        .tint(.white)
+                                } else {
+                                    Image(systemName: "bell.badge.fill")
+                                }
+                                Text(isCreating ? "Creating..." : "Create Reminder")
+                            }
+                        }
+                        .buttonStyle(GradientButtonStyle(isDisabled: selectedPlant == nil || isCreating))
+                        .disabled(selectedPlant == nil || isCreating)
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                        .accessibilityIdentifier("addreminder_button_create")
+                        .padding(.bottom, 24)
+                    }
+                }
 
-                // Advanced settings
-                advancedSettingsSection
+                // Creating overlay
+                if isCreating {
+                    ZStack {
+                        Color.black.opacity(0.3)
+                            .ignoresSafeArea()
 
-                // Custom content (optional)
-                customContentSection
+                        VStack(spacing: 16) {
+                            ProgressView()
+                                .scaleEffect(1.2)
+
+                            Text("Creating reminder...")
+                                .font(.headline)
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        }
+                        .padding(32)
+                        .glassCard()
+                    }
+                }
             }
             .navigationTitle("Add Reminder")
             .task {
@@ -61,20 +102,13 @@ public struct AddReminderView: View {
             .onDisappear {
                 saveTask?.cancel()
             }
-            .gwNavigationBarTitleDisplayMode(.large)
+            .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") {
                         dismiss()
                     }
-                }
-
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Create") {
-                        createReminder()
-                    }
-                    .disabled(selectedPlant == nil || isCreating)
-                    .fontWeight(.semibold)
+                    .accessibilityIdentifier("addreminder_button_cancel")
                 }
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
@@ -86,48 +120,30 @@ public struct AddReminderView: View {
                     Text(errorMessage)
                 }
             }
-            .overlay {
-                if isCreating {
-                    ZStack {
-                        Color.black.opacity(0.3)
-                            .ignoresSafeArea()
-
-                        VStack(spacing: 16) {
-                            ProgressView()
-                                .scaleEffect(1.2)
-
-                            Text("Creating reminder...")
-                                .font(.headline)
-                                .foregroundColor(.primary)
-                        }
-                        .padding(32)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(.regularMaterial)
-                        )
-                    }
-                }
-            }
         }
     }
 
     // MARK: - Form Sections
 
     private var plantSelectionSection: some View {
-        Section("Plant") {
+        reminderFormSection(title: "Plant") {
             if let selectedPlant {
-                HStack {
-                    Image(systemName: plantIcon(for: selectedPlant))
-                        .foregroundColor(plantColor(for: selectedPlant))
-                        .frame(width: 24, height: 24)
+                HStack(spacing: 12) {
+                    IconBubble(
+                        systemName: plantIcon(for: selectedPlant),
+                        color: plantColor(for: selectedPlant),
+                        size: 36,
+                        iconSize: 16
+                    )
 
-                    VStack(alignment: .leading) {
+                    VStack(alignment: .leading, spacing: 2) {
                         Text(selectedPlant.name ?? "Unknown Plant")
-                            .font(.headline)
+                            .font(.system(.headline, design: .rounded))
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                         Text(selectedPlant.plantType?.displayName ?? "Unknown Type")
-                            .font(.caption)
-                            .foregroundColor(.secondary)
+                            .font(.system(.caption, design: .rounded))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
 
                     Spacer()
@@ -135,20 +151,21 @@ public struct AddReminderView: View {
                     Button("Change") {
                         showingPlantPicker = true
                     }
-                    .font(.subheadline)
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .accessibilityIdentifier("addreminder_button_changeplant")
                 }
             } else {
                 Button(action: { showingPlantPicker = true }) {
-                    HStack {
-                        Image(systemName: "plus.circle.fill")
-                            .foregroundColor(.blue)
-
+                    HStack(spacing: 10) {
+                        IconBubble(systemName: "plus.circle.fill", color: CultivationTheme.Colors.brandLeaf, size: 32, iconSize: 15)
                         Text("Select Plant")
-                            .foregroundColor(.blue)
-
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                         Spacer()
                     }
                 }
+                .accessibilityIdentifier("addreminder_button_selectplant")
             }
         }
         .sheet(isPresented: $showingPlantPicker) {
@@ -161,125 +178,189 @@ public struct AddReminderView: View {
     }
 
     private var reminderTypeSection: some View {
-        Section("Reminder Type") {
-            Picker("Type", selection: $reminderType) {
-                ForEach(ReminderType.allCases, id: \.self) { type in
-                    HStack {
-                        Image(systemName: type.iconName)
-                            .foregroundColor(colorForReminderType(type))
-
-                        Text(type.displayName)
+        reminderFormSection(title: "Reminder Type") {
+            VStack(alignment: .leading, spacing: 10) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(ReminderType.allCases, id: \.self) { type in
+                            GlassPill(
+                                label: type.displayName,
+                                isSelected: reminderType == type,
+                                accessibilityID: "addreminder_pill_type_\(type.rawValue)"
+                            ) {
+                                reminderType = type
+                            }
+                        }
                     }
-                    .tag(type)
                 }
-            }
-            .pickerStyle(.menu)
 
-            Text(reminderType.defaultMessage)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                Text(reminderType.defaultMessage)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            }
         }
     }
 
     private var frequencySection: some View {
-        Section("Frequency") {
-            Picker("Frequency", selection: $frequency) {
-                ForEach(frequencyOptions, id: \.self) { freq in
-                    Text(freq.displayName).tag(freq)
+        reminderFormSection(title: "Frequency") {
+            VStack(alignment: .leading, spacing: 10) {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 8) {
+                        ForEach(frequencyOptions, id: \.self) { freq in
+                            GlassPill(
+                                label: freq.displayName,
+                                isSelected: frequency == freq,
+                                accessibilityID: "addreminder_pill_frequency_\(freq.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))"
+                            ) {
+                                frequency = freq
+                            }
+                        }
+                    }
                 }
-            }
-            .pickerStyle(.menu)
 
-            if case .custom = frequency {
-                HStack {
-                    Text("Every")
+                if case .custom = frequency {
+                    HStack {
+                        Text("Every")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
-                    Spacer()
+                        Spacer()
 
-                    TextField("Days", value: $customDays, format: .number)
-                        .textFieldStyle(.roundedBorder)
-                        .frame(width: 80)
+                        TextField("Days", value: $customDays, format: .number)
+                            .textFieldStyle(.roundedBorder)
+                            .frame(width: 80)
+                            .accessibilityIdentifier("addreminder_textfield_customdays")
 
-                    Text("days")
+                        Text("days")
+                            .font(.system(.subheadline, design: .rounded))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    }
                 }
-            }
 
-            Text("This plant will be watered \(frequencyDescription)")
-                .font(.caption)
-                .foregroundColor(.secondary)
+                Text("This plant will be watered \(frequencyDescription)")
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            }
         }
     }
 
     private var timingSection: some View {
-        Section("Timing") {
-            DatePicker(
-                "Preferred Time",
-                selection: $preferredTime,
-                displayedComponents: .hourAndMinute
-            )
+        reminderFormSection(title: "Timing") {
+            VStack(spacing: 12) {
+                HStack {
+                    IconBubble(systemName: "clock.fill", color: CultivationTheme.Colors.brandForest, size: 28, iconSize: 13)
+                    DatePicker(
+                        "Preferred Time",
+                        selection: $preferredTime,
+                        displayedComponents: .hourAndMinute
+                    )
+                    .font(.system(.subheadline, design: .rounded))
+                    .accessibilityIdentifier("addreminder_datepicker_time")
+                }
 
-            HStack {
-                Text("Smart Weather Adjustment")
-                Spacer()
-                Toggle("", isOn: $enableWeatherAdjustment)
-            }
+                Divider()
+                    .background(CultivationTheme.Colors.divider)
 
-            if enableWeatherAdjustment {
-                Text("Reminders will adjust based on weather conditions")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                HStack {
+                    IconBubble(systemName: "cloud.sun.fill", color: CultivationTheme.Colors.brandGold, size: 28, iconSize: 13)
+                    Text("Smart Weather Adjustment")
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    Spacer()
+                    Toggle("", isOn: $enableWeatherAdjustment)
+                        .accessibilityIdentifier("addreminder_toggle_weatheradjustment")
+                }
+
+                if enableWeatherAdjustment {
+                    Text("Reminders will adjust based on weather conditions")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                }
             }
         }
     }
 
-    private var advancedSettingsSection: some View {
-        Section("Priority") {
-            Picker("Priority", selection: $priority) {
-                ForEach(ReminderPriority.allCases, id: \.self) { priority in
-                    HStack {
-                        Circle()
-                            .fill(Color(priority.color))
-                            .frame(width: 12, height: 12)
-
-                        Text(priority.displayName)
+    private var prioritySection: some View {
+        reminderFormSection(title: "Priority") {
+            HStack(spacing: 8) {
+                ForEach(ReminderPriority.allCases, id: \.self) { p in
+                    GlassPill(
+                        label: p.displayName,
+                        isSelected: priority == p,
+                        accessibilityID: "addreminder_pill_priority_\(p.displayName.lowercased())"
+                    ) {
+                        priority = p
                     }
-                    .tag(priority)
                 }
             }
-            .pickerStyle(.segmented)
         }
     }
 
     private var customContentSection: some View {
-        Section("Custom Content (Optional)") {
-            ValidatedTextField(
-                "Custom Title",
-                text: $customTitle,
-                validation: { ValidationService.shared.validateText($0, fieldName: "Title", maxLength: 100) }
-            )
-
-            ZStack(alignment: .topLeading) {
-                TextEditor(text: $customMessage)
-                    .frame(minHeight: 80)
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 8)
-                            .stroke(Color(.systemGray4), lineWidth: 1)
+        reminderFormSection(title: "Custom Content (Optional)") {
+            VStack(spacing: 12) {
+                HStack(spacing: 10) {
+                    IconBubble(systemName: "textformat", color: CultivationTheme.Colors.brandSage, size: 28, iconSize: 13)
+                    ValidatedTextField(
+                        "Custom Title",
+                        text: $customTitle,
+                        validation: { ValidationService.shared.validateText($0, fieldName: "Title", maxLength: 100) }
                     )
+                    .accessibilityIdentifier("addreminder_textfield_customtitle")
+                }
 
-                if customMessage.isEmpty {
-                    Text("Custom Message")
-                        .foregroundColor(.secondary)
-                        .padding(.horizontal, 4)
-                        .padding(.vertical, 8)
-                        .allowsHitTesting(false)
+                Divider()
+                    .background(CultivationTheme.Colors.divider)
+
+                HStack(alignment: .top, spacing: 10) {
+                    IconBubble(systemName: "text.alignleft", color: CultivationTheme.Colors.brandSage, size: 28, iconSize: 13)
+                        .padding(.top, 2)
+
+                    ZStack(alignment: .topLeading) {
+                        TextEditor(text: $customMessage)
+                            .frame(minHeight: 80)
+                            .font(.system(.body))
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                            .scrollContentBackground(.hidden)
+                            .background(Color.clear)
+                            .accessibilityIdentifier("addreminder_texteditor_custommessage")
+                            .overlay(
+                                RoundedRectangle(cornerRadius: 8)
+                                    .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
+                            )
+                            .onChange(of: customMessage) { _, newValue in
+                                let validation = ValidationService.shared.validateText(newValue, fieldName: "Message", maxLength: 500)
+                                if !validation.isValid {
+                                    customMessage = String(newValue.prefix(500))
+                                }
+                            }
+
+                        if customMessage.isEmpty {
+                            Text("Custom Message")
+                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                                .padding(.horizontal, 4)
+                                .padding(.vertical, 8)
+                                .allowsHitTesting(false)
+                        }
+                    }
                 }
             }
-            .onChange(of: customMessage) { _, newValue in
-                let validation = ValidationService.shared.validateText(newValue, fieldName: "Message", maxLength: 500)
-                if !validation.isValid {
-                    customMessage = String(newValue.prefix(500))
-                }
-            }
+        }
+    }
+
+    // MARK: - Form Section Builder
+
+    @ViewBuilder
+    private func reminderFormSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text(title)
+                .sectionLabelStyle()
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+
+            content()
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .glassCard()
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
         }
     }
 
@@ -332,23 +413,13 @@ public struct AddReminderView: View {
 
     private func plantColor(for plant: Plant) -> Color {
         switch plant.plantType {
-        case .houseplant, .herb, .shrub: .green
+        case .houseplant, .herb, .shrub: CultivationTheme.Colors.brandLeaf
         case .succulent: .mint
         case .vegetable: .orange
         case .flower: .pink
         case .fruit: .red
         case .tree: .brown
-        case .none: .gray
-        }
-    }
-
-    private func colorForReminderType(_ type: ReminderType) -> Color {
-        switch type {
-        case .watering: .blue
-        case .fertilizing: .green
-        case .pruning: .orange
-        case .pestControl: .red
-        default: .gray
+        case .none: CultivationTheme.Colors.textTertiary
         }
     }
 
@@ -423,22 +494,23 @@ struct PlantPickerView: View {
                         VStack(alignment: .leading) {
                             Text(plant.name ?? "Unknown Plant")
                                 .font(.headline)
-                                .foregroundColor(.primary)
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                             Text(plant.plantType?.displayName ?? "Unknown Type")
                                 .font(.caption)
-                                .foregroundColor(.secondary)
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
 
                         Spacer()
 
                         if selectedPlant?.id == plant.id {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundColor(.blue)
+                                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                         }
                     }
                 }
                 .buttonStyle(.plain)
+                .accessibilityIdentifier("addreminder_cell_plant_\(plant.id)")
             }
             .navigationTitle("Select Plant")
             .gwNavigationBarTitleDisplayMode(.inline)
@@ -447,6 +519,7 @@ struct PlantPickerView: View {
                     Button("Cancel") {
                         onDismiss()
                     }
+                    .accessibilityIdentifier("addreminder_button_plantpickercancel")
                 }
             }
         }
@@ -468,13 +541,13 @@ struct PlantPickerView: View {
 
     private func plantColor(for plant: Plant) -> Color {
         switch plant.plantType {
-        case .houseplant, .herb, .shrub: .green
+        case .houseplant, .herb, .shrub: CultivationTheme.Colors.brandLeaf
         case .succulent: .mint
         case .vegetable: .orange
         case .flower: .pink
         case .fruit: .red
         case .tree: .brown
-        case .none: .gray
+        case .none: CultivationTheme.Colors.textTertiary
         }
     }
 }

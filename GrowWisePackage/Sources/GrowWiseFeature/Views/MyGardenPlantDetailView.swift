@@ -15,7 +15,7 @@ struct PlantDetailView: View {
     @State private var showingReminderView = false
     @State private var selectedPhoto: String?
     @State private var showingPhotoViewer = false
-    @State private var showingAssignGarden = false // Added per instruction
+    @State private var showingAssignGarden = false
 
     // Care action states
     @State private var isPerformingCareAction = false
@@ -23,10 +23,16 @@ struct PlantDetailView: View {
     @State private var careActionMessage = ""
 
     var body: some View {
-        ScrollView {
-            LazyVStack(alignment: .leading, spacing: 20) {
-                heroImageSection
-                plantInfoSections
+        ZStack {
+            CultivationTheme.Colors.background
+                .ignoresSafeArea()
+
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
+                    heroImageSection
+                    plantInfoSections
+                }
+                .padding(.bottom, 32)
             }
         }
         .navigationTitle(plant.name ?? "Unknown Plant")
@@ -78,11 +84,12 @@ struct PlantDetailView: View {
             } label: {
                 Image(systemName: "ellipsis")
             }
+            .accessibilityIdentifier("plantdetail_button_menu")
         }
     }
 
     private var plantInfoSections: some View {
-        VStack(alignment: .leading, spacing: 20) {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
             basicInfoSection
             careRequirementsSection
             healthStatusSection
@@ -90,13 +97,13 @@ struct PlantDetailView: View {
             careHistorySection
             upcomingRemindersSection
         }
-        .padding(.horizontal)
+        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
     }
 
     // MARK: - Hero Image Section
 
     private var heroImageSection: some View {
-        VStack {
+        ZStack(alignment: .bottom) {
             if let photoURLs = plant.photoURLs, !photoURLs.isEmpty {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
@@ -105,211 +112,239 @@ struct PlantDetailView: View {
                                 image
                                     .resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: 300, height: 200)
-                                    .clipShape(RoundedRectangle(cornerRadius: 12))
+                                    .frame(width: 300, height: 220)
+                                    .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
                                     .onTapGesture {
                                         selectedPhoto = photoURL
                                         showingPhotoViewer = true
                                     }
+                                    .accessibilityIdentifier("plantdetail_image_photo")
                             } placeholder: {
-                                RoundedRectangle(cornerRadius: 12)
-                                    .fill(Color.gray.opacity(0.2))
-                                    .frame(width: 300, height: 200)
-                                    .overlay {
-                                        ProgressView()
-                                    }
+                                RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                                    .fill(CultivationTheme.Colors.cardSurface)
+                                    .frame(width: 300, height: 220)
+                                    .overlay { ProgressView() }
                             }
                         }
                     }
-                    .padding(.horizontal)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 }
             } else {
-                // Placeholder when no photos
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(Color.gray.opacity(0.2))
-                    .frame(height: 200)
-                    .overlay {
-                        VStack {
-                            Image(systemName: "photo")
-                                .font(.system(size: 40))
-                                .foregroundColor(.gray)
-                            Text("No photos yet")
-                                .font(.caption)
-                                .foregroundColor(.gray)
-                        }
+                // Gradient placeholder hero with IconBubble
+                ZStack {
+                    LinearGradient(
+                        colors: [
+                            CultivationTheme.Colors.brandForest.opacity(0.25),
+                            CultivationTheme.Colors.brandLeaf.opacity(0.12),
+                        ],
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
+                    )
+
+                    // Subtle green glow orb
+                    Circle()
+                        .fill(CultivationTheme.Colors.heroGlow)
+                        .frame(width: 200, height: 200)
+                        .blur(radius: 50)
+
+                    VStack(spacing: 12) {
+                        IconBubble(
+                            systemName: plant.plantType?.iconName ?? "leaf.fill",
+                            color: CultivationTheme.Colors.brandLeaf,
+                            size: 80,
+                            iconSize: 36
+                        )
+
+                        Text(plant.name ?? "Unknown Plant")
+                            .font(.system(.title3, design: .rounded, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     }
-                    .padding(.horizontal)
+                }
+                .frame(maxWidth: .infinity)
+                .frame(height: 220)
+                .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
             }
         }
+        .padding(.top, 8)
     }
 
     // MARK: - Basic Info Section
 
     private var basicInfoSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Basic Information")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .sectionLabelStyle()
 
-            InfoCard {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let scientificName = plant.scientificName {
-                        InfoRow(title: "Scientific Name", value: scientificName, systemImage: "leaf.fill")
-                    }
+            VStack(alignment: .leading, spacing: 10) {
+                if let scientificName = plant.scientificName {
+                    DetailInfoRow(title: "Scientific Name", value: scientificName, systemImage: "leaf.fill", color: CultivationTheme.Colors.brandLeaf)
+                }
 
-                    InfoRow(title: "Type", value: plant.plantType?.displayName ?? "Unknown", systemImage: "tag.fill")
-                    InfoRow(title: "Difficulty", value: plant.difficultyLevel?.displayName ?? "Unknown", systemImage: "star.fill")
+                DetailInfoRow(title: "Type", value: plant.plantType?.displayName ?? "Unknown", systemImage: "tag.fill", color: CultivationTheme.Colors.brandSage)
+                DetailInfoRow(title: "Difficulty", value: plant.difficultyLevel?.displayName ?? "Unknown", systemImage: "star.fill", color: CultivationTheme.Colors.brandGold)
 
-                    if let plantingDate = plant.plantingDate {
-                        InfoRow(title: "Planted", value: plantingDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar")
-                    }
+                if let plantingDate = plant.plantingDate {
+                    DetailInfoRow(title: "Planted", value: plantingDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar", color: CultivationTheme.Colors.brandForest)
+                }
 
-                    if let growthStage = plant.growthStage {
-                        InfoRow(title: "Growth Stage", value: growthStage.displayName, systemImage: "chart.line.uptrend.xyaxis")
-                    }
+                if let growthStage = plant.growthStage {
+                    DetailInfoRow(title: "Growth Stage", value: growthStage.displayName, systemImage: "chart.line.uptrend.xyaxis", color: CultivationTheme.Colors.brandLeaf)
+                }
 
-                    if let location = plant.gardenLocation, !location.isEmpty {
-                        InfoRow(title: "Location", value: location, systemImage: "location.fill")
-                    }
+                if let location = plant.gardenLocation, !location.isEmpty {
+                    DetailInfoRow(title: "Location", value: location, systemImage: "location.fill", color: CultivationTheme.Colors.brandForest)
+                }
 
-                    if let containerType = plant.containerType {
-                        InfoRow(title: "Container", value: containerType.displayName, systemImage: "square.stack")
-                    }
+                if let containerType = plant.containerType {
+                    DetailInfoRow(title: "Container", value: containerType.displayName, systemImage: "square.stack", color: CultivationTheme.Colors.brandSage)
+                }
 
-                    if let notes = plant.notes, !notes.isEmpty {
-                        VStack(alignment: .leading, spacing: 4) {
-                            HStack {
-                                Image(systemName: "note.text")
-                                    .foregroundColor(.blue)
-                                    .frame(width: 20)
-                                Text("Notes")
-                                    .font(.caption)
-                                    .fontWeight(.medium)
-                            }
-                            Text(notes)
-                                .font(.body)
-                                .padding(.leading, 24)
+                if let notes = plant.notes, !notes.isEmpty {
+                    VStack(alignment: .leading, spacing: 6) {
+                        HStack(spacing: 8) {
+                            IconBubble(systemName: "note.text", color: CultivationTheme.Colors.brandForest, size: 28, iconSize: 13)
+                            Text("Notes")
+                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
+                        Text(notes)
+                            .font(.body)
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                            .padding(.leading, 36)
                     }
                 }
             }
+            .padding(CultivationTheme.Spacing.cardPadding)
+            .glassCard()
         }
     }
 
     // MARK: - Care Requirements Section
 
     private var careRequirementsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Care Requirements")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .sectionLabelStyle()
 
-            InfoCard {
-                VStack(alignment: .leading, spacing: 8) {
-                    if let sunlight = plant.sunlightRequirement {
-                        InfoRow(title: "Sunlight", value: sunlight.displayName, systemImage: "sun.max.fill")
-                    }
+            VStack(alignment: .leading, spacing: 10) {
+                if let sunlight = plant.sunlightRequirement {
+                    DetailInfoRow(title: "Sunlight", value: sunlight.displayName, systemImage: "sun.max.fill", color: CultivationTheme.Colors.brandGold)
+                }
 
-                    if let watering = plant.wateringFrequency {
-                        InfoRow(title: "Watering", value: watering.displayName, systemImage: "drop.fill")
-                    }
+                if let watering = plant.wateringFrequency {
+                    DetailInfoRow(title: "Watering", value: watering.displayName, systemImage: "drop.fill", color: Color.blue)
+                }
 
-                    if let space = plant.spaceRequirement {
-                        InfoRow(title: "Space Needed", value: space.displayName, systemImage: "square.dashed")
-                    }
+                if let space = plant.spaceRequirement {
+                    DetailInfoRow(title: "Space Needed", value: space.displayName, systemImage: "square.dashed", color: CultivationTheme.Colors.brandSage)
+                }
 
-                    if let harvestDate = plant.harvestDate {
-                        InfoRow(title: "Expected Harvest", value: harvestDate.formatted(date: .abbreviated, time: .omitted), systemImage: "basket.fill")
-                    }
+                if let harvestDate = plant.harvestDate {
+                    DetailInfoRow(title: "Expected Harvest", value: harvestDate.formatted(date: .abbreviated, time: .omitted), systemImage: "basket.fill", color: CultivationTheme.Colors.brandForest)
                 }
             }
+            .padding(CultivationTheme.Spacing.cardPadding)
+            .glassCard()
         }
     }
 
     // MARK: - Health Status Section
 
     private var healthStatusSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Health Status")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .sectionLabelStyle()
 
-            InfoCard {
-                VStack(alignment: .leading, spacing: 8) {
-                    HStack {
-                        Image(systemName: "heart.fill")
-                            .foregroundColor(healthStatusColor)
-                            .frame(width: 20)
-                        Text("Current Health")
-                            .font(.caption)
-                            .fontWeight(.medium)
-                        Spacer()
-                        Text(plant.healthStatus?.displayName ?? "Unknown")
-                            .font(.body)
-                            .fontWeight(.semibold)
-                            .foregroundColor(healthStatusColor)
-                    }
+            VStack(alignment: .leading, spacing: 10) {
+                HStack {
+                    IconBubble(systemName: "heart.fill", color: healthStatusColor, size: 28, iconSize: 13)
 
-                    if let lastWatered = plant.lastWatered {
-                        InfoRow(title: "Last Watered", value: lastWatered.formatted(date: .abbreviated, time: .omitted), systemImage: "drop.fill")
-                    }
+                    Text("Current Health")
+                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
-                    if let lastFertilized = plant.lastFertilized {
-                        InfoRow(title: "Last Fertilized", value: lastFertilized.formatted(date: .abbreviated, time: .omitted), systemImage: "leaf.fill")
-                    }
+                    Spacer()
 
-                    if let lastPruned = plant.lastPruned {
-                        InfoRow(title: "Last Pruned", value: lastPruned.formatted(date: .abbreviated, time: .omitted), systemImage: "scissors")
-                    }
+                    Text(plant.healthStatus?.displayName ?? "Unknown")
+                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .foregroundStyle(healthStatusColor)
+                }
+
+                if let lastWatered = plant.lastWatered {
+                    DetailInfoRow(title: "Last Watered", value: lastWatered.formatted(date: .abbreviated, time: .omitted), systemImage: "drop.fill", color: Color.blue)
+                }
+
+                if let lastFertilized = plant.lastFertilized {
+                    DetailInfoRow(title: "Last Fertilized", value: lastFertilized.formatted(date: .abbreviated, time: .omitted), systemImage: "leaf.fill", color: CultivationTheme.Colors.brandLeaf)
+                }
+
+                if let lastPruned = plant.lastPruned {
+                    DetailInfoRow(title: "Last Pruned", value: lastPruned.formatted(date: .abbreviated, time: .omitted), systemImage: "scissors", color: CultivationTheme.Colors.brandSage)
                 }
             }
+            .padding(CultivationTheme.Spacing.cardPadding)
+            .glassCard()
         }
     }
 
     // MARK: - Action Buttons Section
 
     private var actionButtonsSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             Text("Quick Actions")
-                .font(.title2)
-                .fontWeight(.semibold)
+                .sectionLabelStyle()
 
+            // Primary CTA: Water Now
+            Button {
+                performCareAction(.watering)
+            } label: {
+                HStack(spacing: 8) {
+                    if isPerformingCareAction {
+                        ProgressView()
+                            .tint(.white)
+                    } else {
+                        Image(systemName: "drop.fill")
+                    }
+                    Text("Water Now")
+                }
+            }
+            .buttonStyle(GradientButtonStyle(isDisabled: isPerformingCareAction))
+            .disabled(isPerformingCareAction)
+            .accessibilityIdentifier("plantdetail_button_water")
+
+            // Secondary actions
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible()),
-            ], spacing: 12) {
-                ActionButton(
-                    title: "Water",
-                    systemImage: "drop.fill",
-                    color: .blue,
-                    isLoading: isPerformingCareAction
-                ) {
-                    performCareAction(.watering)
-                }
-
-                ActionButton(
+                GridItem(.flexible()),
+            ], spacing: 10) {
+                GlassActionButton(
                     title: "Fertilize",
                     systemImage: "leaf.fill",
-                    color: .green,
-                    isLoading: isPerformingCareAction
+                    color: CultivationTheme.Colors.brandLeaf,
+                    isLoading: isPerformingCareAction,
+                    accessibilityID: "plantdetail_button_fertilize"
                 ) {
                     performCareAction(.fertilizing)
                 }
 
-                ActionButton(
+                GlassActionButton(
                     title: "Add Entry",
                     systemImage: "plus.circle.fill",
-                    color: .purple,
-                    isLoading: false
+                    color: CultivationTheme.Colors.brandSage,
+                    isLoading: false,
+                    accessibilityID: "plantdetail_button_addentry"
                 ) {
                     showingJournalEntry = true
                 }
 
-                ActionButton(
-                    title: "Set Reminder",
+                GlassActionButton(
+                    title: "Reminder",
                     systemImage: "bell.fill",
-                    color: .orange,
-                    isLoading: false
+                    color: CultivationTheme.Colors.brandGold,
+                    isLoading: false,
+                    accessibilityID: "plantdetail_button_setreminder"
                 ) {
                     showingReminderView = true
                 }
@@ -320,34 +355,26 @@ struct PlantDetailView: View {
     // MARK: - Care History Section
 
     private var careHistorySection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Recent Activity")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .sectionLabelStyle()
 
                 Spacer()
 
                 Button("View All") {
                     // Navigate to full journal view
                 }
-                .font(.caption)
-                .foregroundColor(.blue)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .accessibilityIdentifier("plantdetail_button_viewallactivity")
             }
 
             if let journalEntries = plant.journalEntries?.prefix(5) {
                 if journalEntries.isEmpty {
-                    InfoCard {
-                        HStack {
-                            Image(systemName: "book.closed")
-                                .foregroundColor(.gray)
-                            Text("No journal entries yet")
-                                .foregroundColor(.gray)
-                        }
-                        .padding(.vertical, 8)
-                    }
+                    emptyStateCard(icon: "book.closed", message: "No journal entries yet")
                 } else {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: CultivationTheme.Spacing.rowGap) {
                         ForEach(Array(journalEntries), id: \.id) { entry in
                             JournalEntryRow(entry: entry, photoService: photoService)
                         }
@@ -360,34 +387,26 @@ struct PlantDetailView: View {
     // MARK: - Upcoming Reminders Section
 
     private var upcomingRemindersSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
+        VStack(alignment: .leading, spacing: 10) {
             HStack {
                 Text("Upcoming Reminders")
-                    .font(.title2)
-                    .fontWeight(.semibold)
+                    .sectionLabelStyle()
 
                 Spacer()
 
                 Button("Manage") {
                     // Navigate to reminder management
                 }
-                .font(.caption)
-                .foregroundColor(.blue)
+                .font(.system(.caption, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .accessibilityIdentifier("plantdetail_button_managereminders")
             }
 
             if let reminders = plant.reminders?.filter({ $0.isEnabled == true }).prefix(3) {
                 if reminders.isEmpty {
-                    InfoCard {
-                        HStack {
-                            Image(systemName: "bell.slash")
-                                .foregroundColor(.gray)
-                            Text("No active reminders")
-                                .foregroundColor(.gray)
-                        }
-                        .padding(.vertical, 8)
-                    }
+                    emptyStateCard(icon: "bell.slash", message: "No active reminders")
                 } else {
-                    LazyVStack(spacing: 8) {
+                    LazyVStack(spacing: CultivationTheme.Spacing.rowGap) {
                         ForEach(Array(reminders), id: \.id) { reminder in
                             ReminderRowView(reminder: reminder, reminderService: reminderService)
                         }
@@ -399,86 +418,29 @@ struct PlantDetailView: View {
 
     // MARK: - Helper Views
 
-    private struct InfoCard<Content: View>: View {
-        let content: Content
-
-        init(@ViewBuilder content: () -> Content) {
-            self.content = content()
+    private func emptyStateCard(icon: String, message: String) -> some View {
+        HStack(spacing: 10) {
+            IconBubble(systemName: icon, color: CultivationTheme.Colors.textTertiary, size: 32, iconSize: 15)
+            Text(message)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
-
-        var body: some View {
-            VStack {
-                content
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-        }
-    }
-
-    private struct InfoRow: View {
-        let title: String
-        let value: String
-        let systemImage: String
-
-        var body: some View {
-            HStack {
-                Image(systemName: systemImage)
-                    .foregroundColor(.blue)
-                    .frame(width: 20)
-                Text(title)
-                    .font(.caption)
-                    .fontWeight(.medium)
-                Spacer()
-                Text(value)
-                    .font(.body)
-            }
-        }
-    }
-
-    private struct ActionButton: View {
-        let title: String
-        let systemImage: String
-        let color: Color
-        let isLoading: Bool
-        let action: () -> Void
-
-        var body: some View {
-            Button(action: action) {
-                VStack(spacing: 8) {
-                    if isLoading {
-                        ProgressView()
-                            .controlSize(.regular)
-                    } else {
-                        Image(systemName: systemImage)
-                            .font(.system(size: 20))
-                    }
-
-                    Text(title)
-                        .font(.caption)
-                        .fontWeight(.medium)
-                }
-                .frame(maxWidth: .infinity)
-                .padding()
-                .background(color.opacity(0.1))
-                .foregroundColor(color)
-                .clipShape(RoundedRectangle(cornerRadius: 12))
-            }
-            .disabled(isLoading)
-        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .glassCard()
     }
 
     // MARK: - Computed Properties
 
     private var healthStatusColor: Color {
-        guard let healthStatus = plant.healthStatus else { return .gray }
+        guard let healthStatus = plant.healthStatus else { return CultivationTheme.Colors.textTertiary }
 
         switch healthStatus {
-        case .healthy: return .green
-        case .needsAttention: return .yellow
-        case .sick: return .orange
-        case .dying: return .red
-        case .dead: return .gray
+        case .healthy: return CultivationTheme.Colors.statusHealthy
+        case .needsAttention: return CultivationTheme.Colors.statusWarning
+        case .sick: return CultivationTheme.Colors.statusWarning
+        case .dying: return CultivationTheme.Colors.statusAlert
+        case .dead: return CultivationTheme.Colors.textTertiary
         }
     }
 
@@ -547,79 +509,66 @@ struct PlantDetailView: View {
             }
         }
     }
+}
 
-    // MARK: - Simple Fallback Views
+// MARK: - Detail Info Row
 
-    private struct SimpleJournalEntryRow: View {
-        let entry: JournalEntry
+private struct DetailInfoRow: View {
+    let title: String
+    let value: String
+    let systemImage: String
+    let color: Color
 
-        var body: some View {
-            HStack(spacing: 12) {
-                Image(systemName: entry.entryType.iconName)
-                    .font(.title3)
-                    .foregroundColor(Color(entry.entryType.color))
-                    .frame(width: 24, height: 24)
+    var body: some View {
+        HStack(spacing: 10) {
+            IconBubble(systemName: systemImage, color: color, size: 28, iconSize: 13)
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(entry.title.isEmpty ? entry.entryType.displayName : entry.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+            Text(title)
+                .font(.system(.caption, design: .rounded, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
-                    Text(entry.content)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
+            Spacer()
 
-                    Text(entry.entryDate.formatted(date: .abbreviated, time: .shortened))
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
-                }
-
-                Spacer()
-            }
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            Text(value)
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
         }
     }
+}
 
-    private struct SimpleReminderRow: View {
-        let reminder: PlantReminder
+// MARK: - Glass Action Button
 
-        var body: some View {
-            HStack(spacing: 12) {
-                Image(systemName: reminder.reminderType.iconName)
-                    .font(.title3)
-                    .foregroundColor(Color(reminder.priority.color))
-                    .frame(width: 24, height: 24)
+private struct GlassActionButton: View {
+    let title: String
+    let systemImage: String
+    let color: Color
+    let isLoading: Bool
+    let accessibilityID: String
+    let action: () -> Void
 
-                VStack(alignment: .leading, spacing: 4) {
-                    Text(reminder.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-
-                    Text(reminder.message)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                        .lineLimit(2)
-
-                    Text("Due: \(reminder.nextDueDate.formatted(date: .abbreviated, time: .shortened))")
-                        .font(.caption2)
-                        .foregroundColor(.secondary)
+    var body: some View {
+        Button(action: action) {
+            VStack(spacing: 8) {
+                if isLoading {
+                    ProgressView()
+                        .controlSize(.regular)
+                        .tint(color)
+                } else {
+                    Image(systemName: systemImage)
+                        .font(.system(size: 20, weight: .medium))
+                        .foregroundStyle(color)
                 }
 
-                Spacer()
-
-                if reminder.isEnabled {
-                    Circle()
-                        .fill(Color(reminder.priority.color))
-                        .frame(width: 8, height: 8)
-                }
+                Text(title)
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 8))
+            .frame(maxWidth: .infinity)
+            .padding(.vertical, 14)
+            .glassCard()
         }
+        .disabled(isLoading)
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 
