@@ -98,55 +98,33 @@ public struct MainAppView: View {
         TabView(selection: $selectedTab) {
             HomeView()
                 .tabItem {
-                    Image(systemName: "house.fill")
-                    Text("Home")
+                    Label("Home", systemImage: "house.fill")
                 }
                 .tag(TabSelection.home)
+                .accessibilityIdentifier("tab_home")
 
-            MyGardenView()
+            GardenView()
                 .tabItem {
-                    Image(systemName: "leaf.fill")
-                    Text("My Garden")
+                    Label("Garden", systemImage: "leaf.fill")
                 }
                 .tag(TabSelection.garden)
+                .accessibilityIdentifier("tab_garden")
 
-            PlantDatabaseView()
+            JournalView()
                 .tabItem {
-                    Image(systemName: "books.vertical.fill")
-                    Text("Plant Guide")
+                    Label("Journal", systemImage: "book.fill")
                 }
-                .tag(TabSelection.plantGuide)
-
-            if dataService != nil {
-                JournalView()
-                    .tabItem {
-                        Image(systemName: "book.pages.fill")
-                        Text("Journal")
-                    }
-                    .tag(TabSelection.journal)
-            }
-
-            TutorialsView()
-                .tabItem {
-                    Image(systemName: "graduationcap.fill")
-                    Text("Learn")
-                }
-                .tag(TabSelection.tutorials)
-
-            PlantScannerView()
-                .tabItem {
-                    Image(systemName: "camera.macro")
-                    Text("Scanner")
-                }
-                .tag(TabSelection.scanner)
+                .tag(TabSelection.journal)
+                .accessibilityIdentifier("tab_journal")
 
             ProfileView()
                 .tabItem {
-                    Image(systemName: "person.circle.fill")
-                    Text("Profile")
+                    Label("Profile", systemImage: "person.fill")
                 }
                 .tag(TabSelection.profile)
+                .accessibilityIdentifier("tab_profile")
         }
+        .tint(Color(hex: "52B788"))
     }
 
     private var shouldShowOnboarding: Bool {
@@ -241,38 +219,11 @@ public struct MainAppView: View {
     }
 }
 
-enum TabSelection: Int, CaseIterable {
-    case home = 0
-    case garden = 1
-    case plantGuide = 2
-    case journal = 3
-    case tutorials = 4
-    case scanner = 5
-    case profile = 6
-
-    var title: String {
-        switch self {
-        case .home: "Home"
-        case .garden: "My Garden"
-        case .plantGuide: "Plant Guide"
-        case .journal: "Journal"
-        case .tutorials: "Learn"
-        case .scanner: "Scanner"
-        case .profile: "Profile"
-        }
-    }
-
-    var iconName: String {
-        switch self {
-        case .home: "house.fill"
-        case .garden: "leaf.fill"
-        case .plantGuide: "books.vertical.fill"
-        case .journal: "book.pages.fill"
-        case .tutorials: "graduationcap.fill"
-        case .scanner: "camera.macro"
-        case .profile: "person.circle.fill"
-        }
-    }
+public enum TabSelection: String, CaseIterable {
+    case home
+    case garden
+    case journal
+    case profile
 }
 
 #Preview {
