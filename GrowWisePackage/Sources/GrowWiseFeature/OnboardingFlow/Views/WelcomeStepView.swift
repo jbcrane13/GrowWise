@@ -109,12 +109,19 @@ struct WelcomeStepView: View {
         .padding(.horizontal, 24)
     }
 
-    private var welcomeFeatures: [(icon: String, title: String, subtitle: String, color: Color)] {
+    private struct WelcomeFeature {
+        let icon: String
+        let title: String
+        let subtitle: String
+        let color: Color
+    }
+
+    private var welcomeFeatures: [WelcomeFeature] {
         [
-            ("drop.fill", "Smart Watering", "Personalized schedules for every plant", Color.botanicalLeaf),
-            ("book.pages.fill", "10,000+ Plant Guides", "Expert care for any species", Color(red: 0.275, green: 0.565, blue: 0.898)),
-            ("camera.fill", "Visual Garden Journal", "Track growth with photos & notes", Color.botanicalEarth),
-            ("cloud.sun.fill", "Live Weather Tips", "Care advice based on your climate", Color.botanicalGold),
+            WelcomeFeature(icon: "drop.fill", title: "Smart Watering", subtitle: "Personalized schedules for every plant", color: .botanicalLeaf),
+            WelcomeFeature(icon: "book.pages.fill", title: "10,000+ Plant Guides", subtitle: "Expert care for any species", color: Color(red: 0.275, green: 0.565, blue: 0.898)),
+            WelcomeFeature(icon: "camera.fill", title: "Visual Garden Journal", subtitle: "Track growth with photos & notes", color: .botanicalEarth),
+            WelcomeFeature(icon: "cloud.sun.fill", title: "Live Weather Tips", subtitle: "Care advice based on your climate", color: .botanicalGold),
         ]
     }
 }

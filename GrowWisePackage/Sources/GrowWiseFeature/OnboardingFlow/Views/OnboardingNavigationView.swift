@@ -112,7 +112,7 @@ struct OnboardingNavigationView: View {
                         Text(isSaving ? "Setting up…" : nextLabel)
                             .font(.system(size: 16, weight: .semibold, design: .rounded))
 
-                        if !isSaving && !isLastStep && currentStep != .welcome {
+                        if !isSaving, !isLastStep, currentStep != .welcome {
                             Image(systemName: "chevron.right")
                                 .font(.system(size: 14, weight: .semibold))
                         }

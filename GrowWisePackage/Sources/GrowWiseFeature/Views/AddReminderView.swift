@@ -350,8 +350,7 @@ public struct AddReminderView: View {
 
     // MARK: - Form Section Builder
 
-    @ViewBuilder
-    private func reminderFormSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func reminderFormSection(title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .sectionLabelStyle()

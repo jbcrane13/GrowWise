@@ -206,7 +206,8 @@ struct PlantQuickCard: View {
     private var waterCountdown: String {
         // Try computing from lastWatered + frequency
         if let lastWatered = plant.lastWatered,
-           let freq = plant.wateringFrequency {
+           let freq = plant.wateringFrequency
+        {
             let intervalDays = freq.days
             if intervalDays > 0 {
                 guard let nextWater = Calendar.current.date(

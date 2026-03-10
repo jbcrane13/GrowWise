@@ -43,7 +43,8 @@ public struct ProfileView: View {
         let parts = displayName.split(separator: " ")
         if parts.count >= 2,
            let first = parts.first?.first,
-           let last = parts.last?.first {
+           let last = parts.last?.first
+        {
             return "\(first)\(last)".uppercased()
         } else if let first = displayName.first {
             return String(first).uppercased()
@@ -76,7 +77,7 @@ public struct ProfileView: View {
             }
             .background(CultivationTheme.Colors.background)
             .navigationTitle("Profile")
-            .navigationDestination(isPresented: $showTutorials) {
+            .sheet(isPresented: $showTutorials) {
                 TutorialsView()
             }
             .navigationDestination(isPresented: $showNotifications) {

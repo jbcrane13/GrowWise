@@ -28,7 +28,6 @@ public struct HomeView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
-
                     if viewModel.allTasksDone {
                         emptyStateView
                     } else {
@@ -66,9 +65,12 @@ public struct HomeView: View {
                                 .sectionLabelStyle()
                                 .foregroundStyle(CultivationTheme.Colors.statusWarning)
                                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                                .padding(.top, overdueVisible.isEmpty
-                                    ? CultivationTheme.Spacing.sectionGap
-                                    : CultivationTheme.Spacing.rowGap)
+                                .padding(
+                                    .top,
+                                    overdueVisible.isEmpty
+                                        ? CultivationTheme.Spacing.sectionGap
+                                        : CultivationTheme.Spacing.rowGap
+                                )
                                 .accessibilityIdentifier("home_label_section_duetoday")
 
                             ForEach(dueTodayVisible) { reminder in

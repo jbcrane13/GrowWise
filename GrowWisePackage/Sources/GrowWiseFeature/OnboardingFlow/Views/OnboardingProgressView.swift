@@ -3,7 +3,7 @@ import SwiftUI
 struct OnboardingProgressView: View {
     let currentStep: OnboardingStep
 
-    // Exclude welcome and completion from the visible step dots
+    /// Exclude welcome and completion from the visible step dots
     private let visibleSteps: [OnboardingStep] = [
         .skillAssessment, .goals, .location, .notifications,
     ]

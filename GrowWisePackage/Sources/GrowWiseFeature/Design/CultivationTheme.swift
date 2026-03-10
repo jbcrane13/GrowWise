@@ -2,7 +2,6 @@ import SwiftUI
 
 /// Single source of truth for all Cultivation design tokens.
 public enum CultivationTheme {
-
     // MARK: - Colors
 
     public enum Colors {
@@ -32,7 +31,7 @@ public enum CultivationTheme {
         public static let brandGold = Color(hex: "E9C46A")
         public static let brandSage = Color(hex: "7A9D68")
 
-        // Hero glow
+        /// Hero glow
         public static let heroGlow = Color(hex: "4CAF50").opacity(0.08)
 
         // Interactive
@@ -71,7 +70,7 @@ public enum CultivationTheme {
         public static let card: CGFloat = 14
         public static let icon: CGFloat = 10
         public static let button: CGFloat = 14
-        public static let pill: CGFloat = 100  // use Capsule shape
+        public static let pill: CGFloat = 100 // use Capsule shape
         public static let sheet: CGFloat = 20
         public static let statCard: CGFloat = 14
     }
@@ -103,24 +102,30 @@ public enum CultivationTheme {
         public static func largeTitle(_ text: String) -> Text {
             Text(text).font(.system(.largeTitle, design: .rounded, weight: .bold))
         }
+
         public static func title(_ text: String) -> Text {
             Text(text).font(.system(.title2, design: .rounded, weight: .bold))
         }
+
         public static func headline(_ text: String) -> Text {
             Text(text).font(.system(.headline, design: .rounded, weight: .semibold))
         }
+
         public static func body(_ text: String) -> Text {
             Text(text).font(.system(.body, design: .default))
         }
+
         public static func caption(_ text: String) -> Text {
             Text(text).font(.system(.caption, design: .default))
         }
+
         public static func sectionLabel(_ text: String) -> some View {
             Text(text)
                 .font(.system(size: 11, weight: .semibold))
                 .tracking(1.0)
                 .textCase(.uppercase)
         }
+
         public static func stat(_ text: String) -> Text {
             Text(text).font(.system(.title2, design: .rounded, weight: .bold))
         }

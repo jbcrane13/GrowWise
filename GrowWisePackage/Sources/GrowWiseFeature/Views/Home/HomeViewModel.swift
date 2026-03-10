@@ -7,7 +7,6 @@ import SwiftUI
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
 @Observable
 final class HomeViewModel {
-
     // MARK: - Published State
 
     var overdueReminders: [PlantReminder] = []
@@ -49,8 +48,8 @@ final class HomeViewModel {
         dueTodayReminders = all.filter { $0.nextDueDate >= startOfToday && $0.nextDueDate < startOfTomorrow }
 
         // "All Good" = enabled reminders that aren't overdue or due today
-        let urgentIDs = Set((overdueReminders + dueTodayReminders).map { $0.id })
-        allGoodCount = all.filter { !urgentIDs.contains($0.id) }.count
+        let urgentIDs = Set((overdueReminders + dueTodayReminders).map(\.id))
+        allGoodCount = all.count(where: { !urgentIDs.contains($0.id) })
 
         isLoading = false
     }

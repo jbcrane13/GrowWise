@@ -13,7 +13,10 @@ public struct PlantGroup: Identifiable {
     /// The raw gardenLocation string, or nil for ungrouped plants.
     public let locationKey: String?
     /// Display name shown in the UI section header.
-    public var displayName: String { locationKey ?? "Ungrouped" }
+    public var displayName: String {
+        locationKey ?? "Ungrouped"
+    }
+
     public var plants: [Plant]
 }
 
@@ -30,7 +33,6 @@ public struct PlantGroup: Identifiable {
 @MainActor
 @Observable
 public final class GardenViewModel {
-
     // MARK: - Exposed State
 
     /// All gardens the user owns.
@@ -60,8 +62,8 @@ public final class GardenViewModel {
         return groupedPlants.compactMap { group in
             let matching = group.plants.filter { plant in
                 (plant.name ?? "").lowercased().contains(query) ||
-                (plant.scientificName ?? "").lowercased().contains(query) ||
-                (plant.notes ?? "").lowercased().contains(query)
+                    (plant.scientificName ?? "").lowercased().contains(query) ||
+                    (plant.notes ?? "").lowercased().contains(query)
             }
             guard !matching.isEmpty else { return nil }
             return PlantGroup(id: group.id, locationKey: group.locationKey, plants: matching)
@@ -79,12 +81,11 @@ public final class GardenViewModel {
         let now = Date()
         return groupedPlants
             .flatMap(\.plants)
-            .filter { plant in
+            .count(where: { plant in
                 (plant.reminders ?? []).contains { reminder in
                     reminder.isEnabled && reminder.nextDueDate < now
                 }
-            }
-            .count
+            })
     }
 
     // MARK: - Private State
@@ -138,11 +139,10 @@ public final class GardenViewModel {
     /// Build `groupedPlants` from `allPlants` filtered to `selectedGarden`.
     private func rebuildGroups() {
         // Filter to the selected garden (nil = all gardens combined).
-        let plants: [Plant]
-        if let selectedGarden {
-            plants = allPlants.filter { $0.garden?.id == selectedGarden.id }
+        let plants: [Plant] = if let selectedGarden {
+            allPlants.filter { $0.garden?.id == selectedGarden.id }
         } else {
-            plants = allPlants
+            allPlants
         }
 
         // Group by gardenLocation (nil/empty → ungrouped).

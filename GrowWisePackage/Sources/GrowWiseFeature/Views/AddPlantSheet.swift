@@ -255,8 +255,7 @@ public struct AddPlantSheet: View {
 
     // MARK: - Form Section Builder
 
-    @ViewBuilder
-    private func formSection<Content: View>(title: String, @ViewBuilder content: () -> Content) -> some View {
+    private func formSection(title: String, @ViewBuilder content: () -> some View) -> some View {
         VStack(alignment: .leading, spacing: 8) {
             Text(title)
                 .sectionLabelStyle()
@@ -271,7 +270,6 @@ public struct AddPlantSheet: View {
 
     // MARK: - Styled Text Field
 
-    @ViewBuilder
     private func styledTextField(
         placeholder: String,
         text: Binding<String>,
@@ -344,6 +342,8 @@ public struct AddPlantSheet: View {
 
             newPlant.garden = selectedGarden
             modelContext.insert(newPlant)
+            dismiss()
+            return
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true

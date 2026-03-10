@@ -25,7 +25,7 @@ public struct JournalView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
 
-    // New design-system filter state
+    /// New design-system filter state
     @State private var selectedFilter: JournalFilter = .all
 
     public init() {}
@@ -132,7 +132,6 @@ public struct JournalView: View {
 
     // MARK: - Header
 
-    @ViewBuilder
     private var journalHeader: some View {
         VStack(alignment: .leading, spacing: 12) {
             // Title row
@@ -348,7 +347,7 @@ private enum JournalFilter: String, CaseIterable {
         switch self {
         case .all: nil
         case .watering: .watering
-        case .photos: nil   // filtered via photoURLs presence below
+        case .photos: nil // filtered via photoURLs presence below
         case .notes: .note
         case .harvested: .harvest
         }

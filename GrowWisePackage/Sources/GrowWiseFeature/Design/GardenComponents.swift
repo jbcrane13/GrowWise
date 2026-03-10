@@ -7,22 +7,22 @@ extension HealthStatus {
     /// Maps model-layer HealthStatus to UI-layer PlantHealthStatus.
     var uiStatus: PlantHealthStatus {
         switch self {
-        case .healthy:         .healthy
-        case .needsAttention:  .warning
-        case .sick:            .warning
-        case .dying:           .alert
-        case .dead:            .alert
+        case .healthy: .healthy
+        case .needsAttention: .warning
+        case .sick: .warning
+        case .dying: .alert
+        case .dead: .alert
         }
     }
 
     /// Accent color for icon bubbles and tints.
     var accentColor: Color {
         switch self {
-        case .healthy:         CultivationTheme.Colors.statusHealthy
-        case .needsAttention:  CultivationTheme.Colors.statusWarning
-        case .sick:            CultivationTheme.Colors.statusWarning
-        case .dying:           CultivationTheme.Colors.statusAlert
-        case .dead:            CultivationTheme.Colors.textTertiary
+        case .healthy: CultivationTheme.Colors.statusHealthy
+        case .needsAttention: CultivationTheme.Colors.statusWarning
+        case .sick: CultivationTheme.Colors.statusWarning
+        case .dying: CultivationTheme.Colors.statusAlert
+        case .dead: CultivationTheme.Colors.textTertiary
         }
     }
 }
@@ -34,7 +34,7 @@ extension HealthStatus {
 struct PlantRow: View {
     let plant: Plant
     var isUrgent: Bool = false
-    var onComplete: (() -> Void)? = nil
+    var onComplete: (() -> Void)?
 
     private var plantID: String {
         plant.id?.uuidString ?? "unknown"
@@ -138,7 +138,7 @@ struct BedGroupHeader: View {
     let subtitle: String
     let plantCount: Int
     var showMenu: Bool = false
-    var onMenuTap: (() -> Void)? = nil
+    var onMenuTap: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 10) {
@@ -242,7 +242,7 @@ struct TaskRow: View {
     let locationLabel: String?
     let statusColor: Color
     var isUrgent: Bool = false
-    var onComplete: (() -> Void)? = nil
+    var onComplete: (() -> Void)?
 
     var body: some View {
         HStack(spacing: 12) {
