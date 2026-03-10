@@ -262,15 +262,6 @@ public enum SpaceSize: String, CaseIterable {
     }
 }
 
-/// Temporary stub — replace in Task 8
-struct GardenSetupView: View {
-    @Binding var userProfile: UserProfile
-
-    var body: some View {
-        Color.clear
-    }
-}
-
 #Preview {
     OnboardingView()
 }
