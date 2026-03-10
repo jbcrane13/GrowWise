@@ -66,6 +66,23 @@ public struct GardenView: View {
             .sheet(isPresented: $showAddPlant) {
                 AddPlantSheet()
             }
+            .sheet(item: $selectedPlant) { plant in
+                PlantQuickCard(
+                    plant: plant,
+                    onWater: {
+                        // TODO: Phase 4 — mark watering done via DataService
+                        selectedPlant = nil
+                    },
+                    onPrune: { selectedPlant = nil },
+                    onLog: { selectedPlant = nil },
+                    onViewDetails: {
+                        selectedPlant = nil
+                        // TODO: Phase 6 — navigate to PlantDetailView
+                    }
+                )
+                .presentationDetents([.medium, .large])
+                .presentationDragIndicator(.hidden) // custom drag handle rendered inside card
+            }
         }
         .accessibilityIdentifier("garden_view")
     }
