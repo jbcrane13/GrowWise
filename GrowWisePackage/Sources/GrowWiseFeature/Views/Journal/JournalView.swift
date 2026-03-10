@@ -25,96 +25,44 @@ public struct JournalView: View {
     @State private var alertTitle = ""
     @State private var alertMessage = ""
 
+    // New design-system filter state
+    @State private var selectedFilter: JournalFilter = .all
+
     public init() {}
 
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Search and filter section
-                VStack(spacing: 12) {
-                    // Filter chips
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            JournalFilterChip(
-                                title: "All Plants",
-                                isSelected: selectedPlant == nil,
-                                action: { selectedPlant = nil }
-                            )
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: 0) {
+                    // Journal entries grouped by date
+                    if journalEntries.isEmpty {
+                        emptyJournalView
+                    } else {
+                        ForEach(sortedGroupKeys, id: \.self) { dateKey in
+                            // Section header
+                            Text(formatSectionDate(dateKey))
+                                .sectionLabelStyle()
+                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                                .padding(.top, CultivationTheme.Spacing.sectionGap)
+                                .padding(.bottom, 8)
 
-                            ForEach(plants.filter { $0.isUserPlant ?? false }) { plant in
-                                JournalFilterChip(
-                                    title: plant.name ?? "Unknown Plant",
-                                    isSelected: selectedPlant?.id == plant.id,
-                                    action: { selectedPlant = plant }
+                            // Entry rows
+                            ForEach(paginatedGroupedEntries[dateKey] ?? [], id: \.id) { entry in
+                                JournalEntryRow(
+                                    entry: entry,
+                                    photoService: photoService
                                 )
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            JournalFilterChip(
-                                title: "All Types",
-                                isSelected: selectedEntryType == nil,
-                                action: { selectedEntryType = nil }
-                            )
-
-                            ForEach(JournalEntryType.allCases, id: \.self) { type in
-                                JournalFilterChip(
-                                    title: type.displayName,
-                                    isSelected: selectedEntryType == type,
-                                    action: { selectedEntryType = type }
-                                )
-                            }
-                        }
-                        .padding(.horizontal)
-                    }
-                }
-                .padding(.vertical, 8)
-                .background(Color(.systemGroupedBackground))
-
-                // Sort picker
-                HStack {
-                    Picker("Sort", selection: $sortOrder) {
-                        ForEach(SortOrder.allCases, id: \.self) { order in
-                            Text(order.displayName).tag(order)
-                        }
-                    }
-                    .pickerStyle(.segmented)
-
-                    Spacer()
-                }
-                .padding(.horizontal)
-                .padding(.top, 8)
-
-                // Journal entries list with pagination
-                if journalEntries.isEmpty {
-                    emptyJournalView
-                } else {
-                    List {
-                        ForEach(paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate), id: \.self) { date in
-                            Section {
-                                ForEach(paginatedGroupedEntries[date] ?? [], id: \.id) { entry in
-                                    JournalEntryRow(
-                                        entry: entry,
-                                        photoService: photoService
-                                    )
-                                    .onTapGesture {
-                                        selectedEntry = entry
-                                    }
+                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                                .padding(.bottom, CultivationTheme.Spacing.rowGap)
+                                .contentShape(Rectangle())
+                                .onTapGesture {
+                                    selectedEntry = entry
                                 }
-                                .onDelete { indexSet in
-                                    deleteEntries(at: indexSet, in: paginatedGroupedEntries[date] ?? [])
-                                }
-                            } header: {
-                                Text(formatSectionDate(date))
-                                    .font(.headline)
-                                    .foregroundColor(.primary)
+                                .accessibilityIdentifier("journal_cell_entry_\(entry.id)")
                             }
                         }
 
-                        // Load more button
+                        // Load more
                         if hasMoreData {
                             HStack {
                                 Spacer()
@@ -125,30 +73,24 @@ public struct JournalView: View {
                                     Button("Load More") {
                                         loadMoreEntries()
                                     }
+                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                                     .padding()
-                                    .foregroundColor(.accentColor)
+                                    .accessibilityIdentifier("journal_button_loadmore")
                                 }
                                 Spacer()
                             }
-                            .listRowBackground(Color.clear)
-                            .listRowInsets(EdgeInsets())
+                            .padding(.top, 8)
                         }
                     }
-                    .listStyle(.insetGrouped)
                 }
+                .padding(.bottom, 32)
             }
-            .navigationTitle("Plant Journal")
-            .gwNavigationBarTitleDisplayMode(.large)
-            .toolbar {
-                ToolbarItem(placement: .primaryAction) {
-                    Button {
-                        showingAddEntry = true
-                    } label: {
-                        Image(systemName: "plus")
-                    }
-                    .accessibilityLabel("Add")
-                }
+            .background(CultivationTheme.Colors.background.ignoresSafeArea())
+            .safeAreaInset(edge: .top) {
+                journalHeader
             }
+            .navigationBarHidden(true)
             .sheet(isPresented: $showingAddEntry) {
                 AddJournalEntryView(photoService: photoService)
             }
@@ -158,8 +100,7 @@ public struct JournalView: View {
                     photoService: photoService
                 )
             }
-            // Native SwiftUI search with built-in debouncing - no manual Task management needed
-
+            .searchable(text: $searchText, prompt: "Search journal entries...")
             .task {
                 loadInitialData()
             }
@@ -176,8 +117,11 @@ public struct JournalView: View {
             .onChange(of: sortOrder) { _, _ in
                 loadFilteredData(reset: true)
             }
-
-            .searchable(text: $searchText, prompt: "Search journal entries...")
+            .onChange(of: selectedFilter) { _, _ in
+                // Map design-system filter to the existing entry type filter
+                selectedEntryType = selectedFilter.entryType
+                loadFilteredData(reset: true)
+            }
             .alert(alertTitle, isPresented: $showAlert) {
                 Button("OK") {}
             } message: {
@@ -186,7 +130,58 @@ public struct JournalView: View {
         }
     }
 
-    // MARK: - Computed Properties
+    // MARK: - Header
+
+    @ViewBuilder
+    private var journalHeader: some View {
+        VStack(alignment: .leading, spacing: 12) {
+            // Title row
+            HStack {
+                Text("Journal")
+                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                Spacer()
+
+                Button {
+                    showingAddEntry = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(CultivationTheme.Gradients.ctaVertical)
+                        .clipShape(Circle())
+                }
+                .accessibilityIdentifier("journal_button_add")
+            }
+            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+
+            // Filter pills — All, Watering, Photos, Notes, Harvested
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(JournalFilter.allCases, id: \.self) { filter in
+                        GlassPill(
+                            label: filter.rawValue,
+                            isSelected: selectedFilter == filter,
+                            accessibilityID: "journal_pill_\(filter.rawValue.lowercased())",
+                            action: { selectedFilter = filter }
+                        )
+                    }
+                }
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+            }
+        }
+        .padding(.top, 16)
+        .padding(.bottom, 12)
+        .background(CultivationTheme.Colors.background.ignoresSafeArea(edges: .top))
+        .overlay(alignment: .bottom) {
+            Divider()
+                .foregroundStyle(CultivationTheme.Colors.divider)
+        }
+    }
+
+    // MARK: - Empty State
 
     private var emptyJournalView: some View {
         Group {
@@ -200,8 +195,13 @@ public struct JournalView: View {
                 )
             }
         }
-        .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemGroupedBackground))
+        .frame(maxWidth: .infinity, minHeight: 300)
+    }
+
+    // MARK: - Computed Properties
+
+    private var sortedGroupKeys: [String] {
+        paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate)
     }
 
     private var paginatedGroupedEntries: [String: [JournalEntry]] {
@@ -245,6 +245,10 @@ public struct JournalView: View {
         if let selectedEntryType {
             fetched = fetched.filter { $0.entryType == selectedEntryType }
         }
+        // Photos filter: only entries that have at least one photo
+        if selectedFilter == .photos {
+            fetched = fetched.filter { !$0.photoURLs.isEmpty }
+        }
         if !searchText.isEmpty {
             let query = searchText.lowercased()
             fetched = fetched.filter {
@@ -273,7 +277,6 @@ public struct JournalView: View {
             hasMoreData = false
         }
 
-        // Final in-memory sort if needed
         let finalEntries = page
 
         journalEntries.append(contentsOf: finalEntries)
@@ -286,14 +289,6 @@ public struct JournalView: View {
     }
 
     // MARK: - Helper Methods
-
-    private func deleteEntries(at offsets: IndexSet, in entries: [JournalEntry]) {
-        for index in offsets {
-            let entry = entries[index]
-            dataService.deleteJournalEntry(entry)
-            journalEntries.removeAll { $0.id == entry.id }
-        }
-    }
 
     private static let groupingKeyFormatter: DateFormatter = {
         let f = DateFormatter()
@@ -332,32 +327,31 @@ public struct JournalView: View {
         case .dateDescending:
             lhs > rhs
         default:
-            lhs > rhs // Default to newest first
+            lhs > rhs
         }
     }
 }
 
-// MARK: - Supporting Views
+// MARK: - Journal Filter
 
-private struct JournalFilterChip: View {
-    let title: String
-    let isSelected: Bool
-    let action: () -> Void
+/// Design-system filter tabs shown as GlassPill chips in the header.
+private enum JournalFilter: String, CaseIterable {
+    case all = "All"
+    case watering = "Watering"
+    case photos = "Photos"
+    case notes = "Notes"
+    case harvested = "Harvested"
 
-    var body: some View {
-        Button(action: action) {
-            Text(title)
-                .font(.caption)
-                .fontWeight(isSelected ? .semibold : .regular)
-                .padding(.horizontal, 12)
-                .padding(.vertical, 6)
-                .background(
-                    Capsule()
-                        .fill(isSelected ? Color.accentColor : Color(.systemGray5))
-                )
-                .foregroundColor(isSelected ? .white : .primary)
+    /// Maps the filter pill selection to the underlying JournalEntryType filter.
+    /// Returns nil for `.all` and `.photos` (photos are filtered client-side via photoURLs).
+    var entryType: JournalEntryType? {
+        switch self {
+        case .all: nil
+        case .watering: .watering
+        case .photos: nil   // filtered via photoURLs presence below
+        case .notes: .note
+        case .harvested: .harvest
         }
-        .buttonStyle(.plain)
     }
 }
 
@@ -384,6 +378,7 @@ private enum SortOrder: String, CaseIterable {
     let photoService = PhotoService(dataService: dataService)
 
     JournalView()
+        .environment(dataService)
         .environment(photoService)
         .modelContainer(for: [JournalEntry.self, Plant.self], inMemory: true)
 }
