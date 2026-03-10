@@ -244,6 +244,29 @@ swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise          # fi
 # If hooks broken: bd hooks install
 ```
 
+## CloudKit & Background Tasks
+
+**CloudKit container:** `iCloud.com.growwise.gardening` — used consistently in:
+- `GrowWise/GrowWise.entitlements` → `com.apple.developer.icloud-container-identifiers`
+- `ModelContainerFactory.make()` → `cloudKitDatabase: .private("iCloud.com.growwise.gardening")`
+- `CloudSyncService.init()` → `CKContainer(identifier: "iCloud.com.growwise.gardening")`
+
+If you ever change the container identifier, update all three places or CloudKit sync silently breaks.
+
+**BGTaskSchedulerPermittedIdentifiers:** `Info.plist` declares `com.apple.coredata.cloudkit.private.push`. SwiftData's `NSPersistentCloudKitContainer` submits background tasks under this identifier internally. Without it, every sync attempt is rejected and retried until hitting the 10-request system cap, producing `BGSystemTaskSchedulerErrorDomain Code=8 (tooManyPendingTaskRequests)` on real devices.
+
+**Push notifications entitlement:** The `aps-environment` key in `GrowWise.entitlements` is commented out — uncomment (set to `"development"` or `"production"`) once push notifications are enabled in the App ID on the developer portal.
+
+## Known Gotchas
+
+- **Nested NavigationStack:** `TutorialsView` has its own `NavigationStack`. Always present via `.sheet`, never push via `navigationDestination` — the latter causes silent navigation failure. See ADR-012.
+- **Sheet → push timing:** When dismissing a `.sheet` and then pushing via `navigationDestination`, the push must be delayed ~350ms or it is silently dropped by SwiftUI. See ADR-014 and `GardenView`.
+- **SwiftData `modelContext.insert()` doesn't throw:** Don't put `dismiss()` in a `catch` block after insert — it will never be called. Call `dismiss()` explicitly after insert succeeds. This was a real bug in `AddPlantSheet`.
+- **`@Observable` + `@State` initialization:** When an `@Observable` class needs a default value from an init parameter, use `_property = State(initialValue: value)` inside `init`. Do NOT use `@StateObject` — it's not available with `@Observable`.
+- **SourceKit false positives:** The development machine's SourceKit may show spurious errors that don't reflect actual build state. Always confirm with a real build on mac-mini via SSH before treating an error as real.
+- **CloudKit in UI tests:** `CKContainer` crashes on simulators without iCloud entitlements. `CloudSyncService.init()` and `DataService` both guard on `--uitesting` launch argument to skip CloudKit initialization during tests.
+- **Security services are overbuilt:** The JWT, KeychainManager, and encryption layer were designed for a more sensitive app. They work but may be simplified in a future refactor — don't add complexity to them without discussion.
+
 ## Current State
 
-Full UI redesign complete (March 2026). 4-tab navigation, CultivationTheme design system, glass-morphism throughout. Core features: gardens, plants, reminders, journal, tutorials, onboarding. Known architectural note: security services (JWT, Keychain, encryption) are overbuilt for a gardening app — may simplify. See beads for tracked work.
+Full UI redesign complete (March 2026). 4-tab navigation, CultivationTheme design system, glass-morphism throughout. Core features: gardens, plants, reminders, journal, tutorials, onboarding. See beads for tracked work.
