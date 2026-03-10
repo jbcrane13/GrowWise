@@ -101,7 +101,7 @@ struct PlantQuickCard: View {
                 .font(.system(size: 16))
                 .foregroundStyle(color)
             Text(value)
-                .font(.system(size: 13, design: .rounded, weight: .semibold))
+                .font(.system(size: 13, weight: .semibold, design: .rounded))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
