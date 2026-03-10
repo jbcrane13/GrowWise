@@ -144,7 +144,7 @@ struct StatusDot: View {
     var body: some View {
         Circle()
             .fill(status.color)
-            .frame(width: 8, height: 8)
+            .frame(width: 6, height: 6)
             .accessibilityHidden(true)
     }
 }
@@ -168,6 +168,7 @@ enum PlantHealthStatus {
 struct GlassPill: View {
     let label: String
     var isSelected: Bool = false
+    var accessibilityID: String = ""
     let action: () -> Void
 
     var body: some View {
@@ -201,6 +202,7 @@ struct GlassPill: View {
         }
         .buttonStyle(.plain)
         .animation(CultivationTheme.Animation.selection, value: isSelected)
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 
