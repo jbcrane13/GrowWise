@@ -3,6 +3,10 @@ import SwiftUI
 import UIKit
 #endif
 
+// NOTE: Color.init(hex:) and Color.init(light:dark:) are defined in CultivationTheme.swift
+// New code should use CultivationTheme.Colors.* tokens directly.
+// Existing colors below are kept for backward compatibility during migration.
+
 extension Color {
     /// Adaptive green colors for the app
     static var adaptiveGreen: Color {
@@ -42,21 +46,4 @@ extension Color {
     static let botanicalGold = Color(red: 0.918, green: 0.773, blue: 0.416)
     /// Soft sage — secondary text / icon backgrounds
     static let botanicalSage = Color(red: 0.576, green: 0.722, blue: 0.576)
-
-    /// Initialize a color that adapts to light/dark mode
-    init(light: Color, dark: Color) {
-        #if canImport(UIKit)
-        self.init(UIColor { traitCollection in
-            switch traitCollection.userInterfaceStyle {
-            case .dark:
-                UIColor(dark)
-
-            default:
-                UIColor(light)
-            }
-        })
-        #else
-        self = light
-        #endif
-    }
 }
