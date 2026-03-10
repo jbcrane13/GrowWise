@@ -79,35 +79,6 @@ struct LocationSetupView: View {
                     }
                 }
 
-                // Benefits list
-                VStack(spacing: 14) {
-                    BenefitRow(
-                        icon: "thermometer.sun.fill",
-                        iconColor: Color.botanicalGold,
-                        title: "Weather-Based Care Tips",
-                        description: "Personalized watering and care advice based on your local conditions"
-                    )
-                    BenefitRow(
-                        icon: "map.fill",
-                        iconColor: Color.botanicalLeaf,
-                        title: "Hardiness Zone Detection",
-                        description: "Instantly know which plants thrive in your climate"
-                    )
-                    BenefitRow(
-                        icon: "calendar.badge.clock",
-                        iconColor: Color(red: 0.275, green: 0.565, blue: 0.898),
-                        title: "Seasonal Reminders",
-                        description: "Timely alerts for planting, harvesting, and frost preparation"
-                    )
-                    BenefitRow(
-                        icon: "exclamationmark.triangle.fill",
-                        iconColor: Color(red: 0.922, green: 0.420, blue: 0.310),
-                        title: "Extreme Weather Alerts",
-                        description: "Early warnings for frost, heat waves, and storms"
-                    )
-                }
-                .padding(.horizontal, 24)
-
                 // Privacy note
                 PrivacyNote(
                     icon: "lock.shield.fill",

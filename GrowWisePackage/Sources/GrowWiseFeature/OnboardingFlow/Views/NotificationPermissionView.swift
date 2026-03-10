@@ -90,35 +90,6 @@ struct NotificationPermissionView: View {
                     }
                 }
 
-                // Benefits
-                VStack(spacing: 14) {
-                    BenefitRow(
-                        icon: "drop.fill",
-                        iconColor: Color(red: 0.275, green: 0.565, blue: 0.898),
-                        title: "Watering Reminders",
-                        description: "Smart schedules tailored to each plant's needs"
-                    )
-                    BenefitRow(
-                        icon: "scissors",
-                        iconColor: Color.botanicalLeaf,
-                        title: "Care Alerts",
-                        description: "Timely reminders to prune, fertilize, or repot"
-                    )
-                    BenefitRow(
-                        icon: "exclamationmark.triangle.fill",
-                        iconColor: Color(red: 0.922, green: 0.420, blue: 0.310),
-                        title: "Weather Warnings",
-                        description: "Protect plants from frost, heat waves, and storms"
-                    )
-                    BenefitRow(
-                        icon: "calendar.badge.plus",
-                        iconColor: Color.botanicalGold,
-                        title: "Seasonal Tips",
-                        description: "Learn what to plant, harvest, and prepare each season"
-                    )
-                }
-                .padding(.horizontal, 24)
-
                 // Quiet hours note
                 PrivacyNote(
                     icon: "moon.fill",
