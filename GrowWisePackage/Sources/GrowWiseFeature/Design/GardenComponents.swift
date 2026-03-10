@@ -27,22 +27,6 @@ extension HealthStatus {
     }
 }
 
-extension PlantType {
-    /// SF Symbol representing each plant type.
-    var iconName: String {
-        switch self {
-        case .vegetable:   "carrot.fill"
-        case .herb:        "leaf.fill"
-        case .flower:      "camera.macro"
-        case .houseplant:  "leaf.fill"
-        case .fruit:       "apple.logo"
-        case .succulent:   "sun.max.fill"
-        case .tree:        "tree.fill"
-        case .shrub:       "leaf.fill"
-        }
-    }
-}
-
 // MARK: - PlantRow
 
 /// Garden tab plant row — glass card with icon, name, care subtitle, and status.
