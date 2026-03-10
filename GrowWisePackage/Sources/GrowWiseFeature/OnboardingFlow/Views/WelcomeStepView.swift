@@ -83,9 +83,7 @@ struct WelcomeStepView: View {
             }
         }
     }
-
 }
-
 
 #Preview {
     ZStack {
