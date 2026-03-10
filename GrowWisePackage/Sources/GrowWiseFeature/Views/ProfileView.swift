@@ -7,13 +7,21 @@ public struct ProfileView: View {
     @Environment(DataService.self) private var dataService
     @Environment(SubscriptionService.self) private var subscriptionService
 
-    @State private var gardenCount: Int = 0
     @State private var plantCount: Int = 0
+    @State private var journalCount: Int = 0
+    @State private var streakDays: Int = 0
     @State private var showShareComingSoon = false
     @State private var selectedProductID: String?
     @State private var purchaseError: String?
     @State private var showPurchaseError = false
     @State private var showRestoreSuccess = false
+    @State private var showAchievementsComingSoon = false
+    @State private var showAppSettingsComingSoon = false
+
+    // Navigation state
+    @State private var showTutorials = false
+    @State private var showNotifications = false
+    @State private var showSubscription = false
 
     // Fixed product IDs matching SubscriptionService
     private let monthlyProductID = "com.growwise.premium.monthly"
@@ -21,16 +29,62 @@ public struct ProfileView: View {
 
     public init() {}
 
+    // MARK: - Computed
+
+    private var currentUser: User? {
+        dataService.getCurrentUser()
+    }
+
+    private var displayName: String {
+        currentUser?.displayName ?? "Gardener"
+    }
+
+    private var initials: String {
+        let parts = displayName.split(separator: " ")
+        if parts.count >= 2,
+           let first = parts.first?.first,
+           let last = parts.last?.first {
+            return "\(first)\(last)".uppercased()
+        } else if let first = displayName.first {
+            return String(first).uppercased()
+        }
+        return "G"
+    }
+
+    private var skillLevelText: String {
+        currentUser?.skillLevel.displayName ?? "Beginner"
+    }
+
+    private var zoneText: String {
+        if let zone = currentUser?.hardinessZone {
+            return "Zone \(zone)"
+        }
+        return "Zone —"
+    }
+
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(spacing: 20) {
-                    gardenShowcaseSection
-                    subscriptionSection
+                VStack(spacing: CultivationTheme.Spacing.sectionGap) {
+                    userCard
+                    statsRow
+                    learningSection
+                    settingsSection
                 }
-                .padding()
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                .padding(.vertical, CultivationTheme.Spacing.sectionGap)
             }
+            .background(CultivationTheme.Colors.background)
             .navigationTitle("Profile")
+            .navigationDestination(isPresented: $showTutorials) {
+                TutorialsView()
+            }
+            .navigationDestination(isPresented: $showNotifications) {
+                RemindersListView()
+            }
+            .navigationDestination(isPresented: $showSubscription) {
+                subscriptionDestination
+            }
             .task {
                 loadStats()
             }
@@ -38,6 +92,16 @@ public struct ProfileView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Garden sharing via iCloud is coming in a future update.")
+            }
+            .alert("Coming Soon", isPresented: $showAchievementsComingSoon) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("Achievements are coming in a future update.")
+            }
+            .alert("Coming Soon", isPresented: $showAppSettingsComingSoon) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text("App Settings are coming in a future update.")
             }
             .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
                 Button("OK", role: .cancel) {}
@@ -52,56 +116,186 @@ public struct ProfileView: View {
         }
     }
 
-    // MARK: - Garden Showcase
+    // MARK: - User Card
 
-    private var gardenShowcaseSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Garden Showcase")
-                .font(.headline)
-
-            HStack(spacing: 0) {
-                statCell(value: gardenCount, label: "Gardens", icon: "leaf.fill")
-                Divider().frame(height: 50)
-                statCell(value: plantCount, label: "Plants", icon: "camera.macro")
+    private var userCard: some View {
+        HStack(spacing: 16) {
+            ZStack {
+                Circle()
+                    .fill(CultivationTheme.Gradients.ctaVertical)
+                    .frame(width: 72, height: 72)
+                Text(initials)
+                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .foregroundStyle(.white)
             }
-            .padding()
-            .background(Color(.systemGray6))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
+            .accessibilityIdentifier("profile_avatar")
 
-            Button {
-                showShareComingSoon = true
-            } label: {
-                HStack {
-                    Image(systemName: "square.and.arrow.up")
-                    Text("Share Garden")
+            VStack(alignment: .leading, spacing: 4) {
+                Text(displayName)
+                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                HStack(spacing: 6) {
+                    Image(systemName: "leaf.fill")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    Text(skillLevelText)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
-                .frame(maxWidth: .infinity)
+
+                HStack(spacing: 6) {
+                    Image(systemName: "mappin.circle.fill")
+                        .font(.system(size: 11, weight: .medium))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    Text(zoneText)
+                        .font(.system(.subheadline, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                }
             }
-            .buttonStyle(.borderedProminent)
-            .accessibilityIdentifier("profile_share_garden")
+
+            Spacer()
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .glassCard()
+        .accessibilityIdentifier("profile_user_card")
+    }
+
+    // MARK: - Stats Row
+
+    private var statsRow: some View {
+        HStack(spacing: 10) {
+            statCard(value: plantCount, label: "Plants")
+                .accessibilityIdentifier("profile_stat_plants")
+            statCard(value: streakDays, label: "Day Streak")
+                .accessibilityIdentifier("profile_stat_streak")
+            statCard(value: journalCount, label: "Entries")
+                .accessibilityIdentifier("profile_stat_entries")
         }
     }
 
-    private func statCell(value: Int, label: String, icon: String) -> some View {
+    private func statCard(value: Int, label: String) -> some View {
         VStack(spacing: 4) {
-            Image(systemName: icon)
-                .foregroundColor(.green)
             Text("\(value)")
-                .font(.title2.bold())
+                .font(.system(.title2, design: .rounded, weight: .bold))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
             Text(label)
-                .font(.caption)
-                .foregroundColor(.secondary)
+                .font(.system(size: 11, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
         }
         .frame(maxWidth: .infinity)
+        .padding(.vertical, 14)
+        .glassCard()
     }
 
-    // MARK: - Subscription Section
+    // MARK: - Learning Section
+
+    private var learningSection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            Text("Learning")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            menuRow(
+                icon: "book.fill",
+                color: .blue,
+                title: "Tutorials",
+                id: "profile_row_tutorials"
+            ) {
+                showTutorials = true
+            }
+
+            menuRow(
+                icon: "star.fill",
+                color: .yellow,
+                title: "Achievements",
+                id: "profile_row_achievements"
+            ) {
+                showAchievementsComingSoon = true
+            }
+        }
+    }
+
+    // MARK: - Settings Section
+
+    private var settingsSection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            Text("Settings")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            menuRow(
+                icon: "bell.fill",
+                color: .orange,
+                title: "Notifications",
+                id: "profile_row_notifications"
+            ) {
+                showNotifications = true
+            }
+
+            menuRow(
+                icon: "crown.fill",
+                color: CultivationTheme.Colors.brandLeaf,
+                title: "Subscription",
+                id: "profile_row_subscription"
+            ) {
+                showSubscription = true
+            }
+
+            menuRow(
+                icon: "gearshape.fill",
+                color: .gray,
+                title: "App Settings",
+                id: "profile_row_settings"
+            ) {
+                showAppSettingsComingSoon = true
+            }
+        }
+    }
+
+    // MARK: - Menu Row
+
+    private func menuRow(
+        icon: String,
+        color: Color,
+        title: String,
+        id: String,
+        action: @escaping () -> Void
+    ) -> some View {
+        Button(action: action) {
+            HStack(spacing: 14) {
+                IconBubble(systemName: icon, color: color, size: 36, iconSize: 16)
+                Text(title)
+                    .font(.system(.body, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                Spacer()
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 13, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            }
+            .padding(CultivationTheme.Spacing.cardPadding)
+            .glassCard()
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier(id)
+    }
+
+    // MARK: - Subscription Destination
+
+    private var subscriptionDestination: some View {
+        ScrollView {
+            VStack(spacing: 20) {
+                subscriptionSection
+            }
+            .padding()
+        }
+        .navigationTitle("Subscription")
+        .background(CultivationTheme.Colors.background)
+    }
 
     private var subscriptionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
-            Text("Subscription")
-                .font(.headline)
-
             switch subscriptionService.subscriptionStatus {
             case let .active(tier, expiryDate):
                 activeSubscriptionCard(tier: tier, expiryDate: expiryDate)
@@ -134,8 +328,7 @@ public struct ProfileView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .glassCard()
         .accessibilityIdentifier("profile_subscription_active")
     }
 
@@ -145,9 +338,14 @@ public struct ProfileView: View {
         VStack(spacing: 16) {
             // Header
             VStack(spacing: 6) {
-                Image(systemName: "leaf.circle.fill")
-                    .font(.system(size: 48))
-                    .foregroundColor(.green)
+                ZStack {
+                    Circle()
+                        .fill(CultivationTheme.Gradients.ctaVertical)
+                        .frame(width: 64, height: 64)
+                    Image(systemName: "leaf.circle.fill")
+                        .font(.system(size: 32))
+                        .foregroundStyle(.white)
+                }
                 Text("Unlock GrowWise Premium")
                     .font(.title3.bold())
                 Text("Get unlimited diagnoses, expert tips, and more.")
@@ -186,10 +384,8 @@ public struct ProfileView: View {
                     Task { await subscribe() }
                 } label: {
                     Text("Subscribe")
-                        .fontWeight(.semibold)
-                        .frame(maxWidth: .infinity)
                 }
-                .buttonStyle(.borderedProminent)
+                .buttonStyle(GradientButtonStyle(isDisabled: selectedProductID == nil))
                 .disabled(selectedProductID == nil)
                 .accessibilityIdentifier("profile_subscribe_button")
             }
@@ -209,8 +405,7 @@ public struct ProfileView: View {
                 .multilineTextAlignment(.center)
         }
         .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .glassCard()
     }
 
     private func planCard(
@@ -244,11 +439,14 @@ public struct ProfileView: View {
                 }
             }
             .padding()
-            .background(isSelected ? Color.green : Color(.systemBackground))
+            .background(isSelected ? CultivationTheme.Colors.brandForest : CultivationTheme.Colors.cardSurface)
             .clipShape(RoundedRectangle(cornerRadius: 10))
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
-                    .stroke(isSelected ? Color.green : Color(.systemGray4), lineWidth: 1.5)
+                    .stroke(
+                        isSelected ? CultivationTheme.Colors.brandLeaf : CultivationTheme.Colors.cardBorder,
+                        lineWidth: 1.5
+                    )
             )
         }
         .buttonStyle(.plain)
@@ -258,8 +456,9 @@ public struct ProfileView: View {
     // MARK: - Actions
 
     private func loadStats() {
-        gardenCount = dataService.getGardenCount()
         plantCount = dataService.getPlantCount()
+        journalCount = dataService.getJournalEntryCount()
+        streakDays = dataService.getCurrentUser()?.streakDays ?? 0
     }
 
     private func subscribe() async {
