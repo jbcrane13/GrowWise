@@ -18,6 +18,7 @@ struct GardenBedSection: View {
                 subtitle: "\(group.plants.count) plant\(group.plants.count == 1 ? "" : "s")",
                 plantCount: group.plants.count
             )
+            .accessibilityIdentifier("garden_section_\(group.displayName)")
 
             // Plant rows
             ForEach(group.plants) { plant in

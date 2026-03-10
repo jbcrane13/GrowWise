@@ -9,16 +9,23 @@ struct GrowWiseFeatureTests {
     
     @Test("MainAppView loads successfully") 
     @MainActor func testMainAppViewLoads() async throws {
-        // Test that MainAppView can be instantiated without errors
+        // Verify MainAppView instantiates and that its body is a non-trivial composite view.
+        // MainAppView.body returns a ZStack that wraps the loading-spinner / initialized-content
+        // conditional, so the type description should reference "ZStack".
         let mainAppView = MainAppView()
-        #expect(mainAppView.self != nil)
+        let body = mainAppView.body
+        let bodyDescription = String(describing: type(of: body))
+        #expect(bodyDescription.contains("ZStack"), "MainAppView body should be a ZStack layout container")
     }
     
     @Test("OnboardingView loads successfully")
     @MainActor func testOnboardingViewLoads() async throws {
-        // Test that OnboardingView can be instantiated without errors
+        // Verify OnboardingView instantiates and that its outermost view is a NavigationStack,
+        // which hosts the TabView-based step carousel for the onboarding flow.
         let onboardingView = OnboardingView()
-        #expect(onboardingView.self != nil)
+        let body = onboardingView.body
+        let bodyDescription = String(describing: type(of: body))
+        #expect(bodyDescription.contains("NavigationStack"), "OnboardingView body should be a NavigationStack")
     }
     
     // MARK: - Model Integration Tests
@@ -53,7 +60,11 @@ struct GrowWiseFeatureTests {
     
     @Test("Views render efficiently")
     @MainActor func testViewRenderingPerformance() async throws {
-        // Test that views render quickly
+        // NOTE: This measures struct *instantiation* time, NOT actual SwiftUI rendering.
+        // init() only captures initial @State values — it does NOT trigger body evaluation,
+        // layout passes, or environment resolution. For true rendering benchmarks use
+        // Xcode Instruments (Time Profiler) or a UI test with XCTMetrics.
+        // The 10 ms threshold guards against pathological init-time work (e.g. disk I/O in init).
         let startTime = CFAbsoluteTimeGetCurrent()
         
         let mainAppView = MainAppView()

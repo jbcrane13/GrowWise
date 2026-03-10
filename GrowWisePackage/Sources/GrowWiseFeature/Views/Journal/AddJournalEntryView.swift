@@ -299,6 +299,7 @@ public struct AddJournalEntryView: View {
                         photoTask?.cancel()
                     }
                     .disabled(isSaving)
+                    .accessibilityIdentifier("addentry_button_cancel")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -308,6 +309,7 @@ public struct AddJournalEntryView: View {
                         }
                     }
                     .disabled(isSaving || (title.isEmpty && content.isEmpty))
+                    .accessibilityIdentifier("addentry_button_save")
                 }
             }
             .sheet(isPresented: $showingCamera) {

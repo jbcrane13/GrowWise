@@ -108,7 +108,7 @@ public struct HomeView: View {
                     allGoodCount: viewModel.allGoodCount
                 )
             }
-            .navigationBarHidden(true)
+            .toolbarBackground(.hidden)
             .task {
                 await viewModel.load(dataService: dataService)
             }

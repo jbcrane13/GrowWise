@@ -122,12 +122,18 @@ public struct JournalView: View {
                 selectedEntryType = selectedFilter.entryType
                 loadFilteredData(reset: true)
             }
+            .onChange(of: showingAddEntry) { _, isShowing in
+                if !isShowing {
+                    loadFilteredData(reset: true)
+                }
+            }
             .alert(alertTitle, isPresented: $showAlert) {
                 Button("OK") {}
             } message: {
                 Text(alertMessage)
             }
         }
+        .accessibilityIdentifier("screen_journal")
     }
 
     // MARK: - Header

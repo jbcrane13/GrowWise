@@ -15,6 +15,7 @@ public struct GardenView: View {
     @State private var showAddBed = false
     @State private var newBedName = ""
     @State private var bedLocationPreset = ""
+    @State private var showSearch = false
     @State private var plantToNavigate: Plant?
 
     public init() {}
@@ -46,21 +47,43 @@ public struct GardenView: View {
             }
             .background(CultivationTheme.Colors.background.ignoresSafeArea())
             .safeAreaInset(edge: .top) {
-                GardenHeroHeader(
-                    gardens: viewModel.gardens,
-                    selectedGarden: viewModel.selectedGarden,
-                    totalPlants: viewModel.totalPlantCount,
-                    alertCount: viewModel.alertCount,
-                    onSelectGarden: { garden in
-                        Task { await viewModel.selectGarden(garden, dataService: dataService) }
-                    },
-                    onAdd: { showAddPlant = true },
-                    onSearch: {
-                        // Phase 6: toggle search bar / sheet
+                VStack(spacing: 0) {
+                    GardenHeroHeader(
+                        gardens: viewModel.gardens,
+                        selectedGarden: viewModel.selectedGarden,
+                        totalPlants: viewModel.totalPlantCount,
+                        alertCount: viewModel.alertCount,
+                        onSelectGarden: { garden in
+                            Task { await viewModel.selectGarden(garden, dataService: dataService) }
+                        },
+                        onAdd: { showAddPlant = true },
+                        onSearch: { withAnimation(.easeInOut(duration: 0.2)) { showSearch.toggle() } }
+                    )
+                    if showSearch {
+                        HStack(spacing: 10) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 15, weight: .medium))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                            TextField("Search plants\u{2026}", text: $viewModel.searchText)
+                                .font(.system(.body, design: .rounded))
+                                .accessibilityIdentifier("garden_search_field")
+                            if !viewModel.searchText.isEmpty {
+                                Button {
+                                    viewModel.searchText = ""
+                                } label: {
+                                    Image(systemName: "xmark.circle.fill")
+                                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                                }
+                                .accessibilityIdentifier("garden_button_clearsearch")
+                            }
+                        }
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                        .padding(.vertical, 10)
+                        .background(CultivationTheme.Colors.background)
                     }
-                )
+                }
             }
-            .navigationBarHidden(true)
+            .toolbarBackground(.hidden)
             .task {
                 await viewModel.load(dataService: dataService)
             }
@@ -70,9 +93,11 @@ public struct GardenView: View {
             .navigationDestination(item: $plantToNavigate) { plant in
                 PlantDetailView(plant: plant)
             }
-            .sheet(isPresented: $showAddPlant) {
+            .sheet(isPresented: $showAddPlant, onDismiss: {
+                bedLocationPreset = ""
+                Task { await viewModel.load(dataService: dataService) }
+            }) {
                 AddPlantSheet(locationPreset: bedLocationPreset)
-                    .onDisappear { bedLocationPreset = "" }
             }
             .sheet(item: $selectedPlant) { plant in
                 PlantQuickCard(
@@ -107,7 +132,7 @@ public struct GardenView: View {
                 Text("Name this bed or area, then add your first plant to it.")
             }
         }
-        .accessibilityIdentifier("garden_view")
+        .accessibilityIdentifier("screen_garden")
     }
 
     // MARK: - Sub-views

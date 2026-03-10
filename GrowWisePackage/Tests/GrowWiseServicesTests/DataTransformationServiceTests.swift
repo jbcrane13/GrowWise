@@ -466,45 +466,46 @@ final class DataTransformationServiceTests: XCTestCase {
     
     // MARK: - Thread Safety Tests
     
-    func testConcurrentOperations() {
-        let expectation = XCTestExpectation(description: "Concurrent data transformation operations")
-        expectation.expectedFulfillmentCount = 10
-        
-        DispatchQueue.concurrentPerform(iterations: 10) { index in
-            do {
-                let testString = "Concurrent test string \(index)"
-                let testBool = index % 2 == 0
-                let testUser = TestUser(
-                    id: "concurrent_user_\(index)",
-                    name: "User \(index)",
-                    email: "user\(index)@example.com",
-                    age: 20 + index,
-                    isActive: testBool,
-                    tags: ["concurrent", "test"]
-                )
-                
-                // Test string operations
-                try dataTransformationService.storeString(testString, for: "concurrent_string_\(index)")
-                let retrievedString = try dataTransformationService.retrieveString(for: "concurrent_string_\(index)")
-                XCTAssertEqual(retrievedString, testString)
-                
-                // Test boolean operations
-                try dataTransformationService.storeBool(testBool, for: "concurrent_bool_\(index)")
-                let retrievedBool = try dataTransformationService.retrieveBool(for: "concurrent_bool_\(index)")
-                XCTAssertEqual(retrievedBool, testBool)
-                
-                // Test codable operations
-                try dataTransformationService.storeCodable(testUser, for: "concurrent_codable_\(index)")
-                let retrievedUser = try dataTransformationService.retrieveCodable(TestUser.self, for: "concurrent_codable_\(index)")
-                XCTAssertEqual(retrievedUser, testUser)
-                
-                expectation.fulfill()
-            } catch {
-                XCTFail("Concurrent test failed for iteration \(index): \(error)")
+    func testConcurrentOperations() async throws {
+        // Swift Concurrency-based concurrent test: withTaskGroup awaits all child tasks before
+        // returning — no XCTestExpectation or await fulfillment() boilerplate needed.
+        // Non-throwing variant chosen so all 10 iterations run even when one fails,
+        // providing full failure diagnostics rather than short-circuiting on the first error.
+        await withTaskGroup(of: Void.self) { group in
+            for index in 0..<10 {
+                group.addTask {
+                    do {
+                        let testString = "Concurrent test string \(index)"
+                        let testBool = index % 2 == 0
+                        let testUser = TestUser(
+                            id: "concurrent_user_\(index)",
+                            name: "User \(index)",
+                            email: "user\(index)@example.com",
+                            age: 20 + index,
+                            isActive: testBool,
+                            tags: ["concurrent", "test"]
+                        )
+
+                        // Test string operations
+                        try self.dataTransformationService.storeString(testString, for: "concurrent_string_\(index)")
+                        let retrievedString = try self.dataTransformationService.retrieveString(for: "concurrent_string_\(index)")
+                        XCTAssertEqual(retrievedString, testString)
+
+                        // Test boolean operations
+                        try self.dataTransformationService.storeBool(testBool, for: "concurrent_bool_\(index)")
+                        let retrievedBool = try self.dataTransformationService.retrieveBool(for: "concurrent_bool_\(index)")
+                        XCTAssertEqual(retrievedBool, testBool)
+
+                        // Test codable operations
+                        try self.dataTransformationService.storeCodable(testUser, for: "concurrent_codable_\(index)")
+                        let retrievedUser = try self.dataTransformationService.retrieveCodable(TestUser.self, for: "concurrent_codable_\(index)")
+                        XCTAssertEqual(retrievedUser, testUser)
+                    } catch {
+                        XCTFail("Concurrent test failed for iteration \(index): \(error)")
+                    }
+                }
             }
         }
-        
-        wait(for: [expectation], timeout: 15.0)
     }
     
     // MARK: - Error Description Tests
