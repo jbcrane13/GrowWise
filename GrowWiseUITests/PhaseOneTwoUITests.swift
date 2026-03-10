@@ -41,23 +41,9 @@ final class PhaseOneTwoUITests: XCTestCase {
     }
 
     func testScannerSampleDiagnosisDisplaysResult() throws {
-        let scannerTab = app.tabBars.buttons["Scanner"]
-        if scannerTab.waitForExistence(timeout: 5.0) {
-            scannerTab.tap()
-        } else {
-            let moreTab = app.tabBars.buttons["More"]
-            XCTAssertTrue(moreTab.waitForExistence(timeout: 10.0))
-            moreTab.tap()
-            let scannerCell = app.tables.staticTexts["Scanner"]
-            XCTAssertTrue(scannerCell.waitForExistence(timeout: 10.0))
-            scannerCell.tap()
-        }
-
-        let runSampleButton = app.buttons["scannerRunSampleButton"]
-        XCTAssertTrue(runSampleButton.waitForExistence(timeout: 10.0))
-        runSampleButton.tap()
-
-        XCTAssertTrue(app.staticTexts.matching(identifier: "scannerPrimaryFinding").firstMatch.waitForExistence(timeout: 10.0))
+        // Scanner tab removed in 4-tab navigation redesign (Task 4).
+        // PlantScannerView is no longer a top-level tab.
+        throw XCTSkip("Scanner tab removed in 4-tab redesign (Task 4). Scanner will be re-integrated in a future phase.")
     }
 
     private func dismissOnboardingIfNeeded() {
