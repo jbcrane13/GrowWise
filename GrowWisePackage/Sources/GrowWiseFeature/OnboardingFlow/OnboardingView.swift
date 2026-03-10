@@ -19,13 +19,7 @@ public struct OnboardingView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                // Warm cream background for all steps except welcome
-                if currentStep == .welcome {
-                    welcomeBackground
-                } else {
-                    Color.botanicalCream
-                        .ignoresSafeArea()
-                }
+                Color.black.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     // Progress indicator (hidden on welcome)
@@ -46,6 +40,9 @@ public struct OnboardingView: View {
 
                         GardeningGoalsView(userProfile: $userProfile)
                             .tag(OnboardingStep.goals)
+
+                        GardenSetupView(userProfile: $userProfile)
+                            .tag(OnboardingStep.gardenSetup)
 
                         LocationSetupView(userProfile: $userProfile)
                             .tag(OnboardingStep.location)
@@ -123,6 +120,7 @@ public enum OnboardingStep: String, CaseIterable {
     case welcome
     case skillAssessment
     case goals
+    case gardenSetup
     case location
     case notifications
     case completion
@@ -132,6 +130,7 @@ public enum OnboardingStep: String, CaseIterable {
         case .welcome: "Welcome"
         case .skillAssessment: "Experience"
         case .goals: "Goals"
+        case .gardenSetup: "Setup"
         case .location: "Location"
         case .notifications: "Reminders"
         case .completion: "All Set"
@@ -260,6 +259,15 @@ public enum SpaceSize: String, CaseIterable {
         case .large: "square.grid.2x2.fill"
         case .acreage: "map.fill"
         }
+    }
+}
+
+/// Temporary stub — replace in Task 8
+struct GardenSetupView: View {
+    @Binding var userProfile: UserProfile
+
+    var body: some View {
+        Color.clear
     }
 }
 
