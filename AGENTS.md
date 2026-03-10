@@ -1,164 +1,197 @@
 # PROJECT KNOWLEDGE BASE
 
-**Generated:** 2026-02-27
-**Commit:** $(git rev-parse --short HEAD 2026-02-27 2>/dev/null || echo "Unknown")
-**Branch:** $(git rev-parse --abbrev-ref HEAD 2026-02-27 2>/dev/null || echo "Unknown")
+**Updated:** 2026-03-10
+**Status:** Post full-UI-redesign (March 2026)
 
 ## Agent Readiness
 
-Before starting work, read **`docs/agent-readiness/README.md`** (when it exists). It describes the current readiness level, coding conventions introduced by previous sessions (TODO format, log scrubbing rules, lint config, etc.), and which skill files to use for common agent tasks.
+Before starting work, read **`docs/architecture/CLAUDE.md`** for current conventions and **`docs/architecture/ADR.md`** for architecture decisions.
 
 | Resource | Location | Purpose |
 |----------|----------|---------|
-| Agent Readiness | `docs/agent-readiness/README.md` | Current readiness score, conventions, key files — **read first** |
-| Skills | `.factory/skills/` | Reusable agent skill definitions |
-| Droids | `.factory/droids/` | Agent droid configurations |
-| Session Reports | `docs/agent-readiness/NN-*.md` | Per-session change reports |
+| Architecture guide | `docs/architecture/CLAUDE.md` | Build commands, conventions, design system |
+| ADRs | `docs/architecture/ADR.md` | Architecture decisions with rationale |
+| Design spec | `docs/superpowers/specs/2026-03-09-full-ui-redesign-design.md` | Full UI redesign specification |
+| PRD | `docs/product/gardening-app-prd.md` | Product requirements |
 
 ## OVERVIEW
-GrowWise is an iOS gardening companion app (iOS 17+) using Swift 6 strict concurrency, SwiftData with CloudKit sync, and SwiftUI. It features a heavy custom security layer (Keychain, AES-256-GCM, Secure Enclave) alongside standard gardening tracking and journal features.
+
+GrowWise (branded **Cultivation**) is an iOS gardening companion app (iOS 17+) using Swift 6 strict concurrency, SwiftData with CloudKit sync, and SwiftUI. After a full UI redesign (March 2026), it uses a 4-tab navigation structure with a premium glass-morphism design language defined by `CultivationTheme`.
 
 ## STRUCTURE
+
 ```
 GrowWise/                    # App shell (entry point, assets, info.plist, CloudKit schemas)
-GrowWisePackage/             # Core Swift Package (All logic)
+GrowWisePackage/             # Core Swift Package (all logic)
   Sources/
-    GrowWiseModels/          # @Model classes, Enums (No dependencies, CloudKit-ready)
-    GrowWiseServices/        # Business logic, Security, CloudKit (@Observable, Actors)
+    GrowWiseModels/          # @Model classes, Enums (no dependencies, CloudKit-ready)
+    GrowWiseServices/        # Business logic, security, CloudKit (@Observable, Actors)
     GrowWiseFeature/         # SwiftUI views (Strict MV architecture)
-      Components/            # Shared UI utilities and widgets
+      Design/                # CultivationTheme.swift — single source of truth for all tokens
+      Views/
+        Garden/              # GardenView, GardenViewModel, GardenHeroHeader,
+        │                    #   GardenBedSection, PlantQuickCard
+        Home/                # HomeView, HomeViewModel, HomeHeroHeader
+        Journal/             # JournalView
+      Components/            # Shared UI: ViewModifiers.swift, GardenComponents.swift,
+      │                      #   StatCard.swift
+      OnboardingFlow/        # Onboarding wizard
+      Main/MainAppView.swift # Root 4-tab TabView
   Tests/
     GrowWiseModelsTests/     # Model generation & defaults tests
-    GrowWiseServicesTests/   # Heavy security & logic testing (Keychain, Encryption)
-    GrowWiseFeatureTests/    # View and integration tests
-GrowWiseUITests/             # Xcode UI tests
-docs/                        # ADRs, Product requirements
+    GrowWiseServicesTests/   # Logic and service tests
+    GrowWiseFeatureTests/    # View and integration tests (GardenRepositoryTests)
+GrowWiseUITests/             # Xcode UI tests (some skipped post-redesign)
+docs/                        # ADRs, specs, runbooks, security docs
 ```
 
 ## WHERE TO LOOK
+
 | Task | Location | Notes |
 |------|----------|-------|
-| UI / Screens | `GrowWiseFeature/Views/` | Tab-based navigation, strict MV |
-| Reusable UI | `GrowWiseFeature/Components/` | Shared widgets (Weather, Stats, Reminders) |
+| UI / Screens | `GrowWiseFeature/Views/` | 4-tab: Home, Garden, Journal, Profile |
+| Design tokens | `GrowWiseFeature/Design/CultivationTheme.swift` | Colors, spacing, radius, animation, gradients |
+| Shared UI components | `GrowWiseFeature/Components/ViewModifiers.swift` | GlassCard, GlassPill, IconBubble, StatusDot, GradientButtonStyle |
+| Garden components | `GrowWiseFeature/Components/GardenComponents.swift` | PlantRow, BedGroupHeader, CompanionTipCard, TaskRow |
+| Garden hero/bed | `GrowWiseFeature/Views/Garden/` | GardenHeroHeader, GardenBedSection, PlantQuickCard |
 | Data / Persistence | `GrowWiseModels/` | SwiftData models, all properties optional |
-| Business Logic / Auth | `GrowWiseServices/` | Heavy logic: KeychainManager, DataService |
-| App Entry Point | `GrowWise/` | MainAppView initialization, CloudKit schemas |
-| Test Suites | `GrowWisePackage/Tests/` | Mostly Swift Testing (`@Test`) with XCTest |
+| Business logic / Auth | `GrowWiseServices/` | DataService, KeychainManager, NotificationService, etc. |
+| App entry point | `GrowWise/` | MainAppView init, CloudKit schemas |
+| Tests | `GrowWisePackage/Tests/` | Swift Testing (`@Test`) + XCTest |
+
+## NAVIGATION — 4 TABS
+
+```
+MainAppView (TabView)
+├── Home    — Task dashboard (today's care tasks, grouped by urgency)
+├── Garden  — Hero screen: plant list grouped by bed/area (primary feature tab)
+├── Journal — Timeline of plant journal entries
+└── Profile — Settings + learning tutorials
+```
+
+**Garden tab detail:**
+- `GardenHeroHeader`: garden selector chips + total plant count + alert badge
+- Grouped `LazyVStack`: plants grouped by `Plant.gardenLocation` (String field — no separate GardenBed entity)
+- Plant tap → `PlantQuickCard` bottom sheet → "View Full Details" → `PlantDetailView` push
+- "Add Bed or Area" → alert → name pre-fills `AddPlantSheet(locationPreset:)` → plant saved with `gardenLocation` set
+
+## DESIGN SYSTEM — CultivationTheme
+
+**File:** `GrowWisePackage/Sources/GrowWiseFeature/Design/CultivationTheme.swift`
+
+Design language: **Clean Minimal + Premium** with glass-morphism.
+
+Key tokens:
+- Background: `#0C0C0C` (adaptive dark/light)
+- Card surface: `rgba(255,255,255,0.04)` + `.ultraThinMaterial` + 1px border
+- CTA gradient: `#2d6a4f → #52b788` (brand green)
+- Status: alert=`#FF453A`, warning=`#FFD60A`, healthy=`#30D158`
+- Typography: `.fontDesign(.rounded)` for headlines/CTAs
+- Animations: spring-based throughout
+
+Shared UI components (all in `ViewModifiers.swift`):
+- `.glassCard()` — glass-morphism card modifier
+- `GlassPill` — chip/toggle selector
+- `IconBubble(systemName:color:size:iconSize:)` — tinted icon bubble
+- `StatusDot(status:)` — health status indicator
+- `GradientButtonStyle()` — full-width CTA button
 
 ## CONVENTIONS
-- **Architecture:** Strict MV (Model-View). NO ViewModels (ADR-002).
-- **State:** Views use `@Environment(Service.self)` and `@State` for local state.
-- **Concurrency:** `@MainActor` for UI-bound services; Actors for concurrent state; `async/await`.
-- **Persistence:** SwiftData. All `@Model` properties optional or have defaults for CloudKit compatibility.
-- **Security:** Extensive custom encryption (KeychainStorageService, SecureEnclaveKeyManager, KeyRotationManager).
-- **Error Handling:** Multi-level fallback pattern (see DataService). No silent `try?` in views (ADR-007).
-- **Issue Tracking:** Use `bd` (beads) for issue tracking (`bd ready`, `bd show`, `bd close`, `bd sync`).
 
-## ANTI-PATTERNS (THIS PROJECT)
-- **DO NOT** create `ObservableObject` ViewModels.
-- **NEVER** use `as any`, `@ts-ignore` (or Swift equivalent forced casts like `as!`).
-- **NEVER** crash on init failure. Follow multi-level fallback.
-- **NEVER** use `ModelConfiguration(isStoredInMemoryOnly: true)` in production.
-- **NEVER** force-unwrap optionals (`plant.name!`).
-- **DO NOT** save files to the root folder. Place inside appropriate package target.
-- **DO NOT** place static data in service classes (e.g. CompanionPlantingService).
-- **DO NOT** initialize services locally in views; inject via `@Environment`.
+- **Architecture:** Strict MV (Model-View). NO ViewModels (ADR-002). Exception: `GardenViewModel`/`HomeViewModel` for complex data grouping (ADR-015).
+- **State:** `@State private var viewModel = GardenViewModel()` (not `@StateObject`)
+- **Services:** Injected via `@Environment(Service.self)` — never instantiated locally in views
+- **Observation:** `@Observable` only — never `ObservableObject`/`@Published`
+- **Concurrency:** `@MainActor` for UI-bound services; Actors for concurrent state; `async/await`
+- **Persistence:** SwiftData. All `@Model` properties optional or have defaults for CloudKit compatibility
+- **Navigation:** `.sheet` for views that own their own `NavigationStack`; `navigationDestination(item:)` for standard pushes (ADR-012)
+- **Error Handling:** No silent `try?` in views (ADR-007). `do/catch` with error state + alert for user-facing ops
+- **Security:** Custom encryption stack (KeychainStorageService, SecureEnclaveKeyManager, KeyRotationManager) — may simplify in future
+- **Issue Tracking:** Use `bd` (beads) — `bd ready`, `bd show`, `bd close`, `bd dolt push`
 
-## UNIQUE STYLES
-- Uses `@Observable` instead of `ObservableObject`.
-- Explicit `#expect` instead of XCTAssert where Swift Testing is used.
-- Accessibility is mandatory: `.accessibilityIdentifier()` on all interactive elements.
-- Deeply nested sub-views currently exist in massive view files (e.g. `JournalEntryDetailView.swift`).
+## ANTI-PATTERNS (DO NOT DO)
 
-## COMMANDS
+- **DO NOT** create `ObservableObject`/`@Published` ViewModels
+- **DO NOT** use `@StateObject` — use `@State`
+- **DO NOT** use `DispatchQueue` — use `async/await`
+- **DO NOT** use `CoreData` — use SwiftData
+- **DO NOT** hard-code colors, spacing, or radii — use `CultivationTheme.*`
+- **DO NOT** use `.navigationDestination` for views that own their own `NavigationStack` (use `.sheet`)
+- **NEVER** force-unwrap optionals (`plant.name!`)
+- **NEVER** crash on init failure — multi-level fallback pattern
+- **DO NOT** save files to root folder — place inside appropriate package target
+- **DO NOT** initialize services locally in views — inject via `@Environment`
+- **DO NOT** use `print()` — use `OSLog.Logger` with privacy annotations
+- **DO NOT** run `xcodebuild test` locally — always SSH to mac-mini
+
+## BUILD & TEST COMMANDS
+
+> **CRITICAL:** Tests run on mac-mini via SSH, never locally.
+
 ```bash
-# Build
-xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator build
-# Tests
-cd GrowWisePackage && swift test
-swift test --filter GrowWiseServicesTests
+# Build verification
+ssh mac-mini "cd ~/Projects/GrowWise && xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator build CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO 2>&1 | tail -5"
 
-# Lint (SwiftLint — must pass before commit)
+# Swift package tests (fast)
+ssh mac-mini "cd ~/Projects/GrowWise/GrowWisePackage && swift test 2>&1 | tail -20"
+
+# SwiftLint
 swiftlint lint --strict --config .swiftlint.yml
-swiftlint lint --fix --config .swiftlint.yml   # auto-fix
+swiftlint lint --fix --config .swiftlint.yml
 
-# Format (SwiftFormat — must pass before commit)
-swiftformat --lint --config .swiftformat GrowWisePackage/Sources GrowWise   # check
-swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise          # fix
+# SwiftFormat
+swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise
 
-# Install quality git hooks (one-time per clone)
-./scripts/install-hooks.sh
+# Beads sync
+bd dolt push
 ```
 
 ## TOOLING & QUALITY GATES
-- **SwiftLint** — `.swiftlint.yml` in root. Run before every commit.
-- **SwiftFormat** — `.swiftformat` in root. Run before every commit.
-- **Pre-commit hooks** — `./scripts/install-hooks.sh` to install chained hooks (beads + quality).
-- **CI** — `.github/workflows/ci.yml` runs lint, format, tests, tech debt scan, large file check.
-- **Skills** — `.factory/skills/` contains `ios-swift-development` and `beads-issue-workflow` skills.
 
-## ENVIRONMENT SETUP
-See `.env.example` for required Apple developer account configuration.
-No runtime secrets needed for local development — all secrets managed via iOS Keychain on-device.
+- **SwiftLint** — `.swiftlint.yml` in root. Runs via pre-commit hook.
+- **SwiftFormat** — `.swiftformat` in root. Runs via pre-commit hook.
+- **Pre-commit hooks** — beads hook + quality hook chained. If broken: `bd hooks install`
+- **CI** — `.github/workflows/ci.yml` runs lint, format, tests, tech debt scan
+- **Deploy** — `.github/workflows/deploy.yml` — triggered on `v*` tag push
 
-## ARCHITECTURE DIAGRAMS
-See `docs/architecture/diagrams/app-architecture.md` for Mermaid diagrams covering:
-- Package structure
-- Data flow (MV pattern)
-- Security architecture
-- CloudKit sync flow
-- Service dependencies
+## ACCESSIBILITY
 
-## LOGGING & SECURITY
-- **Never use `print()`** — use `OSLog.Logger` with privacy annotations.
-- All user PII must use `.private` or `.sensitive` privacy level.
-- Security events must go through `AuditLogger`.
-- See `docs/security/log-scrubbing.md` for full redaction guidelines.
+**Mandatory:** Every interactive element MUST have `.accessibilityIdentifier("screen_element_descriptor")`.
 
-## DEPLOYMENT & OBSERVABILITY
-- **Deploy target:** TestFlight (internal → external → App Store)
-- **Deploy workflow:** `.github/workflows/deploy.yml` — triggered on `v*` tag push
-- **Post-deploy monitoring:**
-  - Crashes: [App Store Connect → TestFlight](https://appstoreconnect.apple.com/apps/crashes)
-  - CloudKit: [CloudKit Console](https://icloud.developer.apple.com/dashboard)
-  - Xcode Organizer: Window → Organizer → Crashes (for symbolicated stack traces)
-- **Runbooks:** `docs/runbooks/` — CloudKit sync, Keychain loss, crash on launch, migration failure, key rotation
+Pattern: `{screen}_{element}_{descriptor}` (e.g., `garden_button_addbed`, `quickcard_button_water`)
 
-## SECURITY WORKFLOWS
-- **CodeQL:** `.github/workflows/security.yml` — runs on push to main + weekly
-- **Secret scan:** Gitleaks on every PR
-- **Swift security patterns:** Checked in CI (insecure HTTP, NSLog, UserDefaults for secrets, weak crypto)
+No identifier = rejected.
+
+## ENVIRONMENT & SECURITY
+
+- No runtime secrets needed for local development — all secrets managed via iOS Keychain on-device
+- See `.env.example` for Apple developer account configuration
+- **Never log PII** — `OSLog.Logger` with `.private`/`.sensitive` annotations
+- All security events through `AuditLogger`
+- See `docs/security/` for full security documentation
 
 ## TECH DEBT TRACKING
-TODOs and FIXMEs must reference a beads issue:
+
+TODOs must reference a beads issue:
 ```swift
 // TODO(GW-123): description of what needs doing
 // FIXME(GW-456): description of the problem
 ```
-Unlinked TODOs are flagged in CI (`tech-debt` job in `.github/workflows/ci.yml`).
 
-## Landing the Plane (Session Completion)
+## DEPLOYMENT & OBSERVABILITY
 
-**When ending a work session**, you MUST complete ALL steps below. Work is NOT complete until `git push` succeeds.
+- **Deploy target:** TestFlight → App Store
+- **Crashes:** App Store Connect → TestFlight / Xcode Organizer
+- **CloudKit:** CloudKit Console
+- **Error tracking:** Sentry (integrated in GrowWiseServices)
+- **Analytics:** Amplitude (integrated in GrowWiseServices)
+- **Runbooks:** `docs/runbooks/` — CloudKit sync, Keychain loss, crash on launch, migration failure
 
-**MANDATORY WORKFLOW:**
+## SESSION CLOSE PROTOCOL
 
-1. **File issues for remaining work** - Create issues for anything that needs follow-up
-2. **Run quality gates** (if code changed) - Tests, linters, builds
-3. **Update issue status** - Close finished work, update in-progress items
-4. **PUSH TO REMOTE** - This is MANDATORY:
-   ```bash
-   git pull --rebase
-   bd sync
-   git push
-   git status  # MUST show "up to date with origin"
-   ```
-5. **Clean up** - Clear stashes, prune remote branches
-6. **Verify** - All changes committed AND pushed
-7. **Hand off** - Provide context for next session
-
-**CRITICAL RULES:**
-- Work is NOT complete until `git push` succeeds
-- NEVER stop before pushing - that leaves work stranded locally
-- NEVER say "ready to push when you are" - YOU must push
-- If push fails, resolve and retry until it succeeds
+Before ending a session:
+1. `git status` — verify what changed
+2. `git add <files>` — stage code changes
+3. `git commit -m "..."` — commit
+4. `git push` — push to remote (mandatory)
+5. `bd dolt push` — sync beads
