@@ -4,7 +4,15 @@
 <dict>
 	<key>UIBackgroundModes</key>
 	<array>
+		<string>fetch</string>
 		<string>remote-notification</string>
+	</array>
+	<!-- Required by SwiftData CloudKit sync to schedule background import/export tasks.
+	     Without these identifiers, NSPersistentCloudKitContainer cannot submit BGTask
+	     requests and repeatedly fails with BGSystemTaskSchedulerErrorDomain Code=8. -->
+	<key>BGTaskSchedulerPermittedIdentifiers</key>
+	<array>
+		<string>com.apple.coredata.cloudkit.private.push</string>
 	</array>
 </dict>
 </plist>
