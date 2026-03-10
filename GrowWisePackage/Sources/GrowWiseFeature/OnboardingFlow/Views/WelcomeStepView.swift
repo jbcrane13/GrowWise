@@ -2,32 +2,23 @@ import SwiftUI
 
 struct WelcomeStepView: View {
     @State private var logoVisible = false
-    @State private var featuresVisible = false
 
     var body: some View {
         VStack(spacing: 0) {
-            Spacer(minLength: 48)
-
-            // Brand hero
+            Spacer()
             brandHero
                 .opacity(logoVisible ? 1 : 0)
                 .offset(y: logoVisible ? 0 : 28)
-
             Spacer()
-
-            // Feature cards
-            featureCards
-                .opacity(featuresVisible ? 1 : 0)
-                .offset(y: featuresVisible ? 0 : 20)
-
-            Spacer(minLength: 100)
+            // Subtle "swipe to begin" hint
+            Image(systemName: "chevron.down")
+                .font(.system(size: 16, weight: .semibold))
+                .foregroundStyle(.white.opacity(0.40))
+                .padding(.bottom, 100)
         }
         .onAppear {
             withAnimation(.spring(duration: 0.75, bounce: 0.1).delay(0.1)) {
                 logoVisible = true
-            }
-            withAnimation(.spring(duration: 0.65, bounce: 0.05).delay(0.45)) {
-                featuresVisible = true
             }
         }
     }
@@ -93,85 +84,8 @@ struct WelcomeStepView: View {
         }
     }
 
-    // MARK: - Feature Cards
-
-    private var featureCards: some View {
-        VStack(spacing: 10) {
-            ForEach(welcomeFeatures, id: \.title) { feature in
-                WelcomeFeatureRow(
-                    icon: feature.icon,
-                    title: feature.title,
-                    subtitle: feature.subtitle,
-                    accentColor: feature.color
-                )
-            }
-        }
-        .padding(.horizontal, 24)
-    }
-
-    private struct WelcomeFeature {
-        let icon: String
-        let title: String
-        let subtitle: String
-        let color: Color
-    }
-
-    private var welcomeFeatures: [WelcomeFeature] {
-        [
-            WelcomeFeature(icon: "drop.fill", title: "Smart Watering", subtitle: "Personalized schedules for every plant", color: .botanicalLeaf),
-            WelcomeFeature(icon: "book.pages.fill", title: "10,000+ Plant Guides", subtitle: "Expert care for any species", color: Color(red: 0.275, green: 0.565, blue: 0.898)),
-            WelcomeFeature(icon: "camera.fill", title: "Visual Garden Journal", subtitle: "Track growth with photos & notes", color: .botanicalEarth),
-            WelcomeFeature(icon: "cloud.sun.fill", title: "Live Weather Tips", subtitle: "Care advice based on your climate", color: .botanicalGold),
-        ]
-    }
 }
 
-// MARK: - Feature Row
-
-struct WelcomeFeatureRow: View {
-    let icon: String
-    let title: String
-    let subtitle: String
-    let accentColor: Color
-
-    var body: some View {
-        HStack(spacing: 14) {
-            // Icon bubble
-            ZStack {
-                RoundedRectangle(cornerRadius: 12)
-                    .fill(accentColor.opacity(0.18))
-                    .frame(width: 44, height: 44)
-
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundColor(accentColor)
-            }
-
-            // Text
-            VStack(alignment: .leading, spacing: 2) {
-                Text(title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
-                    .foregroundColor(.white)
-
-                Text(subtitle)
-                    .font(.system(size: 13, weight: .regular, design: .rounded))
-                    .foregroundColor(.white.opacity(0.65))
-            }
-
-            Spacer()
-        }
-        .padding(.horizontal, 16)
-        .padding(.vertical, 12)
-        .background(
-            RoundedRectangle(cornerRadius: 16)
-                .fill(Color.white.opacity(0.10))
-                .overlay(
-                    RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.white.opacity(0.15), lineWidth: 1)
-                )
-        )
-    }
-}
 
 #Preview {
     ZStack {
