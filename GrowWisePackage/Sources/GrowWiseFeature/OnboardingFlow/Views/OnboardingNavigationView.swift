@@ -43,11 +43,7 @@ struct OnboardingNavigationView: View {
         VStack(spacing: 0) {
             // Separator line
             Divider()
-                .overlay(
-                    currentStep == .welcome
-                        ? Color.white.opacity(0.15)
-                        : Color.botanicalSage.opacity(0.20)
-                )
+                .overlay(Color.white.opacity(0.08))
 
             HStack(spacing: 12) {
                 // Back button
@@ -59,19 +55,11 @@ struct OnboardingNavigationView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(
-                                currentStep == .welcome
-                                    ? .white.opacity(0.9)
-                                    : Color.botanicalForest
-                            )
+                            .foregroundColor(.white.opacity(0.85))
                             .frame(width: 50, height: 50)
                             .background(
                                 Circle()
-                                    .fill(
-                                        currentStep == .welcome
-                                            ? Color.white.opacity(0.15)
-                                            : Color.white
-                                    )
+                                    .fill(Color.white.opacity(0.10))
                                     .shadow(
                                         color: Color.black.opacity(0.08),
                                         radius: 6,
@@ -81,9 +69,7 @@ struct OnboardingNavigationView: View {
                             .overlay(
                                 Circle()
                                     .stroke(
-                                        currentStep == .welcome
-                                            ? Color.white.opacity(0.25)
-                                            : Color.botanicalSage.opacity(0.25),
+                                        Color.white.opacity(0.18),
                                         lineWidth: 1
                                     )
                             )
@@ -149,11 +135,7 @@ struct OnboardingNavigationView: View {
             .padding(.top, 12)
             .padding(.bottom, 8)
         }
-        .background(
-            currentStep == .welcome
-                ? Color.clear
-                : Color.botanicalCream
-        )
+        .background(Color.clear)
         .alert("Setup Error", isPresented: $showingError) {
             Button("OK") {}
         } message: {
