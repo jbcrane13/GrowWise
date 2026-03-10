@@ -12,7 +12,7 @@ public enum CultivationTheme {
 
         // Card surfaces — use with .glassCard() modifier
         public static let cardSurface = Color(light: .white, dark: Color(white: 1, opacity: 0.04))
-        public static let cardBorder = Color(light: Color(black: 0, opacity: 0.07), dark: Color(white: 1, opacity: 0.08))
+        public static let cardBorder = Color(light: Color(white: 0, opacity: 0.07), dark: Color(white: 1, opacity: 0.08))
 
         // Text
         public static let textPrimary = Color(light: Color(hex: "1A1A1A"), dark: Color(hex: "E5E5E5"))
@@ -36,7 +36,7 @@ public enum CultivationTheme {
         public static let heroGlow = Color(hex: "4CAF50").opacity(0.08)
 
         // Interactive
-        public static let divider = Color(light: Color(black: 0, opacity: 0.08), dark: Color(white: 1, opacity: 0.06))
+        public static let divider = Color(light: Color(white: 0, opacity: 0.08), dark: Color(white: 1, opacity: 0.06))
         public static let sectionLabel = Color(light: Color(hex: "888888"), dark: Color(hex: "666666"))
     }
 
@@ -115,7 +115,7 @@ public enum CultivationTheme {
         public static func caption(_ text: String) -> Text {
             Text(text).font(.system(.caption, design: .default))
         }
-        public static func sectionLabel(_ text: String) -> Text {
+        public static func sectionLabel(_ text: String) -> some View {
             Text(text)
                 .font(.system(size: 11, weight: .semibold))
                 .tracking(1.0)
