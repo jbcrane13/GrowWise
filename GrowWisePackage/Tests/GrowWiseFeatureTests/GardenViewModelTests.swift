@@ -18,8 +18,12 @@ struct GardenViewModelTests {
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
         let plant2 = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        plant1.gardenLocation = "Bed A"
-        plant2.gardenLocation = "Bed B"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        let bedB = GardenBed(name: "Bed B", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        dataService.mainContext.insert(bedB)
+        plant1.bed = bedA
+        plant2.bed = bedB
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -35,8 +39,10 @@ struct GardenViewModelTests {
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
         let plant2 = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        plant1.gardenLocation = "Bed A"
-        plant2.gardenLocation = "Bed A"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        plant1.bed = bedA
+        plant2.bed = bedA
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -52,7 +58,9 @@ struct GardenViewModelTests {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        plant.gardenLocation = "Bed A"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        plant.bed = bedA
         plant.scientificName = "Solanum lycopersicum"
 
         let vm = GardenViewModel()
@@ -69,7 +77,9 @@ struct GardenViewModelTests {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        plant.gardenLocation = "Herb Corner"
+        let herbCorner = GardenBed(name: "Herb Corner", bedType: .planterBox, garden: garden)
+        dataService.mainContext.insert(herbCorner)
+        plant.bed = herbCorner
         plant.notes = "Great for pizza sauce"
 
         let vm = GardenViewModel()
@@ -86,7 +96,9 @@ struct GardenViewModelTests {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        plant.gardenLocation = "Bed A"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        plant.bed = bedA
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -104,9 +116,15 @@ struct GardenViewModelTests {
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
         let plant2 = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
         let plant3 = try dataService.createPlant(name: "Mint", type: .herb, garden: garden)
-        plant1.gardenLocation = "Bed A"
-        plant2.gardenLocation = "Bed B"
-        plant3.gardenLocation = "Herb Corner"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        let bedB = GardenBed(name: "Bed B", bedType: .raisedBed, garden: garden)
+        let herbCorner = GardenBed(name: "Herb Corner", bedType: .planterBox, garden: garden)
+        dataService.mainContext.insert(bedA)
+        dataService.mainContext.insert(bedB)
+        dataService.mainContext.insert(herbCorner)
+        plant1.bed = bedA
+        plant2.bed = bedB
+        plant3.bed = herbCorner
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -129,14 +147,14 @@ struct GardenViewModelTests {
 
     @Test("alertCount counts plants with overdue enabled reminders")
     func alertCountCountsOverdueEnabledReminders() async throws {
-        // alertCount checks plant.reminders directly (not via fetchActiveReminders),
-        // so past-dated reminders ARE visible here.
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        plant.gardenLocation = "Bed A"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        plant.bed = bedA
 
-        let pastDate = Date(timeIntervalSinceNow: -86_400) // 24 hours ago
+        let pastDate = Date(timeIntervalSinceNow: -86_400)
         _ = try dataService.createReminder(
             title: "Water",
             message: "Water the tomato",
@@ -157,9 +175,11 @@ struct GardenViewModelTests {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        plant.gardenLocation = "Bed A"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        plant.bed = bedA
 
-        let futureDate = Date(timeIntervalSinceNow: 86_400) // 24 hours from now
+        let futureDate = Date(timeIntervalSinceNow: 86_400)
         _ = try dataService.createReminder(
             title: "Fertilize",
             message: "Add fertilizer",
@@ -180,7 +200,9 @@ struct GardenViewModelTests {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        plant.gardenLocation = "Bed A"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        plant.bed = bedA
 
         let pastDate = Date(timeIntervalSinceNow: -86_400)
         let reminder = try dataService.createReminder(
@@ -201,14 +223,18 @@ struct GardenViewModelTests {
 
     // MARK: - load()
 
-    @Test("load() groups plants by gardenLocation")
-    func loadGroupsByGardenLocation() async throws {
+    @Test("load() groups plants by GardenBed name")
+    func loadGroupsByGardenBedName() async throws {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
         let plant2 = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        plant1.gardenLocation = "Bed A"
-        plant2.gardenLocation = "Bed B"
+        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
+        let bedB = GardenBed(name: "Bed B", bedType: .raisedBed, garden: garden)
+        dataService.mainContext.insert(bedA)
+        dataService.mainContext.insert(bedB)
+        plant1.bed = bedA
+        plant2.bed = bedB
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -218,17 +244,13 @@ struct GardenViewModelTests {
         #expect(locationKeys == Set(["Bed A", "Bed B"]))
     }
 
-    @Test("load() places plants with nil or empty gardenLocation into Ungrouped")
-    func loadPlacesNilOrEmptyLocationInUngrouped() async throws {
+    @Test("load() places plants with no bed into Ungrouped")
+    func loadPlacesNilBedInUngrouped() async throws {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
 
-        // nil gardenLocation (default)
         _ = try dataService.createPlant(name: "Mystery Plant", type: .houseplant, garden: garden)
-
-        // empty gardenLocation
-        let plant2 = try dataService.createPlant(name: "Another Plant", type: .flower, garden: garden)
-        plant2.gardenLocation = ""
+        _ = try dataService.createPlant(name: "Another Plant", type: .flower, garden: garden)
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -247,20 +269,25 @@ struct GardenViewModelTests {
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
 
-        // GardenRepository.fetchAll() sorts by name ascending
         #expect(vm.selectedGarden?.name == "Alpha Garden")
     }
 
-    @Test("load() sorts named location groups alphabetically")
+    @Test("load() sorts named bed groups alphabetically")
     func loadSortsNamedGroupsAlphabetically() async throws {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant1 = try dataService.createPlant(name: "P1", type: .vegetable, garden: garden)
         let plant2 = try dataService.createPlant(name: "P2", type: .herb, garden: garden)
         let plant3 = try dataService.createPlant(name: "P3", type: .flower, garden: garden)
-        plant1.gardenLocation = "Zzz Back"
-        plant2.gardenLocation = "Aaa Front"
-        plant3.gardenLocation = "Mmm Middle"
+        let zzzBack = GardenBed(name: "Zzz Back", bedType: .inGroundRow, garden: garden)
+        let aaaFront = GardenBed(name: "Aaa Front", bedType: .raisedBed, garden: garden)
+        let mmmMiddle = GardenBed(name: "Mmm Middle", bedType: .planterBox, garden: garden)
+        dataService.mainContext.insert(zzzBack)
+        dataService.mainContext.insert(aaaFront)
+        dataService.mainContext.insert(mmmMiddle)
+        plant1.bed = zzzBack
+        plant2.bed = aaaFront
+        plant3.bed = mmmMiddle
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -279,8 +306,12 @@ struct GardenViewModelTests {
         let garden2 = try dataService.createGarden(name: "Garden B", type: .indoor, isIndoor: true)
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden1)
         let plant2 = try dataService.createPlant(name: "Fern", type: .houseplant, garden: garden2)
-        plant1.gardenLocation = "Raised Bed"
-        plant2.gardenLocation = "Shelf"
+        let raisedBed = GardenBed(name: "Raised Bed", bedType: .raisedBed, garden: garden1)
+        let shelf = GardenBed(name: "Shelf", bedType: .pot, garden: garden2)
+        dataService.mainContext.insert(raisedBed)
+        dataService.mainContext.insert(shelf)
+        plant1.bed = raisedBed
+        plant2.bed = shelf
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
@@ -298,8 +329,12 @@ struct GardenViewModelTests {
         let garden2 = try dataService.createGarden(name: "Garden B", type: .indoor, isIndoor: true)
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden1)
         let plant2 = try dataService.createPlant(name: "Fern", type: .houseplant, garden: garden2)
-        plant1.gardenLocation = "Raised Bed"
-        plant2.gardenLocation = "Shelf"
+        let raisedBed = GardenBed(name: "Raised Bed", bedType: .raisedBed, garden: garden1)
+        let shelf = GardenBed(name: "Shelf", bedType: .pot, garden: garden2)
+        dataService.mainContext.insert(raisedBed)
+        dataService.mainContext.insert(shelf)
+        plant1.bed = raisedBed
+        plant2.bed = shelf
 
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)

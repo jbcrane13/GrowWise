@@ -192,7 +192,7 @@ struct PlantDetailView: View {
                     DetailInfoRow(title: "Growth Stage", value: growthStage.displayName, systemImage: "chart.line.uptrend.xyaxis", color: CultivationTheme.Colors.brandLeaf)
                 }
 
-                if let location = plant.gardenLocation, !location.isEmpty {
+                if let location = plant.bed?.name, !location.isEmpty {
                     DetailInfoRow(title: "Location", value: location, systemImage: "location.fill", color: CultivationTheme.Colors.brandForest)
                 }
 

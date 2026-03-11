@@ -55,7 +55,7 @@ struct PlantQuickCard: View {
                     StatusDot(status: uiHealthStatus)
                 }
 
-                if let location = plant.gardenLocation, !location.isEmpty {
+                if let location = plant.bed?.name, !location.isEmpty {
                     Text(location)
                         .font(.system(size: 13))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)

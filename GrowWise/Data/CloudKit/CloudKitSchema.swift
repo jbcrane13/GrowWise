@@ -44,7 +44,7 @@ enum CloudKitSchema {
         case healthStatus
         case notes
         case photoURLs
-        case gardenLocation
+        case bedName // was gardenLocation; now derived from GardenBed relationship
         case containerType
         case gardenReference
     }
@@ -173,7 +173,7 @@ enum CloudKitSchema {
         record[PlantFields.healthStatus.rawValue] = plant.healthStatus?.rawValue
         record[PlantFields.notes.rawValue] = plant.notes
         record[PlantFields.photoURLs.rawValue] = plant.photoURLs
-        record[PlantFields.gardenLocation.rawValue] = plant.gardenLocation
+        record[PlantFields.bedName.rawValue] = plant.bed?.name
         record[PlantFields.containerType.rawValue] = plant.containerType?.rawValue
 
         // Add garden reference if exists

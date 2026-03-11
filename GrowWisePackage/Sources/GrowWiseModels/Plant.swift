@@ -29,7 +29,7 @@ public final class Plant {
     public var photoURLs: [String]? = [] // CloudKit: made optional or with default value
 
     // Location in garden
-    public var gardenLocation: String? // CloudKit: made optional or with default value
+    public var bed: GardenBed? // nil = Unassigned
     public var containerType: ContainerType? // CloudKit: made optional or with default value
 
     /// Relationships

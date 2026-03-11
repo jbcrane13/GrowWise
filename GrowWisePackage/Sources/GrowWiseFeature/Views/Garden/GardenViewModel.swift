@@ -4,13 +4,11 @@ import SwiftUI
 
 // MARK: - PlantGroup
 
-/// A grouping of plants by their garden location string.
-/// Since the data model has no GardenBed SwiftData entity, plants are grouped
-/// by Plant.gardenLocation (a free-text field). Plants with nil/empty
-/// gardenLocation fall into the "Ungrouped" group (locationKey == nil).
+/// A grouping of plants by their assigned GardenBed.
+/// Plants with no bed assigned fall into the "Ungrouped" group (locationKey == nil).
 public struct PlantGroup: Identifiable {
     public let id: String
-    /// The raw gardenLocation string, or nil for ungrouped plants.
+    /// The bed name, or nil for ungrouped plants.
     public let locationKey: String?
     /// Display name shown in the UI section header.
     public var displayName: String {
@@ -27,7 +25,7 @@ public struct PlantGroup: Identifiable {
 /// Responsibilities:
 /// - Load all gardens via DataService
 /// - Default-select the first garden
-/// - Group the selected garden's plants by gardenLocation
+/// - Group the selected garden's plants by GardenBed
 /// - Expose search-filtered groups for the list view
 /// - Surface aggregate counts for the hero header (total plants, alert count)
 @MainActor
@@ -41,7 +39,7 @@ public final class GardenViewModel {
     /// The currently selected garden; nil means "show all gardens".
     public var selectedGarden: Garden?
 
-    /// Plants grouped by gardenLocation for the selected garden.
+    /// Plants grouped by GardenBed for the selected garden.
     public var groupedPlants: [PlantGroup] = []
 
     /// Live search text — drives `filteredGroups`.
@@ -145,12 +143,12 @@ public final class GardenViewModel {
             allPlants
         }
 
-        // Group by gardenLocation (nil/empty → ungrouped).
+        // Group by GardenBed name (nil bed → ungrouped).
         var locationMap: [String: [Plant]] = [:]
         var ungrouped: [Plant] = []
 
         for plant in plants {
-            let loc = plant.gardenLocation?.trimmingCharacters(in: .whitespacesAndNewlines)
+            let loc = plant.bed?.name?.trimmingCharacters(in: .whitespacesAndNewlines)
             if let loc, !loc.isEmpty {
                 locationMap[loc, default: []].append(plant)
             } else {

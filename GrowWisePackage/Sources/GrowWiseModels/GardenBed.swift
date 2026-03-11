@@ -9,6 +9,7 @@ public final class GardenBed {
     public var notes: String?
     public var createdDate: Date?
     public var garden: Garden?
+    @Relationship(deleteRule: .cascade, inverse: \Plant.bed)
     public var plants: [Plant]? = []
 
     public init(name: String, bedType: BedType, garden: Garden? = nil) {

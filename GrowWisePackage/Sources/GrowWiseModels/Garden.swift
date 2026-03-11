@@ -25,6 +25,9 @@ public final class Garden {
     @Relationship(deleteRule: .cascade, inverse: \Plant.garden)
     public var plants: [Plant]? = []
 
+    @Relationship(deleteRule: .cascade, inverse: \GardenBed.garden)
+    public var beds: [GardenBed]? = []
+
     @Relationship(deleteRule: .cascade, inverse: \SoilLog.garden)
     public var soilLogs: [SoilLog]? = []
     public var user: User?

@@ -131,11 +131,9 @@ enum DataValidationRules {
             warnings.append("Plant notes are very long (over \(Constants.maxNotesLength) characters)")
         }
 
-        // Garden location validation
-        if let location = plant.gardenLocation,
-           location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty
-        {
-            warnings.append("Garden location should not be empty if provided")
+        // Bed assignment validation: if a bed is set but has no name, warn.
+        if let bed = plant.bed, (bed.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            warnings.append("Garden bed should have a name if assigned")
         }
 
         return errors.isEmpty ? .valid : .invalid(errors: errors, warnings: warnings)
@@ -251,11 +249,9 @@ enum DataValidationRules {
             errors.append("Plant name exceeds maximum length of \(Constants.maxCustomNameLength) characters")
         }
 
-        // Garden location validation
-        if let location = plant.gardenLocation {
-            if location.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
-                warnings.append("Garden location should not be empty")
-            }
+        // Bed assignment validation
+        if let bed = plant.bed, (bed.name ?? "").trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
+            warnings.append("Garden bed name should not be empty")
         }
 
         // Notes length

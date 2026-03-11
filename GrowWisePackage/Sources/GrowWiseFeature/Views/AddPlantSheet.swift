@@ -17,7 +17,6 @@ public struct AddPlantSheet: View {
     @State private var selectedPlantType: PlantType = .flower
     @State private var selectedDifficultyLevel: DifficultyLevel = .beginner
     @State private var plantingDate: Date = .init()
-    @State private var gardenLocation: String = ""
     @State private var notes: String = ""
     @State private var selectedGarden: Garden?
 
@@ -37,7 +36,7 @@ public struct AddPlantSheet: View {
     @State private var showCompanionDetails = false
 
     public init(locationPreset: String = "") {
-        _gardenLocation = State(initialValue: locationPreset)
+        // locationPreset reserved for future bed pre-selection (Task 8)
     }
 
     public var body: some View {
@@ -128,17 +127,6 @@ public struct AddPlantSheet: View {
                                         .font(.system(.subheadline, design: .rounded))
                                         .accessibilityIdentifier("addplant_datepicker_plantingdate")
                                 }
-
-                                Divider()
-                                    .background(CultivationTheme.Colors.divider)
-
-                                styledTextField(
-                                    placeholder: "Bed or Area (e.g. South Bed)",
-                                    text: $gardenLocation,
-                                    systemImage: "square.split.2x2",
-                                    color: CultivationTheme.Colors.brandSage,
-                                    accessibilityID: "addplant_textfield_location"
-                                )
 
                                 if !availableGardens.isEmpty {
                                     Divider()
@@ -348,7 +336,7 @@ public struct AddPlantSheet: View {
 
             newPlant.scientificName = scientificName.isEmpty ? nil : scientificName
             newPlant.plantingDate = plantingDate
-            newPlant.gardenLocation = gardenLocation.isEmpty ? nil : gardenLocation
+            // bed assignment handled via Task 8 (bed pre-selection)
             newPlant.notes = notes.isEmpty ? nil : notes
 
             if !photoURLs.isEmpty {

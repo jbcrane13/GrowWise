@@ -320,7 +320,7 @@ extension TaskRow {
         self.taskID = reminder.id
         self.iconName = reminder.reminderType.iconName
         self.description = reminder.title.isEmpty ? reminder.reminderType.displayName : reminder.title
-        self.locationLabel = reminder.plant?.gardenLocation ?? reminder.plant?.name
+        self.locationLabel = reminder.plant?.bed?.name ?? reminder.plant?.name
         self.statusColor = isUrgent
             ? CultivationTheme.Colors.statusAlert
             : CultivationTheme.Colors.brandLeaf

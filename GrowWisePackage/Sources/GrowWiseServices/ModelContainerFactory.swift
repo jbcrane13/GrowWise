@@ -24,6 +24,7 @@ public struct ModelContainerFactory {
     public static let sharedSchema = Schema([
         Plant.self,
         Garden.self,
+        GardenBed.self,
         User.self,
         PlantReminder.self,
         JournalEntry.self,
@@ -165,6 +166,7 @@ public struct ModelContainerFactory {
         Schema([
             Plant.self,
             Garden.self,
+            GardenBed.self,
             User.self,
             PlantReminder.self,
             JournalEntry.self,
