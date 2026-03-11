@@ -4,143 +4,187 @@ import SwiftUI
 
 // MARK: - GardenView
 
-/// Garden tab — hero screen with grouped plant list by bed/location.
-/// Full redesign implementation (Task 6).
+/// Garden tab — dashboard showing all gardens as visual cards.
+/// Tap a garden card to drill into its plant list.
+/// Prominent "New Garden" card for easy garden creation.
 public struct GardenView: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.modelContext) private var modelContext
 
     @State private var viewModel = GardenViewModel()
-    @State private var selectedPlant: Plant?
-    @State private var showAddPlant = false
-    @State private var showCreateBed = false
-    @State private var showSearch = false
-    @State private var plantToNavigate: Plant?
+    @State private var showCreateGarden = false
+    @State private var gardenToNavigate: Garden?
+    @State private var gardenToDelete: Garden?
+    @State private var showDeleteConfirmation = false
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
+                VStack(alignment: .leading, spacing: 0) {
+                    // Dashboard header
+                    dashboardHeader
+                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+
                     if viewModel.isLoading {
                         loadingState
-                    } else if viewModel.filteredGroups.isEmpty {
+                    } else if viewModel.gardens.isEmpty {
                         emptyState
                     } else {
-                        ForEach(viewModel.filteredGroups) { group in
-                            GardenBedSection(
-                                group: group,
-                                onPlantTap: { plant in selectedPlant = plant },
-                                onQuickAction: { _ in
-                                    // Phase 6: mark care complete
-                                },
-                                onDelete: { plant in
-                                    modelContext.delete(plant)
-                                    Task { await viewModel.load(dataService: dataService) }
-                                }
-                            )
-                        }
-
-                        addBedButton
+                        // Garden cards grid
+                        gardenGrid
                     }
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.bottom, 32)
             }
             .background(CultivationTheme.Colors.background.ignoresSafeArea())
-            .safeAreaInset(edge: .top) {
-                VStack(spacing: 0) {
-                    GardenHeroHeader(
-                        gardens: viewModel.gardens,
-                        selectedGarden: viewModel.selectedGarden,
-                        totalPlants: viewModel.totalPlantCount,
-                        alertCount: viewModel.alertCount,
-                        onSelectGarden: { garden in
-                            Task { await viewModel.selectGarden(garden, dataService: dataService) }
-                        },
-                        onAdd: { showAddPlant = true },
-                        onSearch: { withAnimation(.easeInOut(duration: 0.2)) { showSearch.toggle() } }
-                    )
-                    if showSearch {
-                        HStack(spacing: 10) {
-                            Image(systemName: "magnifyingglass")
-                                .font(.system(size: 15, weight: .medium))
-                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                            TextField("Search plants\u{2026}", text: $viewModel.searchText)
-                                .font(.system(.body, design: .rounded))
-                                .accessibilityIdentifier("garden_search_field")
-                            if !viewModel.searchText.isEmpty {
-                                Button {
-                                    viewModel.searchText = ""
-                                } label: {
-                                    Image(systemName: "xmark.circle.fill")
-                                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                                }
-                                .accessibilityIdentifier("garden_button_clearsearch")
-                            }
-                        }
-                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                        .padding(.vertical, 10)
-                        .background(CultivationTheme.Colors.background)
-                    }
-                }
-            }
-            .toolbarBackground(.hidden)
             .task {
                 await viewModel.load(dataService: dataService)
             }
             .refreshable {
                 await viewModel.load(dataService: dataService)
             }
-            .navigationDestination(item: $plantToNavigate) { plant in
-                PlantDetailView(plant: plant)
+            .navigationDestination(item: $gardenToNavigate) { garden in
+                GardenDetailView(garden: garden)
             }
-            .sheet(isPresented: $showAddPlant, onDismiss: {
+            .sheet(isPresented: $showCreateGarden, onDismiss: {
                 Task { await viewModel.load(dataService: dataService) }
             }) {
-                AddPlantSheet()
-            }
-            .sheet(item: $selectedPlant) { plant in
-                PlantQuickCard(
-                    plant: plant,
-                    onWater: {
-                        selectedPlant = nil
-                    },
-                    onPrune: { selectedPlant = nil },
-                    onLog: { selectedPlant = nil },
-                    onViewDetails: {
-                        let captured = plant
-                        selectedPlant = nil
-                        Task { @MainActor in
-                            try? await Task.sleep(for: .milliseconds(350))
-                            plantToNavigate = captured
-                        }
-                    }
-                )
-                .presentationDetents([.medium, .large])
+                CreateGardenSheet { _ in
+                    Task { await viewModel.load(dataService: dataService) }
+                }
+                .presentationDetents([.large])
                 .presentationDragIndicator(.hidden)
             }
-            .sheet(isPresented: $showCreateBed) {
-                if let garden = viewModel.selectedGarden {
-                    CreateBedSheet(garden: garden) { _ in
-                        Task { await viewModel.load(dataService: dataService) }
+            .alert("Delete Garden?", isPresented: $showDeleteConfirmation) {
+                Button("Cancel", role: .cancel) {
+                    gardenToDelete = nil
+                }
+                Button("Delete", role: .destructive) {
+                    if let garden = gardenToDelete {
+                        Task {
+                            await viewModel.deleteGarden(garden, dataService: dataService)
+                        }
+                        gardenToDelete = nil
                     }
-                    .presentationDetents([.medium])
-                    .presentationDragIndicator(.hidden)
+                }
+            } message: {
+                if let garden = gardenToDelete {
+                    let plantCount = (garden.plants ?? []).count
+                    Text("This will permanently delete \"\(garden.name ?? "this garden")\" and its \(plantCount) plant\(plantCount == 1 ? "" : "s").")
                 }
             }
         }
         .accessibilityIdentifier("screen_garden")
     }
 
-    // MARK: - Sub-views
+    // MARK: - Dashboard Header
+
+    private var dashboardHeader: some View {
+        VStack(alignment: .leading, spacing: 16) {
+            // Title row
+            HStack(alignment: .top) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("MY GARDENS")
+                        .font(.system(size: 12, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        .tracking(0.5)
+                    Text("Gardens")
+                        .font(.system(.title, design: .rounded, weight: .bold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                }
+
+                Spacer()
+
+                Button {
+                    showCreateGarden = true
+                } label: {
+                    Image(systemName: "plus")
+                        .font(.system(size: 17, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .frame(width: 36, height: 36)
+                        .background(CultivationTheme.Gradients.ctaVertical)
+                        .clipShape(Circle())
+                }
+                .accessibilityIdentifier("garden_button_add")
+            }
+
+            // Global stats
+            if !viewModel.gardens.isEmpty {
+                HStack(spacing: 10) {
+                    QuickStatCard(
+                        value: viewModel.gardens.count,
+                        label: "Gardens",
+                        color: CultivationTheme.Colors.brandLeaf
+                    )
+                    QuickStatCard(
+                        value: viewModel.totalPlantsAllGardens,
+                        label: "Plants",
+                        color: CultivationTheme.Colors.statusHealthy
+                    )
+                    QuickStatCard(
+                        value: viewModel.totalAlertsAllGardens,
+                        label: "Alerts",
+                        color: viewModel.totalAlertsAllGardens > 0
+                            ? CultivationTheme.Colors.statusAlert
+                            : CultivationTheme.Colors.textTertiary
+                    )
+                }
+            }
+        }
+        .padding(.top, 16)
+    }
+
+    // MARK: - Garden Grid
+
+    private var gardenGrid: some View {
+        LazyVStack(spacing: 14) {
+            ForEach(viewModel.gardenSummaries) { summary in
+                GardenCardView(
+                    garden: summary.garden,
+                    plantCount: summary.plantCount,
+                    bedCount: summary.bedCount,
+                    alertCount: summary.alertCount,
+                    onTap: {
+                        gardenToNavigate = summary.garden
+                    }
+                )
+                .contextMenu {
+                    Button {
+                        gardenToNavigate = summary.garden
+                    } label: {
+                        Label("Open", systemImage: "arrow.right.circle")
+                    }
+
+                    Button(role: .destructive) {
+                        gardenToDelete = summary.garden
+                        showDeleteConfirmation = true
+                    } label: {
+                        Label("Delete Garden", systemImage: "trash")
+                    }
+                }
+                .transition(.asymmetric(
+                    insertion: .scale(scale: 0.95).combined(with: .opacity),
+                    removal: .opacity
+                ))
+            }
+
+            // Add garden card — always visible at the bottom
+            AddGardenCard {
+                showCreateGarden = true
+            }
+        }
+    }
+
+    // MARK: - States
 
     private var loadingState: some View {
         VStack(spacing: 16) {
             ProgressView()
                 .tint(CultivationTheme.Colors.brandLeaf)
-            Text("Loading garden…")
+            Text("Loading gardens\u{2026}")
                 .font(.system(.subheadline, design: .rounded))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
@@ -150,49 +194,87 @@ public struct GardenView: View {
     }
 
     private var emptyState: some View {
-        VStack(spacing: 16) {
-            IconBubble(
-                systemName: "leaf",
-                color: CultivationTheme.Colors.brandLeaf,
-                size: 64,
-                iconSize: 28
-            )
-            Text("No plants yet")
-                .font(.system(.headline, design: .rounded))
-                .foregroundStyle(CultivationTheme.Colors.textPrimary)
-            Text("Add your first plant to get started")
-                .font(.system(.subheadline))
-                .foregroundStyle(CultivationTheme.Colors.textSecondary)
-            Button("Add Plant") { showAddPlant = true }
-                .buttonStyle(GradientButtonStyle())
-                .padding(.horizontal, 40)
-                .accessibilityIdentifier("garden_button_addplant_empty")
+        VStack(spacing: 20) {
+            // Illustration
+            ZStack {
+                Circle()
+                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.08))
+                    .frame(width: 120, height: 120)
+
+                VStack(spacing: 4) {
+                    Image(systemName: "leaf.circle.fill")
+                        .font(.system(size: 44))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    Image(systemName: "plus.circle")
+                        .font(.system(size: 18))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf.opacity(0.6))
+                        .offset(x: 20, y: -8)
+                }
+            }
+
+            VStack(spacing: 6) {
+                Text("Plant your first garden")
+                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                Text("Create a garden for your backyard, balcony,\nwindowsill, or anywhere you grow")
+                    .font(.system(.subheadline))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Create Your First Garden") {
+                showCreateGarden = true
+            }
+            .buttonStyle(GradientButtonStyle())
+            .padding(.horizontal, 24)
+            .accessibilityIdentifier("garden_button_create_first")
+
+            // Quick-start suggestions
+            VStack(alignment: .leading, spacing: 8) {
+                Text("POPULAR SETUPS")
+                    .sectionLabelStyle()
+
+                HStack(spacing: 10) {
+                    QuickStartChip(icon: "sun.max.fill", label: "Backyard") {
+                        showCreateGarden = true
+                    }
+                    QuickStartChip(icon: "building.2.fill", label: "Balcony") {
+                        showCreateGarden = true
+                    }
+                    QuickStartChip(icon: "house.fill", label: "Indoor") {
+                        showCreateGarden = true
+                    }
+                }
+            }
+            .padding(.top, 8)
         }
         .frame(maxWidth: .infinity)
-        .padding(.top, 60)
+        .padding(.top, 40)
     }
+}
 
-    private var addBedButton: some View {
-        Button {
-            showCreateBed = true
-        } label: {
-            HStack {
-                Image(systemName: "plus.circle")
-                Text("Add Bed or Area")
+// MARK: - QuickStartChip
+
+private struct QuickStartChip: View {
+    let icon: String
+    let label: String
+    let onTap: () -> Void
+
+    var body: some View {
+        Button(action: onTap) {
+            VStack(spacing: 6) {
+                Image(systemName: icon)
+                    .font(.system(size: 18, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                Text(label)
+                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
-            .font(.system(.subheadline, design: .rounded, weight: .medium))
-            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
-            .background {
-                RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                    .stroke(
-                        CultivationTheme.Colors.brandLeaf.opacity(0.3),
-                        style: StrokeStyle(lineWidth: 1, dash: [6])
-                    )
-            }
+            .glassCard()
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("garden_button_addbed")
     }
 }

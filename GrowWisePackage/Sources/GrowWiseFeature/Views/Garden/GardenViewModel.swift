@@ -25,16 +25,25 @@ public struct PlantGroup: Identifiable {
     }
 }
 
+// MARK: - GardenSummary
+
+/// Lightweight summary for each garden shown on the dashboard cards.
+public struct GardenSummary: Identifiable {
+    public let id: UUID
+    public let garden: Garden
+    public let plantCount: Int
+    public let bedCount: Int
+    public let alertCount: Int
+}
+
 // MARK: - GardenViewModel
 
-/// Data layer for the Garden tab grouped plant list (Task 6 hero screen).
+/// Data layer for the Garden tab dashboard.
 ///
 /// Responsibilities:
-/// - Load all gardens via DataService
-/// - Default-select the first garden
-/// - Group the selected garden's plants by GardenBed
-/// - Expose search-filtered groups for the list view
-/// - Surface aggregate counts for the hero header (total plants, alert count)
+/// - Load all gardens and compute per-garden summaries
+/// - Support creating and deleting gardens
+/// - Surface aggregate stats for the dashboard header
 @MainActor
 @Observable
 public final class GardenViewModel {
@@ -57,6 +66,9 @@ public final class GardenViewModel {
 
     /// Non-nil when a load error occurs.
     public var error: Error?
+
+    /// Per-garden summaries for dashboard cards.
+    public var gardenSummaries: [GardenSummary] = []
 
     // MARK: - Computed Properties
 
@@ -93,13 +105,23 @@ public final class GardenViewModel {
             })
     }
 
+    /// Total plants across all gardens.
+    public var totalPlantsAllGardens: Int {
+        gardenSummaries.reduce(0) { $0 + $1.plantCount }
+    }
+
+    /// Total alerts across all gardens.
+    public var totalAlertsAllGardens: Int {
+        gardenSummaries.reduce(0) { $0 + $1.alertCount }
+    }
+
     // MARK: - Private State
 
     private var allPlants: [Plant] = []
 
     // MARK: - Public API
 
-    /// Initial load: fetch all gardens and plants, then group.
+    /// Initial load: fetch all gardens and plants, then build summaries.
     public func load(dataService: DataService) async {
         isLoading = true
         error = nil
@@ -124,6 +146,7 @@ public final class GardenViewModel {
         }
 
         rebuildGroups()
+        rebuildSummaries()
         isLoading = false
     }
 
@@ -137,6 +160,23 @@ public final class GardenViewModel {
             self.error = error
         }
         rebuildGroups()
+    }
+
+    /// Delete a garden and reload data.
+    public func deleteGarden(_ garden: Garden, dataService: DataService) async {
+        do {
+            try dataService.gardens.delete(garden)
+        } catch {
+            self.error = error
+            return
+        }
+
+        // If we deleted the selected garden, clear selection
+        if selectedGarden?.id == garden.id {
+            selectedGarden = nil
+        }
+
+        await load(dataService: dataService)
     }
 
     // MARK: - Private Helpers
@@ -184,5 +224,23 @@ public final class GardenViewModel {
         }
 
         groupedPlants = groups
+    }
+
+    /// Build per-garden summaries for dashboard cards.
+    private func rebuildSummaries() {
+        let now = Date()
+        gardenSummaries = gardens.map { garden in
+            let gardenPlants = allPlants.filter { $0.garden?.id == garden.id }
+            let alerts = gardenPlants.count { plant in
+                (plant.reminders ?? []).contains { $0.isEnabled && $0.nextDueDate < now }
+            }
+            return GardenSummary(
+                id: garden.id ?? UUID(),
+                garden: garden,
+                plantCount: gardenPlants.count,
+                bedCount: (garden.beds ?? []).count,
+                alertCount: alerts
+            )
+        }
     }
 }

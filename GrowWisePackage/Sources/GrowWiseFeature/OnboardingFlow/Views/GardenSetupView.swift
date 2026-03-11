@@ -186,22 +186,7 @@ private struct SpaceSizeRow: View {
     }
 }
 
-// MARK: - GardenType icon extension
-
-extension GardenType {
-    var iconName: String {
-        switch self {
-        case .outdoor: "sun.max.fill"
-        case .indoor: "house.fill"
-        case .container: "rectangle.3.offgrid.fill"
-        case .raised: "rectangle.stack.fill"
-        case .hydroponic: "drop.circle.fill"
-        case .greenhouse: "leaf.fill"
-        case .balcony: "building.2.fill"
-        case .windowsill: "window.horizontal"
-        }
-    }
-}
+// GardenType icon extension moved to GardenComponents.swift
 
 #Preview {
     ZStack {
