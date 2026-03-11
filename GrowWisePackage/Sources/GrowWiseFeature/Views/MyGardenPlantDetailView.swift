@@ -16,6 +16,7 @@ struct PlantDetailView: View {
     @State private var selectedPhoto: String?
     @State private var showingPhotoViewer = false
     @State private var showingAssignGarden = false
+    @State private var showMovePlant = false
 
     // Care action states
     @State private var isPerformingCareAction = false
@@ -65,6 +66,9 @@ struct PlantDetailView: View {
         .sheet(isPresented: $showingAssignGarden) {
             AssignGardenSheet(plant: plant)
         }
+        .sheet(isPresented: $showMovePlant) {
+            MovePlantSheet(plant: plant)
+        }
     }
 
     private var toolbarContent: some ToolbarContent {
@@ -75,6 +79,13 @@ struct PlantDetailView: View {
                 }
 
                 Button("Assign to Garden") { showingAssignGarden = true }
+
+                Button {
+                    showMovePlant = true
+                } label: {
+                    Label("Move to…", systemImage: "arrow.triangle.2.circlepath")
+                }
+                .accessibilityIdentifier("plantdetail_button_move")
 
                 Divider()
 
