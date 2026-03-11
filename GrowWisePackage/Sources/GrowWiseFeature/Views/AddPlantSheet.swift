@@ -43,6 +43,11 @@ public struct AddPlantSheet: View {
     @State private var compatibilityAnalysis: GardenCompatibilityAnalysis?
     @State private var showCompanionDetails = false
 
+    // Inline creation
+    @State private var showCreateGarden = false
+    @State private var showCreateBed = false
+    @State private var newGardenName = ""
+
     public init() {}
 
     public var body: some View {
@@ -195,6 +200,24 @@ public struct AddPlantSheet: View {
                                         }
                                     }
 
+                                    Divider()
+                                        .background(CultivationTheme.Colors.divider)
+
+                                    Button {
+                                        showCreateGarden = true
+                                    } label: {
+                                        HStack {
+                                            Image(systemName: "plus.circle")
+                                                .font(.system(size: 14, weight: .medium))
+                                            Text("New Garden")
+                                                .font(.system(.subheadline, design: .rounded))
+                                        }
+                                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                    }
+                                    .buttonStyle(.plain)
+                                    .accessibilityIdentifier("addplant_button_newgarden")
+
                                     if selectedGarden != nil {
                                         Divider()
                                             .background(CultivationTheme.Colors.divider)
@@ -211,6 +234,24 @@ public struct AddPlantSheet: View {
                                             .pickerStyle(.menu)
                                             .accessibilityIdentifier("addplant_picker_bed")
                                         }
+
+                                        Divider()
+                                            .background(CultivationTheme.Colors.divider)
+
+                                        Button {
+                                            showCreateBed = true
+                                        } label: {
+                                            HStack {
+                                                Image(systemName: "plus.circle")
+                                                    .font(.system(size: 14, weight: .medium))
+                                                Text("New Container")
+                                                    .font(.system(.subheadline, design: .rounded))
+                                            }
+                                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                        }
+                                        .buttonStyle(.plain)
+                                        .accessibilityIdentifier("addplant_button_newcontainer")
                                     }
                                 }
                             }
@@ -311,6 +352,29 @@ public struct AddPlantSheet: View {
                     CompanionDetailsSheet(analysis: analysis)
                 }
             }
+            .alert("New Garden", isPresented: $showCreateGarden) {
+                TextField("Garden name", text: $newGardenName)
+                    .accessibilityIdentifier("addplant_alert_textfield_gardenname")
+                Button("Create") {
+                    createGarden()
+                }
+                .accessibilityIdentifier("addplant_alert_button_creategarden")
+                Button("Cancel", role: .cancel) {
+                    newGardenName = ""
+                }
+            } message: {
+                Text("Name your new garden")
+            }
+            .sheet(isPresented: $showCreateBed) {
+                if let garden = selectedGarden {
+                    CreateBedSheet(garden: garden) { newBed in
+                        loadBeds(for: garden)
+                        selectedBed = newBed
+                    }
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.hidden)
+                }
+            }
             .task {
                 loadGardens()
             }
@@ -369,6 +433,18 @@ public struct AddPlantSheet: View {
             showingError = true
             availableGardens = []
         }
+    }
+
+    @MainActor
+    private func createGarden() {
+        let name = newGardenName.trimmingCharacters(in: .whitespaces)
+        guard !name.isEmpty else { return }
+        let garden = Garden(name: name)
+        modelContext.insert(garden)
+        newGardenName = ""
+        // Reload and select the new garden
+        loadGardens()
+        selectedGarden = availableGardens.last(where: { $0.name == name })
     }
 
     private func loadBeds(for garden: Garden?) {
