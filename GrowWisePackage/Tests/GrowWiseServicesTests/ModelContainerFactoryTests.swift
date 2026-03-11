@@ -42,10 +42,8 @@ struct ModelContainerFactoryTests {
         context.insert(plant)
         try context.save()
 
-        let descriptor = FetchDescriptor<Plant>(
-            predicate: #Predicate { $0.name == "Basil" }
-        )
-        let results = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<Plant>()
+        let results = try context.fetch(descriptor).filter { $0.name == "Basil" }
         #expect(results.count == 1)
         #expect(results.first?.name == "Basil")
     }
@@ -59,10 +57,8 @@ struct ModelContainerFactoryTests {
         context.insert(garden)
         try context.save()
 
-        let descriptor = FetchDescriptor<Garden>(
-            predicate: #Predicate { $0.name == "Back Yard" }
-        )
-        let results = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<Garden>()
+        let results = try context.fetch(descriptor).filter { $0.name == "Back Yard" }
         #expect(results.count == 1)
         #expect(results.first?.name == "Back Yard")
     }
@@ -76,10 +72,8 @@ struct ModelContainerFactoryTests {
         context.insert(user)
         try context.save()
 
-        let descriptor = FetchDescriptor<User>(
-            predicate: #Predicate { $0.email == "test@example.com" }
-        )
-        let results = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<User>()
+        let results = try context.fetch(descriptor).filter { $0.email == "test@example.com" }
         #expect(results.count == 1)
         #expect(results.first?.displayName == "Tester")
     }
@@ -93,10 +87,8 @@ struct ModelContainerFactoryTests {
         context.insert(entry)
         try context.save()
 
-        let descriptor = FetchDescriptor<JournalEntry>(
-            predicate: #Predicate { $0.title == "First Bloom" }
-        )
-        let results = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<JournalEntry>()
+        let results = try context.fetch(descriptor).filter { $0.title == "First Bloom" }
         #expect(results.count == 1)
         #expect(results.first?.content == "Saw buds today")
     }
@@ -116,10 +108,8 @@ struct ModelContainerFactoryTests {
         context.insert(reminder)
         try context.save()
 
-        let descriptor = FetchDescriptor<PlantReminder>(
-            predicate: #Predicate { $0.title == "Water Basil" }
-        )
-        let results = try context.fetch(descriptor)
+        let descriptor = FetchDescriptor<PlantReminder>()
+        let results = try context.fetch(descriptor).filter { $0.title == "Water Basil" }
         #expect(results.count == 1)
         #expect(results.first?.message == "Time to water your basil")
     }
@@ -156,10 +146,8 @@ struct ModelContainerFactoryTests {
         try contextA.save()
 
         // Container B should have zero plants
-        let descriptorB = FetchDescriptor<Plant>(
-            predicate: #Predicate { $0.name == "Unique Plant in A" }
-        )
-        let resultsInB = try contextB.fetch(descriptorB)
+        let descriptorB = FetchDescriptor<Plant>()
+        let resultsInB = try contextB.fetch(descriptorB).filter { $0.name == "Unique Plant in A" }
         #expect(resultsInB.isEmpty, "Plant inserted into container A must not appear in container B")
     }
 
