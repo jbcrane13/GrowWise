@@ -46,7 +46,7 @@ struct MovePlantSheet: View {
                         .accessibilityIdentifier("moveplant_button_cancel")
                 }
                 if step == .bed {
-                    ToolbarItem(placement: .navigationBarLeading) {
+                    ToolbarItem(placement: .automatic) {
                         Button {
                             step = .garden
                         } label: {
