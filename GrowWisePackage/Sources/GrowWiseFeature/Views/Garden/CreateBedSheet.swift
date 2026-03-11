@@ -133,7 +133,7 @@ private struct BedTypeChip: View {
                     .fill(
                         isSelected
                             ? CultivationTheme.Colors.brandLeaf.opacity(0.15)
-                            : CultivationTheme.Colors.cardFill
+                            : CultivationTheme.Colors.cardSurface
                     )
                     .overlay {
                         RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
