@@ -1,13 +1,13 @@
 {
-  "originHash" : "e4dbfe7f6284d89090b946c7a4f6396ba9bfeb6a3b38a5c68611ec4cd317afa2",
+  "originHash" : "47a309ca547205aa1e8765469ffd50d400e9fcf33f23171fd06819ba91eba2b3",
   "pins" : [
     {
       "identity" : "amplitude-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/Amplitude-Swift",
       "state" : {
-        "revision" : "b9da4c5e28830375dccdd9b49cc62da60b7f1895",
-        "version" : "1.17.3"
+        "revision" : "65925b0371e6d40a465eba547b157084ff3c1450",
+        "version" : "1.17.4"
       }
     },
     {
