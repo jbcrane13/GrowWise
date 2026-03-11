@@ -12,9 +12,7 @@ public struct GardenView: View {
     @State private var viewModel = GardenViewModel()
     @State private var selectedPlant: Plant?
     @State private var showAddPlant = false
-    @State private var showAddBed = false
-    @State private var newBedName = ""
-    @State private var bedLocationPreset = ""
+    @State private var showCreateBed = false
     @State private var showSearch = false
     @State private var plantToNavigate: Plant?
 
@@ -94,10 +92,9 @@ public struct GardenView: View {
                 PlantDetailView(plant: plant)
             }
             .sheet(isPresented: $showAddPlant, onDismiss: {
-                bedLocationPreset = ""
                 Task { await viewModel.load(dataService: dataService) }
             }) {
-                AddPlantSheet(locationPreset: bedLocationPreset)
+                AddPlantSheet()
             }
             .sheet(item: $selectedPlant) { plant in
                 PlantQuickCard(
@@ -119,17 +116,14 @@ public struct GardenView: View {
                 .presentationDetents([.medium, .large])
                 .presentationDragIndicator(.hidden)
             }
-            .alert("New Bed or Area", isPresented: $showAddBed) {
-                TextField("e.g. South Bed, Back Patio", text: $newBedName)
-                    .accessibilityIdentifier("garden_alert_textfield_bedname")
-                Button("Add Plant") {
-                    bedLocationPreset = newBedName
-                    newBedName = ""
-                    showAddPlant = true
+            .sheet(isPresented: $showCreateBed) {
+                if let garden = viewModel.selectedGarden {
+                    CreateBedSheet(garden: garden) { _ in
+                        Task { await viewModel.load(dataService: dataService) }
+                    }
+                    .presentationDetents([.medium])
+                    .presentationDragIndicator(.hidden)
                 }
-                Button("Cancel", role: .cancel) { newBedName = "" }
-            } message: {
-                Text("Name this bed or area, then add your first plant to it.")
             }
         }
         .accessibilityIdentifier("screen_garden")
@@ -175,7 +169,7 @@ public struct GardenView: View {
 
     private var addBedButton: some View {
         Button {
-            showAddBed = true
+            showCreateBed = true
         } label: {
             HStack {
                 Image(systemName: "plus.circle")
