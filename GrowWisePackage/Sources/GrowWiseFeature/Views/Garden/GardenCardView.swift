@@ -18,15 +18,15 @@ struct GardenCardView: View {
 
     private var healthSummary: GardenHealthSummary {
         let plants = garden.plants ?? []
-        let healthy = plants.filter { ($0.healthStatus ?? .healthy) == .healthy }.count
-        let warning = plants.filter {
+        let healthy = plants.count(where: { ($0.healthStatus ?? .healthy) == .healthy })
+        let warning = plants.count(where: {
             let s = $0.healthStatus ?? .healthy
             return s == .needsAttention || s == .sick
-        }.count
-        let critical = plants.filter {
+        })
+        let critical = plants.count(where: {
             let s = $0.healthStatus ?? .healthy
             return s == .dying || s == .dead
-        }.count
+        })
         return GardenHealthSummary(healthy: healthy, warning: warning, critical: critical)
     }
 
@@ -297,7 +297,7 @@ struct GardenMiniLayout: View {
             let cols = 3
             let rows = (count + cols - 1) / cols
             let rowHeight = 1.0 / Double(rows)
-            return (0..<count).map { i in
+            return (0 ..< count).map { i in
                 let row = i / cols
                 let col = i % cols
                 let colWidth = 1.0 / Double(min(cols, count - row * cols))
@@ -336,7 +336,7 @@ private struct BedTile: View {
 
                 if plantCount > 0 {
                     HStack(spacing: 2) {
-                        ForEach(0..<min(plantCount, 5), id: \.self) { _ in
+                        ForEach(0 ..< min(plantCount, 5), id: \.self) { _ in
                             Circle()
                                 .fill(color.opacity(0.6))
                                 .frame(width: 4, height: 4)

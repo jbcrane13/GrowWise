@@ -60,7 +60,7 @@ struct GardenDetailView: View {
 
                 if isLoading {
                     loadingState
-                } else if filteredGroups.isEmpty && searchText.isEmpty {
+                } else if filteredGroups.isEmpty, searchText.isEmpty {
                     emptyState
                 } else if filteredGroups.isEmpty {
                     noResultsState
