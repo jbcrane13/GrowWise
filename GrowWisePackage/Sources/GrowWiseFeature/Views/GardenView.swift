@@ -8,6 +8,7 @@ import SwiftUI
 /// Full redesign implementation (Task 6).
 public struct GardenView: View {
     @Environment(DataService.self) private var dataService
+    @Environment(\.modelContext) private var modelContext
 
     @State private var viewModel = GardenViewModel()
     @State private var selectedPlant: Plant?
@@ -33,6 +34,10 @@ public struct GardenView: View {
                                 onPlantTap: { plant in selectedPlant = plant },
                                 onQuickAction: { _ in
                                     // Phase 6: mark care complete
+                                },
+                                onDelete: { plant in
+                                    modelContext.delete(plant)
+                                    Task { await viewModel.load(dataService: dataService) }
                                 }
                             )
                         }

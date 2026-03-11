@@ -9,6 +9,7 @@ struct GardenBedSection: View {
     let group: PlantGroup
     let onPlantTap: (Plant) -> Void
     let onQuickAction: (Plant) -> Void
+    let onDelete: (Plant) -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
@@ -28,6 +29,13 @@ struct GardenBedSection: View {
                     onComplete: { onQuickAction(plant) }
                 )
                 .onTapGesture { onPlantTap(plant) }
+                .contextMenu {
+                    Button(role: .destructive) {
+                        onDelete(plant)
+                    } label: {
+                        Label("Delete Plant", systemImage: "trash")
+                    }
+                }
                 .accessibilityIdentifier("garden_row_plant_\(plant.id?.uuidString ?? plant.name ?? "unknown")")
             }
 
