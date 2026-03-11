@@ -15,7 +15,7 @@ struct HomeViewModelTests {
 
     // MARK: - load() — bucket separation
 
-    @Test("load() excludes past-day reminders from overdueReminders due to fetchActiveReminders predicate")
+    @Test("load excludes past-day reminders from overdueReminders due to fetchActiveReminders predicate")
     func loadSeparatesOverdueReminders() async throws {
         // INTEGRATION GAP: fetchActiveReminders() delegates to ReminderRepository.fetchActive()
         // whose predicate is `nextDueDate >= startOfDay(today)`. Reminders from previous days
@@ -265,4 +265,5 @@ struct HomeViewModelTests {
         #expect(reminder.isEnabled == false)            // markCompleted() ran
         #expect(vm.completedIDs.contains(reminder.id)) // optimistic id retained after reload
         #expect(vm.allTasksDone)                        // completedIDs hides the stale row
+    }
 }

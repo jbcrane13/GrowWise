@@ -4,6 +4,37 @@ import Foundation
 @testable import GrowWiseModels
 import GrowWiseServices
 
+// MARK: - PlantGroupTests
+
+@Suite("PlantGroup")
+struct PlantGroupTests {
+    @Test("displayName returns bed name when bed is set")
+    func displayNameWithBed() {
+        let bed = GardenBed(name: "South Bed", bedType: .raisedBed)
+        let group = PlantGroup(id: bed.id?.uuidString ?? "x", bed: bed, plants: [])
+        #expect(group.displayName == "South Bed")
+    }
+
+    @Test("displayName returns Unassigned when bed is nil")
+    func displayNameWithoutBed() {
+        let group = PlantGroup(id: "__unassigned__", bed: nil, plants: [])
+        #expect(group.displayName == "Unassigned")
+    }
+
+    @Test("iconName returns tray for unassigned group")
+    func iconNameUnassigned() {
+        let group = PlantGroup(id: "__unassigned__", bed: nil, plants: [])
+        #expect(group.iconName == "tray")
+    }
+
+    @Test("iconName returns bed type icon when bed is set")
+    func iconNameWithBed() {
+        let bed = GardenBed(name: "Herb Pots", bedType: .pot)
+        let group = PlantGroup(id: "x", bed: bed, plants: [])
+        #expect(group.iconName == BedType.pot.iconName)
+    }
+}
+
 // MARK: - GardenViewModelTests
 
 @Suite("GardenViewModel Tests")
@@ -223,8 +254,8 @@ struct GardenViewModelTests {
 
     // MARK: - load()
 
-    @Test("load() groups plants by GardenBed name")
-    func loadGroupsByGardenBedName() async throws {
+    @Test("load() groups plants by GardenBed")
+    func loadGroupsByGardenBed() async throws {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
         let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
@@ -240,12 +271,12 @@ struct GardenViewModelTests {
         await vm.load(dataService: dataService)
 
         #expect(vm.groupedPlants.count == 2)
-        let locationKeys = Set(vm.groupedPlants.compactMap(\.locationKey))
-        #expect(locationKeys == Set(["Bed A", "Bed B"]))
+        let bedNames = Set(vm.groupedPlants.compactMap { $0.bed?.name })
+        #expect(bedNames == Set(["Bed A", "Bed B"]))
     }
 
-    @Test("load() places plants with no bed into Ungrouped")
-    func loadPlacesNilBedInUngrouped() async throws {
+    @Test("load() places plants with no bed into Unassigned")
+    func loadPlacesNilBedInUnassigned() async throws {
         let dataService = try DataService.makeForTesting()
         let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
 
@@ -255,9 +286,10 @@ struct GardenViewModelTests {
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
 
-        let ungrouped = vm.groupedPlants.first(where: { $0.locationKey == nil })
-        #expect(ungrouped != nil)
-        #expect(ungrouped?.plants.count == 2)
+        let unassigned = vm.groupedPlants.first(where: { $0.bed == nil })
+        #expect(unassigned != nil)
+        #expect(unassigned?.plants.count == 2)
+        #expect(unassigned?.displayName == "Unassigned")
     }
 
     @Test("load() auto-selects the first garden alphabetically")
@@ -292,8 +324,8 @@ struct GardenViewModelTests {
         let vm = GardenViewModel()
         await vm.load(dataService: dataService)
 
-        let namedGroups = vm.groupedPlants.filter { $0.locationKey != nil }
-        let names = namedGroups.compactMap(\.locationKey)
+        let namedGroups = vm.groupedPlants.filter { $0.bed != nil }
+        let names = namedGroups.compactMap { $0.bed?.name }
         #expect(names == ["Aaa Front", "Mmm Middle", "Zzz Back"])
     }
 
@@ -356,13 +388,5 @@ struct GardenViewModelTests {
         #expect(vm.groupedPlants.isEmpty)
         #expect(vm.totalPlantCount == 0)
         #expect(vm.alertCount == 0)
-    }
-
-    // MARK: - PlantGroup.displayName
-
-    @Test("PlantGroup.displayName returns 'Ungrouped' when locationKey is nil")
-    func plantGroupDisplayNameReturnsUngroupedForNil() {
-        let group = PlantGroup(id: "__ungrouped__", locationKey: nil, plants: [])
-        #expect(group.displayName == "Ungrouped")
     }
 }

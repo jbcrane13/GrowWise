@@ -4,18 +4,25 @@ import SwiftUI
 
 // MARK: - PlantGroup
 
-/// A grouping of plants by their assigned GardenBed.
-/// Plants with no bed assigned fall into the "Ungrouped" group (locationKey == nil).
+/// A grouping of plants by their GardenBed.
+/// bed == nil means "Unassigned" (plants with no container assigned).
 public struct PlantGroup: Identifiable {
     public let id: String
-    /// The bed name, or nil for ungrouped plants.
-    public let locationKey: String?
-    /// Display name shown in the UI section header.
+    /// The GardenBed this group represents, or nil for unassigned plants.
+    public let bed: GardenBed?
+    public var plants: [Plant]
+
     public var displayName: String {
-        locationKey ?? "Ungrouped"
+        bed?.name ?? "Unassigned"
     }
 
-    public var plants: [Plant]
+    public var bedType: BedType? {
+        bed?.bedType
+    }
+
+    public var iconName: String {
+        bed?.bedType?.iconName ?? "tray"
+    }
 }
 
 // MARK: - GardenViewModel
@@ -64,7 +71,7 @@ public final class GardenViewModel {
                     (plant.notes ?? "").lowercased().contains(query)
             }
             guard !matching.isEmpty else { return nil }
-            return PlantGroup(id: group.id, locationKey: group.locationKey, plants: matching)
+            return PlantGroup(id: group.id, bed: group.bed, plants: matching)
         }
     }
 
@@ -136,38 +143,44 @@ public final class GardenViewModel {
 
     /// Build `groupedPlants` from `allPlants` filtered to `selectedGarden`.
     private func rebuildGroups() {
-        // Filter to the selected garden (nil = all gardens combined).
         let plants: [Plant] = if let selectedGarden {
             allPlants.filter { $0.garden?.id == selectedGarden.id }
         } else {
             allPlants
         }
 
-        // Group by GardenBed name (nil bed → ungrouped).
-        var locationMap: [String: [Plant]] = [:]
-        var ungrouped: [Plant] = []
+        // Group by bed (nil → unassigned).
+        var bedMap: [String: (GardenBed, [Plant])] = [:]
+        var unassigned: [Plant] = []
 
         for plant in plants {
-            let loc = plant.bed?.name?.trimmingCharacters(in: .whitespacesAndNewlines)
-            if let loc, !loc.isEmpty {
-                locationMap[loc, default: []].append(plant)
+            if let bed = plant.bed, let bedID = bed.id?.uuidString {
+                if bedMap[bedID] == nil {
+                    bedMap[bedID] = (bed, [])
+                }
+                bedMap[bedID]?.1.append(plant)
             } else {
-                ungrouped.append(plant)
+                unassigned.append(plant)
             }
         }
 
-        // Build ordered groups: named locations first (sorted), then ungrouped.
-        var groups: [PlantGroup] = locationMap.keys.sorted().map { key in
-            PlantGroup(
-                id: key,
-                locationKey: key,
-                plants: locationMap[key]?.sorted { ($0.name ?? "") < ($1.name ?? "") } ?? []
-            )
-        }
+        // Sort beds by name, then append unassigned.
+        var groups: [PlantGroup] = bedMap.values
+            .sorted { ($0.0.name ?? "") < ($1.0.name ?? "") }
+            .map { bed, bedPlants in
+                PlantGroup(
+                    id: bed.id?.uuidString ?? UUID().uuidString,
+                    bed: bed,
+                    plants: bedPlants.sorted { ($0.name ?? "") < ($1.name ?? "") }
+                )
+            }
 
-        if !ungrouped.isEmpty {
-            let sorted = ungrouped.sorted { ($0.name ?? "") < ($1.name ?? "") }
-            groups.append(PlantGroup(id: "__ungrouped__", locationKey: nil, plants: sorted))
+        if !unassigned.isEmpty {
+            groups.append(PlantGroup(
+                id: "__unassigned__",
+                bed: nil,
+                plants: unassigned.sorted { ($0.name ?? "") < ($1.name ?? "") }
+            ))
         }
 
         groupedPlants = groups

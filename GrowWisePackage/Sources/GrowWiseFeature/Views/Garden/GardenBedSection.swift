@@ -57,7 +57,7 @@ struct GardenBedSection: View {
             "Nasturtiums attract aphids away from more valuable crops — a great sacrificial plant.",
             "Tall plants can shade heat-sensitive neighbors during the hottest part of the day.",
         ]
-        let index = abs((group.locationKey ?? "__ungrouped__").hashValue) % tips.count
+        let index = abs((group.bed?.id?.uuidString ?? "__unassigned__").hashValue) % tips.count
         return tips[index]
     }
 }
