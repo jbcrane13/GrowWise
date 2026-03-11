@@ -9,6 +9,7 @@ public struct AddPlantSheet: View {
     @Environment(\.dismiss) private var dismiss
     @Environment(DataService.self) private var dataService
     @Environment(CompanionPlantingService.self) private var companionService
+    @Environment(PlantDatabaseService.self) private var plantDatabaseService
     @Environment(\.modelContext) private var modelContext
 
     // Form fields
@@ -19,6 +20,7 @@ public struct AddPlantSheet: View {
     @State private var plantingDate: Date = .init()
     @State private var notes: String = ""
     @State private var selectedGarden: Garden?
+    @State private var selectedBed: GardenBed? = nil
 
     // Photo selection
     @State private var selectedPhotos: [PhotosPickerItem] = []
@@ -26,18 +28,22 @@ public struct AddPlantSheet: View {
 
     // UI state
     @State private var availableGardens: [Garden] = []
+    @State private var availableBeds: [GardenBed] = []
     @State private var showingError = false
     @State private var errorMessage = ""
     @State private var isSaving = false
     @State private var saveTask: Task<Void, Never>?
 
+    // Autocomplete state
+    @State private var suggestions: [Plant] = []
+    @State private var searchTask: Task<Void, Never>?
+    @State private var nameFieldCommitted = false
+
     // Companion planting analysis
     @State private var compatibilityAnalysis: GardenCompatibilityAnalysis?
     @State private var showCompanionDetails = false
 
-    public init(locationPreset: String = "") {
-        // locationPreset reserved for future bed pre-selection (Task 8)
-    }
+    public init() {}
 
     public var body: some View {
         NavigationStack {
@@ -63,8 +69,48 @@ public struct AddPlantSheet: View {
                                     color: CultivationTheme.Colors.brandLeaf,
                                     accessibilityID: "addplant_textfield_name"
                                 )
-                                .onChange(of: plantName) { _, _ in
+                                .onChange(of: plantName) { _, newValue in
                                     updateCompatibilityAnalysis()
+                                    // Debounced autocomplete
+                                    searchTask?.cancel()
+                                    nameFieldCommitted = false
+                                    guard !newValue.isEmpty else {
+                                        suggestions = []
+                                        return
+                                    }
+                                    searchTask = Task {
+                                        try? await Task.sleep(for: .milliseconds(300))
+                                        guard !Task.isCancelled else { return }
+                                        suggestions = plantDatabaseService.searchPlants(query: newValue)
+                                    }
+                                }
+
+                                if !suggestions.isEmpty, !nameFieldCommitted {
+                                    ScrollView(.horizontal, showsIndicators: false) {
+                                        HStack(spacing: 8) {
+                                            ForEach(suggestions, id: \.id) { suggestion in
+                                                Button {
+                                                    applyTemplate(suggestion)
+                                                } label: {
+                                                    Text(suggestion.name ?? "")
+                                                        .font(.system(.caption, design: .rounded, weight: .medium))
+                                                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                                        .padding(.horizontal, 12)
+                                                        .padding(.vertical, 6)
+                                                        .background {
+                                                            Capsule()
+                                                                .fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                                                                .overlay {
+                                                                    Capsule()
+                                                                        .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.3), lineWidth: 1)
+                                                                }
+                                                        }
+                                                }
+                                                .buttonStyle(.plain)
+                                                .accessibilityIdentifier("addplant_suggestion_\(suggestion.name ?? "")")
+                                            }
+                                        }
+                                    }
                                 }
 
                                 Divider()
@@ -142,8 +188,28 @@ public struct AddPlantSheet: View {
                                         }
                                         .pickerStyle(.menu)
                                         .accessibilityIdentifier("addplant_picker_garden")
-                                        .onChange(of: selectedGarden) { _, _ in
+                                        .onChange(of: selectedGarden) { _, newGarden in
                                             updateCompatibilityAnalysis()
+                                            loadBeds(for: newGarden)
+                                            selectedBed = nil
+                                        }
+                                    }
+
+                                    if selectedGarden != nil {
+                                        Divider()
+                                            .background(CultivationTheme.Colors.divider)
+
+                                        HStack {
+                                            IconBubble(systemName: "square.split.2x2", color: CultivationTheme.Colors.brandSage, size: 28, iconSize: 13)
+                                            Picker("Container", selection: $selectedBed) {
+                                                Text("Unassigned").tag(nil as GardenBed?)
+                                                ForEach(availableBeds) { bed in
+                                                    Label(bed.name ?? "Unnamed", systemImage: bed.bedType?.iconName ?? "tray")
+                                                        .tag(bed as GardenBed?)
+                                                }
+                                            }
+                                            .pickerStyle(.menu)
+                                            .accessibilityIdentifier("addplant_picker_bed")
                                         }
                                     }
                                 }
@@ -251,6 +317,7 @@ public struct AddPlantSheet: View {
             .accessibilityIdentifier("addPlantSheet")
             .onDisappear {
                 saveTask?.cancel()
+                searchTask?.cancel()
             }
         }
     }
@@ -293,11 +360,23 @@ public struct AddPlantSheet: View {
     private func loadGardens() {
         do {
             availableGardens = try dataService.gardens.fetchAll()
+            if selectedGarden == nil, let first = availableGardens.first {
+                selectedGarden = first
+                loadBeds(for: first)
+            }
         } catch {
             errorMessage = "Could not load gardens: \(error.localizedDescription)"
             showingError = true
             availableGardens = []
         }
+    }
+
+    private func loadBeds(for garden: Garden?) {
+        guard let garden else {
+            availableBeds = []
+            return
+        }
+        availableBeds = (garden.beds ?? []).sorted { ($0.name ?? "") < ($1.name ?? "") }
     }
 
     private func updateCompatibilityAnalysis() {
@@ -315,6 +394,15 @@ public struct AddPlantSheet: View {
             plantName: plantName,
             existingPlants: existingPlantNames
         )
+    }
+
+    private func applyTemplate(_ plant: Plant) {
+        plantName = plant.name ?? plantName
+        scientificName = plant.scientificName ?? scientificName
+        if let type = plant.plantType { selectedPlantType = type }
+        if let diff = plant.difficultyLevel { selectedDifficultyLevel = diff }
+        suggestions = []
+        nameFieldCommitted = true
     }
 
     @MainActor
@@ -336,7 +424,7 @@ public struct AddPlantSheet: View {
 
             newPlant.scientificName = scientificName.isEmpty ? nil : scientificName
             newPlant.plantingDate = plantingDate
-            // bed assignment handled via Task 8 (bed pre-selection)
+            newPlant.bed = selectedBed
             newPlant.notes = notes.isEmpty ? nil : notes
 
             if !photoURLs.isEmpty {
