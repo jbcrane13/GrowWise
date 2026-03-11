@@ -58,7 +58,22 @@ public struct ModelContainerFactory {
                 isStoredInMemoryOnly: false,
                 cloudKitDatabase: .private("iCloud.com.growwise.gardening")
             )
-            return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            do {
+                return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            } catch {
+                // Schema incompatible with persisted store — wipe local SQLite and recreate.
+                // Sole developer, no user data at risk. Approved clean-wipe migration strategy.
+                logger.warning("⚠️ ModelContainer init failed (likely schema mismatch), wiping local store: \(error.localizedDescription)")
+                if let appSupportURL = FileManager.default
+                    .urls(for: .applicationSupportDirectory, in: .userDomainMask)
+                    .first
+                {
+                    for filename in ["default.store", "default.store-shm", "default.store-wal"] {
+                        try? FileManager.default.removeItem(at: appSupportURL.appending(path: filename))
+                    }
+                }
+                return try ModelContainer(for: schema, configurations: [modelConfiguration])
+            }
         }
     }
 
