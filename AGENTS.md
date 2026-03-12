@@ -71,9 +71,11 @@ MainAppView (TabView)
 
 **Garden tab detail:**
 - `GardenHeroHeader`: garden selector chips + total plant count + alert badge
-- Grouped `LazyVStack`: plants grouped by `Plant.gardenLocation` (String field — no separate GardenBed entity)
+- Grouped `LazyVStack`: plants grouped by `Plant.bed` (`GardenBed?` — nil = "Unassigned" section)
 - Plant tap → `PlantQuickCard` bottom sheet → "View Full Details" → `PlantDetailView` push
-- "Add Bed or Area" → alert → name pre-fills `AddPlantSheet(locationPreset:)` → plant saved with `gardenLocation` set
+- "Add Container" → `CreateBedSheet` → saves `GardenBed` linked to selected `Garden`
+- `AddPlantSheet`: garden picker → bed picker (or inline "New Garden"/"New Container" creation)
+- Long-press plant row → context menu → "Delete Plant"
 
 ## DESIGN SYSTEM — CultivationTheme
 
@@ -95,6 +97,71 @@ Shared UI components (all in `ViewModifiers.swift`):
 - `IconBubble(systemName:color:size:iconSize:)` — tinted icon bubble
 - `StatusDot(status:)` — health status indicator
 - `GradientButtonStyle()` — full-width CTA button
+
+## NAMING CONVENTIONS
+
+All naming rules are enforced by SwiftLint (`.swiftlint.yml`). Violations block CI.
+
+### Swift identifiers
+
+| Construct | Convention | Example |
+|-----------|------------|---------|
+| Types, structs, classes, enums, protocols | `UpperCamelCase` | `GardenBed`, `BedType`, `DataService` |
+| Enum cases | `lowerCamelCase` | `raisedBed`, `planterBox` |
+| Enum raw values (String) | `snake_case` | `"raised_bed"`, `"planter_box"` |
+| Functions and methods | `lowerCamelCase` | `loadGardens()`, `savePlant()` |
+| Properties and variables | `lowerCamelCase` | `selectedBed`, `availableGardens` |
+| Constants | `lowerCamelCase` (Swift style) | `brandLeaf`, `screenPadding` |
+| Generic type parameters | Single `UpperCamelCase` letter or short noun | `T`, `Content`, `Element` |
+| Acronyms in names | Treat as single word | `urlString` not `URLString`; `id` not `ID` |
+
+### File naming
+
+| Content | Convention | Example |
+|---------|------------|---------|
+| SwiftUI View | `UpperCamelCase` matching the primary type | `GardenView.swift`, `CreateBedSheet.swift` |
+| `@Model` class | `UpperCamelCase` matching the type | `GardenBed.swift`, `Plant.swift` |
+| `@Observable` service | `UpperCamelCase` + `Service` suffix | `DataService.swift`, `NotificationService.swift` |
+| ViewModel | `UpperCamelCase` + `ViewModel` suffix | `GardenViewModel.swift` |
+| Test file | Mirrors source file + `Tests` suffix | `GardenViewModelTests.swift` |
+
+### Accessibility identifiers
+
+Pattern: `{screen}_{element}_{descriptor}` — all `snake_case`.
+
+```swift
+// Good
+.accessibilityIdentifier("garden_button_addbed")
+.accessibilityIdentifier("addplant_textfield_name")
+.accessibilityIdentifier("moveplant_bed_unassigned")
+
+// Bad — wrong case, wrong separator
+.accessibilityIdentifier("gardenButtonAddBed")
+.accessibilityIdentifier("add-plant-text-field")
+```
+
+### SwiftData model properties
+
+All `@Model` properties use `lowerCamelCase` and are optional for CloudKit compatibility:
+
+```swift
+// Good
+public var gardenType: GardenType?
+public var createdDate: Date?
+
+// Bad — wrong case
+public var GardenType: GardenType?
+public var created_date: Date?
+```
+
+### Enforced by SwiftLint
+
+- `identifier_name` — enforces `lowerCamelCase` for variables/functions, min length 2
+- `type_name` — enforces `UpperCamelCase` for types, min length 3
+- `modifier_order` — consistent modifier ordering (`public nonisolated static`)
+- Custom `no_print_statements`, `todo_with_issue`, `fixme_with_issue` rules
+
+---
 
 ## CONVENTIONS
 
