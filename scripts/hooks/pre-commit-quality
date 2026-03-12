@@ -1,12 +1,48 @@
 #!/usr/bin/env sh
 # GrowWise quality pre-commit hook
-# Runs SwiftLint and SwiftFormat checks on staged Swift files.
+# Runs: large file check → SwiftLint → SwiftFormat on staged files.
 # Install via: ./scripts/install-hooks.sh
 
 set -e
 
-# Only run if there are staged Swift files
-STAGED_SWIFT=$(git diff --cached --name-only --diff-filter=ACM | grep '\.swift$' || true)
+# --- Large file detection ---
+# Block files over 2MB and Swift files over 800 lines from being committed.
+MAX_FILE_SIZE=2097152  # 2MB in bytes
+MAX_SWIFT_LINES=800
+
+STAGED_FILES=$(git diff --cached --name-only --diff-filter=ACM)
+if [ -n "$STAGED_FILES" ]; then
+    OVERSIZED=""
+    OVERLONG=""
+    for f in $STAGED_FILES; do
+        [ -f "$f" ] || continue
+        SIZE=$(wc -c < "$f" | tr -d ' ')
+        if [ "$SIZE" -gt "$MAX_FILE_SIZE" ]; then
+            HUMAN_SIZE=$(echo "$SIZE" | awk '{ printf "%.1fMB", $1/1048576 }')
+            OVERSIZED="$OVERSIZED\n  $f ($HUMAN_SIZE)"
+        fi
+        case "$f" in *.swift)
+            LINES=$(wc -l < "$f" | tr -d ' ')
+            if [ "$LINES" -gt "$MAX_SWIFT_LINES" ]; then
+                OVERLONG="$OVERLONG\n  $f ($LINES lines)"
+            fi
+        ;; esac
+    done
+
+    if [ -n "$OVERSIZED" ]; then
+        echo "ERROR: Staged files exceed 2MB size limit:$OVERSIZED"
+        echo ""
+        echo "Consider using Git LFS for binary assets or splitting large files."
+        exit 1
+    fi
+    if [ -n "$OVERLONG" ]; then
+        echo "WARNING: Swift files exceed $MAX_SWIFT_LINES lines:$OVERLONG"
+        echo "Consider splitting into smaller, focused modules."
+    fi
+fi
+
+# Only run lint/format if there are staged Swift files
+STAGED_SWIFT=$(echo "$STAGED_FILES" | grep '\.swift$' || true)
 if [ -z "$STAGED_SWIFT" ]; then
     exit 0
 fi
