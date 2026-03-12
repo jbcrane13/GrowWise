@@ -32,6 +32,10 @@ let package = Package(
             url: "https://github.com/amplitude/Amplitude-Swift",
             from: "1.10.0"
         ),
+        .package(
+            url: "https://github.com/apple/swift-docc-plugin",
+            from: "1.4.3"
+        ),
     ],
     targets: [
         // Core feature module - main app views and navigation
