@@ -157,53 +157,56 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Scan for unlinked TODOs and FIXMEs
+      - name: Enforce linked TODO/FIXME policy
         run: |
           echo "## Tech Debt Report" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
-          # Find TODOs without issue references
-          UNLINKED_TODOS=$(grep -rn "//\s*TODO\s*[^(]" \
+          # Find TODOs/FIXMEs without issue references (must be // TODO(GW-NNN): format)
+          UNLINKED_TODOS=$(grep -rn "//[[:space:]]*TODO[^(]" \
             --include="*.swift" \
             GrowWisePackage/Sources GrowWise \
-            | grep -v "TODO(" \
-            | head -20 || true)
+            || true)
 
-          # Find FIXMEs without issue references
-          UNLINKED_FIXMES=$(grep -rn "//\s*FIXME\s*[^(]" \
+          UNLINKED_FIXMES=$(grep -rn "//[[:space:]]*FIXME[^(]" \
             --include="*.swift" \
             GrowWisePackage/Sources GrowWise \
-            | grep -v "FIXME(" \
-            | head -20 || true)
+            || true)
 
-          # Count all tech debt markers
-          TODO_COUNT=$(grep -rn "//\s*TODO" --include="*.swift" GrowWisePackage/Sources GrowWise | wc -l | tr -d ' ')
-          FIXME_COUNT=$(grep -rn "//\s*FIXME" --include="*.swift" GrowWisePackage/Sources GrowWise | wc -l | tr -d ' ')
+          # Count linked markers (properly formatted with issue refs)
+          LINKED_TODOS=$(grep -rn "//[[:space:]]*TODO(" --include="*.swift" GrowWisePackage/Sources GrowWise | wc -l | tr -d ' ')
+          LINKED_FIXMES=$(grep -rn "//[[:space:]]*FIXME(" --include="*.swift" GrowWisePackage/Sources GrowWise | wc -l | tr -d ' ')
+          UNLINKED_TODO_COUNT=$(echo "$UNLINKED_TODOS" | grep -c "[^[:space:]]" || true)
+          UNLINKED_FIXME_COUNT=$(echo "$UNLINKED_FIXMES" | grep -c "[^[:space:]]" || true)
 
-          echo "| Marker | Count |" >> $GITHUB_STEP_SUMMARY
-          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
-          echo "| TODO   | $TODO_COUNT |" >> $GITHUB_STEP_SUMMARY
-          echo "| FIXME  | $FIXME_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| Marker | Linked | Unlinked |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|--------|----------|" >> $GITHUB_STEP_SUMMARY
+          echo "| TODO   | $LINKED_TODOS | $UNLINKED_TODO_COUNT |" >> $GITHUB_STEP_SUMMARY
+          echo "| FIXME  | $LINKED_FIXMES | $UNLINKED_FIXME_COUNT |" >> $GITHUB_STEP_SUMMARY
           echo "" >> $GITHUB_STEP_SUMMARY
 
           if [ -n "$UNLINKED_TODOS" ] || [ -n "$UNLINKED_FIXMES" ]; then
-            echo "### Unlinked Tech Debt (missing issue reference)" >> $GITHUB_STEP_SUMMARY
-            echo "TODOs/FIXMEs should reference a beads issue: \`TODO(GW-123): description\`" >> $GITHUB_STEP_SUMMARY
+            echo "### Unlinked Tech Debt — CI FAILED" >> $GITHUB_STEP_SUMMARY
+            echo "All TODOs/FIXMEs must reference a beads issue: \`// TODO(GW-123): description\`" >> $GITHUB_STEP_SUMMARY
+            echo "See \`docs/tech-debt/DEBT.md\` for the debt register and workflow." >> $GITHUB_STEP_SUMMARY
             echo "" >> $GITHUB_STEP_SUMMARY
             if [ -n "$UNLINKED_TODOS" ]; then
               echo "**Unlinked TODOs:**" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-              echo "$UNLINKED_TODOS" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$UNLINKED_TODOS" | head -20 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
             fi
             if [ -n "$UNLINKED_FIXMES" ]; then
               echo "**Unlinked FIXMEs:**" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
-              echo "$UNLINKED_FIXMES" >> $GITHUB_STEP_SUMMARY
-              echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
+              echo "$UNLINKED_FIXMES" | head -20 >> $GITHUB_STEP_SUMMARY
+              echo '```' >> $GITHUB_STEP_SUMMARY
             fi
+            echo "Fix: run \`bd create 'description'\` then add ref: \`// TODO(GW-NNN): description\`" >> $GITHUB_STEP_SUMMARY
+            exit 1
           else
-            echo "All TODOs and FIXMEs have issue references." >> $GITHUB_STEP_SUMMARY
+            echo "### All TODOs and FIXMEs have issue references." >> $GITHUB_STEP_SUMMARY
+            echo "Linked TODOs: $LINKED_TODOS | Linked FIXMEs: $LINKED_FIXMES" >> $GITHUB_STEP_SUMMARY
           fi
 
   large-files:
