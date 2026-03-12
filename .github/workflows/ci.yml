@@ -179,3 +179,29 @@ jobs:
             echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
             echo "Consider using Git LFS for large binary assets." >> $GITHUB_STEP_SUMMARY
           fi
+
+  sonarcloud:
+    name: SonarCloud Analysis
+    runs-on: macos-14
+    if: github.event_name == 'push' || github.event_name == 'pull_request'
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Install SwiftLint
+        run: brew install swiftlint
+
+      - name: Generate SwiftLint report
+        run: |
+          swiftlint lint --reporter json --config .swiftlint.yml > swiftlint-report.json || true
+
+      - name: SonarCloud Scan
+        uses: SonarSource/sonarcloud-github-action@master
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          SONAR_TOKEN: ${{ secrets.SONAR_TOKEN }}
+        with:
+          args: >
+            -Dsonar.projectKey=growwise_cultivation
+            -Dsonar.organization=growwise
