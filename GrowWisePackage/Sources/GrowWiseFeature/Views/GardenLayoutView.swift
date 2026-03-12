@@ -7,7 +7,7 @@ import SwiftUI
 
 // Stored as JSON in Garden.layout — no additional SwiftData models needed.
 
-struct GardenLayoutData: Codable, Sendable, Equatable {
+struct GardenLayoutData: Codable, Equatable {
     var beds: [GardenBedData] = []
 
     static func from(garden: Garden) -> GardenLayoutData {
@@ -25,7 +25,7 @@ struct GardenLayoutData: Codable, Sendable, Equatable {
     }
 }
 
-struct GardenBedData: Codable, Identifiable, Sendable, Equatable {
+struct GardenBedData: Codable, Identifiable, Equatable {
     var id = UUID()
     var name: String
     var widthFeet: Int
@@ -72,7 +72,7 @@ struct GardenBedData: Codable, Identifiable, Sendable, Equatable {
     }
 }
 
-struct PlantSlot: Codable, Sendable, Equatable {
+struct PlantSlot: Codable, Equatable {
     var plantName: String?
     var plantTypeRaw: String?
 

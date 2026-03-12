@@ -9,12 +9,12 @@ struct CreateGardenSheet: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
 
-    let onCreated: (Garden) -> Void
+    var onCreated: (Garden) -> Void = { _ in }
 
     @State private var gardenName: String = ""
     @State private var selectedType: GardenType = .outdoor
     @State private var selectedSun: SunExposure = .fullSun
-    @State private var selectedSize: SpaceSize = .medium
+    @State private var selectedSize: GrowWiseModels.SpaceSize = .medium
     @State private var isSaving = false
 
     private var isValid: Bool {
@@ -108,7 +108,7 @@ struct CreateGardenSheet: View {
 
                             ScrollView(.horizontal, showsIndicators: false) {
                                 HStack(spacing: 8) {
-                                    ForEach(SpaceSize.allCases, id: \.self) { size in
+                                    ForEach(GrowWiseModels.SpaceSize.allCases, id: \.self) { size in
                                         GlassPill(
                                             label: size.displayName,
                                             isSelected: selectedSize == size,
