@@ -420,66 +420,6 @@ struct FilterChip: View {
     }
 }
 
-struct CreateGardenSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
-    @State private var name: String = ""
-    @State private var type: GardenType = .outdoor
-    @State private var isIndoor: Bool = false
-    @State private var isSaving = false
-    @State private var saveTask: Task<Void, Never>?
-    @State private var errorMessage: String = ""
-    @State private var showingError = false
-
-    var body: some View {
-        NavigationStack {
-            Form {
-                Section("Garden Details") {
-                    TextField("Name", text: $name)
-                    Picker("Type", selection: $type) {
-                        ForEach(GardenType.allCases, id: \.self) { t in
-                            Text(t.displayName).tag(t)
-                        }
-                    }
-                    Toggle("Indoor Garden", isOn: $isIndoor)
-                }
-            }
-            .navigationTitle("Create Garden")
-            .gwNavigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                        .disabled(isSaving)
-                }
-                ToolbarItem(placement: .primaryAction) {
-                    Button("Save") { saveTask = Task { await saveGarden() } }
-                        .disabled(name.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty || isSaving)
-                }
-            }
-            .onDisappear { saveTask?.cancel() }
-            .alert("Error", isPresented: $showingError) {
-                Button("OK") {}
-            } message: {
-                Text(errorMessage)
-            }
-        }
-    }
-
-    @MainActor
-    private func saveGarden() async {
-        isSaving = true
-        do {
-            let garden = Garden(name: name.trimmingCharacters(in: .whitespacesAndNewlines), gardenType: type, isIndoor: isIndoor)
-            try dataService.gardens.add(garden)
-            dismiss()
-        } catch {
-            errorMessage = "Failed to create garden: \(error.localizedDescription)"
-            showingError = true
-        }
-        isSaving = false
-    }
-}
-
 // MARK: - Assign Garden Sheet
 
 struct AssignGardenSheet: View {
