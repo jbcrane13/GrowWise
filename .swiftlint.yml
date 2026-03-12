@@ -174,12 +174,12 @@ custom_rules:
 
   todo_with_issue:
     name: "TODO with Issue Reference"
-    message: "TODOs should reference a beads issue (e.g., TODO(GW-123): description)"
+    message: "TODOs must reference a beads issue (e.g., TODO(GW-123): description). Run: bd create 'description'"
     regex: '\/\/\s*TODO(?!\()'
-    severity: warning
+    severity: error
 
   fixme_with_issue:
     name: "FIXME with Issue Reference"
-    message: "FIXMEs should reference a beads issue (e.g., FIXME(GW-123): description)"
+    message: "FIXMEs must reference a beads issue (e.g., FIXME(GW-123): description). Run: bd create 'description'"
     regex: '\/\/\s*FIXME(?!\()'
-    severity: warning
+    severity: error
