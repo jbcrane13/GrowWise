@@ -51,8 +51,8 @@ docs/                        # ADRs, specs, runbooks, security docs
 |------|----------|-------|
 | UI / Screens | `GrowWiseFeature/Views/` | 4-tab: Home, Garden, Journal, Profile |
 | Design tokens | `GrowWiseFeature/Design/CultivationTheme.swift` | Colors, spacing, radius, animation, gradients |
-| Shared UI components | `GrowWiseFeature/Components/ViewModifiers.swift` | GlassCard, GlassPill, IconBubble, StatusDot, GradientButtonStyle |
-| Garden components | `GrowWiseFeature/Components/GardenComponents.swift` | PlantRow, BedGroupHeader, CompanionTipCard, TaskRow |
+| Shared UI components | `GrowWiseFeature/Design/ViewModifiers.swift` | GlassCard, GlassPill, IconBubble, StatusDot, GradientButtonStyle |
+| Garden components | `GrowWiseFeature/Design/GardenComponents.swift` | PlantRow, BedGroupHeader, CompanionTipCard, TaskRow |
 | Garden hero/bed | `GrowWiseFeature/Views/Garden/` | GardenHeroHeader, GardenBedSection, PlantQuickCard |
 | Data / Persistence | `GrowWiseModels/` | SwiftData models, all properties optional |
 | Business logic / Auth | `GrowWiseServices/` | DataService, KeychainManager, NotificationService, etc. |
