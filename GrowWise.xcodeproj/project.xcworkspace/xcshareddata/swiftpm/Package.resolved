@@ -1,13 +1,13 @@
 {
-  "originHash" : "3e1aed8da5ad461fd9debf4971b74a81f1001f1e62813aa77c1347b39ed71e82",
+  "originHash" : "98ac9ae3622b95870568fcbc541d77a0f88fd03b31ef81a00d2ef651f704d4fa",
   "pins" : [
     {
       "identity" : "amplitude-swift",
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/Amplitude-Swift",
       "state" : {
-        "revision" : "b9da4c5e28830375dccdd9b49cc62da60b7f1895",
-        "version" : "1.17.3"
+        "revision" : "65925b0371e6d40a465eba547b157084ff3c1450",
+        "version" : "1.17.4"
       }
     },
     {
@@ -33,8 +33,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/getsentry/sentry-cocoa",
       "state" : {
-        "revision" : "c63a66f1b5107eec3792249bb03e65015eeba905",
-        "version" : "9.7.0"
+        "revision" : "16cd512711375fa73f25ae5e373f596bdf4251ae",
+        "version" : "8.58.0"
       }
     }
   ],
