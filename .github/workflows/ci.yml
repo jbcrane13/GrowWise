@@ -73,6 +73,23 @@ jobs:
           echo "## Coverage" >> $GITHUB_STEP_SUMMARY
           echo "Coverage: $COVERAGE" >> $GITHUB_STEP_SUMMARY
 
+  duplicate-code:
+    name: Duplicate Code Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run jscpd
+        run: npx jscpd@latest --config .jscpd.json
+
+      - name: Upload duplication report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cpd-report
+          path: build/cpd-report/
+          retention-days: 14
+
   tech-debt:
     name: Tech Debt Scan
     runs-on: ubuntu-latest
