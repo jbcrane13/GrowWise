@@ -4,7 +4,7 @@ import SwiftData
 
 // MARK: - JSON Codable Type for Plant Data
 
-struct PlantData: Codable, Sendable {
+struct PlantData: Codable {
     let name: String
     let scientificName: String
     let type: PlantType

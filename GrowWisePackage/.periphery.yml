@@ -1,0 +1,36 @@
+# Periphery dead code detection configuration for GrowWise Swift Package
+# https://github.com/peripheryapp/periphery
+# Run: cd GrowWisePackage && periphery scan
+
+# Exclude test targets — they reference symbols from main targets
+# and would cause false positives if included in isolation
+exclude_tests: true
+
+# Report format
+format: xcode
+
+# Retain declarations that are explicitly public — these form the module API
+# and may be used by the app target (GrowWise/) which is outside the SPM package
+retain_public: true
+
+# Disable checking public accessibility on internal declarations;
+# the package targets are libraries consumed by the Xcode app target
+disable_redundant_public_analysis: true
+
+# Do not flag assign-only properties — SwiftData @Model properties are
+# often set and read via KVC/persistence paths not visible to the compiler
+retain_assign_only_properties: true
+
+# Retain ObjC-bridged types (used by frameworks like Sentry/Amplitude)
+retain_objc_accessible: true
+retain_objc_annotated: true
+
+# Exclude generated code, build artifacts, and third-party sources
+index_exclude:
+  - "**/*.build/**"
+  - "**/SourcePackages/**"
+  - "**/DerivedData/**"
+
+# Exclude results from files we don't own
+report_exclude:
+  - "**/SourcePackages/**"

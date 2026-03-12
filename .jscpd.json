@@ -1,0 +1,30 @@
+{
+  "threshold": 5,
+  "reporters": ["console", "json"],
+  "output": "build/cpd-report",
+  "path": [
+    "GrowWisePackage/Sources",
+    "GrowWise",
+    "scripts",
+    ".github/workflows"
+  ],
+  "ignore": [
+    "**/build/**",
+    "**/.build/**",
+    "**/Pods/**",
+    "**/node_modules/**",
+    "**/.beads/**",
+    "**/memory/**",
+    "**/coordination/**",
+    "**/*.generated.swift",
+    "**/GrowWiseUITests/**"
+  ],
+  "absolute": false,
+  "gitignore": true,
+  "format": ["swift", "javascript", "yaml", "json"],
+  "minLines": 10,
+  "minTokens": 50,
+  "maxLines": 5000,
+  "maxSize": "100kb",
+  "skipLocal": false
+}

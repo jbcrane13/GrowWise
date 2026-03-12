@@ -82,6 +82,23 @@ jobs:
           echo "## Coverage" >> $GITHUB_STEP_SUMMARY
           echo "Coverage: $COVERAGE" >> $GITHUB_STEP_SUMMARY
 
+  duplicate-code:
+    name: Duplicate Code Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run jscpd
+        run: npx jscpd@latest --config .jscpd.json
+
+      - name: Upload duplication report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: cpd-report
+          path: build/cpd-report/
+          retention-days: 14
+
   tech-debt:
     name: Tech Debt Scan
     runs-on: ubuntu-latest
@@ -205,3 +222,37 @@ jobs:
           args: >
             -Dsonar.projectKey=growwise_cultivation
             -Dsonar.organization=growwise
+  dead-code:
+    name: Dead Code Detection (Periphery)
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app
+
+      - name: Install Periphery
+        run: brew install periphery
+
+      - name: Run Periphery scan
+        run: |
+          cd GrowWisePackage
+          periphery scan --format github-actions --relative-results 2>&1 | tee ../periphery-report.txt
+          DEAD_COUNT=$(grep -c "warning:" ../periphery-report.txt || true)
+          echo "## Dead Code Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Periphery found **${DEAD_COUNT}** unused code warning(s)." >> $GITHUB_STEP_SUMMARY
+          if [ "$DEAD_COUNT" -gt 0 ]; then
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            head -50 ../periphery-report.txt >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Upload Periphery report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: periphery-report
+          path: periphery-report.txt
+          retention-days: 14

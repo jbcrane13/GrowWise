@@ -125,6 +125,7 @@ nesting:
 identifier_name:
   min_length:
     warning: 2
+    error: 1
   max_length:
     warning: 50
     error: 60
@@ -133,11 +134,16 @@ identifier_name:
     - x
     - y
     - db
-  validates_start_with_lowercase: warning
+    - i
+    - j
+    - k
+  validates_start_with_lowercase: error
   allowed_symbols: ["_"]
 
 type_name:
-  min_length: 3
+  min_length:
+    warning: 3
+    error: 2
   max_length:
     warning: 50
     error: 60

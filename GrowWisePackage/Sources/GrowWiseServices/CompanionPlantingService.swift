@@ -90,7 +90,7 @@ public struct GardenCompatibilityAnalysis: Sendable {
 
 // MARK: - JSON Codable Type
 
-private struct PlantCompatibilityProfile: Codable, Sendable {
+private struct PlantCompatibilityProfile: Codable {
     let companions: [String]
     let incompatibles: [String]
     let reasons: [String: String]
