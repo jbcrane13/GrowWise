@@ -31,6 +31,15 @@ jobs:
       - name: Check formatting
         run: swiftformat --lint --config .swiftformat GrowWisePackage/Sources GrowWise
 
+  prettier:
+    name: Prettier Check
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check non-Swift file formatting
+        run: npx prettier@latest --check "**/*.{js,json,yml,yaml,md}" --ignore-path .prettierignore
+
   test:
     name: Unit Tests
     runs-on: macos-14
