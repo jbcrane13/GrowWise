@@ -85,7 +85,7 @@ public final class ObservabilityService {
     }
 
     /// Capture a non-fatal message (for errors that don't throw).
-    public func capture(message: String, level: SentryLevel = .error, context: [String: String] = [:]) {
+    public func capture(message: String, level: SentryLevel = kSentryLevelError, context: [String: String] = [:]) {
         SentrySDK.capture(message: message) { scope in
             scope.setLevel(level)
             if !context.isEmpty {
@@ -101,7 +101,7 @@ public final class ObservabilityService {
         let crumb = Breadcrumb()
         crumb.message = message
         crumb.category = category.rawValue
-        crumb.level = .info
+        crumb.level = kSentryLevelInfo
         if !data.isEmpty {
             crumb.data = data
         }
