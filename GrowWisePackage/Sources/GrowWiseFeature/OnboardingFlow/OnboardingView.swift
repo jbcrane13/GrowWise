@@ -214,54 +214,6 @@ public enum GardeningGoal: String, CaseIterable, Identifiable {
     }
 }
 
-public enum SpaceSize: String, CaseIterable {
-    case tiny
-    case small
-    case medium
-    case large
-    case acreage
-
-    var displayName: String {
-        switch self {
-        case .tiny: "Tiny"
-        case .small: "Small"
-        case .medium: "Medium"
-        case .large: "Large"
-        case .acreage: "Acreage"
-        }
-    }
-
-    var subtitle: String {
-        switch self {
-        case .tiny: "Windowsill / Indoor"
-        case .small: "Balcony / Patio"
-        case .medium: "Small Yard"
-        case .large: "Large Yard"
-        case .acreage: "Farm / Estate"
-        }
-    }
-
-    var description: String {
-        switch self {
-        case .tiny: "Perfect for herbs and small houseplants"
-        case .small: "Container gardening and small plants"
-        case .medium: "Raised beds and medium-sized gardens"
-        case .large: "Multiple garden areas and diverse plantings"
-        case .acreage: "Large-scale gardening and farming"
-        }
-    }
-
-    var icon: String {
-        switch self {
-        case .tiny: "house.fill"
-        case .small: "building.fill"
-        case .medium: "rectangle.split.3x1.fill"
-        case .large: "square.grid.2x2.fill"
-        case .acreage: "map.fill"
-        }
-    }
-}
-
 #Preview {
     OnboardingView()
 }

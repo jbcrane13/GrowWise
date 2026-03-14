@@ -259,7 +259,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
 
         switch reminderType {
         case .watering:
-            await adjustWateringForWeather(baseDate: baseDate, plant: plant)
+            await adjustWateringForWeather(baseDate: baseDate)
         case .fertilizing:
             adjustFertilizingForWeather(baseDate: baseDate)
         case .pruning:
@@ -275,7 +275,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         }
     }
 
-    private func adjustWateringForWeather(baseDate: Date, plant: Plant) async -> Date {
+    private func adjustWateringForWeather(baseDate: Date) async -> Date {
         guard
             let user = dataService.getCurrentUser(),
             let latitude = user.latitude,
@@ -332,8 +332,8 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
 
     // MARK: - Seasonal Care Automation
 
-    public func createSeasonalCareSchedule(for plant: Plant, year: Int = Calendar.current.component(.year, from: Date())) async throws {
-        let seasonalTasks = generateSeasonalTasks(for: plant, year: year)
+    public func createSeasonalCareSchedule(for plant: Plant) async throws {
+        let seasonalTasks = generateSeasonalTasks(for: plant)
 
         for task in seasonalTasks {
             _ = try await createSmartReminder(
@@ -349,7 +349,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         }
     }
 
-    private func generateSeasonalTasks(for plant: Plant, year: Int) -> [SeasonalTask] {
+    private func generateSeasonalTasks(for plant: Plant) -> [SeasonalTask] {
         var tasks: [SeasonalTask] = []
 
         // Spring tasks

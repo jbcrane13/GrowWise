@@ -439,7 +439,7 @@ import Photos
 /// Placeholder for non-iOS platforms
 @MainActor
 @Observable public final class PhotoService {
-    public init(dataService: DataService) {}
+    public init(dataService _: DataService) {}
 
     public func requestPhotoLibraryPermission() async -> Bool {
         false
