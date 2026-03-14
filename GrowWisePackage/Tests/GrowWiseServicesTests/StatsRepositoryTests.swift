@@ -1,24 +1,19 @@
 import Foundation
-import Testing
-import SwiftData
-@testable import GrowWiseServices
 @testable import GrowWiseModels
+@testable import GrowWiseServices
+import SwiftData
+import Testing
 
-@Suite("StatsRepository Tests")
 @MainActor
 struct StatsRepositoryTests {
-
     private func makeContainer() throws -> ModelContainer {
-        try ModelContainer(
-            for: Plant.self,
-            configurations: ModelConfiguration(isStoredInMemoryOnly: true)
-        )
+        try ModelContainerFactory.makeForTesting()
     }
 
     // MARK: - totalPlantCount (getPlantCount)
 
     @Test("totalPlantCount returns 0 for an empty store")
-    func totalPlantCountIsZeroWhenEmpty() async throws {
+    func totalPlantCountIsZeroWhenEmpty() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -26,7 +21,7 @@ struct StatsRepositoryTests {
     }
 
     @Test("totalPlantCount returns the correct count after inserting plants")
-    func totalPlantCountMatchesInsertedPlants() async throws {
+    func totalPlantCountMatchesInsertedPlants() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -43,7 +38,7 @@ struct StatsRepositoryTests {
     // MARK: - healthyPlantCount (via getGardeningStats / healthyDescriptor)
 
     @Test("healthyPlantCount filters only plants with .healthy status")
-    func healthyPlantCountFiltersCorrectly() async throws {
+    func healthyPlantCountFiltersCorrectly() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -62,7 +57,7 @@ struct StatsRepositoryTests {
     }
 
     @Test("healthyPlantCount is 0 when all plants are unhealthy")
-    func healthyPlantCountIsZeroWhenNoHealthyPlants() async throws {
+    func healthyPlantCountIsZeroWhenNoHealthyPlants() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -81,7 +76,7 @@ struct StatsRepositoryTests {
     // MARK: - activeReminderCount (getReminderCount activeOnly)
 
     @Test("activeReminderCount counts enabled reminders with nextDueDate after now")
-    func activeReminderCountIncludesEnabledFutureReminders() async throws {
+    func activeReminderCountIncludesEnabledFutureReminders() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -93,7 +88,7 @@ struct StatsRepositoryTests {
             message: "Water it!",
             reminderType: .watering,
             frequency: .daily,
-            nextDueDate: Date().addingTimeInterval(3_600),
+            nextDueDate: Date().addingTimeInterval(3600),
             plant: plant
         )
         active.isEnabled = true
@@ -104,7 +99,7 @@ struct StatsRepositoryTests {
             message: "Should not count",
             reminderType: .fertilizing,
             frequency: .weekly,
-            nextDueDate: Date().addingTimeInterval(3_600),
+            nextDueDate: Date().addingTimeInterval(3600),
             plant: plant
         )
         disabled.isEnabled = false
@@ -114,7 +109,7 @@ struct StatsRepositoryTests {
     }
 
     @Test("activeReminderCount excludes past-due reminders")
-    func activeReminderCountExcludesPastDue() async throws {
+    func activeReminderCountExcludesPastDue() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -126,7 +121,7 @@ struct StatsRepositoryTests {
             message: "Should have watered",
             reminderType: .watering,
             frequency: .daily,
-            nextDueDate: Date().addingTimeInterval(-86_400),
+            nextDueDate: Date().addingTimeInterval(-86400),
             plant: plant
         )
         past.isEnabled = true
@@ -138,7 +133,7 @@ struct StatsRepositoryTests {
     // MARK: - totalJournalEntryCount (getJournalEntryCount)
 
     @Test("totalJournalEntryCount returns correct count of all entries")
-    func totalJournalEntryCountMatchesInserted() async throws {
+    func totalJournalEntryCountMatchesInserted() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -154,7 +149,7 @@ struct StatsRepositoryTests {
     }
 
     @Test("totalJournalEntryCount returns 0 for empty store")
-    func totalJournalEntryCountIsZeroWhenEmpty() async throws {
+    func totalJournalEntryCountIsZeroWhenEmpty() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -164,7 +159,7 @@ struct StatsRepositoryTests {
     // MARK: - getGardeningStats (composite)
 
     @Test("getGardeningStats aggregates all domain counts into a single struct")
-    func getGardeningStatsReturnsComposite() async throws {
+    func getGardeningStatsReturnsComposite() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
@@ -176,7 +171,7 @@ struct StatsRepositoryTests {
             message: "Time to prune",
             reminderType: .pruning,
             frequency: .monthly,
-            nextDueDate: Date().addingTimeInterval(86_400),
+            nextDueDate: Date().addingTimeInterval(86400),
             plant: plant
         )
         reminder.isEnabled = true
@@ -193,7 +188,7 @@ struct StatsRepositoryTests {
     }
 
     @Test("getGardeningStats returns all-zero GardeningStats for an empty store")
-    func getGardeningStatsIsEmptyWhenNoData() async throws {
+    func getGardeningStatsIsEmptyWhenNoData() throws {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 

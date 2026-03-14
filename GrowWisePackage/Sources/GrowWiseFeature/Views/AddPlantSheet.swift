@@ -491,32 +491,24 @@ public struct AddPlantSheet: View {
 
         isSaving = true
 
-        do {
-            let newPlant = Plant(
-                name: plantName,
-                plantType: selectedPlantType,
-                difficultyLevel: selectedDifficultyLevel
-            )
+        let newPlant = Plant(
+            name: plantName,
+            plantType: selectedPlantType,
+            difficultyLevel: selectedDifficultyLevel
+        )
 
-            newPlant.scientificName = scientificName.isEmpty ? nil : scientificName
-            newPlant.plantingDate = plantingDate
-            newPlant.bed = selectedBed
-            newPlant.notes = notes.isEmpty ? nil : notes
+        newPlant.scientificName = scientificName.isEmpty ? nil : scientificName
+        newPlant.plantingDate = plantingDate
+        newPlant.bed = selectedBed
+        newPlant.notes = notes.isEmpty ? nil : notes
 
-            if !photoURLs.isEmpty {
-                newPlant.photoURLs = photoURLs.map(\.absoluteString)
-            }
-
-            newPlant.garden = selectedGarden
-            modelContext.insert(newPlant)
-            dismiss()
-            return
-        } catch {
-            errorMessage = "Failed to save plant: \(error.localizedDescription)"
-            showingError = true
+        if !photoURLs.isEmpty {
+            newPlant.photoURLs = photoURLs.map(\.absoluteString)
         }
 
-        isSaving = false
+        newPlant.garden = selectedGarden
+        modelContext.insert(newPlant)
+        dismiss()
     }
 }
 
