@@ -5,6 +5,7 @@ public struct ValidatedTextField: View {
     let title: String
     @Binding var text: String
     let validation: (String) -> ValidationService.ValidationResult
+    let accessibilityId: String
     #if canImport(UIKit)
     let keyboardType: UIKeyboardType
     #else
@@ -19,11 +20,13 @@ public struct ValidatedTextField: View {
         _ title: String,
         text: Binding<String>,
         validation: @escaping (String) -> ValidationService.ValidationResult,
+        accessibilityId: String = "validated_text_field",
         keyboardType: UIKeyboardType = .default
     ) {
         self.title = title
         _text = text
         self.validation = validation
+        self.accessibilityId = accessibilityId
         self.keyboardType = keyboardType
     }
     #else
@@ -31,11 +34,13 @@ public struct ValidatedTextField: View {
         _ title: String,
         text: Binding<String>,
         validation: @escaping (String) -> ValidationService.ValidationResult,
+        accessibilityId: String = "validated_text_field",
         keyboardType: Int = 0
     ) {
         self.title = title
         _text = text
         self.validation = validation
+        self.accessibilityId = accessibilityId
         self.keyboardType = keyboardType
     }
     #endif
@@ -43,6 +48,7 @@ public struct ValidatedTextField: View {
     public var body: some View {
         VStack(alignment: .leading, spacing: 4) {
             TextField(title, text: $text)
+                .accessibilityIdentifier(accessibilityId)
                 .textFieldStyle(RoundedBorderTextFieldStyle())
             #if canImport(UIKit)
                 .keyboardType(keyboardType)

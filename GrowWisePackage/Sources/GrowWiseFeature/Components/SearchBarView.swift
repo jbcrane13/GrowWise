@@ -50,6 +50,7 @@ public struct SearchBarView: View {
                 .font(.system(size: 16))
 
             TextField(placeholder, text: $text)
+                .accessibilityIdentifier("search_bar_field")
                 .focused($isSearchFieldFocused)
                 .textFieldStyle(PlainTextFieldStyle())
                 .onSubmit {

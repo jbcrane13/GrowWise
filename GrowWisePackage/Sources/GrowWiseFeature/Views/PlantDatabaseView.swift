@@ -64,18 +64,21 @@ public struct PlantDatabaseView: View {
                     FilterTag(title: type.displayName, color: .blue) {
                         selectedPlantType = nil
                     }
+                    .accessibilityIdentifier("plant_database_filter_tag_plant_type")
                 }
 
                 if let difficulty = selectedDifficulty {
                     FilterTag(title: difficulty.displayName, color: .orange) {
                         selectedDifficulty = nil
                     }
+                    .accessibilityIdentifier("plant_database_filter_tag_difficulty")
                 }
 
                 if let sunlight = selectedSunlight {
                     FilterTag(title: sunlight.displayName, color: .yellow) {
                         selectedSunlight = nil
                     }
+                    .accessibilityIdentifier("plant_database_filter_tag_sunlight")
                 }
 
                 Button("Clear All") {
@@ -84,6 +87,7 @@ public struct PlantDatabaseView: View {
                 .font(.caption)
                 .foregroundColor(.red)
                 .padding(.horizontal, 8)
+                .accessibilityIdentifier("plant_database_button_clear_all_filters")
             }
             .padding(.horizontal)
         }
@@ -110,6 +114,7 @@ public struct PlantDatabaseView: View {
                     DatabasePlantCardView(plant: plant) {
                         showingPlantDetail = plant
                     }
+                    .accessibilityIdentifier("plant_database_card_\(plant.id)")
                 }
             }
             .padding()
@@ -157,6 +162,7 @@ public struct PlantDatabaseView: View {
         } label: {
             Image(systemName: "arrow.up.arrow.down")
         }
+        .accessibilityIdentifier("plant_database_button_sort")
     }
 
     private var filterButton: some View {
@@ -164,6 +170,7 @@ public struct PlantDatabaseView: View {
             Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                 .foregroundColor(hasActiveFilters ? .blue : .gray)
         }
+        .accessibilityIdentifier("plant_database_button_filter")
     }
 
     private var hasActiveFilters: Bool {
@@ -417,6 +424,7 @@ struct DatabaseFiltersSheet: View {
                                 selectedPlantType = nil
                             }
                             .foregroundColor(.red)
+                            .accessibilityIdentifier("database_filters_button_clear_plant_type")
                         }
 
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
@@ -439,6 +447,7 @@ struct DatabaseFiltersSheet: View {
                                 selectedDifficulty = nil
                             }
                             .foregroundColor(.red)
+                            .accessibilityIdentifier("database_filters_button_clear_difficulty")
                         }
 
                         VStack(spacing: 8) {
@@ -461,6 +470,7 @@ struct DatabaseFiltersSheet: View {
                                 selectedSunlight = nil
                             }
                             .foregroundColor(.red)
+                            .accessibilityIdentifier("database_filters_button_clear_sunlight")
                         }
 
                         VStack(spacing: 8) {
@@ -483,6 +493,7 @@ struct DatabaseFiltersSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("database_filters_button_done")
                 }
             }
         }
@@ -522,6 +533,7 @@ struct PlantDatabaseDetailView: View {
                     Button("Close") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("plant_detail_button_close")
                 }
             }
             .overlay(alignment: .bottom) {
@@ -641,6 +653,7 @@ struct PlantDatabaseDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding()
         .background(Color(.systemBackground))
+        .accessibilityIdentifier("plant_detail_button_add_to_garden")
     }
 
     private func extractDescription(from notes: String) -> String {
