@@ -164,7 +164,7 @@ struct PlantData: Codable {
         let allPlants = dataService.fetchPlantDatabase()
         return allPlants.map { plant in
             let score = calculateCompatibilityScore(plant: plant, userProfile: userProfile)
-            let reasons = generateRecommendationReasons(plant: plant, userProfile: userProfile, score: score)
+            let reasons = generateRecommendationReasons(plant: plant, userProfile: userProfile)
             return PlantRecommendation(plant: plant, compatibilityScore: score, reasons: reasons)
         }
         .sorted { $0.compatibilityScore > $1.compatibilityScore }
@@ -227,7 +227,7 @@ struct PlantData: Codable {
         return (score / maxScore) * 100
     }
 
-    private func generateRecommendationReasons(plant: Plant, userProfile: UserGardenProfile, score: Double) -> [String] {
+    private func generateRecommendationReasons(plant: Plant, userProfile: UserGardenProfile) -> [String] {
         var reasons: [String] = []
         let matchingDifficulty: DifficultyLevel = switch userProfile.skillLevel {
         case .beginner: .beginner

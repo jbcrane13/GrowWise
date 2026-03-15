@@ -259,23 +259,23 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
 
         switch reminderType {
         case .watering:
-            await adjustWateringForWeather(baseDate: baseDate, plant: plant)
+            return await adjustWateringForWeather(baseDate: baseDate)
         case .fertilizing:
-            adjustFertilizingForWeather(baseDate: baseDate)
+            return adjustFertilizingForWeather(baseDate: baseDate)
         case .pruning:
-            adjustPruningForWeather(baseDate: baseDate)
+            return adjustPruningForWeather(baseDate: baseDate)
         case .pestControl:
-            adjustPestCheckForWeather(baseDate: baseDate)
+            return adjustPestCheckForWeather(baseDate: baseDate)
         case .harvest:
-            baseDate // Harvest timing usually doesn't adjust for weather
+            return baseDate // Harvest timing usually doesn't adjust for weather
         case .repotting, .planting, .inspection, .soilTest, .mulching:
-            baseDate // These tasks don't typically adjust for weather
+            return baseDate // These tasks don't typically adjust for weather
         case .custom:
-            baseDate
+            return baseDate
         }
     }
 
-    private func adjustWateringForWeather(baseDate: Date, plant: Plant) async -> Date {
+    private func adjustWateringForWeather(baseDate: Date) async -> Date {
         guard
             let user = dataService.getCurrentUser(),
             let latitude = user.latitude,
@@ -332,8 +332,8 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
 
     // MARK: - Seasonal Care Automation
 
-    public func createSeasonalCareSchedule(for plant: Plant, year: Int = Calendar.current.component(.year, from: Date())) async throws {
-        let seasonalTasks = generateSeasonalTasks(for: plant, year: year)
+    public func createSeasonalCareSchedule(for plant: Plant) async throws {
+        let seasonalTasks = generateSeasonalTasks(for: plant)
 
         for task in seasonalTasks {
             _ = try await createSmartReminder(
@@ -349,7 +349,7 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
         }
     }
 
-    private func generateSeasonalTasks(for plant: Plant, year: Int) -> [SeasonalTask] {
+    private func generateSeasonalTasks(for plant: Plant) -> [SeasonalTask] {
         var tasks: [SeasonalTask] = []
 
         // Spring tasks
