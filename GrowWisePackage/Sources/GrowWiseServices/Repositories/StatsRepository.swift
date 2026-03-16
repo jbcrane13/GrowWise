@@ -63,14 +63,10 @@ public final class StatsRepository {
     public func getGardeningStats() -> GardeningStats {
         let totalPlants = getPlantCount()
 
-        // Use fetchCount with a predicate for healthy plants instead of loading all plants.
-        // SwiftData #Predicate requires the full enum type for comparison.
-        let healthyStatus = HealthStatus.healthy
-        var healthyDescriptor = FetchDescriptor<Plant>()
-        healthyDescriptor.predicate = #Predicate<Plant> { plant in
-            plant.healthStatus == healthyStatus
-        }
-        let healthyPlants = (try? context.fetchCount(healthyDescriptor)) ?? 0
+        // SwiftData #Predicate has issues comparing optional enum properties in-memory,
+        // so fetch all plants and filter. Plant count is bounded by user's garden size.
+        let allPlants = (try? context.fetch(FetchDescriptor<Plant>())) ?? []
+        let healthyPlants = allPlants.count(where: { $0.healthStatus == .healthy })
 
         let activeReminders = getReminderCount(activeOnly: true)
         let totalJournalEntries = getJournalEntryCount()

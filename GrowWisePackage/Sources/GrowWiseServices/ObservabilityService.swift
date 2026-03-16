@@ -1,6 +1,6 @@
 import Foundation
 import os
-import Sentry
+@_exported import Sentry
 
 // MARK: - ObservabilityService
 
@@ -42,7 +42,7 @@ public final class ObservabilityService {
             options.debug = false
 
             // Performance monitoring — sample 20% of transactions in production
-            options.tracesSampleRate = environment == "production" ? 0.2 : 1.0
+            options.tracesSampleRate = NSNumber(value: environment == "production" ? 0.2 : 1.0)
 
             // Privacy: strip user IP addresses
             options.sendDefaultPii = false
@@ -63,10 +63,10 @@ public final class ObservabilityService {
     /// Sets an anonymous user identifier for grouping errors by user.
     /// Never pass real names, emails, or device identifiers.
     public func setAnonymousUser(stableID: String, subscriptionTier: String) {
-        let user = User()
-        user.userId = stableID // Opaque UUID — not linked to real identity
-        user.data = ["subscription_tier": subscriptionTier]
-        SentrySDK.setUser(user)
+        let sentryUser = Sentry.User()
+        sentryUser.userId = stableID // Opaque UUID — not linked to real identity
+        sentryUser.data = ["subscription_tier": subscriptionTier]
+        SentrySDK.setUser(sentryUser)
     }
 
     public func clearUser() {

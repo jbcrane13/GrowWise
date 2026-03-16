@@ -65,9 +65,6 @@ struct AssignGardenSheet: View {
     private func save() async {
         isSaving = true
         plant.garden = selectedGarden
-        if let selectedGarden {
-            selectedGarden.plants = (selectedGarden.plants ?? []) + [plant]
-        }
         do {
             try dataService.updatePlant(plant)
             dismiss()
