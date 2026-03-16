@@ -1,6 +1,6 @@
 {
   "database": "dolt",
   "backend": "dolt",
-  "dolt_server_port": 13322,
-  "dolt_database": "beads_GrowWise"
+  "dolt_database": "beads_GrowWise",
+  "project_id": "2f9d8b2f-e5f0-47d4-9ee3-8e0159f14fe7"
 }

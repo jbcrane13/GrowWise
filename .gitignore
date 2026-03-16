@@ -111,3 +111,7 @@ build/Index.noindex/DataStore/v5/.DS_Store
 .DS_Store
 .worktrees/
 .superpowers/
+
+# Dolt database files (added by bd init)
+.dolt/
+.DS_Store
