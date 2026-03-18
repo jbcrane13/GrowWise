@@ -115,3 +115,4 @@ build/Index.noindex/DataStore/v5/.DS_Store
 # Dolt database files (added by bd init)
 .dolt/
 .DS_Store
+.beads/
