@@ -259,19 +259,19 @@ public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
 
         switch reminderType {
         case .watering:
-            return await adjustWateringForWeather(baseDate: baseDate)
+            await adjustWateringForWeather(baseDate: baseDate)
         case .fertilizing:
-            return adjustFertilizingForWeather(baseDate: baseDate)
+            adjustFertilizingForWeather(baseDate: baseDate)
         case .pruning:
-            return adjustPruningForWeather(baseDate: baseDate)
+            adjustPruningForWeather(baseDate: baseDate)
         case .pestControl:
-            return adjustPestCheckForWeather(baseDate: baseDate)
+            adjustPestCheckForWeather(baseDate: baseDate)
         case .harvest:
-            return baseDate // Harvest timing usually doesn't adjust for weather
+            baseDate // Harvest timing usually doesn't adjust for weather
         case .repotting, .planting, .inspection, .soilTest, .mulching:
-            return baseDate // These tasks don't typically adjust for weather
+            baseDate // These tasks don't typically adjust for weather
         case .custom:
-            return baseDate
+            baseDate
         }
     }
 
