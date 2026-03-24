@@ -6,8 +6,10 @@ import SwiftUI
 
 /// Sheet for creating a new garden with name, type, and environment settings.
 struct CreateGardenSheet: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(\.dismiss) private var dismiss
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
 
     var onCreated: (Garden) -> Void = { _ in }
 

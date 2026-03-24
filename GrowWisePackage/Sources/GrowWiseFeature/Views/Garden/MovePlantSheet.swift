@@ -8,9 +8,12 @@ import SwiftUI
 struct MovePlantSheet: View {
     let plant: Plant
 
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
-    @Environment(DataService.self) private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(\.modelContext)
+    private var modelContext
+    @Environment(DataService.self)
+    private var dataService
 
     @State private var gardens: [Garden] = []
     @State private var selectedGarden: Garden?

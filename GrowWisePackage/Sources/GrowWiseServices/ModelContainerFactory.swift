@@ -63,7 +63,8 @@ public struct ModelContainerFactory {
             } catch {
                 // Schema incompatible with persisted store — wipe local SQLite and recreate.
                 // Sole developer, no user data at risk. Approved clean-wipe migration strategy.
-                logger.warning("⚠️ ModelContainer init failed (likely schema mismatch), wiping local store: \(error.localizedDescription)")
+                let errorDesc = error.localizedDescription
+                logger.warning("ModelContainer init failed (likely schema mismatch), wiping local store: \(errorDesc)")
                 if let appSupportURL = FileManager.default
                     .urls(for: .applicationSupportDirectory, in: .userDomainMask)
                     .first

@@ -174,7 +174,7 @@ public var created_date: Date?
 - **Navigation:** `.sheet` for views that own their own `NavigationStack`; `navigationDestination(item:)` for standard pushes (ADR-012)
 - **Error Handling:** No silent `try?` in views (ADR-007). `do/catch` with error state + alert for user-facing ops
 - **Security:** Custom encryption stack (KeychainStorageService, SecureEnclaveKeyManager, KeyRotationManager) — may simplify in future
-- **Issue Tracking:** Use `bd` (beads) — `bd ready`, `bd show`, `bd close`, `bd dolt push`
+- **Issue Tracking:** Use GitHub Issues — `gh issue list --repo jbcrane13/GrowWise --label status:ready`
 
 ## ANTI-PATTERNS (DO NOT DO)
 
@@ -209,15 +209,15 @@ swiftlint lint --fix --config .swiftlint.yml
 # SwiftFormat
 swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise
 
-# Beads sync
-bd dolt push
+# Push to remote
+git push
 ```
 
 ## TOOLING & QUALITY GATES
 
 - **SwiftLint** — `.swiftlint.yml` in root. Runs via pre-commit hook.
 - **SwiftFormat** — `.swiftformat` in root. Runs via pre-commit hook.
-- **Pre-commit hooks** — beads hook + quality hook chained. If broken: `bd hooks install`
+- **Pre-commit hooks** — quality hook (SwiftLint + SwiftFormat). If broken: re-run hook install script.
 - **CI** — `.github/workflows/ci.yml` runs lint, format, tests, tech debt scan
 - **Deploy** — `.github/workflows/deploy.yml` — triggered on `v*` tag push
 
@@ -239,10 +239,10 @@ No identifier = rejected.
 
 ## TECH DEBT TRACKING
 
-TODOs must reference a beads issue:
+TODOs must reference a GitHub issue:
 ```swift
-// TODO(GW-123): description of what needs doing
-// FIXME(GW-456): description of the problem
+// TODO(#123): description of what needs doing
+// FIXME(#456): description of the problem
 ```
 
 ## DEPLOYMENT & OBSERVABILITY
@@ -261,4 +261,4 @@ Before ending a session:
 2. `git add <files>` — stage code changes
 3. `git commit -m "..."` — commit
 4. `git push` — push to remote (mandatory)
-5. `bd dolt push` — sync beads
+5. `git push` — push to remote (mandatory)

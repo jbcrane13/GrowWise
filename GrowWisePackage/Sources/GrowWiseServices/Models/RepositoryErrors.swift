@@ -7,7 +7,7 @@ public enum PlantError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .notFound: "Plant not found in the database."
-        case let .saveFailed(err): "Failed to save plant: \(err.localizedDescription)"
+        case .saveFailed(let err): "Failed to save plant: \(err.localizedDescription)"
         }
     }
 }

@@ -6,11 +6,16 @@ import SwiftUI
 
 /// Sheet view for adding a new plant to the user's garden.
 public struct AddPlantSheet: View {
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
-    @Environment(CompanionPlantingService.self) private var companionService
-    @Environment(PlantDatabaseService.self) private var plantDatabaseService
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(CompanionPlantingService.self)
+    private var companionService
+    @Environment(PlantDatabaseService.self)
+    private var plantDatabaseService
+    @Environment(\.modelContext)
+    private var modelContext
 
     // Form fields
     @State private var plantName: String = ""
@@ -20,7 +25,7 @@ public struct AddPlantSheet: View {
     @State private var plantingDate: Date = .init()
     @State private var notes: String = ""
     @State private var selectedGarden: Garden?
-    @State private var selectedBed: GardenBed? = nil
+    @State private var selectedBed: GardenBed?
 
     // Photo selection
     @State private var selectedPhotos: [PhotosPickerItem] = []
@@ -107,7 +112,10 @@ public struct AddPlantSheet: View {
                                                                 .fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
                                                                 .overlay {
                                                                     Capsule()
-                                                                        .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.3), lineWidth: 1)
+                                                                        .stroke(
+                                                                            CultivationTheme.Colors.brandLeaf.opacity(0.3),
+                                                                            lineWidth: 1
+                                                                        )
                                                                 }
                                                         }
                                                 }
@@ -153,7 +161,12 @@ public struct AddPlantSheet: View {
 
                                 // Difficulty
                                 HStack {
-                                    IconBubble(systemName: "star.fill", color: CultivationTheme.Colors.brandGold, size: 28, iconSize: 13)
+                                    IconBubble(
+                                        systemName: "star.fill",
+                                        color: CultivationTheme.Colors.brandGold,
+                                        size: 28,
+                                        iconSize: 13
+                                    )
                                     Text("Difficulty")
                                         .font(.system(.subheadline, design: .rounded))
                                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
@@ -173,7 +186,12 @@ public struct AddPlantSheet: View {
                         formSection(title: "Planting Information") {
                             VStack(spacing: 12) {
                                 HStack {
-                                    IconBubble(systemName: "calendar", color: CultivationTheme.Colors.brandForest, size: 28, iconSize: 13)
+                                    IconBubble(
+                                        systemName: "calendar",
+                                        color: CultivationTheme.Colors.brandForest,
+                                        size: 28,
+                                        iconSize: 13
+                                    )
                                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
                                         .font(.system(.subheadline, design: .rounded))
                                         .accessibilityIdentifier("addplant_datepicker_plantingdate")
@@ -184,7 +202,12 @@ public struct AddPlantSheet: View {
                                         .background(CultivationTheme.Colors.divider)
 
                                     HStack {
-                                        IconBubble(systemName: "location.fill", color: CultivationTheme.Colors.brandLeaf, size: 28, iconSize: 13)
+                                        IconBubble(
+                                            systemName: "location.fill",
+                                            color: CultivationTheme.Colors.brandLeaf,
+                                            size: 28,
+                                            iconSize: 13
+                                        )
                                         Picker("Garden", selection: $selectedGarden) {
                                             Text("Select Garden").tag(nil as Garden?)
                                             ForEach(availableGardens) { garden in
@@ -223,7 +246,12 @@ public struct AddPlantSheet: View {
                                             .background(CultivationTheme.Colors.divider)
 
                                         HStack {
-                                            IconBubble(systemName: "square.split.2x2", color: CultivationTheme.Colors.brandSage, size: 28, iconSize: 13)
+                                            IconBubble(
+                                                systemName: "square.split.2x2",
+                                                color: CultivationTheme.Colors.brandSage,
+                                                size: 28,
+                                                iconSize: 13
+                                            )
                                             Picker("Container", selection: $selectedBed) {
                                                 Text("Unassigned").tag(nil as GardenBed?)
                                                 ForEach(availableBeds) { bed in
@@ -266,8 +294,13 @@ public struct AddPlantSheet: View {
                         // Notes
                         formSection(title: "Notes") {
                             HStack(alignment: .top, spacing: 10) {
-                                IconBubble(systemName: "note.text", color: CultivationTheme.Colors.brandSage, size: 28, iconSize: 13)
-                                    .padding(.top, 2)
+                                IconBubble(
+                                    systemName: "note.text",
+                                    color: CultivationTheme.Colors.brandSage,
+                                    size: 28,
+                                    iconSize: 13
+                                )
+                                .padding(.top, 2)
 
                                 TextEditor(text: $notes)
                                     .frame(minHeight: 80)
@@ -295,7 +328,12 @@ public struct AddPlantSheet: View {
                                 matching: .images
                             ) {
                                 HStack(spacing: 10) {
-                                    IconBubble(systemName: "photo.on.rectangle.angled", color: CultivationTheme.Colors.brandLeaf, size: 28, iconSize: 13)
+                                    IconBubble(
+                                        systemName: "photo.on.rectangle.angled",
+                                        color: CultivationTheme.Colors.brandLeaf,
+                                        size: 28,
+                                        iconSize: 13
+                                    )
                                     Text("Add Photos")
                                         .font(.system(.subheadline, design: .rounded))
                                         .foregroundStyle(CultivationTheme.Colors.brandLeaf)
@@ -598,7 +636,8 @@ struct CompanionPlantingSection: View {
 
 struct CompanionDetailsSheet: View {
     let analysis: GardenCompatibilityAnalysis
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -703,7 +742,11 @@ struct FlowLayout: Layout {
     func placeSubviews(in bounds: CGRect, proposal: ProposedViewSize, subviews: Subviews, cache: inout ()) {
         let result = FlowResult(in: bounds.width, subviews: subviews, spacing: spacing)
         for (index, subview) in subviews.enumerated() {
-            subview.place(at: CGPoint(x: bounds.minX + result.positions[index].x, y: bounds.minY + result.positions[index].y), proposal: .unspecified)
+            let position = result.positions[index]
+            subview.place(
+                at: CGPoint(x: bounds.minX + position.x, y: bounds.minY + position.y),
+                proposal: .unspecified
+            )
         }
     }
 

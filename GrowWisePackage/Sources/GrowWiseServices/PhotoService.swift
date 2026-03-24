@@ -1,5 +1,6 @@
 import Foundation
 import Observation
+import os
 #if canImport(Combine)
 import Combine
 #endif
@@ -14,12 +15,21 @@ import CoreImage.CIFilterBuiltins
 import GrowWiseModels
 import Photos
 
+private let logger = Logger(subsystem: "com.growwise", category: "PhotoService")
+
 #if canImport(UIKit)
 @MainActor
-@Observable public final class PhotoService {
+@Observable
+public final class PhotoService {
     private let dataService: DataService
     private let maxImageSize: CGFloat = 2048
     private let compressionQuality: CGFloat = 0.8
+
+    private static let mediumDateFormatter: DateFormatter = {
+        let formatter = DateFormatter()
+        formatter.dateStyle = .medium
+        return formatter
+    }()
 
     // Image cache for memory management
     private let imageCache = NSCache<NSString, UIImage>()
@@ -28,6 +38,7 @@ import Photos
     // Background processing queue
 
     // Photo storage paths
+    // swiftlint:disable:next force_unwrapping
     private let documentsPath = FileManager.default.urls(for: .documentDirectory, in: .userDomainMask).first!
     private var photosPath: URL {
         documentsPath.appendingPathComponent("PlantPhotos")
@@ -53,10 +64,11 @@ import Photos
         )
     }
 
-    @objc private func handleMemoryPressure() {
+    @objc
+    private func handleMemoryPressure() {
         imageCache.removeAllObjects()
         thumbnailCache.removeAllObjects()
-        print("📸 Cleared photo caches due to memory pressure")
+        logger.info("Cleared photo caches due to memory pressure")
     }
 
     // MARK: - Directory Management
@@ -65,7 +77,7 @@ import Photos
         do {
             try FileManager.default.createDirectory(at: photosPath, withIntermediateDirectories: true)
         } catch {
-            print("Failed to create photos directory: \(error)")
+            logger.error("Failed to create photos directory: \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -78,13 +90,18 @@ import Photos
         do {
             try FileManager.default.createDirectory(at: plantPath, withIntermediateDirectories: true)
         } catch {
-            print("Failed to create plant photo directory: \(error)")
+            logger.error("Failed to create plant photo directory: \(error.localizedDescription, privacy: .public)")
         }
     }
 
     // MARK: - Photo Saving
 
-    public func savePhoto(_ image: UIImage, for plant: Plant, type: PhotoType = .general, notes: String = "") async throws -> PlantPhoto {
+    public func savePhoto(
+        _ image: UIImage,
+        for plant: Plant,
+        type: PhotoType = .general,
+        notes: String = ""
+    ) async throws -> PlantPhoto {
         guard let plantId = plant.id else {
             throw PhotoError.invalidPlantID
         }
@@ -136,11 +153,21 @@ import Photos
         return photoMetadata
     }
 
-    public func savePhotoFromCamera(_ image: UIImage, for plant: Plant, type: PhotoType = .general, notes: String = "") async throws -> PlantPhoto {
+    public func savePhotoFromCamera(
+        _ image: UIImage,
+        for plant: Plant,
+        type: PhotoType = .general,
+        notes: String = ""
+    ) async throws -> PlantPhoto {
         try await savePhoto(image, for: plant, type: type, notes: notes)
     }
 
-    public func savePhotoFromLibrary(_ image: UIImage, for plant: Plant, type: PhotoType = .general, notes: String = "") async throws -> PlantPhoto {
+    public func savePhotoFromLibrary(
+        _ image: UIImage,
+        for plant: Plant,
+        type: PhotoType = .general,
+        notes: String = ""
+    ) async throws -> PlantPhoto {
         try await savePhoto(image, for: plant, type: type, notes: notes)
     }
 
@@ -171,6 +198,37 @@ import Photos
             await MainActor.run {
                 let nsKey = NSString(string: cacheKeyString)
                 self.imageCache.setObject(image, forKey: nsKey, cost: imageData.count)
+            }
+
+            return image
+        }.value
+    }
+
+    /// Loads an image from a file-URL string (e.g. plant.photoURLs entries),
+    /// using the shared NSCache to avoid redundant disk reads in scroll views.
+    public func loadImage(from urlString: String) async -> UIImage? {
+        let cacheKey = NSString(string: urlString)
+
+        // Check cache first
+        if let cachedImage = imageCache.object(forKey: cacheKey) {
+            return cachedImage
+        }
+
+        // Load from disk in background
+        let urlStringCopy = urlString
+        return await Task.detached(priority: .userInitiated) { @Sendable in
+            guard let url = URL(string: urlStringCopy) else { return nil }
+            let path = url.scheme == "file" ? url.path : urlStringCopy
+
+            guard FileManager.default.fileExists(atPath: path),
+                  let imageData = try? Data(contentsOf: URL(fileURLWithPath: path)),
+                  let image = UIImage(data: imageData)
+            else {
+                return nil
+            }
+
+            await MainActor.run {
+                self.imageCache.setObject(image, forKey: NSString(string: urlStringCopy), cost: imageData.count)
             }
 
             return image
@@ -227,11 +285,9 @@ import Photos
 
     public func getPhotosByDate(for plant: Plant) async -> [String: [PlantPhoto]] {
         let allPhotos = await getPhotos(for: plant)
-        let formatter = DateFormatter()
-        formatter.dateStyle = .medium
 
         return Dictionary(grouping: allPhotos) { photo in
-            formatter.string(from: photo.dateTaken)
+            Self.mediumDateFormatter.string(from: photo.dateTaken)
         }
     }
 
@@ -356,36 +412,45 @@ import Photos
 
     private func calculateTotalStorageSize() async -> Int {
         let photosDirectory = photosPath
-        return await withCheckedContinuation { continuation in
-            DispatchQueue.global(qos: .userInitiated).async {
-                var totalSize = 0
+        return await Task.detached(priority: .userInitiated) { @Sendable in
+            var totalSize = 0
 
-                guard let enumerator = FileManager.default.enumerator(at: photosDirectory, includingPropertiesForKeys: [.fileSizeKey]) else {
-                    continuation.resume(returning: 0)
-                    return
-                }
-
-                for case let fileURL as URL in enumerator {
-                    if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
-                        totalSize += fileSize
-                    }
-                }
-
-                continuation.resume(returning: totalSize)
+            let enumerator = FileManager.default.enumerator(
+                at: photosDirectory,
+                includingPropertiesForKeys: [.fileSizeKey]
+            )
+            guard let enumerator else {
+                return 0
             }
-        }
+
+            for case let fileURL as URL in enumerator {
+                if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
+                    totalSize += fileSize
+                }
+            }
+
+            return totalSize
+        }.value
     }
 
     private func calculateTotalPhotoCount() async -> Int {
         let photosDirectory = photosPath
         return await Task.detached(priority: .userInitiated) { @Sendable in
-            guard let contents = try? FileManager.default.contentsOfDirectory(at: photosDirectory, includingPropertiesForKeys: nil) else {
+            let contents = try? FileManager.default.contentsOfDirectory(
+                at: photosDirectory,
+                includingPropertiesForKeys: nil
+            )
+            guard let contents else {
                 return 0
             }
 
             var count = 0
             for plantDirectory in contents {
-                if let plantContents = try? FileManager.default.contentsOfDirectory(at: plantDirectory, includingPropertiesForKeys: nil) {
+                let plantContents = try? FileManager.default.contentsOfDirectory(
+                    at: plantDirectory,
+                    includingPropertiesForKeys: nil
+                )
+                if let plantContents {
                     count += plantContents.count
                 }
             }
@@ -398,7 +463,11 @@ import Photos
 
     public func cleanupOrphanedPhotos() async throws {
         // Remove photo files that don't have corresponding metadata
-        guard let plantDirectories = try? FileManager.default.contentsOfDirectory(at: photosPath, includingPropertiesForKeys: nil) else {
+        let plantDirectories = try? FileManager.default.contentsOfDirectory(
+            at: photosPath,
+            includingPropertiesForKeys: nil
+        )
+        guard let plantDirectories else {
             return
         }
 
@@ -409,7 +478,11 @@ import Photos
             let metadata = await getAllPhotosMetadata(for: plantId)
             let metadataFilenames = Set(metadata.map(\.filename))
 
-            if let photoFiles = try? FileManager.default.contentsOfDirectory(at: plantDirectory, includingPropertiesForKeys: nil) {
+            let photoFiles = try? FileManager.default.contentsOfDirectory(
+                at: plantDirectory,
+                includingPropertiesForKeys: nil
+            )
+            if let photoFiles {
                 for photoFile in photoFiles {
                     let filename = photoFile.lastPathComponent
                     if !metadataFilenames.contains(filename) {
@@ -438,7 +511,8 @@ import Photos
 #else
 /// Placeholder for non-iOS platforms
 @MainActor
-@Observable public final class PhotoService {
+@Observable
+public final class PhotoService {
     public init(dataService _: DataService) {}
 
     public func requestPhotoLibraryPermission() async -> Bool {
@@ -464,7 +538,17 @@ public struct PlantPhoto: Identifiable, Codable, Sendable {
     public let fileSize: Int
     public let dimensions: PhotoDimensions
 
-    public init(id: UUID, plantId: UUID, filename: String, filePath: String, photoType: PhotoType, dateTaken: Date, notes: String, fileSize: Int, dimensions: PhotoDimensions) {
+    public init(
+        id: UUID,
+        plantId: UUID,
+        filename: String,
+        filePath: String,
+        photoType: PhotoType,
+        dateTaken: Date,
+        notes: String,
+        fileSize: Int,
+        dimensions: PhotoDimensions
+    ) {
         self.id = id
         self.plantId = plantId
         self.filename = filename
@@ -552,12 +636,16 @@ public enum PhotoError: Error, Sendable {
         switch self {
         case .compressionFailed:
             "Failed to compress image"
+
         case .saveLocationUnavailable:
             "Photo save location is unavailable"
+
         case .fileNotFound:
             "Photo file not found"
+
         case .permissionDenied:
             "Permission denied to access photos"
+
         case .invalidPlantID:
             "Invalid plant ID provided"
         }

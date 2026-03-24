@@ -5,8 +5,10 @@ import SwiftData
 import SwiftUI
 
 public struct JournalView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(PhotoService.self) private var photoService
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(PhotoService.self)
+    private var photoService
     @State private var journalEntries: [JournalEntry] = []
     @State private var plants: [Plant] = []
     @State private var hasMoreData = true
@@ -24,6 +26,8 @@ public struct JournalView: View {
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var paginatedGroupedEntries: [String: [JournalEntry]] = [:]
+    @State private var sortedGroupKeys: [String] = []
 
     /// New design-system filter state
     @State private var selectedFilter: JournalFilter = .all
@@ -203,16 +207,13 @@ public struct JournalView: View {
         .frame(maxWidth: .infinity, minHeight: 300)
     }
 
-    // MARK: - Computed Properties
+    // MARK: - Grouped Entry Cache
 
-    private var sortedGroupKeys: [String] {
-        paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate)
-    }
-
-    private var paginatedGroupedEntries: [String: [JournalEntry]] {
-        Dictionary(grouping: journalEntries) { entry in
+    private func updatePaginatedEntries() {
+        paginatedGroupedEntries = Dictionary(grouping: journalEntries) { entry in
             formatDateForGrouping(entry.entryDate)
         }
+        sortedGroupKeys = paginatedGroupedEntries.keys.sorted(by: sortGroupsByDate)
     }
 
     // MARK: - Data Loading
@@ -266,10 +267,13 @@ public struct JournalView: View {
         switch sortOrder {
         case .dateAscending:
             fetched.sort { $0.entryDate < $1.entryDate }
+
         case .dateDescending:
             fetched.sort { $0.entryDate > $1.entryDate }
+
         case .plantName:
             fetched.sort { ($0.plant?.name ?? "") < ($1.plant?.name ?? "") }
+
         case .entryType:
             fetched.sort { $0.entryType.displayName < $1.entryType.displayName }
         }
@@ -287,6 +291,7 @@ public struct JournalView: View {
         journalEntries.append(contentsOf: finalEntries)
         currentOffset += finalEntries.count
         isLoadingMore = false
+        updatePaginatedEntries()
     }
 
     private func loadMoreEntries() {
@@ -296,12 +301,14 @@ public struct JournalView: View {
     // MARK: - Helper Methods
 
     private static let groupingKeyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateFormat = "yyyy-MM-dd"
         return f
     }()
 
     private static let sectionDateFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .medium
         return f
@@ -329,8 +336,10 @@ public struct JournalView: View {
         switch sortOrder {
         case .dateAscending:
             lhs < rhs
+
         case .dateDescending:
             lhs > rhs
+
         default:
             lhs > rhs
         }

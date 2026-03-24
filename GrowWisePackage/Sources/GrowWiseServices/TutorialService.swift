@@ -3,7 +3,8 @@ import GrowWiseModels
 import SwiftData
 
 @MainActor
-@Observable public final class TutorialService {
+@Observable
+public final class TutorialService {
     private let dataService: DataService
 
     public init(dataService: DataService) {
@@ -25,8 +26,10 @@ import SwiftData
             switch skillLevel {
             case .beginner:
                 tutorial.difficultyLevel == .beginner
+
             case .intermediate:
                 tutorial.difficultyLevel == .beginner || tutorial.difficultyLevel == .intermediate
+
             case .advanced, .expert:
                 true
             }
@@ -150,7 +153,18 @@ public struct TutorialTopic: Identifiable, Codable, Sendable, Hashable {
     public let imageURL: String
     public let steps: [TutorialStep]
 
-    public init(id: String, title: String, subtitle: String, description: String, difficultyLevel: DifficultyLevel, estimatedDuration: Int, category: TutorialCategory, relevantGardenTypes: [String], imageURL: String, steps: [TutorialStep]) {
+    public init(
+        id: String,
+        title: String,
+        subtitle: String,
+        description: String,
+        difficultyLevel: DifficultyLevel,
+        estimatedDuration: Int,
+        category: TutorialCategory,
+        relevantGardenTypes: [String],
+        imageURL: String,
+        steps: [TutorialStep]
+    ) {
         self.id = id
         self.title = title
         self.subtitle = subtitle

@@ -3,7 +3,8 @@ import GrowWiseServices
 import SwiftUI
 
 public struct TutorialView: View {
-    @Environment(TutorialService.self) private var tutorialService
+    @Environment(TutorialService.self)
+    private var tutorialService
     @State private var selectedCategory: TutorialCategory = .planning
     @State private var searchText = ""
     @State private var showProgressView = false
@@ -99,7 +100,9 @@ public struct TutorialView: View {
             Spacer()
 
             CircularProgressView(
-                progress: analytics.totalTutorials > 0 ? Double(analytics.completedTutorials) / Double(analytics.totalTutorials) : 0
+                progress: analytics.totalTutorials > 0
+                    ? Double(analytics.completedTutorials) / Double(analytics.totalTutorials)
+                    : 0
             )
             .frame(width: 50, height: 50)
         }

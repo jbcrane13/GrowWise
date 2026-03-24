@@ -121,8 +121,8 @@ public final class FeatureFlagService {
             if userDefaults.object(forKey: overrideKey) != nil {
                 return (flag, userDefaults.bool(forKey: overrideKey), .override)
             }
-            if remoteFlags[flag.rawValue] != nil {
-                return (flag, remoteFlags[flag.rawValue]!, .remote)
+            if let remoteValue = remoteFlags[flag.rawValue] {
+                return (flag, remoteValue, .remote)
             }
             return (flag, flag.defaultValue, .default)
         }

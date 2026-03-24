@@ -6,13 +6,21 @@ import GrowWiseServices
 import SwiftUI
 
 public struct HomeView: View {
-    @Environment(DataService.self) private var dataService
+    @Environment(DataService.self)
+    private var dataService
 
     @State private var viewModel = HomeViewModel()
 
     public init() {}
 
     // MARK: - Derived visible lists (filter out optimistically-completed rows)
+
+    //
+    // These computed properties re-filter on every render, but the cost is
+    // negligible: both source arrays are small (typically <20 reminders) and
+    // the predicate is a Set<UUID>.contains() lookup — O(1) per element.
+    // Caching in @State would add complexity (manual invalidation when
+    // completedIDs or the source arrays change) with no measurable benefit.
 
     private var overdueVisible: [PlantReminder] {
         viewModel.overdueReminders.filter { !viewModel.completedIDs.contains($0.id) }

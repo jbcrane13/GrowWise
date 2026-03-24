@@ -5,10 +5,14 @@ import SwiftUI
 struct PlantDetailView: View {
     let plant: Plant
 
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
-    @Environment(PhotoService.self) private var photoService
-    @Environment(ReminderService.self) private var reminderService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(PhotoService.self)
+    private var photoService
+    @Environment(ReminderService.self)
+    private var reminderService
     @State private var showingEditPlant = false
     @State private var showingDeleteConfirmation = false
     @State private var showingJournalEntry = false
@@ -119,23 +123,29 @@ struct PlantDetailView: View {
                 ScrollView(.horizontal, showsIndicators: false) {
                     HStack(spacing: 12) {
                         ForEach(photoURLs, id: \.self) { photoURL in
+                            #if canImport(UIKit)
+                            CachedPhotoView(
+                                photoURL: photoURL,
+                                photoService: photoService,
+                                onTap: {
+                                    selectedPhoto = photoURL
+                                    showingPhotoViewer = true
+                                }
+                            )
+                            #else
                             AsyncImage(url: URL(string: photoURL)) { image in
-                                image
-                                    .resizable()
+                                image.resizable()
                                     .aspectRatio(contentMode: .fill)
-                                    .frame(width: 300, height: 220)
-                                    .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
-                                    .onTapGesture {
-                                        selectedPhoto = photoURL
-                                        showingPhotoViewer = true
-                                    }
-                                    .accessibilityIdentifier("plantdetail_image_photo")
                             } placeholder: {
-                                RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                                    .fill(CultivationTheme.Colors.cardSurface)
-                                    .frame(width: 300, height: 220)
-                                    .overlay { ProgressView() }
+                                ProgressView()
                             }
+                            .frame(width: 300, height: 220)
+                            .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                            .onTapGesture {
+                                selectedPhoto = photoURL
+                                showingPhotoViewer = true
+                            }
+                            #endif
                         }
                     }
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -189,32 +199,72 @@ struct PlantDetailView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 if let scientificName = plant.scientificName {
-                    DetailInfoRow(title: "Scientific Name", value: scientificName, systemImage: "leaf.fill", color: CultivationTheme.Colors.brandLeaf)
+                    DetailInfoRow(
+                        title: "Scientific Name",
+                        value: scientificName,
+                        systemImage: "leaf.fill",
+                        color: CultivationTheme.Colors.brandLeaf
+                    )
                 }
 
-                DetailInfoRow(title: "Type", value: plant.plantType?.displayName ?? "Unknown", systemImage: "tag.fill", color: CultivationTheme.Colors.brandSage)
-                DetailInfoRow(title: "Difficulty", value: plant.difficultyLevel?.displayName ?? "Unknown", systemImage: "star.fill", color: CultivationTheme.Colors.brandGold)
+                DetailInfoRow(
+                    title: "Type",
+                    value: plant.plantType?.displayName ?? "Unknown",
+                    systemImage: "tag.fill",
+                    color: CultivationTheme.Colors.brandSage
+                )
+                DetailInfoRow(
+                    title: "Difficulty",
+                    value: plant.difficultyLevel?.displayName ?? "Unknown",
+                    systemImage: "star.fill",
+                    color: CultivationTheme.Colors.brandGold
+                )
 
                 if let plantingDate = plant.plantingDate {
-                    DetailInfoRow(title: "Planted", value: plantingDate.formatted(date: .abbreviated, time: .omitted), systemImage: "calendar", color: CultivationTheme.Colors.brandForest)
+                    DetailInfoRow(
+                        title: "Planted",
+                        value: plantingDate.formatted(date: .abbreviated, time: .omitted),
+                        systemImage: "calendar",
+                        color: CultivationTheme.Colors.brandForest
+                    )
                 }
 
                 if let growthStage = plant.growthStage {
-                    DetailInfoRow(title: "Growth Stage", value: growthStage.displayName, systemImage: "chart.line.uptrend.xyaxis", color: CultivationTheme.Colors.brandLeaf)
+                    DetailInfoRow(
+                        title: "Growth Stage",
+                        value: growthStage.displayName,
+                        systemImage: "chart.line.uptrend.xyaxis",
+                        color: CultivationTheme.Colors.brandLeaf
+                    )
                 }
 
                 if let location = plant.bed?.name, !location.isEmpty {
-                    DetailInfoRow(title: "Location", value: location, systemImage: "location.fill", color: CultivationTheme.Colors.brandForest)
+                    DetailInfoRow(
+                        title: "Location",
+                        value: location,
+                        systemImage: "location.fill",
+                        color: CultivationTheme.Colors.brandForest
+                    )
                 }
 
                 if let containerType = plant.containerType {
-                    DetailInfoRow(title: "Container", value: containerType.displayName, systemImage: "square.stack", color: CultivationTheme.Colors.brandSage)
+                    DetailInfoRow(
+                        title: "Container",
+                        value: containerType.displayName,
+                        systemImage: "square.stack",
+                        color: CultivationTheme.Colors.brandSage
+                    )
                 }
 
                 if let notes = plant.notes, !notes.isEmpty {
                     VStack(alignment: .leading, spacing: 6) {
                         HStack(spacing: 8) {
-                            IconBubble(systemName: "note.text", color: CultivationTheme.Colors.brandForest, size: 28, iconSize: 13)
+                            IconBubble(
+                                systemName: "note.text",
+                                color: CultivationTheme.Colors.brandForest,
+                                size: 28,
+                                iconSize: 13
+                            )
                             Text("Notes")
                                 .font(.system(.caption, design: .rounded, weight: .medium))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
@@ -240,7 +290,12 @@ struct PlantDetailView: View {
 
             VStack(alignment: .leading, spacing: 10) {
                 if let sunlight = plant.sunlightRequirement {
-                    DetailInfoRow(title: "Sunlight", value: sunlight.displayName, systemImage: "sun.max.fill", color: CultivationTheme.Colors.brandGold)
+                    DetailInfoRow(
+                        title: "Sunlight",
+                        value: sunlight.displayName,
+                        systemImage: "sun.max.fill",
+                        color: CultivationTheme.Colors.brandGold
+                    )
                 }
 
                 if let watering = plant.wateringFrequency {
@@ -248,11 +303,21 @@ struct PlantDetailView: View {
                 }
 
                 if let space = plant.spaceRequirement {
-                    DetailInfoRow(title: "Space Needed", value: space.displayName, systemImage: "square.dashed", color: CultivationTheme.Colors.brandSage)
+                    DetailInfoRow(
+                        title: "Space Needed",
+                        value: space.displayName,
+                        systemImage: "square.dashed",
+                        color: CultivationTheme.Colors.brandSage
+                    )
                 }
 
                 if let harvestDate = plant.harvestDate {
-                    DetailInfoRow(title: "Expected Harvest", value: harvestDate.formatted(date: .abbreviated, time: .omitted), systemImage: "basket.fill", color: CultivationTheme.Colors.brandForest)
+                    DetailInfoRow(
+                        title: "Expected Harvest",
+                        value: harvestDate.formatted(date: .abbreviated, time: .omitted),
+                        systemImage: "basket.fill",
+                        color: CultivationTheme.Colors.brandForest
+                    )
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -283,15 +348,30 @@ struct PlantDetailView: View {
                 }
 
                 if let lastWatered = plant.lastWatered {
-                    DetailInfoRow(title: "Last Watered", value: lastWatered.formatted(date: .abbreviated, time: .omitted), systemImage: "drop.fill", color: Color.blue)
+                    DetailInfoRow(
+                        title: "Last Watered",
+                        value: lastWatered.formatted(date: .abbreviated, time: .omitted),
+                        systemImage: "drop.fill",
+                        color: Color.blue
+                    )
                 }
 
                 if let lastFertilized = plant.lastFertilized {
-                    DetailInfoRow(title: "Last Fertilized", value: lastFertilized.formatted(date: .abbreviated, time: .omitted), systemImage: "leaf.fill", color: CultivationTheme.Colors.brandLeaf)
+                    DetailInfoRow(
+                        title: "Last Fertilized",
+                        value: lastFertilized.formatted(date: .abbreviated, time: .omitted),
+                        systemImage: "leaf.fill",
+                        color: CultivationTheme.Colors.brandLeaf
+                    )
                 }
 
                 if let lastPruned = plant.lastPruned {
-                    DetailInfoRow(title: "Last Pruned", value: lastPruned.formatted(date: .abbreviated, time: .omitted), systemImage: "scissors", color: CultivationTheme.Colors.brandSage)
+                    DetailInfoRow(
+                        title: "Last Pruned",
+                        value: lastPruned.formatted(date: .abbreviated, time: .omitted),
+                        systemImage: "scissors",
+                        color: CultivationTheme.Colors.brandSage
+                    )
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -582,6 +662,47 @@ private struct GlassActionButton: View {
         .accessibilityIdentifier(accessibilityID)
     }
 }
+
+// MARK: - Cached Photo View
+
+#if canImport(UIKit)
+/// Loads a plant photo from a file-URL string via PhotoService's NSCache,
+/// avoiding the redundant network/disk reads that AsyncImage would cause
+/// when scrolling through the hero image carousel.
+private struct CachedPhotoView: View {
+    let photoURL: String
+    let photoService: PhotoService
+    var onTap: (() -> Void)?
+
+    @State private var image: UIImage?
+    @State private var isLoading = false
+
+    var body: some View {
+        Group {
+            if let image {
+                Image(uiImage: image)
+                    .resizable()
+                    .aspectRatio(contentMode: .fill)
+                    .frame(width: 300, height: 220)
+                    .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                    .onTapGesture { onTap?() }
+                    .accessibilityIdentifier("plantdetail_image_photo")
+            } else {
+                RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                    .fill(CultivationTheme.Colors.cardSurface)
+                    .frame(width: 300, height: 220)
+                    .overlay { if isLoading { ProgressView() } }
+            }
+        }
+        .task {
+            guard image == nil, !isLoading else { return }
+            isLoading = true
+            image = await photoService.loadImage(from: photoURL)
+            isLoading = false
+        }
+    }
+}
+#endif
 
 // MARK: - Sort Options
 

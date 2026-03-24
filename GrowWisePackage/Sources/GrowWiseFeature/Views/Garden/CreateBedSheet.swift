@@ -8,8 +8,10 @@ struct CreateBedSheet: View {
     let garden: Garden
     let onCreated: (GardenBed) -> Void
 
-    @Environment(\.dismiss) private var dismiss
-    @Environment(\.modelContext) private var modelContext
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(\.modelContext)
+    private var modelContext
 
     @State private var selectedType: BedType = .raisedBed
     @State private var bedName: String = ""

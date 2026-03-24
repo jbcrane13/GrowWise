@@ -117,8 +117,8 @@ struct PlantSlot: Codable, Equatable {
 
 struct GardenLayoutView: View {
     let garden: Garden
-    // swiftlint:disable:next attributes
-    @Environment(DataService.self) private var dataService
+    @Environment(DataService.self)
+    private var dataService
     @State private var layoutData: GardenLayoutData
     @State private var showingAddBed = false
     @State private var bedBeingEdited: GardenBedData?
@@ -431,8 +431,8 @@ private struct AddBedSheet: View {
     let bedNumber: Int
     let onCreate: (String, Int, Int) -> Void
 
-    // swiftlint:disable:next attributes
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
     @State private var name: String = ""
     @State private var widthFeet: Int = 4
     @State private var heightFeet: Int = 8
@@ -609,8 +609,8 @@ private struct PlantSlotPickerSheet: View {
     let onPick: (PlantSlot) -> Void
     let onClear: () -> Void
 
-    // swiftlint:disable:next attributes
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     var body: some View {
         NavigationStack {

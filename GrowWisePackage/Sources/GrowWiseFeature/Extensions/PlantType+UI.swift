@@ -1,8 +1,8 @@
 import GrowWiseModels
 import SwiftUI
 
-extension PlantType {
-    public var iconName: String {
+public extension PlantType {
+    var iconName: String {
         switch self {
         case .vegetable: "carrot.fill"
         case .herb: "leaf.fill"
@@ -15,7 +15,7 @@ extension PlantType {
         }
     }
 
-    public var color: Color {
+    var color: Color {
         switch self {
         case .houseplant: .green
         case .succulent: .mint

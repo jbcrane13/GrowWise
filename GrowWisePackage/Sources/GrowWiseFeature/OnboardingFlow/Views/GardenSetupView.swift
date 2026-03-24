@@ -98,11 +98,13 @@ private struct GardenTypeChip: View {
                         isSelected
                             ? LinearGradient(
                                 colors: [Color.botanicalForest, Color.botanicalLeaf],
-                                startPoint: .leading, endPoint: .trailing
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
                             : LinearGradient(
                                 colors: [Color.white.opacity(0.07), Color.white.opacity(0.05)],
-                                startPoint: .leading, endPoint: .trailing
+                                startPoint: .leading,
+                                endPoint: .trailing
                             )
                     )
                     .overlay(

@@ -24,7 +24,8 @@ public struct KeychainService: Sendable {
             switch self {
             case .unexpectedData:
                 "Unexpected keychain data format"
-            case let .osStatus(status):
+
+            case .osStatus(let status):
                 "Keychain error: \(status)"
             }
         }

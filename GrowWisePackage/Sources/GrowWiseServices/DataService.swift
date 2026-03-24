@@ -14,7 +14,8 @@ import SwiftData
 /// 3. Delegates domain operations to repositories
 /// 4. Provides the test factory `makeForTesting()`
 @MainActor
-@Observable public final class DataService {
+@Observable
+public final class DataService {
     private let modelContainer: ModelContainer
     public var mainContext: ModelContext {
         modelContainer.mainContext
@@ -95,7 +96,8 @@ import SwiftData
                     let container = try ModelContainerFactory.make(isUITesting: isUITesting)
                     continuation.resume(returning: container)
                 } catch {
-                    logger.error("[DataService] Background initialization failed: \(error.localizedDescription, privacy: .public)")
+                    let errorDesc = error.localizedDescription
+                    logger.error("[DataService] Background initialization failed: \(errorDesc, privacy: .public)")
                     continuation.resume(throwing: DataServiceError.initializationFailed(error.localizedDescription))
                 }
             }
@@ -463,7 +465,13 @@ import SwiftData
         let sunKey = sunlightRequirement?.rawValue ?? "all"
         let cacheKey = "plants:filter:\(typeKey):\(diffKey):\(sunKey):limit:\(limit):offset:\(offset)"
         if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
-        let result = (try? plants.filter(byType: type, difficultyLevel: difficultyLevel, sunlightRequirement: sunlightRequirement, offset: offset, limit: limit)) ?? []
+        let result = (try? plants.filter(
+            byType: type,
+            difficultyLevel: difficultyLevel,
+            sunlightRequirement: sunlightRequirement,
+            offset: offset,
+            limit: limit
+        )) ?? []
         cache.set(cacheKey, value: result, policy: .medium)
         return result
     }
@@ -707,17 +715,18 @@ public enum DataServiceError: Error, LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case let .criticalInitializationFailure(message):
+        case .criticalInitializationFailure(let message):
             message
-        case let .initializationFailed(message):
+
+        case .initializationFailed(let message):
             "DataService initialization failed: \(message)"
         }
     }
 }
 
-extension DataService {
+public extension DataService {
     /// A throwing variant of `createFallback()` so callers that can handle errors don't have to rely on emergency stubs.
-    public static func createFallbackOrThrow() throws -> DataService {
+    static func createFallbackOrThrow() throws -> DataService {
         do {
             let schema = Schema([User.self])
             let modelConfiguration = ModelConfiguration(
@@ -742,7 +751,7 @@ extension DataService {
     ///
     /// - Returns: A DataService backed by an in-memory SQLite store.
     /// - Throws: `DataServiceError.criticalInitializationFailure` if the container cannot be created.
-    public static func makeForTesting() throws -> DataService {
+    static func makeForTesting() throws -> DataService {
         do {
             let container = try ModelContainerFactory.makeForTesting()
             return DataService(testing: container, cloudContainer: nil)

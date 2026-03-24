@@ -6,7 +6,8 @@ import SwiftUI
 /// Dark: translucent surface + blur + fine border
 /// Light: white + soft shadow + fine border
 struct GlassCardModifier: ViewModifier {
-    @Environment(\.colorScheme) private var colorScheme
+    @Environment(\.colorScheme)
+    private var colorScheme
 
     func body(content: Content) -> some View {
         content

@@ -15,17 +15,22 @@ public final class DataTransformationService {
 
         public var errorDescription: String? {
             switch self {
-            case let .encodingFailed(error):
+            case .encodingFailed(let error):
                 "Failed to encode data: \(error.localizedDescription)"
-            case let .decodingFailed(error):
+
+            case .decodingFailed(let error):
                 "Failed to decode data: \(error.localizedDescription)"
+
             case .invalidData:
                 "Invalid data format"
+
             case .serializationFailed:
                 "JSON serialization failed"
-            case let .checksumMismatch(expected, actual):
+
+            case .checksumMismatch(let expected, let actual):
                 "Data integrity check failed - expected: \(expected), actual: \(actual)"
-            case let .migrationVerificationFailed(reason):
+
+            case .migrationVerificationFailed(let reason):
                 "Migration verification failed: \(reason)"
             }
         }

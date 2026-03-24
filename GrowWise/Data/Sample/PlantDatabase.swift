@@ -1,6 +1,9 @@
 import Foundation
 import GrowWiseModels
+import os
 import SwiftData
+
+private let logger = Logger(subsystem: "com.growwise", category: "PlantDatabase")
 
 /// Sample plant database with 25+ common plants for MVP
 enum PlantDatabase {
@@ -584,8 +587,8 @@ enum PlantDatabase {
         ),
     ]
 
+    // swiftlint:disable cyclomatic_complexity
     /// Load sample plants into SwiftData
-    // swiftlint:disable:next cyclomatic_complexity
     static func loadSamplePlants(into context: ModelContext) {
         for plantData in samplePlants {
             // Map category string to PlantType enum
@@ -652,9 +655,10 @@ enum PlantDatabase {
         do {
             try context.save()
         } catch {
-            print("Error saving sample plants: \(error)")
+            logger.error("Error saving sample plants: \(error.localizedDescription, privacy: .public)")
         }
     }
+    // swiftlint:enable cyclomatic_complexity
 }
 
 /// Helper struct for plant data

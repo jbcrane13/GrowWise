@@ -7,7 +7,8 @@ public struct PlantReminderDetailView: View {
     let reminderService: ReminderService
     let dataService: DataService
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     @State private var reminders: [PlantReminder] = []
     @State private var showingAddReminder = false
@@ -57,12 +58,14 @@ public struct PlantReminderDetailView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("plantreminder_button_done")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
                     Button("Add Reminder", systemImage: "plus") {
                         showingAddReminder = true
                     }
+                    .accessibilityIdentifier("plantreminder_button_addreminder")
                 }
             }
             .onAppear {
@@ -91,12 +94,15 @@ public struct PlantReminderDetailView: View {
                         deleteReminder(reminder)
                     }
                 }
+                .accessibilityIdentifier("plantreminder_button_delete_confirm")
                 Button("Cancel", role: .cancel) {}
+                    .accessibilityIdentifier("plantreminder_button_delete_cancel")
             } message: {
                 Text("Are you sure you want to delete this reminder? This action cannot be undone.")
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") {}
+                    .accessibilityIdentifier("plantreminder_button_error_ok")
             } message: {
                 Text(errorMessage)
             }
@@ -149,24 +155,25 @@ public struct PlantReminderDetailView: View {
     // MARK: - Quick Stats View
 
     private var quickStatsView: some View {
-        HStack(spacing: 16) {
+        let cats = categorizedReminders
+        return HStack(spacing: 16) {
             StatCard(
                 title: "Active",
-                value: "\(activeReminders.count)",
+                value: "\(cats.active.count)",
                 icon: "bell.fill",
                 color: .blue
             )
 
             StatCard(
                 title: "Overdue",
-                value: "\(overdueReminders.count)",
+                value: "\(cats.overdue.count)",
                 icon: "exclamationmark.triangle.fill",
                 color: .red
             )
 
             StatCard(
                 title: "Today",
-                value: "\(todaysReminders.count)",
+                value: "\(cats.today.count)",
                 icon: "calendar",
                 color: .green
             )
@@ -232,6 +239,7 @@ public struct PlantReminderDetailView: View {
                 showingAddReminder = true
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("plantreminder_button_addfirst")
         }
         .padding(.vertical, 32)
         .frame(maxWidth: .infinity)
@@ -255,6 +263,7 @@ public struct PlantReminderDetailView: View {
                     color: .blue,
                     action: { completeWateringReminder() }
                 )
+                .accessibilityIdentifier("plantreminder_button_waternow")
 
                 PlantDetailQuickActionButton(
                     title: "Add Watering",
@@ -262,6 +271,7 @@ public struct PlantReminderDetailView: View {
                     color: .green,
                     action: { addWateringReminder() }
                 )
+                .accessibilityIdentifier("plantreminder_button_addwatering")
 
                 PlantDetailQuickActionButton(
                     title: "Fertilize",
@@ -269,6 +279,7 @@ public struct PlantReminderDetailView: View {
                     color: .orange,
                     action: { addFertilizingReminder() }
                 )
+                .accessibilityIdentifier("plantreminder_button_fertilize")
 
                 PlantDetailQuickActionButton(
                     title: "Health Check",
@@ -276,6 +287,7 @@ public struct PlantReminderDetailView: View {
                     color: .purple,
                     action: { addInspectionReminder() }
                 )
+                .accessibilityIdentifier("plantreminder_button_healthcheck")
             }
         }
     }
@@ -301,16 +313,38 @@ public struct PlantReminderDetailView: View {
 
     // MARK: - Computed Properties
 
+    private struct CategorizedReminders {
+        var active: [PlantReminder] = []
+        var overdue: [PlantReminder] = []
+        var today: [PlantReminder] = []
+    }
+
+    private var categorizedReminders: CategorizedReminders {
+        let now = Date()
+        let calendar = Calendar.current
+        var result = CategorizedReminders()
+        for reminder in reminders where reminder.isEnabled {
+            result.active.append(reminder)
+            if reminder.nextDueDate < now {
+                result.overdue.append(reminder)
+            }
+            if calendar.isDateInToday(reminder.nextDueDate) {
+                result.today.append(reminder)
+            }
+        }
+        return result
+    }
+
     private var activeReminders: [PlantReminder] {
-        reminders.filter(\.isEnabled)
+        categorizedReminders.active
     }
 
     private var overdueReminders: [PlantReminder] {
-        activeReminders.filter { $0.nextDueDate < Date() }
+        categorizedReminders.overdue
     }
 
     private var todaysReminders: [PlantReminder] {
-        activeReminders.filter { Calendar.current.isDateInToday($0.nextDueDate) }
+        categorizedReminders.today
     }
 
     private var suggestedReminders: [ReminderSuggestion] {
@@ -522,12 +556,14 @@ struct ReminderDetailCard: View {
                         .font(.title3)
                         .foregroundColor(.green)
                 }
+                .accessibilityIdentifier("plantreminder_button_complete")
 
                 Button(action: onTap) {
                     Image(systemName: "gear")
                         .font(.title3)
                         .foregroundColor(.secondary)
                 }
+                .accessibilityIdentifier("plantreminder_button_edit")
             }
         }
         .padding()
@@ -543,12 +579,14 @@ struct ReminderDetailCard: View {
     }
 
     private static let timeOnlyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.timeStyle = .short
         return f
     }()
 
     private static let dateTimeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .medium
         f.timeStyle = .short
@@ -629,6 +667,7 @@ struct SuggestionCard: View {
             }
             .buttonStyle(.borderedProminent)
             .controlSize(.small)
+            .accessibilityIdentifier("plantreminder_button_suggestion_add")
         }
         .padding()
         .background(
@@ -645,7 +684,8 @@ struct EditReminderView: View {
     let onSave: () -> Void
     let onDelete: (PlantReminder) -> Void
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -654,12 +694,14 @@ struct EditReminderView: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
+                            .accessibilityIdentifier("plantreminder_button_edit_cancel")
                     }
                     ToolbarItem(placement: .primaryAction) {
                         Button("Save") {
                             onSave()
                             dismiss()
                         }
+                        .accessibilityIdentifier("plantreminder_button_edit_save")
                     }
                 }
         }

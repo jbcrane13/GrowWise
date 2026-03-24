@@ -67,7 +67,9 @@ public final class SoilLog {
 
     /// Convenience computed property for N-P-K display
     public var npkDisplay: String? {
+        // swiftlint:disable:next identifier_name
         guard let n = nitrogenLevel,
+              // swiftlint:disable:next identifier_name
               let p = phosphorusLevel,
               let k = potassiumLevel
         else {

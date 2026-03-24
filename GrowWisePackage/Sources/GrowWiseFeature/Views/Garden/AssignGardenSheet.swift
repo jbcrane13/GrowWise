@@ -4,8 +4,10 @@ import SwiftUI
 
 struct AssignGardenSheet: View {
     let plant: Plant
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(DataService.self)
+    private var dataService
     @State private var gardens: [Garden] = []
     @State private var selectedGarden: Garden?
     @State private var isSaving = false

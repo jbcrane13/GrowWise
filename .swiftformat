@@ -13,7 +13,7 @@
 --binary-grouping 4,8
 --octal-grouping 4,8
 --hex-grouping 4,8
---pattern-let hoist
+--pattern-let inline
 --self init-only
 --self-required
 --strip-unused-args closure-only
@@ -29,7 +29,7 @@
 --xcode-indentation disabled
 --inferred-types always
 --organize-types class,struct,enum,extension,protocol
---extension-acl on-declarations
+--extension-acl on-extension
 --mark-types always
 --mark-extensions always
 --ifdef no-indent

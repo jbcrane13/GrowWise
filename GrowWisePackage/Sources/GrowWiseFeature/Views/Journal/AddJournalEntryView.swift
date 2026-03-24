@@ -13,8 +13,10 @@ typealias UIImage = NSImage
 #endif
 
 public struct AddJournalEntryView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(\.dismiss) private var dismiss
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
     @State private var plants: [Plant] = []
 
     let photoService: PhotoService
@@ -82,6 +84,7 @@ public struct AddJournalEntryView: View {
                                 .tag(type)
                         }
                     }
+                    .accessibilityIdentifier("journal_picker_entrytype")
 
                     Picker("Plant", selection: $selectedPlant) {
                         Text("Select a plant")
@@ -92,6 +95,7 @@ public struct AddJournalEntryView: View {
                                 .tag(plant as Plant?)
                         }
                     }
+                    .accessibilityIdentifier("journal_picker_plant")
                 }
 
                 // Content Section
@@ -99,6 +103,7 @@ public struct AddJournalEntryView: View {
                     ZStack(alignment: .topLeading) {
                         TextEditor(text: $content)
                             .frame(minHeight: 100)
+                            .accessibilityIdentifier("journal_texteditor_content")
 
                         if content.isEmpty {
                             Text("How is your plant doing today?")
@@ -566,7 +571,8 @@ private struct CameraView: View {
 #if canImport(UIKit)
 private struct CameraPickerView: UIViewControllerRepresentable {
     let onImageCaptured: (UIImage) -> Void
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     func makeUIViewController(context: Context) -> UIImagePickerController {
         let picker = UIImagePickerController()
@@ -588,7 +594,10 @@ private struct CameraPickerView: UIViewControllerRepresentable {
             self.parent = parent
         }
 
-        func imagePickerController(_ picker: UIImagePickerController, didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]) {
+        func imagePickerController(
+            _ picker: UIImagePickerController,
+            didFinishPickingMediaWithInfo info: [UIImagePickerController.InfoKey: Any]
+        ) {
             if let image = info[.originalImage] as? UIImage {
                 parent.onImageCaptured(image)
             }

@@ -1,7 +1,10 @@
 import Foundation
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftData
+
+private let logger = Logger(subsystem: "com.growwise", category: "DataValidationRules")
 
 /// Comprehensive data validation rules for GrowWise entities
 enum DataValidationRules {
@@ -421,56 +424,56 @@ enum DataValidationRules {
 
         do {
             // Validate users (limited sample)
-            print("Validating users (limit: \(validationLimit))...")
+            logger.info("Validating users (limit: \(validationLimit))...")
             var userDescriptor = FetchDescriptor<User>(sortBy: [SortDescriptor(\.createdDate, order: .reverse)])
             userDescriptor.fetchLimit = validationLimit
             let users = try context.fetch(userDescriptor)
             results["User"] = users.map { validateUser($0) }
             if users.count == validationLimit {
-                print("⚠️ User validation limited to \(validationLimit) records. Some users not validated.")
+                logger.info("User validation limited to \(validationLimit) records. Some users not validated.")
             }
 
             // Validate plants (limited sample)
-            print("Validating plants (limit: \(validationLimit))...")
+            logger.info("Validating plants (limit: \(validationLimit))...")
             var plantDescriptor = FetchDescriptor<Plant>(sortBy: [SortDescriptor(\.name)])
             plantDescriptor.fetchLimit = validationLimit
             let plants = try context.fetch(plantDescriptor)
             results["Plant"] = plants.map { validatePlant($0) }
             if plants.count == validationLimit {
-                print("⚠️ Plant validation limited to \(validationLimit) records. Some plants not validated.")
+                logger.info("Plant validation limited to \(validationLimit) records. Some plants not validated.")
             }
 
             // Validate gardens (limited sample)
-            print("Validating gardens (limit: \(validationLimit))...")
+            logger.info("Validating gardens (limit: \(validationLimit))...")
             var gardenDescriptor = FetchDescriptor<Garden>(sortBy: [SortDescriptor(\.name)])
             gardenDescriptor.fetchLimit = validationLimit
             let gardens = try context.fetch(gardenDescriptor)
             results["Garden"] = gardens.map { validateGarden($0) }
             if gardens.count == validationLimit {
-                print("⚠️ Garden validation limited to \(validationLimit) records. Some gardens not validated.")
+                logger.info("Garden validation limited to \(validationLimit) records. Some gardens not validated.")
             }
 
             // Validate plant reminders (limited sample)
-            print("Validating reminders (limit: \(validationLimit))...")
+            logger.info("Validating reminders (limit: \(validationLimit))...")
             var reminderDescriptor = FetchDescriptor<PlantReminder>(sortBy: [SortDescriptor(\.nextDueDate)])
             reminderDescriptor.fetchLimit = validationLimit
             let reminders = try context.fetch(reminderDescriptor)
             results["PlantReminder"] = reminders.map { validateReminder($0) }
             if reminders.count == validationLimit {
-                print("⚠️ Reminder validation limited to \(validationLimit) records. Some reminders not validated.")
+                logger.info("Reminder validation limited to \(validationLimit) records. Some reminders not validated.")
             }
 
             // Validate journal entries (limited sample)
-            print("Validating journal entries (limit: \(validationLimit))...")
+            logger.info("Validating journal entries (limit: \(validationLimit))...")
             var entryDescriptor = FetchDescriptor<JournalEntry>(sortBy: [SortDescriptor(\.entryDate, order: .reverse)])
             entryDescriptor.fetchLimit = validationLimit
             let entries = try context.fetch(entryDescriptor)
             results["JournalEntry"] = entries.map { validateJournalEntry($0) }
             if entries.count == validationLimit {
-                print("⚠️ Journal entry validation limited to \(validationLimit) records. Some entries not validated.")
+                logger.info("Journal entry validation limited to \(validationLimit) records. Some entries not validated.")
             }
         } catch {
-            print("Error fetching entities for validation: \(error)")
+            logger.error("Error fetching entities for validation: \(error.localizedDescription, privacy: .public)")
         }
 
         return results
@@ -479,10 +482,13 @@ enum DataValidationRules {
     /// Validates all entities in batches using autoreleasepool for memory efficiency
     /// This is the preferred method for production use with large datasets
     @MainActor
-    static func validateAllEntitiesPaginated(in context: ModelContext, batchSize: Int = 50) async -> [String: [ValidationResult]] {
+    static func validateAllEntitiesPaginated(
+        in context: ModelContext,
+        batchSize: Int = 50
+    ) async -> [String: [ValidationResult]] {
         var results: [String: [ValidationResult]] = [:]
         let memoryBefore = Double(ProcessInfo.processInfo.physicalMemory) / 1_048_576
-        print("Starting paginated validation - Memory: \(Int(memoryBefore))MB")
+        logger.info("Starting paginated validation - Memory: \(Int(memoryBefore))MB")
 
         do {
             // Validate users in batches
@@ -525,15 +531,15 @@ enum DataValidationRules {
                 validator: validateJournalEntry
             )
         } catch {
-            print("Error in paginated validation: \(error)")
+            logger.error("Error in paginated validation: \(error.localizedDescription, privacy: .public)")
         }
 
         let memoryAfter = Double(ProcessInfo.processInfo.physicalMemory) / 1_048_576
         let memoryDelta = memoryAfter - memoryBefore
-        print("Validation memory usage: \(Int(memoryDelta))MB")
+        logger.info("Validation memory usage: \(Int(memoryDelta))MB")
 
         if memoryDelta > 10 {
-            print("⚠️ High memory usage during validation: \(Int(memoryDelta))MB")
+            logger.info("High memory usage during validation: \(Int(memoryDelta))MB")
         }
 
         return results

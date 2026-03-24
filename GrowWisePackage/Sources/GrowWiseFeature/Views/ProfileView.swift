@@ -4,8 +4,10 @@ import StoreKit
 import SwiftUI
 
 public struct ProfileView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(SubscriptionService.self) private var subscriptionService
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(SubscriptionService.self)
+    private var subscriptionService
 
     @State private var plantCount: Int = 0
     @State private var journalCount: Int = 0
@@ -298,7 +300,7 @@ public struct ProfileView: View {
     private var subscriptionSection: some View {
         VStack(alignment: .leading, spacing: 12) {
             switch subscriptionService.subscriptionStatus {
-            case let .active(tier, expiryDate):
+            case .active(let tier, let expiryDate):
                 activeSubscriptionCard(tier: tier, expiryDate: expiryDate)
 
             case .notSubscribed:

@@ -114,7 +114,8 @@ public final class PlantRepository {
         let result = allPlants.filter { plant in
             plant.name?.lowercased().contains(lowercasedQuery) == true ||
                 plant.scientificName?.lowercased().contains(lowercasedQuery) == true
-        }.prefix(clampedLimit)
+        }
+        .prefix(clampedLimit)
 
         return Array(result)
     }
@@ -138,28 +139,42 @@ public final class PlantRepository {
         let predicate: Predicate<Plant>
 
         switch (type, difficultyLevel, sunlightRequirement) {
-        case let (t?, d?, s?):
+        // swiftlint:disable:next identifier_name pattern_matching_keywords
+        case (let t?, let d?, let s?):
             predicate = #Predicate<Plant> { plant in
                 plant.plantType == t && plant.difficultyLevel == d && plant.sunlightRequirement == s
             }
+
+        // swiftlint:disable:next identifier_name pattern_matching_keywords
         case (let t?, let d?, nil):
             predicate = #Predicate<Plant> { plant in
                 plant.plantType == t && plant.difficultyLevel == d
             }
+
+        // swiftlint:disable:next identifier_name pattern_matching_keywords
         case (let t?, nil, let s?):
             predicate = #Predicate<Plant> { plant in
                 plant.plantType == t && plant.sunlightRequirement == s
             }
+
+        // swiftlint:disable:next identifier_name pattern_matching_keywords
         case (nil, let d?, let s?):
             predicate = #Predicate<Plant> { plant in
                 plant.difficultyLevel == d && plant.sunlightRequirement == s
             }
+
+        // swiftlint:disable:next identifier_name
         case (let t?, nil, nil):
             predicate = #Predicate<Plant> { plant in plant.plantType == t }
+
+        // swiftlint:disable:next identifier_name
         case (nil, let d?, nil):
             predicate = #Predicate<Plant> { plant in plant.difficultyLevel == d }
+
+        // swiftlint:disable:next identifier_name
         case (nil, nil, let s?):
             predicate = #Predicate<Plant> { plant in plant.sunlightRequirement == s }
+
         default:
             predicate = #Predicate<Plant> { _ in true }
         }

@@ -6,8 +6,10 @@ import SwiftData
 import SwiftUI
 
 public struct JournalEntryDetailView: View {
-    @Environment(\.modelContext) private var modelContext
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.modelContext)
+    private var modelContext
+    @Environment(\.dismiss)
+    private var dismiss
 
     @State var entry: JournalEntry
     let photoService: PhotoService
@@ -313,6 +315,7 @@ public struct JournalEntryDetailView: View {
     }
 
     private static let fullDateFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .full
         f.timeStyle = .short
@@ -639,6 +642,7 @@ private struct MetadataSection: View {
     }
 
     private static let shortDateTimeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .short
         f.timeStyle = .short
@@ -711,7 +715,8 @@ private struct ActivityRow: View {
 
 private struct PhotoDetailView: View {
     let image: UIImage
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -790,7 +795,8 @@ private struct ZoomableImageView: View {
 
 private struct ShareSheet: View {
     let entry: JournalEntry
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     var body: some View {
         NavigationStack {
