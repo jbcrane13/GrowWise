@@ -1,12 +1,16 @@
 import Foundation
 import GrowWiseModels
+import os
 import UserNotifications
+
+private let logger = Logger(subsystem: "com.growwise", category: "NotificationService")
 
 /// Notification management service using @Observable pattern
 /// Access via @Environment(NotificationService.self) in views
 /// Singleton pattern removed - injected via environment
 @MainActor
-@Observable public final class NotificationService: NSObject {
+@Observable
+public final class NotificationService: NSObject {
     public var isAuthorized = false
     public var badgeCount = 0
     public var authorizationStatus: UNAuthorizationStatus = .notDetermined
@@ -47,7 +51,7 @@ import UserNotifications
             self.isAuthorized = granted
             return granted
         } catch {
-            print("Failed to request notification permissions: \(error)")
+            logger.error("Failed to request notification permissions: \(error.localizedDescription, privacy: .public)")
             return false
         }
     }
@@ -202,7 +206,14 @@ public struct NotificationStatistics: Sendable {
     public let soundEnabled: Bool
     public let alertEnabled: Bool
 
-    public init(pendingCount: Int, deliveredCount: Int, isAuthorized: Bool, badgeEnabled: Bool, soundEnabled: Bool, alertEnabled: Bool) {
+    public init(
+        pendingCount: Int,
+        deliveredCount: Int,
+        isAuthorized: Bool,
+        badgeEnabled: Bool,
+        soundEnabled: Bool,
+        alertEnabled: Bool
+    ) {
         self.pendingCount = pendingCount
         self.deliveredCount = deliveredCount
         self.isAuthorized = isAuthorized

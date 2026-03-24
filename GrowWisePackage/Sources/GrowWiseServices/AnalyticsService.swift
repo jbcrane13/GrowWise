@@ -108,25 +108,35 @@ public enum AnalyticsEvent: Sendable {
              .subscriptionViewed, .subscriptionRestored, .plantDatabaseViewed,
              .profileViewed, .dataExportRequested:
             [:]
-        case let .onboardingCompleted(days):
+
+        case .onboardingCompleted(let days):
             ["days_to_complete": days]
-        case let .onboardingSkipped(step):
+
+        case .onboardingSkipped(let step):
             ["step": step]
-        case let .plantAdded(plantType, source):
+
+        case .plantAdded(let plantType, let source):
             ["plant_type": plantType, "source": source.rawValue]
-        case let .journalEntryCreated(hasPhoto, hasWeather):
+
+        case .journalEntryCreated(let hasPhoto, let hasWeather):
             ["has_photo": hasPhoto, "has_weather": hasWeather]
-        case let .reminderCreated(type, frequencyDays):
+
+        case .reminderCreated(let type, let frequencyDays):
             ["reminder_type": type, "frequency_days": frequencyDays]
-        case let .companionPlantingChecked(isCompatible):
+
+        case .companionPlantingChecked(let isCompatible):
             ["is_compatible": isCompatible]
-        case let .subscriptionStarted(plan):
+
+        case .subscriptionStarted(let plan):
             ["plan": plan]
-        case let .plantSearchPerformed(resultCount):
+
+        case .plantSearchPerformed(let resultCount):
             ["result_count_bucket": resultCount < 5 ? "0-4" : resultCount < 20 ? "5-19" : "20+"]
-        case let .settingsChanged(setting):
+
+        case .settingsChanged(let setting):
             ["setting": setting]
-        case let .featureFlagExposed(flagName, enabled):
+
+        case .featureFlagExposed(let flagName, let enabled):
             ["flag_name": flagName, "enabled": enabled]
         }
     }

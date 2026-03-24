@@ -5,8 +5,10 @@ import SwiftUI
 
 struct AddPlantToGardenFromDatabaseSheet: View {
     let plant: Plant
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(DataService.self)
+    private var dataService
 
     // Customization fields
     @State private var selectedGarden: Garden?
@@ -196,7 +198,12 @@ struct AddPlantToGardenFromDatabaseSheet: View {
 
         do {
             // Create a user instance of the database plant
-            let newPlant = Plant(name: plant.name ?? "Unknown Plant", plantType: plant.plantType ?? .houseplant, difficultyLevel: plant.difficultyLevel ?? .beginner, isUserPlant: true)
+            let newPlant = Plant(
+                name: plant.name ?? "Unknown Plant",
+                plantType: plant.plantType ?? .houseplant,
+                difficultyLevel: plant.difficultyLevel ?? .beginner,
+                isUserPlant: true
+            )
             newPlant.garden = selectedGarden
             try dataService.plants.add(newPlant)
             let userPlant = newPlant
@@ -224,7 +231,6 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             )
 
             dismiss()
-
         } catch {
             isLoading = false
             errorMessage = "Failed to add plant: \(error.localizedDescription)"

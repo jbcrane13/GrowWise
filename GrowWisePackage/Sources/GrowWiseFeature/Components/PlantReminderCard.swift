@@ -102,20 +102,28 @@ public struct PlantReminderCard: View {
         switch plant.plantType {
         case .houseplant:
             "house.fill"
+
         case .succulent:
             "circle.hexagongrid.fill"
+
         case .herb:
             "leaf.fill"
+
         case .vegetable:
             "carrot.fill"
+
         case .flower:
             "camera.macro"
+
         case .fruit:
             "apple.logo"
+
         case .tree:
             "tree.fill"
+
         case .shrub:
             "leaf.circle.fill"
+
         case .none:
             "questionmark.circle.fill"
         }
@@ -125,20 +133,28 @@ public struct PlantReminderCard: View {
         switch plant.plantType {
         case .houseplant:
             .green
+
         case .succulent:
             .mint
+
         case .herb:
             .green
+
         case .vegetable:
             .orange
+
         case .flower:
             .pink
+
         case .fruit:
             .red
+
         case .tree:
             .brown
+
         case .shrub:
             .green
+
         case .none:
             .gray
         }
@@ -147,8 +163,7 @@ public struct PlantReminderCard: View {
     private var nextWateringReminder: PlantReminder? {
         wateringReminders
             .filter(\.isEnabled)
-            .sorted { $0.nextDueDate < $1.nextDueDate }
-            .first
+            .min { $0.nextDueDate < $1.nextDueDate }
     }
 
     private var hasOverdueReminders: Bool {
@@ -249,7 +264,7 @@ public struct PlantReminderCard: View {
             Spacer()
 
             // View details button
-            Button(action: { showingReminderDetail = true }) {
+            Button(action: { showingReminderDetail = true }, label: {
                 HStack(spacing: 4) {
                     Image(systemName: "gear")
                         .font(.caption)
@@ -265,7 +280,7 @@ public struct PlantReminderCard: View {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(Color(.quaternarySystemFill))
                 )
-            }
+            })
         }
     }
 
@@ -276,6 +291,7 @@ public struct PlantReminderCard: View {
     }
 
     private static let timeOnlyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .none
         f.timeStyle = .short
@@ -283,12 +299,14 @@ public struct PlantReminderCard: View {
     }()
 
     private static let dayNameFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateFormat = "EEEE"
         return f
     }()
 
     private static let shortDateTimeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .short
         f.timeStyle = .short

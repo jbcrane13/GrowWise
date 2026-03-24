@@ -1,13 +1,18 @@
 import GrowWiseServices
+import os
 import SwiftUI
 import UserNotifications
+
+private let logger = Logger(subsystem: "com.growwise", category: "ReminderSettingsView")
 
 public struct ReminderSettingsView: View {
     let reminderService: ReminderService
     @Binding var reminderSettings: ReminderSettings
 
-    @Environment(\.dismiss) private var dismiss
-    @Environment(NotificationService.self) private var notificationService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(NotificationService.self)
+    private var notificationService
 
     @State private var showingQuietHoursStart = false
     @State private var showingQuietHoursEnd = false
@@ -95,6 +100,7 @@ public struct ReminderSettingsView: View {
         } header: {
             Text("Permissions")
         } footer: {
+            // swiftlint:disable:next line_length
             Text("Notifications are required to receive plant care reminders. You can manage notification permissions in Settings.")
         }
     }
@@ -102,8 +108,11 @@ public struct ReminderSettingsView: View {
     private var reminderTypesSection: some View {
         Section(content: {
             Toggle("Watering Reminders", isOn: $reminderSettings.enableWateringReminders)
+                .accessibilityIdentifier("remindersettings_toggle_watering")
             Toggle("Fertilizing Reminders", isOn: $reminderSettings.enableFertilizingReminders)
+                .accessibilityIdentifier("remindersettings_toggle_fertilizing")
             Toggle("Pest Control Reminders", isOn: $reminderSettings.enablePestControlReminders)
+                .accessibilityIdentifier("remindersettings_toggle_pestcontrol")
         }, header: {
             Text("Reminder Types")
         }, footer: {
@@ -117,10 +126,11 @@ public struct ReminderSettingsView: View {
                 Text("Default Notification Time")
                 Spacer()
 
-                Button(action: { showingDefaultTime = true }) {
+                Button(action: { showingDefaultTime = true }, label: {
                     Text(formatTime(reminderSettings.defaultNotificationTime ?? Date()))
                         .foregroundColor(.blue)
-                }
+                })
+                .accessibilityIdentifier("remindersettings_button_defaulttime")
             }
         }, header: {
             Text("Default Timing")
@@ -147,15 +157,17 @@ public struct ReminderSettingsView: View {
                 Spacer()
 
                 if let quietStart = reminderSettings.quietHoursStart {
-                    Button(action: { showingQuietHoursStart = true }) {
+                    Button(action: { showingQuietHoursStart = true }, label: {
                         Text(formatTime(quietStart))
                             .foregroundColor(.blue)
-                    }
+                    })
+                    .accessibilityIdentifier("remindersettings_button_quietstart")
                 } else {
                     Button("Set Time") {
                         showingQuietHoursStart = true
                     }
                     .foregroundColor(.blue)
+                    .accessibilityIdentifier("remindersettings_button_quietstart")
                 }
             }
 
@@ -164,15 +176,17 @@ public struct ReminderSettingsView: View {
                 Spacer()
 
                 if let quietEnd = reminderSettings.quietHoursEnd {
-                    Button(action: { showingQuietHoursEnd = true }) {
+                    Button(action: { showingQuietHoursEnd = true }, label: {
                         Text(formatTime(quietEnd))
                             .foregroundColor(.blue)
-                    }
+                    })
+                    .accessibilityIdentifier("remindersettings_button_quietend")
                 } else {
                     Button("Set Time") {
                         showingQuietHoursEnd = true
                     }
                     .foregroundColor(.blue)
+                    .accessibilityIdentifier("remindersettings_button_quietend")
                 }
             }
 
@@ -182,6 +196,7 @@ public struct ReminderSettingsView: View {
                     reminderSettings.quietHoursEnd = nil
                 }
                 .foregroundColor(.red)
+                .accessibilityIdentifier("remindersettings_button_clearquiethours")
             }
         }, header: {
             Text("Quiet Hours")
@@ -215,6 +230,7 @@ public struct ReminderSettingsView: View {
     private var advancedFeaturesSection: some View {
         Section {
             Toggle("Weather-Based Adjustments", isOn: $reminderSettings.enableWeatherBasedAdjustments)
+                .accessibilityIdentifier("remindersettings_toggle_weatheradjustments")
         } header: {
             Text("Smart Features")
         } footer: {
@@ -227,6 +243,7 @@ public struct ReminderSettingsView: View {
             NavigationLink("Pending Notifications") {
                 PendingNotificationsView()
             }
+            .accessibilityIdentifier("remindersettings_navlink_pending")
 
             Button("Test Notification") {
                 sendTestNotification()
@@ -250,14 +267,19 @@ public struct ReminderSettingsView: View {
         switch notificationService.authorizationStatus {
         case .authorized:
             return "Enabled"
+
         case .denied:
             return "Denied - Enable in Settings"
+
         case .notDetermined:
             return "Not requested"
+
         case .provisional:
             return "Provisional"
+
         case .ephemeral:
             return "Ephemeral"
+
         @unknown default:
             return "Unknown"
         }
@@ -280,11 +302,16 @@ public struct ReminderSettingsView: View {
 
     private func setupTempValues() {
         tempDefaultTime = reminderSettings.defaultNotificationTime ?? Date()
-        tempQuietStart = reminderSettings.quietHoursStart ?? Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date()) ?? Date()
-        tempQuietEnd = reminderSettings.quietHoursEnd ?? Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date()) ?? Date()
+        tempQuietStart = reminderSettings.quietHoursStart
+            ?? Calendar.current.date(bySettingHour: 22, minute: 0, second: 0, of: Date())
+            ?? Date()
+        tempQuietEnd = reminderSettings.quietHoursEnd
+            ?? Calendar.current.date(bySettingHour: 7, minute: 0, second: 0, of: Date())
+            ?? Date()
     }
 
     private static let timeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.timeStyle = .short
         return f
@@ -317,9 +344,8 @@ public struct ReminderSettingsView: View {
                 // Provide feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-
             } catch {
-                print("Failed to send test notification: \(error)")
+                logger.error("Failed to send test notification: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -351,6 +377,7 @@ struct TimePickerSheet: View {
                 )
                 .gwWheelDatePickerStyle()
                 .labelsHidden()
+                .accessibilityIdentifier("remindersettings_datepicker_time")
 
                 Spacer()
             }
@@ -360,11 +387,13 @@ struct TimePickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
+                        .accessibilityIdentifier("remindersettings_button_timepicker_cancel")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save", action: onSave)
                         .fontWeight(.semibold)
+                        .accessibilityIdentifier("remindersettings_button_timepicker_save")
                 }
             }
         }
@@ -374,7 +403,8 @@ struct TimePickerSheet: View {
 // MARK: - Pending Notifications View
 
 struct PendingNotificationsView: View {
-    @Environment(NotificationService.self) private var notificationService
+    @Environment(NotificationService.self)
+    private var notificationService
     @State private var pendingNotifications: [UNNotificationRequest] = []
 
     var body: some View {

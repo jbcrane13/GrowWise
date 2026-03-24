@@ -1,6 +1,9 @@
 import Foundation
 import GrowWiseModels
+import os
 import SwiftData
+
+private let logger = Logger(subsystem: "com.growwise", category: "PlantDatabaseService")
 
 // MARK: - JSON Codable Type for Plant Data
 
@@ -20,7 +23,8 @@ struct PlantData: Codable {
 // MARK: - Plant Database Service
 
 @MainActor
-@Observable public final class PlantDatabaseService {
+@Observable
+public final class PlantDatabaseService {
     private let dataService: DataService
     private let seedingWorker: PlantSeedingWorker
     private static let plantDataEntries: [PlantData] = {
@@ -46,7 +50,7 @@ struct PlantData: Codable {
         let existingPlants = dataService.fetchPlantDatabase()
         if !existingPlants.isEmpty { return }
 
-        print("🌱 Starting plant database seeding")
+        logger.info("Starting plant database seeding")
         let startTime = CFAbsoluteTimeGetCurrent()
 
         var failures: [PlantDatabaseSeedingError.Failure] = []
@@ -67,7 +71,8 @@ struct PlantData: Codable {
             } catch {
                 let failure = PlantDatabaseSeedingError.Failure(category: category.rawValue, underlyingError: error)
                 failures.append(failure)
-                print("❌ Error seeding \(category.rawValue): \(error)")
+                let errorDesc = error.localizedDescription
+                logger.error("Error seeding \(category.rawValue, privacy: .public): \(errorDesc, privacy: .public)")
             }
         }
 
@@ -75,7 +80,7 @@ struct PlantData: Codable {
 
         let totalTime = CFAbsoluteTimeGetCurrent() - startTime
         let totalPlants = dataService.fetchPlantDatabase().count
-        print("🚀 Seeded \(totalPlants) plants in \(String(format: "%.2f", totalTime))s")
+        logger.info("Seeded \(totalPlants) plants in \(String(format: "%.2f", totalTime), privacy: .public)s")
     }
 
     // MARK: - Search and Filter
@@ -175,7 +180,7 @@ struct PlantData: Codable {
     // MARK: - Private Helpers
 
     private func createPlantsInBatches(_ plantDataArray: [PlantData], batchSize: Int = 5, category: SeedCategory) async throws {
-        print("   📦 Batching \(plantDataArray.count) \(category.rawValue) (batch size: \(batchSize))")
+        logger.debug("Batching \(plantDataArray.count) \(category.rawValue, privacy: .public) (batch size: \(batchSize))")
         let startTime = CFAbsoluteTimeGetCurrent()
         for batchIndex in stride(from: 0, to: plantDataArray.count, by: batchSize) {
             let batchEnd = min(batchIndex + batchSize, plantDataArray.count)
@@ -183,11 +188,12 @@ struct PlantData: Codable {
             for plantData in batch {
                 try await seedingWorker.insertPlant(from: plantData)
             }
-            autoreleasepool { print("      ✓ Batch \(batchIndex / batchSize + 1): \(batch.count) plants") }
+            autoreleasepool { logger.debug("Batch \(batchIndex / batchSize + 1): \(batch.count) plants") }
             await Task.yield()
         }
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        print("   ✅ Seeded \(plantDataArray.count) \(category.rawValue) in \(String(format: "%.3f", duration))s")
+        let durationStr = String(format: "%.3f", duration)
+        logger.info("Seeded \(plantDataArray.count) \(category.rawValue, privacy: .public) in \(durationStr, privacy: .public)s")
     }
 
     private func calculateCompatibilityScore(plant: Plant, userProfile: UserGardenProfile) -> Double {
@@ -205,9 +211,13 @@ struct PlantData: Codable {
         }
 
         maxScore += 25
-        if plant.spaceRequirement == userProfile.availableSpace { score += 25 }
-        else if plant.spaceRequirement == .small, userProfile.availableSpace != .small { score += 20 }
-        else { score += 10 }
+        if plant.spaceRequirement == userProfile.availableSpace {
+            score += 25
+        } else if plant.spaceRequirement == .small, userProfile.availableSpace != .small {
+            score += 20
+        } else {
+            score += 10
+        }
 
         maxScore += 25
         let plantCareTime = estimateCareTime(for: plant)
@@ -234,7 +244,9 @@ struct PlantData: Codable {
         case .intermediate: .intermediate
         case .advanced, .expert: .advanced
         }
-        if plant.difficultyLevel == matchingDifficulty { reasons.append("Perfect match for your \(userProfile.skillLevel.rawValue) skill level") }
+        if plant.difficultyLevel == matchingDifficulty {
+            reasons.append("Perfect match for your \(userProfile.skillLevel.rawValue) skill level")
+        }
         if plant.spaceRequirement == userProfile.availableSpace { reasons.append("Ideal size for your available space") }
         if estimateCareTime(for: plant) == userProfile.timeCommitment { reasons.append("Matches your time commitment level") }
         if plant.plantType == .herb || plant.plantType == .vegetable { reasons.append("Provides fresh, homegrown food") }
@@ -244,9 +256,13 @@ struct PlantData: Codable {
     }
 
     private func estimateCareTime(for plant: Plant) -> UserTimeCommitment {
-        if plant.plantType == .succulent || plant.plantType == .houseplant { .minimal }
-        else if plant.plantType == .herb || plant.plantType == .flower { .moderate }
-        else { .heavy }
+        if plant.plantType == .succulent || plant.plantType == .houseplant {
+            .minimal
+        } else if plant.plantType == .herb || plant.plantType == .flower {
+            .moderate
+        } else {
+            .heavy
+        }
     }
 
     private func isPlantSuitableForSeason(plant: Plant, season: PlantingSeason) -> Bool {
@@ -358,7 +374,12 @@ public struct UserGardenProfile {
     public let timeCommitment: UserTimeCommitment
     public let gardenType: String
 
-    public init(skillLevel: GardeningSkillLevel, availableSpace: SpaceRequirement, timeCommitment: UserTimeCommitment, gardenType: String) {
+    public init(
+        skillLevel: GardeningSkillLevel,
+        availableSpace: SpaceRequirement,
+        timeCommitment: UserTimeCommitment,
+        gardenType: String
+    ) {
         self.skillLevel = skillLevel
         self.availableSpace = availableSpace
         self.timeCommitment = timeCommitment

@@ -7,7 +7,8 @@ import WeatherKit
 /// Access via @Environment(LocationService.self) in views
 /// Singleton pattern removed - injected via environment
 @MainActor
-@Observable public final class LocationService: NSObject {
+@Observable
+public final class LocationService: NSObject {
     public var authorizationStatus: CLAuthorizationStatus = .notDetermined
     public var currentLocation: CLLocation?
     public var hardinessZone: String?
@@ -97,7 +98,6 @@ import WeatherKit
         // This is a basic implementation - in production, you'd use more sophisticated data
 
         // US Hardiness Zones (approximate, latitude-based)
-        // swiftlint:disable:next cyclomatic_complexity
         return switch latitude {
         case 64.0...: "1a"
         case 60.0 ..< 64.0: "1b"
@@ -466,7 +466,7 @@ public enum LocationError: LocalizedError, Sendable {
         case .networkError:
             "Network error while fetching location data."
 
-        case let .weatherFetchFailed(message):
+        case .weatherFetchFailed(let message):
             "Failed to fetch weather data: \(message)"
 
         case .unknown:

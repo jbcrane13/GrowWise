@@ -6,7 +6,8 @@ import os
 
 /// Extended CloudKit service supporting both private (user data) and public (community) databases
 @MainActor
-@Observable public final class CloudSyncService {
+@Observable
+public final class CloudSyncService {
     public private(set) var isSyncing = false
     public private(set) var lastSyncDate: Date?
     public private(set) var lastErrorMessage: String?
@@ -124,10 +125,13 @@ import os
         switch sortBy {
         case .newest:
             query.sortDescriptors = [NSSortDescriptor(key: "publishedDate", ascending: false)]
+
         case .oldest:
             query.sortDescriptors = [NSSortDescriptor(key: "publishedDate", ascending: true)]
+
         case .mostLiked:
             query.sortDescriptors = [NSSortDescriptor(key: "likeCount", ascending: false)]
+
         case .mostViewed:
             query.sortDescriptors = [NSSortDescriptor(key: "viewCount", ascending: false)]
         }
@@ -142,9 +146,10 @@ import os
 
             let gardens = results.compactMap { _, result -> PublicGarden? in
                 switch result {
-                case let .success(record):
+                case .success(let record):
                     return PublicGarden(from: record)
-                case let .failure(error):
+
+                case .failure(let error):
                     logger.error("Failed to decode garden record: \(error.localizedDescription)")
                     return nil
                 }
@@ -359,12 +364,16 @@ public enum CloudKitError: LocalizedError, Sendable {
         switch self {
         case .accountNotAvailable:
             "iCloud account is not available. Please sign in to iCloud to use this feature."
-        case let .publishFailed(message):
+
+        case .publishFailed(let message):
             "Failed to publish garden: \(message)"
-        case let .fetchFailed(message):
+
+        case .fetchFailed(let message):
             "Failed to fetch gardens: \(message)"
-        case let .operationFailed(message):
+
+        case .operationFailed(let message):
             "Operation failed: \(message)"
+
         case .invalidRecord:
             "Invalid record data"
         }

@@ -8,8 +8,10 @@ import SwiftUI
 /// Tap a garden card to drill into its plant list.
 /// Prominent "New Garden" card for easy garden creation.
 public struct GardenView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(\.modelContext) private var modelContext
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(\.modelContext)
+    private var modelContext
 
     @State private var viewModel = GardenViewModel()
     @State private var showCreateGarden = false
@@ -49,15 +51,19 @@ public struct GardenView: View {
             .navigationDestination(item: $gardenToNavigate) { garden in
                 GardenDetailView(garden: garden)
             }
-            .sheet(isPresented: $showCreateGarden, onDismiss: {
-                Task { await viewModel.load(dataService: dataService) }
-            }) {
-                CreateGardenSheet { _ in
+            .sheet(
+                isPresented: $showCreateGarden,
+                onDismiss: {
                     Task { await viewModel.load(dataService: dataService) }
+                },
+                content: {
+                    CreateGardenSheet { _ in
+                        Task { await viewModel.load(dataService: dataService) }
+                    }
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
                 }
-                .presentationDetents([.large])
-                .presentationDragIndicator(.hidden)
-            }
+            )
             .alert("Delete Garden?", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
                     gardenToDelete = nil
@@ -73,7 +79,9 @@ public struct GardenView: View {
             } message: {
                 if let garden = gardenToDelete {
                     let plantCount = (garden.plants ?? []).count
-                    Text("This will permanently delete \"\(garden.name ?? "this garden")\" and its \(plantCount) plant\(plantCount == 1 ? "" : "s").")
+                    let gardenName = garden.name ?? "this garden"
+                    let suffix = plantCount == 1 ? "" : "s"
+                    Text("This will permanently delete \"\(gardenName)\" and its \(plantCount) plant\(suffix).")
                 }
             }
         }

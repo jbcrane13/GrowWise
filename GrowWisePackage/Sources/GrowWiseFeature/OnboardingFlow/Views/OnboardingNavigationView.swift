@@ -7,8 +7,10 @@ struct OnboardingNavigationView: View {
     @Binding var userProfile: UserProfile
     @Binding var isCompleted: Bool
 
-    @Environment(DataService.self) private var dataService
-    @Environment(NotificationService.self) private var notificationService
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(NotificationService.self)
+    private var notificationService
 
     @State private var showingError = false
     @State private var errorMessage = ""
@@ -26,6 +28,7 @@ struct OnboardingNavigationView: View {
         switch currentStep {
         case .welcome, .skillAssessment, .gardenSetup, .location, .notifications, .completion:
             true
+
         case .goals:
             !userProfile.goals.isEmpty
         }
@@ -150,6 +153,7 @@ struct OnboardingNavigationView: View {
         let newIndex: Int = switch direction {
         case .next:
             min(currentIndex + 1, allCases.count - 1)
+
         case .previous:
             max(currentIndex - 1, 0)
         }

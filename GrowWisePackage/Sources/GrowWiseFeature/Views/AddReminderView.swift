@@ -6,7 +6,8 @@ public struct AddReminderView: View {
     let reminderService: ReminderService
     let dataService: DataService
 
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     @State private var selectedPlant: Plant?
     @State private var reminderType: ReminderType = .watering
@@ -156,15 +157,20 @@ public struct AddReminderView: View {
                     .accessibilityIdentifier("addreminder_button_changeplant")
                 }
             } else {
-                Button(action: { showingPlantPicker = true }) {
+                Button(action: { showingPlantPicker = true }, label: {
                     HStack(spacing: 10) {
-                        IconBubble(systemName: "plus.circle.fill", color: CultivationTheme.Colors.brandLeaf, size: 32, iconSize: 15)
+                        IconBubble(
+                            systemName: "plus.circle.fill",
+                            color: CultivationTheme.Colors.brandLeaf,
+                            size: 32,
+                            iconSize: 15
+                        )
                         Text("Select Plant")
                             .font(.system(.subheadline, design: .rounded))
                             .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                         Spacer()
                     }
-                }
+                })
                 .accessibilityIdentifier("addreminder_button_selectplant")
             }
         }
@@ -210,6 +216,7 @@ public struct AddReminderView: View {
                             GlassPill(
                                 label: freq.displayName,
                                 isSelected: frequency == freq,
+                                // swiftlint:disable:next line_length
                                 accessibilityID: "addreminder_pill_frequency_\(freq.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))"
                             ) {
                                 frequency = freq
@@ -283,6 +290,7 @@ public struct AddReminderView: View {
     private var prioritySection: some View {
         reminderFormSection(title: "Priority") {
             HStack(spacing: 8) {
+                // swiftlint:disable:next identifier_name
                 ForEach(ReminderPriority.allCases, id: \.self) { p in
                     GlassPill(
                         label: p.displayName,
@@ -329,7 +337,9 @@ public struct AddReminderView: View {
                                     .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
                             )
                             .onChange(of: customMessage) { _, newValue in
-                                let validation = ValidationService.shared.validateText(newValue, fieldName: "Message", maxLength: 500)
+                                let validation = ValidationService.shared.validateText(
+                                    newValue, fieldName: "Message", maxLength: 500
+                                )
                                 if !validation.isValid {
                                     customMessage = String(newValue.prefix(500))
                                 }
@@ -375,20 +385,28 @@ public struct AddReminderView: View {
         switch freq {
         case .daily:
             return "every day"
+
         case .everyOtherDay:
             return "every other day"
+
         case .twiceWeekly:
             return "twice a week"
+
         case .weekly:
             return "once a week"
+
         case .biweekly:
             return "every 2 weeks"
+
         case .monthly:
             return "once a month"
+
         case .custom:
             return "every \(customDays) day\(customDays == 1 ? "" : "s")"
+
         case .once:
             return "one time only"
+
         default:
             return freq.displayName.lowercased()
         }
@@ -460,7 +478,6 @@ public struct AddReminderView: View {
                     isCreating = false
                     dismiss()
                 }
-
             } catch {
                 await MainActor.run {
                     isCreating = false
@@ -484,7 +501,7 @@ struct PlantPickerView: View {
                 Button(action: {
                     selectedPlant = plant
                     onDismiss()
-                }) {
+                }, label: {
                     HStack {
                         Image(systemName: plantIcon(for: plant))
                             .foregroundColor(plantColor(for: plant))
@@ -507,7 +524,7 @@ struct PlantPickerView: View {
                                 .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                         }
                     }
-                }
+                })
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("addreminder_cell_plant_\(plant.id)")
             }

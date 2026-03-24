@@ -3,7 +3,8 @@ import SwiftUI
 
 struct NotificationPermissionView: View {
     @Binding var userProfile: UserProfile
-    @Environment(NotificationService.self) private var notificationService
+    @Environment(NotificationService.self)
+    private var notificationService
     @State private var isRequesting = false
 
     var body: some View {

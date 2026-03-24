@@ -7,8 +7,10 @@ import SwiftUI
 /// Drill-down view for a single garden showing its beds, plants, and stats.
 /// Reached by tapping a garden card on the main Gardens dashboard.
 struct GardenDetailView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(\.modelContext) private var modelContext
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(\.modelContext)
+    private var modelContext
 
     let garden: Garden
 
@@ -18,6 +20,7 @@ struct GardenDetailView: View {
     @State private var showAddPlant = false
     @State private var showCreateBed = false
     @State private var plantToNavigate: Plant?
+    @State private var alertCount: Int = 0
     @State private var isLoading = true
 
     private var filteredGroups: [PlantGroup] {
@@ -42,9 +45,9 @@ struct GardenDetailView: View {
         (garden.beds ?? []).count
     }
 
-    private var alertCount: Int {
+    private func updateAlertCount() {
         let now = Date()
-        return groupedPlants.flatMap(\.plants).count { plant in
+        alertCount = groupedPlants.flatMap(\.plants).count { plant in
             (plant.reminders ?? []).contains { $0.isEnabled && $0.nextDueDate < now }
         }
     }
@@ -106,11 +109,15 @@ struct GardenDetailView: View {
         .navigationDestination(item: $plantToNavigate) { plant in
             PlantDetailView(plant: plant)
         }
-        .sheet(isPresented: $showAddPlant, onDismiss: {
-            Task { await rebuildGroups() }
-        }) {
-            AddPlantSheet()
-        }
+        .sheet(
+            isPresented: $showAddPlant,
+            onDismiss: {
+                Task { await rebuildGroups() }
+            },
+            content: {
+                AddPlantSheet()
+            }
+        )
         .sheet(item: $selectedPlant) { plant in
             PlantQuickCard(
                 plant: plant,
@@ -129,15 +136,19 @@ struct GardenDetailView: View {
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.hidden)
         }
-        .sheet(isPresented: $showCreateBed, onDismiss: {
-            Task { await rebuildGroups() }
-        }) {
-            CreateBedSheet(garden: garden) { _ in
+        .sheet(
+            isPresented: $showCreateBed,
+            onDismiss: {
                 Task { await rebuildGroups() }
+            },
+            content: {
+                CreateBedSheet(garden: garden) { _ in
+                    Task { await rebuildGroups() }
+                }
+                .presentationDetents([.medium])
+                .presentationDragIndicator(.hidden)
             }
-            .presentationDetents([.medium])
-            .presentationDragIndicator(.hidden)
-        }
+        )
     }
 
     // MARK: - Sub-views
@@ -195,6 +206,7 @@ struct GardenDetailView: View {
                     Image(systemName: "xmark.circle.fill")
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
+                .accessibilityIdentifier("gardendetail_button_clearsearch")
             }
         }
         .padding(10)
@@ -338,6 +350,7 @@ struct GardenDetailView: View {
 
         groupedPlants = groups
         isLoading = false
+        updateAlertCount()
     }
 }
 

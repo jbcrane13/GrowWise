@@ -20,7 +20,13 @@ struct DatabasePlantCustomizationSheet: View {
     @State private var showingError = false
     @State private var errorMessage = ""
 
-    init(plant: Plant, targetGarden: Garden?, dataService: DataService, onSave: @escaping (Plant) -> Void, onCancel: @escaping () -> Void) {
+    init(
+        plant: Plant,
+        targetGarden: Garden?,
+        dataService: DataService,
+        onSave: @escaping (Plant) -> Void,
+        onCancel: @escaping () -> Void
+    ) {
         self.plant = plant
         self.targetGarden = targetGarden
         self.dataService = dataService
@@ -171,7 +177,12 @@ struct DatabasePlantCustomizationSheet: View {
     private func saveCustomizedPlant() async {
         do {
             // Create a new plant based on the database plant
-            let newPlant = Plant(name: customPlantName, plantType: plant.plantType ?? .vegetable, difficultyLevel: plant.difficultyLevel ?? .beginner, isUserPlant: true)
+            let newPlant = Plant(
+                name: customPlantName,
+                plantType: plant.plantType ?? .vegetable,
+                difficultyLevel: plant.difficultyLevel ?? .beginner,
+                isUserPlant: true
+            )
             newPlant.garden = targetGarden
             try dataService.plants.add(newPlant)
             let customizedPlant = newPlant
@@ -187,11 +198,9 @@ struct DatabasePlantCustomizationSheet: View {
 
             // Process photos
             var processedPhotoURLs: [String] = []
-            for item in selectedPhotos {
-                if await (try? item.loadTransferable(type: Data.self)) != nil {
-                    let photoURL = "photo_\(UUID().uuidString)"
-                    processedPhotoURLs.append(photoURL)
-                }
+            for item in selectedPhotos where await (try? item.loadTransferable(type: Data.self)) != nil {
+                let photoURL = "photo_\(UUID().uuidString)"
+                processedPhotoURLs.append(photoURL)
             }
             customizedPlant.photoURLs = processedPhotoURLs
 
@@ -199,7 +208,6 @@ struct DatabasePlantCustomizationSheet: View {
             try dataService.updatePlant(customizedPlant)
 
             onSave(customizedPlant)
-
         } catch {
             errorMessage = "Failed to save plant: \(error.localizedDescription)"
             showingError = true

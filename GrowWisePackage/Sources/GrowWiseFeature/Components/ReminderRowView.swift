@@ -79,11 +79,11 @@ public struct ReminderRowView: View {
                 }
                 .disabled(isCompleting)
 
-                Button(action: { showingSnoozeOptions = true }) {
+                Button(action: { showingSnoozeOptions = true }, label: {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.title3)
                         .foregroundColor(.orange)
-                }
+                })
                 .disabled(isCompleting)
             }
         }
@@ -127,10 +127,13 @@ public struct ReminderRowView: View {
         switch reminder.priority {
         case .low:
             return .gray
+
         case .medium:
             return .blue
+
         case .high:
             return .orange
+
         case .critical:
             return .red
         }
@@ -156,6 +159,7 @@ public struct ReminderRowView: View {
     }
 
     private static let timeOnlyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .none
         f.timeStyle = .short
@@ -163,6 +167,7 @@ public struct ReminderRowView: View {
     }()
 
     private static let dateOnlyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .short
         f.timeStyle = .none
@@ -213,7 +218,6 @@ public struct ReminderRowView: View {
                 await MainActor.run {
                     isCompleting = false
                 }
-
             } catch {
                 await MainActor.run {
                     isCompleting = false
@@ -236,7 +240,6 @@ public struct ReminderRowView: View {
                 // Provide feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
-
             } catch {
                 await MainActor.run {
                     alertTitle = "Action Failed"

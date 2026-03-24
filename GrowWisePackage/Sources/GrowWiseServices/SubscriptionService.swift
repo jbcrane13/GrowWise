@@ -5,7 +5,8 @@ import StoreKit
 
 /// Service for managing StoreKit subscriptions and purchases
 @MainActor
-@Observable public final class SubscriptionService {
+@Observable
+public final class SubscriptionService {
     // MARK: - Published State
 
     public private(set) var subscriptionStatus: SubscriptionStatus = .notSubscribed
@@ -92,7 +93,7 @@ import StoreKit
             let result = try await product.purchase()
 
             switch result {
-            case let .success(verification):
+            case .success(let verification):
                 // Check transaction verification
                 let transaction = try checkVerified(verification)
 
@@ -249,7 +250,7 @@ import StoreKit
         case .unverified:
             throw SubscriptionError.verificationFailed
 
-        case let .verified(safe):
+        case .verified(let safe):
             return safe
         }
     }
@@ -260,7 +261,7 @@ import StoreKit
         case .unverified:
             nil
 
-        case let .verified(safe):
+        case .verified(let safe):
             safe
         }
     }
@@ -277,7 +278,7 @@ import StoreKit
     /// Check if user can access premium features
     public var canAccessPremiumFeatures: Bool {
         switch subscriptionStatus {
-        case let .active(tier, _):
+        case .active(let tier, _):
             tier == SubscriptionTier.premium || tier == SubscriptionTier.pro
 
         case .notSubscribed:
@@ -288,7 +289,7 @@ import StoreKit
     /// Check if user can access pro features
     public var canAccessProFeatures: Bool {
         switch subscriptionStatus {
-        case let .active(tier, _):
+        case .active(let tier, _):
             tier == SubscriptionTier.pro
 
         case .notSubscribed:
@@ -328,7 +329,7 @@ public enum SubscriptionStatus: Equatable, Sendable {
         case .notSubscribed:
             SubscriptionTier.free
 
-        case let .active(tier, _):
+        case .active(let tier, _):
             tier
         }
     }
@@ -343,10 +344,10 @@ public enum SubscriptionError: LocalizedError, Sendable {
 
     public var errorDescription: String? {
         switch self {
-        case let .purchaseFailed(message):
+        case .purchaseFailed(let message):
             "Purchase failed: \(message)"
 
-        case let .restoreFailed(message):
+        case .restoreFailed(let message):
             "Restore failed: \(message)"
 
         case .verificationFailed:
@@ -364,7 +365,8 @@ public enum SubscriptionError: LocalizedError, Sendable {
 // MARK: - Paywall State
 
 @MainActor
-@Observable public final class PaywallState {
+@Observable
+public final class PaywallState {
     public let service: SubscriptionService
 
     public var selectedProduct: Product?

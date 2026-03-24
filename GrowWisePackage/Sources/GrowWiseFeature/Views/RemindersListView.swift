@@ -1,12 +1,17 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftUI
 import UserNotifications
 
+private let logger = Logger(subsystem: "com.growwise", category: "RemindersListView")
+
 /// Full view for displaying and managing all plant reminders.
 public struct RemindersListView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(NotificationService.self) private var notificationService
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(NotificationService.self)
+    private var notificationService
 
     @State private var reminders: [PlantReminder] = []
     @State private var isLoading = true
@@ -16,6 +21,7 @@ public struct RemindersListView: View {
     @State private var showAlert = false
     @State private var alertTitle = ""
     @State private var alertMessage = ""
+    @State private var groupedReminders: [String: [PlantReminder]] = [:]
 
     public init() {}
 
@@ -37,18 +43,24 @@ public struct RemindersListView: View {
         .task {
             await loadReminders()
         }
+        .onAppear {
+            updateGroupedReminders()
+        }
         .alert("Delete Reminder", isPresented: $showingDeleteAlert) {
             Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("reminders_button_deletealert_cancel")
             Button("Delete", role: .destructive) {
                 if let reminder = reminderToDelete {
                     deleteReminder(reminder)
                 }
             }
+            .accessibilityIdentifier("reminders_button_deletealert_delete")
         } message: {
             Text("Are you sure you want to delete this reminder?")
         }
         .alert(alertTitle, isPresented: $showAlert) {
             Button("OK") {}
+                .accessibilityIdentifier("reminders_button_alert_ok")
         } message: {
             Text(alertMessage)
         }
@@ -86,7 +98,7 @@ public struct RemindersListView: View {
         }
     }
 
-    private var groupedReminders: [String: [PlantReminder]] {
+    private func updateGroupedReminders() {
         let calendar = Calendar.current
         let now = Date()
 
@@ -120,14 +132,14 @@ public struct RemindersListView: View {
         }
 
         // Remove empty sections
-        return groups.filter { !$0.value.isEmpty }
+        groupedReminders = groups.filter { !$0.value.isEmpty }
     }
 
     @MainActor
     private func loadReminders() async {
         isLoading = true
         reminders = dataService.fetchActiveReminders()
-
+        updateGroupedReminders()
         isLoading = false
     }
 
@@ -181,7 +193,7 @@ public struct RemindersListView: View {
 
         UNUserNotificationCenter.current().add(request) { error in
             if let error {
-                print("Failed to schedule notification: \(error)")
+                logger.error("Failed to schedule notification: \(error.localizedDescription, privacy: .public)")
             }
         }
     }
@@ -199,10 +211,10 @@ struct HomeReminderRowView: View {
             Button(action: {
                 isCompleted.toggle()
                 onComplete()
-            }) {
+            }, label: {
                 Image(systemName: isCompleted ? "checkmark.circle.fill" : "circle")
                     .foregroundColor(isCompleted ? .green : .gray)
-            }
+            })
             .buttonStyle(.plain)
 
             Image(systemName: reminder.reminderType.iconName)
@@ -243,12 +255,14 @@ struct HomeReminderRowView: View {
     }
 
     private static let timeOnlyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.timeStyle = .short
         return f
     }()
 
     private static let dateTimeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.dateStyle = .medium
         f.timeStyle = .short

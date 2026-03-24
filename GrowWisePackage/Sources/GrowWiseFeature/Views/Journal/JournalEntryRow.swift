@@ -191,6 +191,7 @@ public struct JournalEntryRow: View {
     // MARK: - Helper Methods
 
     private static let timeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
         let f = DateFormatter()
         f.timeStyle = .short
         return f

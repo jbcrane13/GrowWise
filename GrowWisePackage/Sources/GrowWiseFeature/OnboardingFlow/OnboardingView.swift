@@ -6,7 +6,8 @@ public struct OnboardingView: View {
     @State private var currentStep: OnboardingStep = .welcome
     @State private var userProfile = UserProfile()
     @State private var isCompleted = false
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     /// Called when the user finishes onboarding. Used when OnboardingView is
     /// embedded in an if/else branch (not a sheet) so dismiss() has no effect.

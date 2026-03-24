@@ -65,7 +65,8 @@ public enum PlantDiagnosticError: Error, LocalizedError {
 }
 
 @MainActor
-@Observable public final class PlantDiagnosticService {
+@Observable
+public final class PlantDiagnosticService {
     public private(set) var isAnalyzing = false
     public private(set) var lastDiagnosis: PlantDiagnosis?
     public private(set) var lastError: String?

@@ -4,7 +4,8 @@ import SwiftData
 import SwiftUI
 
 public struct PlantDatabaseView: View {
-    @Environment(DataService.self) private var dataService
+    @Environment(DataService.self)
+    private var dataService
     @State private var databasePlants: [Plant] = []
     @State private var searchText = ""
     @State private var selectedPlantType: PlantType?
@@ -14,6 +15,7 @@ public struct PlantDatabaseView: View {
     @State private var isLoading = true
     @State private var selectedSortOption: DatabaseSortOption = .name
     @State private var showingPlantDetail: Plant?
+    @State private var filteredPlants: [Plant] = []
 
     public init() {}
 
@@ -52,6 +54,24 @@ public struct PlantDatabaseView: View {
             .task {
                 await loadDatabasePlants()
             }
+            .onAppear {
+                updateFilteredPlants()
+            }
+            .onChange(of: searchText) {
+                updateFilteredPlants()
+            }
+            .onChange(of: selectedPlantType) {
+                updateFilteredPlants()
+            }
+            .onChange(of: selectedDifficulty) {
+                updateFilteredPlants()
+            }
+            .onChange(of: selectedSunlight) {
+                updateFilteredPlants()
+            }
+            .onChange(of: selectedSortOption) {
+                updateFilteredPlants()
+            }
         }
         // Native SwiftUI search bar with built-in debouncing
         .searchable(text: $searchText, prompt: "Search plants...")
@@ -84,6 +104,7 @@ public struct PlantDatabaseView: View {
                 .font(.caption)
                 .foregroundColor(.red)
                 .padding(.horizontal, 8)
+                .accessibilityIdentifier("database_button_clearfilters")
             }
             .padding(.horizontal)
         }
@@ -160,17 +181,17 @@ public struct PlantDatabaseView: View {
     }
 
     private var filterButton: some View {
-        Button(action: { showingFilters = true }) {
+        Button(action: { showingFilters = true }, label: {
             Image(systemName: hasActiveFilters ? "line.3.horizontal.decrease.circle.fill" : "line.3.horizontal.decrease.circle")
                 .foregroundColor(hasActiveFilters ? .blue : .gray)
-        }
+        })
     }
 
     private var hasActiveFilters: Bool {
         selectedPlantType != nil || selectedDifficulty != nil || selectedSunlight != nil
     }
 
-    private var filteredPlants: [Plant] {
+    private func updateFilteredPlants() {
         var filtered: [Plant]
 
             // Use DataService.searchPlants for search queries (with caching)
@@ -199,13 +220,14 @@ public struct PlantDatabaseView: View {
         }
 
         // Sort filtered results
-        return sortPlants(filtered)
+        filteredPlants = sortPlants(filtered)
     }
 
     private func sortPlants(_ plants: [Plant]) -> [Plant] {
         switch selectedSortOption {
         case .name:
             plants.sorted { ($0.name ?? "") < ($1.name ?? "") }
+
         case .difficulty:
             plants.sorted {
                 if $0.difficultyLevel != $1.difficultyLevel {
@@ -213,6 +235,7 @@ public struct PlantDatabaseView: View {
                 }
                 return ($0.name ?? "") < ($1.name ?? "")
             }
+
         case .plantType:
             plants.sorted {
                 if $0.plantType != $1.plantType {
@@ -220,6 +243,7 @@ public struct PlantDatabaseView: View {
                 }
                 return ($0.name ?? "") < ($1.name ?? "")
             }
+
         case .sunlightRequirement:
             plants.sorted {
                 if $0.sunlightRequirement != $1.sunlightRequirement {
@@ -242,6 +266,7 @@ public struct PlantDatabaseView: View {
 
         // Load database plants (not user plants)
         databasePlants = dataService.fetchPlantDatabase()
+        updateFilteredPlants()
 
         isLoading = false
     }
@@ -286,19 +311,19 @@ struct DatabasePlantCardView: View {
                 HStack {
                     RequirementIcon(
                         icon: "sun.max.fill",
-                        text: plant.sunlightRequirement != nil ? sunlightShorthand(plant.sunlightRequirement!) : "Unknown",
+                        text: plant.sunlightRequirement.map { sunlightShorthand($0) } ?? "Unknown",
                         color: .yellow
                     )
 
                     RequirementIcon(
                         icon: "drop.fill",
-                        text: plant.wateringFrequency != nil ? wateringShorthand(plant.wateringFrequency!) : "Unknown",
+                        text: plant.wateringFrequency.map { wateringShorthand($0) } ?? "Unknown",
                         color: .blue
                     )
 
                     RequirementIcon(
                         icon: "square.grid.3x3.fill",
-                        text: plant.spaceRequirement != nil ? spaceShorthand(plant.spaceRequirement!) : "Unknown",
+                        text: plant.spaceRequirement.map { spaceShorthand($0) } ?? "Unknown",
                         color: .green
                     )
 
@@ -405,7 +430,8 @@ struct DatabaseFiltersSheet: View {
     @Binding var selectedPlantType: PlantType?
     @Binding var selectedDifficulty: DifficultyLevel?
     @Binding var selectedSunlight: SunlightLevel?
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     var body: some View {
         NavigationStack {
@@ -417,6 +443,7 @@ struct DatabaseFiltersSheet: View {
                                 selectedPlantType = nil
                             }
                             .foregroundColor(.red)
+                            .accessibilityIdentifier("database_button_clearplanttype")
                         }
 
                         LazyVGrid(columns: Array(repeating: GridItem(.flexible()), count: 2), spacing: 8) {
@@ -439,6 +466,7 @@ struct DatabaseFiltersSheet: View {
                                 selectedDifficulty = nil
                             }
                             .foregroundColor(.red)
+                            .accessibilityIdentifier("database_button_cleardifficulty")
                         }
 
                         VStack(spacing: 8) {
@@ -461,6 +489,7 @@ struct DatabaseFiltersSheet: View {
                                 selectedSunlight = nil
                             }
                             .foregroundColor(.red)
+                            .accessibilityIdentifier("database_button_clearsunlight")
                         }
 
                         VStack(spacing: 8) {
@@ -483,6 +512,7 @@ struct DatabaseFiltersSheet: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("database_button_filters_done")
                 }
             }
         }
@@ -491,8 +521,10 @@ struct DatabaseFiltersSheet: View {
 
 struct PlantDatabaseDetailView: View {
     let plant: Plant
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(DataService.self)
+    private var dataService
     @State private var showingAddToGarden = false
 
     var body: some View {
@@ -522,6 +554,7 @@ struct PlantDatabaseDetailView: View {
                     Button("Close") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("database_button_close")
                 }
             }
             .overlay(alignment: .bottom) {
@@ -641,6 +674,7 @@ struct PlantDatabaseDetailView: View {
         .clipShape(RoundedRectangle(cornerRadius: 12))
         .padding()
         .background(Color(.systemBackground))
+        .accessibilityIdentifier("database_button_addtogarden")
     }
 
     private func extractDescription(from notes: String) -> String {

@@ -1,4 +1,7 @@
+import os
 import SwiftUI
+
+private let logger = Logger(subsystem: "com.growwise", category: "ErrorView")
 
 /// Error view for displaying initialization failures
 public struct ErrorView: View {
@@ -35,6 +38,7 @@ public struct ErrorView: View {
                     .padding(.vertical, 12)
             }
             .buttonStyle(.borderedProminent)
+            .accessibilityIdentifier("error_button_retry")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(Color(.systemBackground))
@@ -42,7 +46,12 @@ public struct ErrorView: View {
 }
 
 #Preview {
-    ErrorView(error: NSError(domain: "Test", code: 0, userInfo: [NSLocalizedDescriptionKey: "Failed to initialize data service"])) {
-        print("Retry tapped")
+    let error = NSError(
+        domain: "Test",
+        code: 0,
+        userInfo: [NSLocalizedDescriptionKey: "Failed to initialize data service"]
+    )
+    ErrorView(error: error) {
+        logger.debug("Retry tapped")
     }
 }

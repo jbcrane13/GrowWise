@@ -1,6 +1,9 @@
 import CloudKit
 import Foundation
 import GrowWiseModels
+import os
+
+private let logger = Logger(subsystem: "com.growwise", category: "CloudKitSchema")
 
 /// CloudKit schema definitions and record types for GrowWise
 enum CloudKitSchema {
@@ -119,9 +122,10 @@ enum CloudKitSchema {
             do {
                 let query = CKQuery(recordType: recordType, predicate: NSPredicate(value: false))
                 _ = try await database.records(matching: query)
-                print("✅ Record type '\(recordType)' exists")
+                logger.info("Record type '\(recordType, privacy: .public)' validated successfully")
             } catch {
-                print("❌ Record type '\(recordType)' validation failed: \(error)")
+                // swiftlint:disable:next line_length
+                logger.error("Record type '\(recordType, privacy: .public)' validation failed: \(error.localizedDescription, privacy: .public)")
                 throw error
             }
         }
@@ -340,9 +344,9 @@ enum CloudKitSchema {
         do {
             _ = try await database.save(userPlantsSubscription)
             _ = try await database.save(remindersSubscription)
-            print("✅ CloudKit subscriptions created successfully")
+            logger.info("CloudKit subscriptions created successfully")
         } catch {
-            print("❌ Failed to create CloudKit subscriptions: \(error)")
+            logger.error("Failed to create CloudKit subscriptions: \(error.localizedDescription, privacy: .public)")
             throw error
         }
     }

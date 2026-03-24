@@ -3,7 +3,8 @@ import SwiftUI
 
 struct LocationSetupView: View {
     @Binding var userProfile: UserProfile
-    @Environment(LocationService.self) private var locationService
+    @Environment(LocationService.self)
+    private var locationService
     @State private var isRequesting = false
 
     var body: some View {

@@ -19,8 +19,8 @@ public enum SystemColorToken {
     case quaternaryLabel
 }
 
-extension Color {
-    public init(_ token: SystemColorToken) {
+public extension Color {
+    init(_ token: SystemColorToken) {
         #if canImport(UIKit)
         switch token {
         case .systemBackground:
@@ -101,9 +101,9 @@ public enum GWTextInputAutocapitalization {
     case characters
 }
 
-extension View {
+public extension View {
     @ViewBuilder
-    public func gwNavigationBarTitleDisplayMode(_ displayMode: GWNavigationBarTitleDisplayMode) -> some View {
+    func gwNavigationBarTitleDisplayMode(_ displayMode: GWNavigationBarTitleDisplayMode) -> some View {
         #if os(iOS)
         switch displayMode {
         case .automatic:
@@ -121,7 +121,7 @@ extension View {
     }
 
     @ViewBuilder
-    public func gwNavigationBarHidden(_ hidden: Bool) -> some View {
+    func gwNavigationBarHidden(_ hidden: Bool) -> some View {
         #if os(iOS)
         navigationBarHidden(hidden)
         #else
@@ -130,7 +130,7 @@ extension View {
     }
 
     @ViewBuilder
-    public func gwWheelPickerStyle() -> some View {
+    func gwWheelPickerStyle() -> some View {
         #if os(iOS)
         pickerStyle(.wheel)
         #else
@@ -139,7 +139,7 @@ extension View {
     }
 
     @ViewBuilder
-    public func gwPagingTabStyle(indexDisplayMode: GWPageIndexDisplayMode = .never) -> some View {
+    func gwPagingTabStyle(indexDisplayMode: GWPageIndexDisplayMode = .never) -> some View {
         #if os(iOS)
         switch indexDisplayMode {
         case .automatic:
@@ -157,7 +157,7 @@ extension View {
     }
 
     @ViewBuilder
-    public func gwTextInputAutocapitalization(_ style: GWTextInputAutocapitalization) -> some View {
+    func gwTextInputAutocapitalization(_ style: GWTextInputAutocapitalization) -> some View {
         #if os(iOS)
         switch style {
         case .none:
@@ -178,7 +178,7 @@ extension View {
     }
 
     @ViewBuilder
-    public func gwWheelDatePickerStyle() -> some View {
+    func gwWheelDatePickerStyle() -> some View {
         #if os(iOS)
         datePickerStyle(.wheel)
         #else

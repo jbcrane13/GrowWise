@@ -72,10 +72,8 @@ public final class ValidationService: Sendable {
         // Check for potential SQL injection patterns
         let dangerousPatterns = ["DROP TABLE", "DELETE FROM", "INSERT INTO", "UPDATE SET", "'; --", "UNION SELECT"]
         let upperText = trimmedText.uppercased()
-        for pattern in dangerousPatterns {
-            if upperText.contains(pattern) {
-                return .invalid("Invalid characters detected")
-            }
+        for pattern in dangerousPatterns where upperText.contains(pattern) {
+            return .invalid("Invalid characters detected")
         }
 
         return .valid
@@ -111,7 +109,13 @@ public final class ValidationService: Sendable {
 
     // MARK: - Number Validation
 
-    public func validateNumber(_ text: String, fieldName: String, min: Double? = nil, max: Double? = nil, allowDecimals: Bool = true) -> ValidationResult {
+    public func validateNumber(
+        _ text: String,
+        fieldName: String,
+        min: Double? = nil,
+        max: Double? = nil,
+        allowDecimals: Bool = true
+    ) -> ValidationResult {
         let trimmedText = text.trimmingCharacters(in: .whitespacesAndNewlines)
 
         if trimmedText.isEmpty {
@@ -227,10 +231,8 @@ public final class ValidationService: Sendable {
         // Remove potential SQL injection attempts
         let dangerousPatterns = ["DROP", "DELETE", "INSERT", "UPDATE", "EXEC", "SCRIPT", "<script>", "</script>"]
         let upperQuery = trimmedQuery.uppercased()
-        for pattern in dangerousPatterns {
-            if upperQuery.contains(pattern.uppercased()) {
-                return .invalid("Invalid search query")
-            }
+        for pattern in dangerousPatterns where upperQuery.contains(pattern.uppercased()) {
+            return .invalid("Invalid search query")
         }
 
         return .valid
@@ -268,11 +270,9 @@ public final class ValidationService: Sendable {
         var errors: [String: String] = [:]
         var isValid = true
 
-        for (fieldName, result) in validations {
-            if !result.isValid {
-                isValid = false
-                errors[fieldName] = result.errorMessage ?? "Invalid input"
-            }
+        for (fieldName, result) in validations where !result.isValid {
+            isValid = false
+            errors[fieldName] = result.errorMessage ?? "Invalid input"
         }
 
         return (isValid, errors)
@@ -307,8 +307,8 @@ public struct ValidationModifier: ViewModifier {
     }
 }
 
-extension View {
-    public func validate(_ validation: @escaping () -> ValidationService.ValidationResult) -> some View {
+public extension View {
+    func validate(_ validation: @escaping () -> ValidationService.ValidationResult) -> some View {
         modifier(ValidationModifier(validation: validation))
     }
 }

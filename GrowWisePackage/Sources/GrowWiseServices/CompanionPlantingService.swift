@@ -105,7 +105,8 @@ private struct PlantCompatibilityProfile: Codable {
 // MARK: - Companion Planting Service
 
 @MainActor
-@Observable public final class CompanionPlantingService {
+@Observable
+public final class CompanionPlantingService {
     private let companionDatabase: [String: PlantCompatibilityProfile]
 
     private static let loadedDatabase: [String: PlantCompatibilityProfile] = {
@@ -202,9 +203,11 @@ private struct PlantCompatibilityProfile: Codable {
             switch info.compatibility {
             case .companion:
                 if !recommendedCompanions.contains(existingPlant) { recommendedCompanions.append(existingPlant) }
+
             case .incompatible:
                 incompatiblePlants.append(existingPlant)
                 warnings.append("\(plantName) should not be planted near \(existingPlant)")
+
             case .neutral:
                 break
             }
@@ -220,9 +223,13 @@ private struct PlantCompatibilityProfile: Codable {
             }
         }
 
-        let overallCompatibility: PlantCompatibility = if !incompatiblePlants.isEmpty { .incompatible }
-        else if !recommendedCompanions.isEmpty { .companion }
-        else { .neutral }
+        let overallCompatibility: PlantCompatibility = if !incompatiblePlants.isEmpty {
+            .incompatible
+        } else if !recommendedCompanions.isEmpty {
+            .companion
+        } else {
+            .neutral
+        }
 
         return GardenCompatibilityAnalysis(
             plantName: plantName,

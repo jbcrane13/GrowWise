@@ -18,15 +18,21 @@ struct GardenCardView: View {
 
     private var healthSummary: GardenHealthSummary {
         let plants = garden.plants ?? []
-        let healthy = plants.count(where: { ($0.healthStatus ?? .healthy) == .healthy })
-        let warning = plants.count(where: {
-            let s = $0.healthStatus ?? .healthy
-            return s == .needsAttention || s == .sick
-        })
-        let critical = plants.count(where: {
-            let s = $0.healthStatus ?? .healthy
-            return s == .dying || s == .dead
-        })
+        var healthy = 0
+        var warning = 0
+        var critical = 0
+        for plant in plants {
+            switch plant.healthStatus ?? .healthy {
+            case .healthy:
+                healthy += 1
+
+            case .needsAttention, .sick:
+                warning += 1
+
+            case .dying, .dead:
+                critical += 1
+            }
+        }
         return GardenHealthSummary(healthy: healthy, warning: warning, critical: critical)
     }
 
@@ -100,8 +106,7 @@ struct GardenCardView: View {
         .accessibilityIdentifier("garden_card_\(garden.id?.uuidString ?? "unknown")")
     }
 
-    @ViewBuilder
-    private var healthIndicator: some View {
+    @ViewBuilder private var healthIndicator: some View {
         let summary = healthSummary
         if plantCount == 0 {
             GardenMiniStat(
@@ -266,17 +271,20 @@ struct GardenMiniLayout: View {
         switch count {
         case 1:
             return [CGRect(x: 0, y: 0, width: 1.0, height: 1.0)]
+
         case 2:
             return [
                 CGRect(x: 0, y: 0, width: 0.55, height: 1.0),
                 CGRect(x: 0.55, y: 0, width: 0.45, height: 1.0),
             ]
+
         case 3:
             return [
                 CGRect(x: 0, y: 0, width: 0.5, height: 1.0),
                 CGRect(x: 0.5, y: 0, width: 0.5, height: 0.5),
                 CGRect(x: 0.5, y: 0.5, width: 0.5, height: 0.5),
             ]
+
         case 4:
             return [
                 CGRect(x: 0, y: 0, width: 0.5, height: 0.5),
@@ -284,6 +292,7 @@ struct GardenMiniLayout: View {
                 CGRect(x: 0, y: 0.5, width: 0.5, height: 0.5),
                 CGRect(x: 0.5, y: 0.5, width: 0.5, height: 0.5),
             ]
+
         case 5:
             return [
                 CGRect(x: 0, y: 0, width: 0.6, height: 0.55),
@@ -292,6 +301,7 @@ struct GardenMiniLayout: View {
                 CGRect(x: 0.33, y: 0.55, width: 0.33, height: 0.45),
                 CGRect(x: 0.66, y: 0.55, width: 0.34, height: 0.45),
             ]
+
         default:
             // For 6+ beds, pack into a 3-column grid with varying heights
             let cols = 3

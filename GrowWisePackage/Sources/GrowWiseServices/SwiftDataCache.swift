@@ -1,4 +1,7 @@
 import Foundation
+import os
+
+private let logger = Logger(subsystem: "com.growwise", category: "SwiftDataCache")
 
 /// High-performance caching layer for SwiftData queries with TTL management
 /// Supports TTL policies (short/medium/long) for different data freshness requirements
@@ -17,7 +20,7 @@ public final class SwiftDataCache {
             case .short: 120
             case .medium: 300
             case .long: 900
-            case let .custom(interval): interval
+            case .custom(let interval): interval
             }
         }
     }
@@ -71,7 +74,9 @@ public final class SwiftDataCache {
     public func set(_ key: String, value: some Any, policy: TTLPolicy) {
         let ttl = policy.timeInterval
         cache[key] = CacheEntry(value: value, timestamp: Date(), ttl: ttl, policy: policy)
-        print("[Cache] Set: key=\(key), policy=\(policy), size=\(cache.count)")
+        let policyDesc = String(describing: policy)
+        let cacheSize = self.cache.count
+        logger.debug("[Cache] Set: key=\(key, privacy: .public), policy=\(policyDesc, privacy: .public), size=\(cacheSize)")
 
         // Prevent cache from growing too large
         if cache.count > maxCacheSize {
@@ -135,10 +140,18 @@ public final class SwiftDataCache {
             }
             entriesByPolicy[policyKey, default: 0] += 1
 
-            if oldestTimestamp == nil || entry.timestamp < oldestTimestamp! {
+            if let oldest = oldestTimestamp {
+                if entry.timestamp < oldest {
+                    oldestTimestamp = entry.timestamp
+                }
+            } else {
                 oldestTimestamp = entry.timestamp
             }
-            if newestTimestamp == nil || entry.timestamp > newestTimestamp! {
+            if let newest = newestTimestamp {
+                if entry.timestamp > newest {
+                    newestTimestamp = entry.timestamp
+                }
+            } else {
                 newestTimestamp = entry.timestamp
             }
         }
@@ -188,9 +201,10 @@ public final class SwiftDataCache {
         do {
             let value = try await loader()
             set(key, value: value, policy: policy)
-            print("[Cache] Preloaded: \(key) with policy \(policy)")
+            let policyDesc = String(describing: policy)
+            logger.debug("[Cache] Preloaded: \(key, privacy: .public) with policy \(policyDesc, privacy: .public)")
         } catch {
-            print("[Cache] Preload failed for \(key): \(error.localizedDescription)")
+            logger.error("[Cache] Preload failed for \(key, privacy: .public): \(error.localizedDescription, privacy: .public)")
         }
     }
 
@@ -212,7 +226,8 @@ public final class SwiftDataCache {
                 cache[item.key] = CacheEntry(value: value, timestamp: Date(), ttl: ttl, policy: item.policy)
                 successCount += 1
             } catch {
-                print("[Cache] Batch warming failed for \(item.key): \(error.localizedDescription)")
+                let errorDesc = error.localizedDescription
+                logger.error("[Cache] Batch warming failed for \(item.key, privacy: .public): \(errorDesc, privacy: .public)")
             }
 
             // Keep UI responsive
@@ -220,7 +235,8 @@ public final class SwiftDataCache {
         }
 
         let duration = CFAbsoluteTimeGetCurrent() - startTime
-        print("[Cache] Batch warming complete: \(successCount)/\(items.count) items in \(String(format: "%.2fs", duration))")
+        let durationStr = String(format: "%.2fs", duration)
+        logger.info("[Cache] Batch warming complete: \(successCount)/\(items.count) items in \(durationStr, privacy: .public)")
     }
 
     private func cleanExpiredEntries() {
@@ -231,13 +247,14 @@ public final class SwiftDataCache {
         let removedCount = sizeBefore - cache.count
 
         if removedCount > 0, cache.count > 10 {
-            print("[Cache] Cleaned \(removedCount) expired entries")
+            logger.debug("[Cache] Cleaned \(removedCount) expired entries")
         }
     }
 
     private func evictOldestEntries() {
         let sortedKeys = cache.keys.sorted { key1, key2 in
-            cache[key1]!.timestamp < cache[key2]!.timestamp
+            guard let entry1 = cache[key1], let entry2 = cache[key2] else { return false }
+            return entry1.timestamp < entry2.timestamp
         }
 
         let toRemove = sortedKeys.prefix(cache.count - maxCacheSize + 10)

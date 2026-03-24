@@ -1,20 +1,26 @@
 import Foundation
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftData
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
 #endif
 
+private let logger = Logger(subsystem: "com.growwise", category: "MainAppView")
+
 public struct MainAppView: View {
-    // Services injected from GrowWiseApp via environment
-    @Environment(LocationService.self) private var locationService
-    @Environment(NotificationService.self) private var notificationService
-    @Environment(CloudSyncService.self) private var cloudSyncService
+    /// Services injected from GrowWiseApp via environment
+    @Environment(LocationService.self)
+    private var locationService
+    @Environment(NotificationService.self)
+    private var notificationService
+    @Environment(CloudSyncService.self)
+    private var cloudSyncService
 
     // DataService initialized asynchronously in this view, then injected to children
-    @State private var dataService: DataService? = nil
+    @State private var dataService: DataService?
     @State private var featureServices: FeatureServices?
     @State private var selectedTab: TabSelection = .home
     @State private var isInitializing = true
@@ -25,7 +31,9 @@ public struct MainAppView: View {
     public init() {
         let launchArgs = ProcessInfo.processInfo.arguments
         let launchEnv = ProcessInfo.processInfo.environment
-        let initialOnboardingStatus: Bool = if launchArgs.contains("--skip-onboarding") || launchEnv["UITEST_SKIP_ONBOARDING"] == "1" {
+        let skipOnboarding = launchArgs.contains("--skip-onboarding")
+            || launchEnv["UITEST_SKIP_ONBOARDING"] == "1"
+        let initialOnboardingStatus: Bool = if skipOnboarding {
             true
         } else {
             UserDefaults.standard.bool(forKey: "hasCompletedOnboarding")
@@ -174,7 +182,7 @@ public struct MainAppView: View {
         }
 
         let initDuration = CFAbsoluteTimeGetCurrent() - initStartTime
-        print("[Init] DataService initialized in \(String(format: "%.3fs", initDuration))")
+        logger.info("[Init] DataService initialized in \(String(format: "%.3fs", initDuration), privacy: .public)")
 
         let isUITesting = ProcessInfo.processInfo.arguments.contains("--uitesting")
 
@@ -187,8 +195,8 @@ public struct MainAppView: View {
                 let warmingDuration = CFAbsoluteTimeGetCurrent() - warmingStart
                 await MainActor.run {
                     let stats = service.getCacheStats()
-                    print("[Init] Cache warming completed in \(String(format: "%.3fs", warmingDuration))")
-                    print("[Init] Cache ready: \(stats.size) entries preloaded")
+                    logger.info("[Init] Cache warming completed in \(String(format: "%.3fs", warmingDuration), privacy: .public)")
+                    logger.info("[Init] Cache ready: \(stats.size) entries preloaded")
                 }
             }
         }
@@ -207,14 +215,14 @@ public struct MainAppView: View {
     @MainActor
     private func seedDatabaseIfNeeded() async {
         guard let plantDatabaseService = featureServices?.plantDatabaseService else {
-            print("[Seed] PlantDatabaseService not available, skipping seeding")
+            logger.info("[Seed] PlantDatabaseService not available, skipping seeding")
             return
         }
 
         do {
             try await plantDatabaseService.seedPlantDatabase()
         } catch {
-            print("[Seed] Seeding encountered errors: \(error.localizedDescription)")
+            logger.error("[Seed] Seeding encountered errors: \(error.localizedDescription, privacy: .public)")
         }
     }
 }

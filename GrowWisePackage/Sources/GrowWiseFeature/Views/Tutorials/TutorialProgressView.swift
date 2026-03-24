@@ -7,7 +7,8 @@ public struct TutorialProgressView: View {
 
     @State private var analytics: TutorialAnalytics
     @State private var selectedFilter: ProgressFilter = .all
-    @Environment(\.dismiss) private var dismiss
+    @Environment(\.dismiss)
+    private var dismiss
 
     public init(tutorialService: TutorialService) {
         self.tutorialService = tutorialService
@@ -205,15 +206,18 @@ public struct TutorialProgressView: View {
         switch selectedFilter {
         case .all:
             return allTutorials
+
         case .completed:
             return allTutorials.filter { tutorial in
                 tutorialService.getTutorialProgress(tutorialId: tutorial.id).isCompleted
             }
+
         case .inProgress:
             return allTutorials.filter { tutorial in
                 let progress = tutorialService.getTutorialProgress(tutorialId: tutorial.id)
                 return progress.completedSteps > 0 && !progress.isCompleted
             }
+
         case .notStarted:
             return allTutorials.filter { tutorial in
                 tutorialService.getTutorialProgress(tutorialId: tutorial.id).completedSteps == 0
