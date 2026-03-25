@@ -6,8 +6,8 @@ import SwiftUI
 
 #if canImport(ARKit) && os(iOS)
 import ARKit
-import RealityKit
 import AVFoundation
+import RealityKit
 import UIKit
 
 /// AR garden visualization using RealityKit for plant placement in real space.

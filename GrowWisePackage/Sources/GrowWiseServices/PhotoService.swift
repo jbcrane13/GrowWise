@@ -327,7 +327,7 @@ public final class PhotoService {
                 let size = image.size
                 let aspectRatio = size.width / size.height
 
-                var newSize = if size.width > size.height {
+                let newSize = if size.width > size.height {
                     CGSize(width: min(maxSize, size.width), height: min(maxSize, size.width) / aspectRatio)
                 } else {
                     CGSize(width: min(maxSize, size.height) * aspectRatio, height: min(maxSize, size.height))
@@ -423,7 +423,7 @@ public final class PhotoService {
                 return 0
             }
 
-            for case let fileURL as URL in enumerator {
+            while let fileURL = enumerator.nextObject() as? URL {
                 if let fileSize = try? fileURL.resourceValues(forKeys: [.fileSizeKey]).fileSize {
                     totalSize += fileSize
                 }

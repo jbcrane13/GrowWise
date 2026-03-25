@@ -224,7 +224,7 @@ public struct PaywallView: View {
     }
 
     private func currentTierIs(_ tier: SubscriptionTier) -> Bool {
-        if case let .active(activeTier, _) = subscriptionService.subscriptionStatus {
+        if case .active(let activeTier, _) = subscriptionService.subscriptionStatus {
             return activeTier == tier
         }
         return false
@@ -431,7 +431,7 @@ public struct PaywallView: View {
             Image(systemName: "minus")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
-        case let .text(label):
+        case .text(let label):
             Text(label)
                 .font(.system(.caption2, design: .rounded))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)

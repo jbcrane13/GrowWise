@@ -66,7 +66,7 @@ public enum PlantDiagnosticError: Error, LocalizedError {
         case .noClassification:
             "No diagnosis could be produced from the image."
 
-        case let .diagnosisLimitReached(remaining, tier):
+        case .diagnosisLimitReached(let remaining, let tier):
             "You have reached your monthly diagnosis limit (\(tier.aiDiagnosesPerMonth) per month on the \(tier.displayName) plan). Upgrade for unlimited diagnoses. Remaining: \(remaining)."
         }
     }

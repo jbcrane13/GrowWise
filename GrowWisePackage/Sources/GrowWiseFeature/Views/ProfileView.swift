@@ -19,6 +19,14 @@ public struct ProfileView: View {
     @State private var showCommunity = false
     @State private var showAchievements = false
     @State private var showForum = false
+    @State private var selectedProductID: String?
+    @State private var purchaseError: String?
+    @State private var showPurchaseError = false
+    @State private var showRestoreSuccess = false
+
+    // Product IDs
+    private let monthlyProductID = "com.growwise.premium.monthly"
+    private let yearlyProductID = "com.growwise.premium.yearly"
 
     public init() {}
 
@@ -101,6 +109,18 @@ public struct ProfileView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("App Settings are coming in a future update.")
+            }
+            .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("profile_subscribe_error_dismiss")
+            } message: { message in
+                Text(message)
+            }
+            .alert("Purchases Restored", isPresented: $showRestoreSuccess) {
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("profile_restore_dismiss")
+            } message: {
+                Text("Your purchases have been restored successfully.")
             }
         }
     }
@@ -471,6 +491,34 @@ public struct ProfileView: View {
     }
 
     // MARK: - Actions
+
+    private func subscribe() async {
+        guard let productID = selectedProductID else { return }
+
+        let product = subscriptionService.availableProducts.first { $0.id == productID }
+        guard let product else {
+            purchaseError = "Product not available. Please check your connection and try again."
+            showPurchaseError = true
+            return
+        }
+
+        do {
+            _ = try await subscriptionService.purchase(product)
+        } catch {
+            purchaseError = error.localizedDescription
+            showPurchaseError = true
+        }
+    }
+
+    private func restorePurchases() async {
+        do {
+            try await subscriptionService.restorePurchases()
+            showRestoreSuccess = true
+        } catch {
+            purchaseError = error.localizedDescription
+            showPurchaseError = true
+        }
+    }
 
     private func loadStats() {
         plantCount = dataService.getPlantCount()

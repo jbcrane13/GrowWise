@@ -27,7 +27,7 @@ struct PublicGardenCardView: View {
             if let asset = garden.imageAsset, let url = asset.fileURL {
                 AsyncImage(url: url) { phase in
                     switch phase {
-                    case let .success(image):
+                    case .success(let image):
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)

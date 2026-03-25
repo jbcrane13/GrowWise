@@ -189,7 +189,7 @@ public final class ForumService {
         }
 
         let fetched = results.matchResults.compactMap { _, result -> ForumQuestion? in
-            guard case let .success(record) = result else { return nil }
+            guard case .success(let record) = result else { return nil }
             return Self.questionFromRecord(record)
         }
 
@@ -235,7 +235,7 @@ public final class ForumService {
         let results = try await db.records(matching: query, resultsLimit: 100)
 
         return results.matchResults.compactMap { _, result -> ForumAnswer? in
-            guard case let .success(record) = result else { return nil }
+            guard case .success(let record) = result else { return nil }
             return Self.answerFromRecord(record)
         }
     }
