@@ -1,5 +1,5 @@
-import XCTest
 @testable import GrowWiseServices
+import XCTest
 
 final class PlantDiagnosticServiceTests: XCTestCase {
     @MainActor
@@ -7,7 +7,7 @@ final class PlantDiagnosticServiceTests: XCTestCase {
         let service = PlantDiagnosticService()
         let diagnosis = service.summarize([
             PlantClassificationCandidate(label: "healthy_leaf", confidence: 0.93),
-            PlantClassificationCandidate(label: "leaf_spot", confidence: 0.24)
+            PlantClassificationCandidate(label: "leaf_spot", confidence: 0.24),
         ])
 
         XCTAssertEqual(diagnosis.primaryLabel, "healthy_leaf")
@@ -20,11 +20,14 @@ final class PlantDiagnosticServiceTests: XCTestCase {
         let service = PlantDiagnosticService()
         let diagnosis = service.summarize([
             PlantClassificationCandidate(label: "powdery_mildew", confidence: 0.89),
-            PlantClassificationCandidate(label: "leaf_rust", confidence: 0.33)
+            PlantClassificationCandidate(label: "leaf_rust", confidence: 0.33),
         ])
 
-        XCTAssertEqual(diagnosis.severity, .severe)
+        // powdery_mildew is in the knowledge base with .moderate severity
+        XCTAssertEqual(diagnosis.severity, .moderate)
         XCTAssertEqual(diagnosis.alternatives.count, 1)
+        XCTAssertNotNil(diagnosis.condition)
+        XCTAssertEqual(diagnosis.condition?.commonName, "Powdery Mildew")
     }
 
     @MainActor
