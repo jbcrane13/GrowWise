@@ -1,33 +1,24 @@
 import GrowWiseModels
 import GrowWiseServices
-import StoreKit
 import SwiftUI
 
 public struct ProfileView: View {
-    @Environment(DataService.self)
-    private var dataService
-    @Environment(SubscriptionService.self)
-    private var subscriptionService
+    @Environment(DataService.self) private var dataService
+    @Environment(SubscriptionService.self) private var subscriptionService
 
     @State private var plantCount: Int = 0
     @State private var journalCount: Int = 0
     @State private var streakDays: Int = 0
     @State private var showShareComingSoon = false
-    @State private var selectedProductID: String?
-    @State private var purchaseError: String?
-    @State private var showPurchaseError = false
-    @State private var showRestoreSuccess = false
-    @State private var showAchievementsComingSoon = false
     @State private var showAppSettingsComingSoon = false
 
     // Navigation state
     @State private var showTutorials = false
     @State private var showNotifications = false
     @State private var showSubscription = false
-
-    // Fixed product IDs matching SubscriptionService
-    private let monthlyProductID = "com.growwise.premium.monthly"
-    private let yearlyProductID = "com.growwise.premium.yearly"
+    @State private var showCommunity = false
+    @State private var showAchievements = false
+    @State private var showForum = false
 
     public init() {}
 
@@ -72,6 +63,7 @@ public struct ProfileView: View {
                     userCard
                     statsRow
                     learningSection
+                    communitySection
                     settingsSection
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -86,7 +78,16 @@ public struct ProfileView: View {
                 RemindersListView()
             }
             .navigationDestination(isPresented: $showSubscription) {
-                subscriptionDestination
+                PaywallView()
+            }
+            .navigationDestination(isPresented: $showCommunity) {
+                CommunityFeedView()
+            }
+            .navigationDestination(isPresented: $showAchievements) {
+                AchievementsView()
+            }
+            .navigationDestination(isPresented: $showForum) {
+                ForumView()
             }
             .task {
                 loadStats()
@@ -96,25 +97,10 @@ public struct ProfileView: View {
             } message: {
                 Text("Garden sharing via iCloud is coming in a future update.")
             }
-            .alert("Coming Soon", isPresented: $showAchievementsComingSoon) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Achievements are coming in a future update.")
-            }
             .alert("Coming Soon", isPresented: $showAppSettingsComingSoon) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("App Settings are coming in a future update.")
-            }
-            .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
-                Button("OK", role: .cancel) {}
-            } message: { message in
-                Text(message)
-            }
-            .alert("Purchases Restored", isPresented: $showRestoreSuccess) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Your purchases have been restored successfully.")
             }
         }
     }
@@ -215,7 +201,35 @@ public struct ProfileView: View {
                 title: "Achievements",
                 id: "profile_row_achievements"
             ) {
-                showAchievementsComingSoon = true
+                showAchievements = true
+            }
+        }
+    }
+
+    // MARK: - Community Section
+
+    private var communitySection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            Text("Community")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            menuRow(
+                icon: "person.3.fill",
+                color: CultivationTheme.Colors.brandLeaf,
+                title: "Garden Showcase",
+                id: "profile_row_community"
+            ) {
+                showCommunity = true
+            }
+
+            menuRow(
+                icon: "bubble.left.and.bubble.right.fill",
+                color: CultivationTheme.Colors.brandLeaf,
+                title: "Q&A Forum",
+                id: "profile_row_forum"
+            ) {
+                showForum = true
             }
         }
     }
@@ -463,43 +477,12 @@ public struct ProfileView: View {
         journalCount = dataService.getJournalEntryCount()
         streakDays = dataService.getCurrentUser()?.streakDays ?? 0
     }
-
-    private func subscribe() async {
-        guard let productID = selectedProductID else { return }
-
-        // Find the matching product from the service
-        let product = subscriptionService.availableProducts.first { $0.id == productID }
-        guard let product else {
-            purchaseError = "Product not available. Please check your connection and try again."
-            showPurchaseError = true
-            return
-        }
-
-        do {
-            _ = try await subscriptionService.purchase(product)
-        } catch {
-            purchaseError = error.localizedDescription
-            showPurchaseError = true
-        }
-    }
-
-    private func restorePurchases() async {
-        do {
-            try await subscriptionService.restorePurchases()
-            showRestoreSuccess = true
-        } catch {
-            purchaseError = error.localizedDescription
-            showPurchaseError = true
-        }
-    }
 }
 
 #Preview {
     // swiftlint:disable:next force_try
     let dataService = try! DataService()
-    let subscriptionService = SubscriptionService()
 
     ProfileView()
         .environment(dataService)
-        .environment(subscriptionService)
 }

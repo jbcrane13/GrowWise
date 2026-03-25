@@ -9,6 +9,8 @@ import SwiftData
 @MainActor
 @Observable
 public final class ShoppingListService {
+    public init() {}
+
     // MARK: - Auto-Generation
 
     /// Generate shopping list items based on a garden's current plants and state.

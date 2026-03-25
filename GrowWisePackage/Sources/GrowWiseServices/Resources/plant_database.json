@@ -508,5 +508,379 @@
       "Produces colorful flower spikes"
     ],
     "companionPlants": ["Sedum", "Jade Plant"]
+  },
+  {
+    "name": "Blueberry",
+    "scientificName": "Vaccinium corymbosum",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "medium",
+    "description": "Deciduous fruiting shrub producing antioxidant-rich berries in summer",
+    "careInstructions": [
+      "Plant in acidic soil with pH 4.5-5.5",
+      "Mulch heavily with pine needles or wood chips",
+      "Prune older canes in late winter to encourage new growth",
+      "Net bushes when fruit begins to ripen to protect from birds"
+    ],
+    "companionPlants": ["Strawberry", "Thyme", "Basil"]
+  },
+  {
+    "name": "Raspberry",
+    "scientificName": "Rubus idaeus",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "medium",
+    "description": "Vigorous cane fruit that produces sweet berries from summer through fall",
+    "careInstructions": [
+      "Plant in well-draining soil with full sun",
+      "Provide a trellis or support system for canes",
+      "Prune spent floricanes after harvest",
+      "Mulch to retain moisture and suppress weeds"
+    ],
+    "companionPlants": ["Garlic", "Tansy", "Marigold"]
+  },
+  {
+    "name": "Lemon",
+    "scientificName": "Citrus limon",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "large",
+    "description": "Evergreen citrus tree that produces tart fruit year-round in warm climates or indoors",
+    "careInstructions": [
+      "Plant in well-draining soil or a large container",
+      "Needs at least 6-8 hours of direct sunlight",
+      "Feed with citrus-specific fertilizer monthly during growing season",
+      "Protect from temperatures below 50 degrees Fahrenheit"
+    ],
+    "companionPlants": ["Lavender", "Basil", "Marigold"]
+  },
+  {
+    "name": "Fig",
+    "scientificName": "Ficus carica",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Ancient fruit tree producing sweet figs in summer with minimal pest problems",
+    "careInstructions": [
+      "Plant in a sheltered, south-facing spot",
+      "Water deeply but allow soil to dry between waterings",
+      "Prune in late winter to maintain shape and size",
+      "Wrap or mulch heavily in cold climates for winter protection"
+    ],
+    "companionPlants": ["Strawberry", "Marigold", "Rue"]
+  },
+  {
+    "name": "Sage",
+    "scientificName": "Salvia officinalis",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Aromatic perennial herb with soft gray-green leaves used in cooking and medicine",
+    "careInstructions": [
+      "Plant in well-draining soil with full sun",
+      "Drought tolerant once established",
+      "Prune in spring to prevent woody, leggy growth",
+      "Replace plants every 3-4 years as they become woody"
+    ],
+    "companionPlants": ["Rosemary", "Thyme", "Lavender"]
+  },
+  {
+    "name": "Dill",
+    "scientificName": "Anethum graveolens",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Feathery annual herb with a distinctive flavor, essential for pickling and seafood dishes",
+    "careInstructions": [
+      "Direct sow in garden as dill dislikes transplanting",
+      "Succession plant every 3 weeks for continuous harvest",
+      "Allow some plants to flower and self-seed",
+      "Harvest leaves before flowering for best flavor"
+    ],
+    "companionPlants": ["Cabbage", "Lettuce", "Cucumber"]
+  },
+  {
+    "name": "Zinnia",
+    "scientificName": "Zinnia elegans",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Vibrant annual flower that blooms prolifically in hot weather and attracts butterflies",
+    "careInstructions": [
+      "Direct sow after last frost in warm soil",
+      "Space plants for good air circulation to prevent mildew",
+      "Deadhead spent blooms to encourage continuous flowering",
+      "Makes excellent long-lasting cut flowers"
+    ],
+    "companionPlants": ["Marigold", "Cosmos", "Basil"]
+  },
+  {
+    "name": "Cosmos",
+    "scientificName": "Cosmos bipinnatus",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Tall, airy annual with daisy-like blooms that thrives in poor soil and attracts pollinators",
+    "careInstructions": [
+      "Direct sow after last frost",
+      "Avoid rich soil and heavy fertilizing which reduces blooms",
+      "Pinch young plants to encourage branching",
+      "Self-seeds reliably for next year"
+    ],
+    "companionPlants": ["Zinnia", "Marigold", "Sunflower"]
+  },
+  {
+    "name": "Dahlia",
+    "scientificName": "Dahlia pinnata",
+    "type": "flower",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "medium",
+    "description": "Stunning late-summer to fall bloomer with intricate flower forms in endless colors",
+    "careInstructions": [
+      "Plant tubers after last frost when soil warms",
+      "Stake tall varieties early before they topple",
+      "Pinch growing tip when plant is 12 inches tall for bushier growth",
+      "Dig up tubers after first frost in cold climates and store over winter"
+    ],
+    "companionPlants": ["Zinnia", "Cosmos", "Marigold"]
+  },
+  {
+    "name": "Pansy",
+    "scientificName": "Viola tricolor var. hortensis",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Cool-season annual with cheerful face-like blooms that thrives in spring and fall",
+    "careInstructions": [
+      "Plant in early spring or fall for best performance",
+      "Prefers cool temperatures and fades in summer heat",
+      "Deadhead regularly to extend blooming",
+      "Edible flowers that add color to salads"
+    ],
+    "companionPlants": ["Lettuce", "Chives", "Violas"]
+  },
+  {
+    "name": "Chrysanthemum",
+    "scientificName": "Chrysanthemum morifolium",
+    "type": "flower",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "medium",
+    "description": "Classic fall-blooming perennial with dense flower heads in warm autumn colors",
+    "careInstructions": [
+      "Pinch stems back in early summer for bushier plants with more blooms",
+      "Plant in spring so roots establish before fall flowering",
+      "Water at the base to keep foliage dry",
+      "Mulch heavily in late fall for winter protection"
+    ],
+    "companionPlants": ["Aster", "Sedum", "Ornamental Grasses"]
+  },
+  {
+    "name": "Green Bean",
+    "scientificName": "Phaseolus vulgaris",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "Fast-growing warm-season vegetable available as bush or climbing pole varieties",
+    "careInstructions": [
+      "Direct sow after last frost when soil is warm",
+      "Do not soak seeds before planting as they can crack",
+      "Provide trellis or poles for climbing varieties",
+      "Harvest frequently to encourage continued production"
+    ],
+    "companionPlants": ["Corn", "Squash", "Marigold"]
+  },
+  {
+    "name": "Garlic",
+    "scientificName": "Allium sativum",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Hardy bulb planted in fall for summer harvest, prized for culinary and pest-repelling properties",
+    "careInstructions": [
+      "Plant individual cloves in fall, 4-6 weeks before ground freezes",
+      "Mulch heavily after planting to protect over winter",
+      "Cut scapes in spring to direct energy to bulb growth",
+      "Harvest when lower leaves brown but upper leaves remain green"
+    ],
+    "companionPlants": ["Tomatoes", "Roses", "Peppers"]
+  },
+  {
+    "name": "Radish",
+    "scientificName": "Raphanus sativus",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "small",
+    "description": "One of the fastest vegetables from seed to harvest, ready in as little as 25 days",
+    "careInstructions": [
+      "Direct sow in cool weather for best roots",
+      "Thin seedlings to 2 inches apart",
+      "Harvest promptly when roots reach mature size to avoid pithy texture",
+      "Succession plant every 10 days for continuous harvest"
+    ],
+    "companionPlants": ["Carrots", "Lettuce", "Spinach"]
+  },
+  {
+    "name": "Broccoli",
+    "scientificName": "Brassica oleracea var. italica",
+    "type": "vegetable",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "everyOtherDay",
+    "space": "medium",
+    "description": "Cool-season crop producing nutritious green heads, with side shoots extending the harvest",
+    "careInstructions": [
+      "Start indoors 6-8 weeks before last frost or direct sow in late summer for fall crop",
+      "Transplant to full sun with rich, well-draining soil",
+      "Harvest main head while buds are tight and before flowers open",
+      "Continue harvesting side shoots for weeks after the main head"
+    ],
+    "companionPlants": ["Dill", "Sage", "Onions"]
+  },
+  {
+    "name": "Sweet Potato",
+    "scientificName": "Ipomoea batatas",
+    "type": "vegetable",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Warm-season root crop that produces nutritious tubers and attractive trailing vines",
+    "careInstructions": [
+      "Plant slips after soil warms to at least 65 degrees Fahrenheit",
+      "Build raised mounds or ridges for best tuber formation",
+      "Water regularly during early growth, reduce as harvest approaches",
+      "Cure harvested tubers in a warm humid spot for 10 days before storage"
+    ],
+    "companionPlants": ["Beans", "Thyme", "Marigold"]
+  },
+  {
+    "name": "ZZ Plant",
+    "scientificName": "Zamioculcas zamiifolia",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialShade",
+    "watering": "biweekly",
+    "space": "medium",
+    "description": "Nearly indestructible houseplant with glossy dark green leaves that tolerates extreme neglect",
+    "careInstructions": [
+      "Tolerates low light but grows faster in bright indirect light",
+      "Water only when soil is completely dry",
+      "Rhizome stores water so err on the side of underwatering",
+      "Wipe leaves occasionally to keep them shiny"
+    ],
+    "companionPlants": ["Snake Plant", "Pothos"]
+  },
+  {
+    "name": "Fiddle Leaf Fig",
+    "scientificName": "Ficus lyrata",
+    "type": "houseplant",
+    "difficulty": "advanced",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Statement houseplant with large violin-shaped leaves that commands attention in any room",
+    "careInstructions": [
+      "Place in bright, indirect light and avoid moving once settled",
+      "Water when top 2 inches of soil are dry, using room-temperature water",
+      "Avoid cold drafts and sudden temperature changes",
+      "Rotate the pot quarterly for even growth"
+    ],
+    "companionPlants": ["Monstera", "Pothos", "Bird of Paradise"]
+  },
+  {
+    "name": "String of Pearls",
+    "scientificName": "Senecio rowleyanus",
+    "type": "succulent",
+    "difficulty": "intermediate",
+    "sunlight": "partialSun",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Trailing succulent with bead-like leaves that cascades beautifully from hanging planters",
+    "careInstructions": [
+      "Provide bright, indirect light to prevent sun scorch",
+      "Water only when soil is completely dry, about every 2 weeks",
+      "Use a well-draining cactus/succulent soil mix",
+      "Propagate easily by laying stem cuttings on moist soil"
+    ],
+    "companionPlants": ["Jade Plant", "Echeveria", "Aloe Vera"]
+  },
+  {
+    "name": "Hen and Chicks",
+    "scientificName": "Sempervivum tectorum",
+    "type": "succulent",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Cold-hardy succulent that forms rosettes and spreads by producing offsets called chicks",
+    "careInstructions": [
+      "Plant in gritty, well-draining soil or rock gardens",
+      "Extremely cold-hardy and drought tolerant",
+      "Separate offsets to propagate or let them form natural colonies",
+      "Mother rosette dies after flowering but offsets continue"
+    ],
+    "companionPlants": ["Sedum", "Echeveria", "Thyme"]
+  },
+  {
+    "name": "Japanese Maple",
+    "scientificName": "Acer palmatum",
+    "type": "tree",
+    "difficulty": "intermediate",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "large",
+    "description": "Ornamental tree with delicate, deeply lobed leaves that turn brilliant red in autumn",
+    "careInstructions": [
+      "Plant in sheltered spot with afternoon shade in hot climates",
+      "Mulch to keep roots cool and retain moisture",
+      "Prune minimally in late winter to maintain natural form",
+      "Protect from harsh winds which can damage delicate leaves"
+    ],
+    "companionPlants": ["Hosta", "Fern", "Azalea"]
+  },
+  {
+    "name": "Hydrangea",
+    "scientificName": "Hydrangea macrophylla",
+    "type": "shrub",
+    "difficulty": "intermediate",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "large",
+    "description": "Showy flowering shrub with large globular blooms that change color based on soil pH",
+    "careInstructions": [
+      "Plant in morning sun with afternoon shade for best blooms",
+      "Amend soil pH to change flower color: acidic for blue, alkaline for pink",
+      "Water deeply and consistently as they wilt quickly in dry conditions",
+      "Prune after flowering on old wood varieties, or in spring for new wood types"
+    ],
+    "companionPlants": ["Hosta", "Fern", "Azalea"]
   }
 ]
