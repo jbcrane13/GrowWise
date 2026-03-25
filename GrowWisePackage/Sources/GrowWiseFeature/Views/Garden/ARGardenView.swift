@@ -7,6 +7,8 @@ import SwiftUI
 #if canImport(ARKit) && os(iOS)
 import ARKit
 import RealityKit
+import AVFoundation
+import UIKit
 
 /// AR garden visualization using RealityKit for plant placement in real space.
 /// Wraps an ARView via UIViewRepresentable and provides tap-to-place functionality.
