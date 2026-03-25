@@ -34,6 +34,9 @@ public final class Garden {
     @Relationship(deleteRule: .cascade, inverse: \ShoppingItem.garden)
     public var shoppingItems: [ShoppingItem]? = []
 
+    @Relationship(deleteRule: .cascade, inverse: \CompostBatch.garden)
+    public var compostBatches: [CompostBatch]? = []
+
     public var user: User?
 
     // Metadata
@@ -53,6 +56,7 @@ public final class Garden {
         soilType = SoilType.loam
         spaceAvailable = SpaceSize.small
         plants = []
+        compostBatches = []
         createdDate = Date()
         lastModified = Date()
     }

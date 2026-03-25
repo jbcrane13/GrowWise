@@ -21,6 +21,7 @@ public final class CompostBatch {
     public var turnDates: [Date] = []
 
     public var notes: String?
+
     public var garden: Garden?
 
     public init(name: String, startDate: Date = Date()) {

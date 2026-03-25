@@ -1,0 +1,1764 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=390, initial-scale=1.0, maximum-scale=1.0">
+<title>Cultivation — Botanical Field Journal Redesign</title>
+<link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    /* Warm earth palette — intentionally NOT the expected bright greens */
+    --ink: #0D0B09;
+    --parchment: #F7F3ED;
+    --parchment-dim: #EDE8DF;
+    --clay: #1A1714;
+    --clay-mid: #2A2520;
+    --clay-light: #3A3530;
+
+    /* Accent: terracotta/copper warmth */
+    --terracotta: #C4664A;
+    --terracotta-soft: rgba(196, 102, 74, 0.12);
+    --copper: #D4915E;
+    --copper-glow: rgba(212, 145, 94, 0.08);
+
+    /* Nature tones — muted, sophisticated */
+    --sage: #7A8B6F;
+    --sage-soft: rgba(122, 139, 111, 0.12);
+    --moss: #4A5C3F;
+    --lichen: #9AA88F;
+    --dried-rose: #B8897A;
+    --wheat: #D4C5A9;
+    --frost: #C8D0C5;
+
+    /* Functional */
+    --text-primary: #E8E3DB;
+    --text-secondary: rgba(232, 227, 219, 0.55);
+    --text-tertiary: rgba(232, 227, 219, 0.3);
+    --border: rgba(232, 227, 219, 0.07);
+    --border-accent: rgba(232, 227, 219, 0.12);
+
+    /* Status — warm-shifted */
+    --status-urgent: #E05A3A;
+    --status-caution: #D4A03C;
+    --status-good: #6B9B5E;
+
+    --serif: 'Instrument Serif', Georgia, serif;
+    --sans: 'DM Sans', -apple-system, sans-serif;
+    --mono: 'JetBrains Mono', monospace;
+
+    --radius-sm: 8px;
+    --radius-md: 14px;
+    --radius-lg: 22px;
+    --radius-xl: 28px;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html { font-size: 16px; }
+
+  body {
+    font-family: var(--sans);
+    background: var(--ink);
+    color: var(--text-primary);
+    overflow-x: hidden;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* ============================
+     LAYOUT FRAME — iPhone 15 Pro
+     ============================ */
+  .device-frame {
+    width: 390px;
+    margin: 40px auto;
+    position: relative;
+    border-radius: 48px;
+    border: 3px solid #2A2520;
+    overflow: hidden;
+    box-shadow:
+      0 0 0 1px rgba(255,255,255,0.03),
+      0 40px 100px rgba(0,0,0,0.6),
+      0 8px 32px rgba(0,0,0,0.4);
+  }
+
+  .screen {
+    width: 390px;
+    min-height: 844px;
+    position: relative;
+    overflow: hidden;
+    background: var(--ink);
+  }
+
+  /* ============================
+     ATMOSPHERIC BACKGROUND
+     ============================ */
+  .screen::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 300px 400px at 85% 8%, rgba(196, 102, 74, 0.06), transparent),
+      radial-gradient(ellipse 250px 350px at 15% 45%, rgba(122, 139, 111, 0.04), transparent),
+      radial-gradient(ellipse 200px 200px at 60% 85%, rgba(212, 145, 94, 0.03), transparent);
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* Grain texture */
+  .screen::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.025;
+    background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noise)'/%3E%3C/svg%3E");
+    background-size: 128px 128px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .screen > * { position: relative; z-index: 1; }
+
+  /* ============================
+     STATUS BAR
+     ============================ */
+  .status-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 14px 28px 8px;
+    font-size: 14px;
+    font-weight: 600;
+    letter-spacing: -0.2px;
+  }
+  .status-bar .time { font-variant-numeric: tabular-nums; }
+  .status-bar .icons { display: flex; gap: 5px; align-items: center; font-size: 12px; }
+
+  /* ============================
+     SCREEN TITLES
+     ============================ */
+  .screen-label {
+    text-align: center;
+    padding: 32px 0 16px;
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--terracotta);
+    opacity: 0;
+    animation: fadeUp 0.6s ease forwards;
+  }
+
+  /* ============================
+     HOME — HERO SECTION
+     ============================ */
+  .hero {
+    padding: 0 24px 20px;
+  }
+
+  .hero-greeting {
+    font-family: var(--sans);
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+    margin-bottom: 4px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.1s forwards;
+  }
+
+  .hero-title {
+    font-family: var(--serif);
+    font-size: 36px;
+    font-weight: 400;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    color: var(--text-primary);
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.2s forwards;
+  }
+
+  .hero-title em {
+    font-style: italic;
+    color: var(--copper);
+  }
+
+  .hero-subtitle {
+    font-size: 14px;
+    color: var(--text-secondary);
+    margin-top: 8px;
+    line-height: 1.5;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.3s forwards;
+  }
+
+  /* ============================
+     SEASONAL STRIP — Living data
+     ============================ */
+  .season-strip {
+    display: flex;
+    gap: 10px;
+    padding: 0 24px;
+    margin-bottom: 24px;
+    overflow-x: auto;
+    -webkit-overflow-scrolling: touch;
+    scrollbar-width: none;
+  }
+  .season-strip::-webkit-scrollbar { display: none; }
+
+  .season-card {
+    flex: 0 0 auto;
+    width: 105px;
+    padding: 14px 12px;
+    border-radius: var(--radius-md);
+    background: var(--clay);
+    border: 1px solid var(--border);
+    position: relative;
+    overflow: hidden;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .season-card:nth-child(1) { animation-delay: 0.3s; }
+  .season-card:nth-child(2) { animation-delay: 0.38s; }
+  .season-card:nth-child(3) { animation-delay: 0.46s; }
+
+  .season-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+  .season-card:nth-child(1)::before { background: var(--terracotta); }
+  .season-card:nth-child(2)::before { background: var(--sage); }
+  .season-card:nth-child(3)::before { background: var(--copper); }
+
+  .season-card .value {
+    font-family: var(--mono);
+    font-size: 22px;
+    font-weight: 500;
+    letter-spacing: -1px;
+    margin-bottom: 2px;
+  }
+  .season-card:nth-child(1) .value { color: var(--terracotta); }
+  .season-card:nth-child(2) .value { color: var(--sage); }
+  .season-card:nth-child(3) .value { color: var(--copper); }
+
+  .season-card .label {
+    font-size: 11px;
+    color: var(--text-tertiary);
+    font-weight: 500;
+    letter-spacing: 0.3px;
+  }
+
+  /* ============================
+     SECTION HEADERS
+     ============================ */
+  .section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: baseline;
+    padding: 0 24px;
+    margin-bottom: 12px;
+  }
+
+  .section-title {
+    font-family: var(--serif);
+    font-size: 22px;
+    font-weight: 400;
+    letter-spacing: -0.3px;
+  }
+
+  .section-action {
+    font-size: 12px;
+    font-weight: 500;
+    color: var(--copper);
+    letter-spacing: 0.3px;
+    text-decoration: none;
+    cursor: pointer;
+  }
+
+  /* ============================
+     CARE TIMELINE — not a flat list
+     ============================ */
+  .care-timeline {
+    padding: 0 24px;
+    margin-bottom: 28px;
+  }
+
+  .timeline-item {
+    display: flex;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .timeline-item:nth-child(1) { animation-delay: 0.4s; }
+  .timeline-item:nth-child(2) { animation-delay: 0.48s; }
+  .timeline-item:nth-child(3) { animation-delay: 0.56s; }
+  .timeline-item:last-child { border-bottom: none; }
+
+  .timeline-dot {
+    flex: 0 0 auto;
+    width: 38px;
+    height: 38px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 16px;
+    margin-top: 2px;
+  }
+  .timeline-dot.urgent {
+    background: rgba(224, 90, 58, 0.12);
+    border: 1px solid rgba(224, 90, 58, 0.25);
+  }
+  .timeline-dot.water {
+    background: rgba(106, 153, 180, 0.12);
+    border: 1px solid rgba(106, 153, 180, 0.25);
+  }
+  .timeline-dot.feed {
+    background: rgba(212, 145, 94, 0.12);
+    border: 1px solid rgba(212, 145, 94, 0.25);
+  }
+
+  .timeline-content { flex: 1; min-width: 0; }
+  .timeline-plant {
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .timeline-task {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .timeline-meta {
+    display: flex;
+    gap: 8px;
+    align-items: center;
+    margin-top: 6px;
+  }
+  .timeline-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .timeline-tag.overdue {
+    background: rgba(224, 90, 58, 0.12);
+    color: var(--status-urgent);
+  }
+  .timeline-tag.today {
+    background: rgba(212, 160, 60, 0.12);
+    color: var(--status-caution);
+  }
+  .timeline-tag.optional {
+    background: var(--sage-soft);
+    color: var(--sage);
+  }
+  .timeline-time {
+    font-size: 11px;
+    color: var(--text-tertiary);
+  }
+
+  .timeline-action {
+    flex: 0 0 auto;
+    align-self: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    border: 1.5px solid var(--border-accent);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  .timeline-action:hover {
+    background: var(--sage-soft);
+    border-color: var(--sage);
+    color: var(--sage);
+  }
+
+  /* ============================
+     GARDEN BEDS — Magazine layout
+     ============================ */
+  .garden-beds {
+    padding: 0 24px;
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 12px;
+    margin-bottom: 28px;
+  }
+
+  .bed-card {
+    border-radius: var(--radius-lg);
+    padding: 18px;
+    position: relative;
+    overflow: hidden;
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .bed-card:nth-child(1) { animation-delay: 0.5s; }
+  .bed-card:nth-child(2) { animation-delay: 0.58s; }
+  .bed-card:nth-child(3) { animation-delay: 0.66s; }
+  .bed-card:nth-child(4) { animation-delay: 0.74s; }
+
+  .bed-card:hover { transform: scale(0.97); }
+
+  /* Each bed gets its own warm tone */
+  .bed-card.herb {
+    background: linear-gradient(145deg, rgba(122, 139, 111, 0.15), rgba(74, 92, 63, 0.08));
+    border: 1px solid rgba(122, 139, 111, 0.2);
+  }
+  .bed-card.tomato {
+    background: linear-gradient(145deg, rgba(196, 102, 74, 0.15), rgba(196, 102, 74, 0.05));
+    border: 1px solid rgba(196, 102, 74, 0.2);
+  }
+  .bed-card.flower {
+    background: linear-gradient(145deg, rgba(184, 137, 122, 0.15), rgba(184, 137, 122, 0.05));
+    border: 1px solid rgba(184, 137, 122, 0.2);
+  }
+  .bed-card.raised {
+    background: linear-gradient(145deg, rgba(212, 197, 169, 0.12), rgba(212, 197, 169, 0.04));
+    border: 1px solid rgba(212, 197, 169, 0.18);
+  }
+
+  /* Featured bed — spans full width */
+  .bed-card.featured {
+    grid-column: 1 / -1;
+    display: flex;
+    gap: 16px;
+    align-items: center;
+    padding: 20px;
+  }
+
+  .bed-icon {
+    font-size: 28px;
+    margin-bottom: 10px;
+    display: block;
+  }
+  .bed-name {
+    font-family: var(--serif);
+    font-size: 17px;
+    margin-bottom: 4px;
+  }
+  .bed-count {
+    font-size: 12px;
+    color: var(--text-secondary);
+  }
+  .bed-health-dots {
+    display: flex;
+    gap: 4px;
+    margin-top: 10px;
+  }
+  .bed-health-dots span {
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+  }
+  .dot-good { background: var(--status-good); }
+  .dot-caution { background: var(--status-caution); }
+  .dot-alert { background: var(--status-urgent); }
+
+  .bed-featured-info { flex: 1; }
+  .bed-featured-visual {
+    width: 80px;
+    height: 80px;
+    border-radius: 50%;
+    background: radial-gradient(circle at 30% 30%, rgba(122, 139, 111, 0.25), rgba(74, 92, 63, 0.08));
+    border: 1px solid rgba(122, 139, 111, 0.15);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 32px;
+  }
+
+  /* ============================
+     WEATHER STRIP — contextual data
+     ============================ */
+  .weather-strip {
+    margin: 0 24px 24px;
+    padding: 16px 18px;
+    border-radius: var(--radius-lg);
+    background: var(--clay);
+    border: 1px solid var(--border);
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.8s forwards;
+  }
+
+  .weather-icon {
+    font-size: 28px;
+    flex: 0 0 auto;
+  }
+
+  .weather-info { flex: 1; }
+  .weather-temp {
+    font-family: var(--mono);
+    font-size: 18px;
+    font-weight: 500;
+    letter-spacing: -0.5px;
+    margin-bottom: 1px;
+  }
+  .weather-desc {
+    font-size: 12px;
+    color: var(--text-secondary);
+    line-height: 1.4;
+  }
+  .weather-insight {
+    font-size: 11px;
+    color: var(--copper);
+    margin-top: 4px;
+    font-style: italic;
+    font-family: var(--serif);
+  }
+
+  /* ============================
+     JOURNAL ENTRY PREVIEW — Editorial
+     ============================ */
+  .journal-preview {
+    margin: 0 24px 28px;
+    border-radius: var(--radius-lg);
+    overflow: hidden;
+    background: var(--clay);
+    border: 1px solid var(--border);
+    cursor: pointer;
+    transition: transform 0.3s ease;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.9s forwards;
+  }
+  .journal-preview:hover { transform: scale(0.98); }
+
+  .journal-image {
+    width: 100%;
+    height: 160px;
+    background: linear-gradient(
+      135deg,
+      rgba(122, 139, 111, 0.3) 0%,
+      rgba(74, 92, 63, 0.2) 40%,
+      rgba(196, 102, 74, 0.15) 100%
+    );
+    position: relative;
+    display: flex;
+    align-items: flex-end;
+    padding: 16px;
+  }
+  .journal-image::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(to top, rgba(13,11,9,0.7), transparent 60%);
+  }
+  .journal-image-tag {
+    position: relative;
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    color: var(--wheat);
+    background: rgba(13, 11, 9, 0.5);
+    padding: 4px 10px;
+    border-radius: 4px;
+    backdrop-filter: blur(8px);
+  }
+  .journal-image-date {
+    position: absolute;
+    top: 14px;
+    right: 14px;
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-secondary);
+    letter-spacing: 0.5px;
+  }
+  .journal-body {
+    padding: 16px 18px 18px;
+  }
+  .journal-title {
+    font-family: var(--serif);
+    font-size: 19px;
+    margin-bottom: 6px;
+    line-height: 1.3;
+  }
+  .journal-excerpt {
+    font-size: 13px;
+    color: var(--text-secondary);
+    line-height: 1.55;
+    display: -webkit-box;
+    -webkit-line-clamp: 2;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+
+  /* ============================
+     TAB BAR — Minimal, warm
+     ============================ */
+  .tab-bar {
+    position: sticky;
+    bottom: 0;
+    display: flex;
+    justify-content: space-around;
+    align-items: center;
+    padding: 10px 16px 30px;
+    background: linear-gradient(to top, var(--ink) 60%, transparent);
+  }
+
+  .tab-item {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    padding: 6px 16px;
+    border-radius: var(--radius-md);
+  }
+  .tab-item .tab-icon {
+    font-size: 20px;
+    transition: transform 0.3s ease;
+  }
+  .tab-item .tab-label {
+    font-size: 10px;
+    font-weight: 500;
+    letter-spacing: 0.5px;
+    color: var(--text-tertiary);
+    transition: color 0.3s ease;
+  }
+  .tab-item.active .tab-icon { transform: scale(1.1); }
+  .tab-item.active .tab-label { color: var(--terracotta); }
+  .tab-item.active {
+    background: var(--terracotta-soft);
+  }
+
+  /* ============================
+     SCREEN 2: PLANT DETAIL
+     ============================ */
+  .plant-hero {
+    position: relative;
+    height: 280px;
+    overflow: hidden;
+  }
+
+  .plant-hero-bg {
+    position: absolute;
+    inset: 0;
+    background:
+      radial-gradient(ellipse 200px 200px at 70% 30%, rgba(122, 139, 111, 0.25), transparent),
+      radial-gradient(ellipse 150px 200px at 30% 70%, rgba(196, 102, 74, 0.12), transparent),
+      var(--ink);
+  }
+
+  .plant-hero-content {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    padding: 24px;
+    background: linear-gradient(to top, var(--ink), transparent);
+  }
+
+  .plant-botanical {
+    font-family: var(--serif);
+    font-style: italic;
+    font-size: 13px;
+    color: var(--copper);
+    margin-bottom: 4px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.2s forwards;
+  }
+
+  .plant-name {
+    font-family: var(--serif);
+    font-size: 32px;
+    line-height: 1.1;
+    letter-spacing: -0.5px;
+    margin-bottom: 8px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.3s forwards;
+  }
+
+  .plant-tags {
+    display: flex;
+    gap: 8px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.4s forwards;
+  }
+
+  .plant-tag {
+    font-family: var(--mono);
+    font-size: 10px;
+    font-weight: 500;
+    padding: 4px 10px;
+    border-radius: 6px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .plant-tag.health-good {
+    background: rgba(107, 155, 94, 0.12);
+    color: var(--status-good);
+    border: 1px solid rgba(107, 155, 94, 0.25);
+  }
+  .plant-tag.stage {
+    background: var(--sage-soft);
+    color: var(--lichen);
+    border: 1px solid rgba(154, 168, 143, 0.2);
+  }
+
+  .plant-hero-icon {
+    position: absolute;
+    top: 60px;
+    right: 30px;
+    font-size: 80px;
+    opacity: 0.12;
+  }
+
+  /* Plant vitals — horizontal scroll */
+  .plant-vitals {
+    display: flex;
+    gap: 10px;
+    padding: 20px 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+  }
+  .plant-vitals::-webkit-scrollbar { display: none; }
+
+  .vital-card {
+    flex: 0 0 auto;
+    width: 100px;
+    padding: 14px 12px;
+    border-radius: var(--radius-md);
+    background: var(--clay);
+    border: 1px solid var(--border);
+    text-align: center;
+    opacity: 0;
+    animation: fadeUp 0.4s ease forwards;
+  }
+  .vital-card:nth-child(1) { animation-delay: 0.45s; }
+  .vital-card:nth-child(2) { animation-delay: 0.5s; }
+  .vital-card:nth-child(3) { animation-delay: 0.55s; }
+  .vital-card:nth-child(4) { animation-delay: 0.6s; }
+
+  .vital-icon {
+    font-size: 20px;
+    margin-bottom: 8px;
+    display: block;
+  }
+  .vital-value {
+    font-family: var(--mono);
+    font-size: 15px;
+    font-weight: 500;
+    margin-bottom: 2px;
+  }
+  .vital-label {
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.3px;
+  }
+
+  /* Plant care history — sparkline-inspired */
+  .care-history {
+    margin: 0 24px 20px;
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    background: var(--clay);
+    border: 1px solid var(--border);
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.65s forwards;
+  }
+
+  .care-history-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 14px;
+  }
+  .care-history-title {
+    font-family: var(--serif);
+    font-size: 16px;
+  }
+  .care-history-range {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 0.5px;
+  }
+
+  .sparkline-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+  }
+  .sparkline-row:last-child { margin-bottom: 0; }
+
+  .sparkline-label {
+    font-size: 12px;
+    color: var(--text-secondary);
+    width: 60px;
+    flex: 0 0 auto;
+  }
+
+  .sparkline-bar {
+    flex: 1;
+    height: 24px;
+    border-radius: 4px;
+    background: rgba(255,255,255,0.02);
+    overflow: hidden;
+    display: flex;
+    gap: 2px;
+    padding: 4px;
+    align-items: center;
+  }
+
+  .spark-dot {
+    flex: 1;
+    height: 100%;
+    border-radius: 2px;
+    transition: transform 0.3s ease;
+  }
+  .spark-dot:hover { transform: scaleY(1.3); }
+  .spark-dot.done { background: rgba(107, 155, 94, 0.5); }
+  .spark-dot.missed { background: rgba(224, 90, 58, 0.4); }
+  .spark-dot.future { background: rgba(232, 227, 219, 0.06); }
+  .spark-dot.skip { background: rgba(212, 160, 60, 0.3); }
+
+  /* Plant quick actions */
+  .plant-actions {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+    padding: 0 24px;
+    margin-bottom: 24px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.7s forwards;
+  }
+
+  .plant-action-btn {
+    padding: 16px;
+    border-radius: var(--radius-md);
+    border: 1px solid var(--border);
+    background: var(--clay);
+    cursor: pointer;
+    transition: all 0.3s ease;
+    text-align: center;
+  }
+  .plant-action-btn:hover {
+    border-color: var(--border-accent);
+    transform: scale(0.97);
+  }
+  .plant-action-btn.primary {
+    grid-column: 1 / -1;
+    background: linear-gradient(135deg, var(--moss), var(--sage));
+    border: none;
+    color: var(--parchment);
+  }
+  .plant-action-icon {
+    font-size: 20px;
+    margin-bottom: 6px;
+    display: block;
+  }
+  .plant-action-label {
+    font-size: 13px;
+    font-weight: 500;
+  }
+
+  /* ============================
+     SCREEN 3: GARDEN TAB
+     ============================ */
+  .garden-hero-header {
+    padding: 0 24px 8px;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.15s forwards;
+  }
+  .garden-overline {
+    font-family: var(--mono);
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--sage);
+    margin-bottom: 6px;
+  }
+  .garden-hero-title {
+    font-family: var(--serif);
+    font-size: 30px;
+    letter-spacing: -0.5px;
+    margin-bottom: 4px;
+  }
+  .garden-hero-subtitle {
+    font-size: 13px;
+    color: var(--text-secondary);
+  }
+
+  /* Garden filter pills */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    padding: 16px 24px;
+    overflow-x: auto;
+    scrollbar-width: none;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.25s forwards;
+  }
+  .filter-row::-webkit-scrollbar { display: none; }
+
+  .filter-pill {
+    flex: 0 0 auto;
+    padding: 7px 14px;
+    border-radius: 100px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    border: 1px solid var(--border-accent);
+    background: transparent;
+    color: var(--text-secondary);
+    white-space: nowrap;
+  }
+  .filter-pill.active {
+    background: var(--terracotta-soft);
+    border-color: rgba(196, 102, 74, 0.3);
+    color: var(--terracotta);
+  }
+
+  /* Garden list — stacked editorial cards */
+  .garden-list {
+    padding: 8px 24px;
+  }
+
+  .garden-card {
+    padding: 18px;
+    border-radius: var(--radius-lg);
+    background: var(--clay);
+    border: 1px solid var(--border);
+    margin-bottom: 12px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    opacity: 0;
+    animation: fadeUp 0.5s ease forwards;
+  }
+  .garden-card:nth-child(1) { animation-delay: 0.35s; }
+  .garden-card:nth-child(2) { animation-delay: 0.43s; }
+  .garden-card:nth-child(3) { animation-delay: 0.51s; }
+
+  .garden-card:hover { transform: scale(0.98); }
+
+  .garden-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 12px;
+  }
+
+  .garden-card-icon {
+    width: 44px;
+    height: 44px;
+    border-radius: var(--radius-sm);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+  }
+  .garden-card-icon.backyard {
+    background: var(--sage-soft);
+  }
+  .garden-card-icon.indoor {
+    background: var(--copper-glow);
+  }
+  .garden-card-icon.balcony {
+    background: rgba(184, 137, 122, 0.12);
+  }
+
+  .garden-card-badge {
+    font-family: var(--mono);
+    font-size: 10px;
+    padding: 3px 8px;
+    border-radius: 4px;
+    letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  .garden-card-badge.alert {
+    background: rgba(224, 90, 58, 0.12);
+    color: var(--status-urgent);
+  }
+  .garden-card-badge.healthy {
+    background: rgba(107, 155, 94, 0.12);
+    color: var(--status-good);
+  }
+
+  .garden-card-name {
+    font-family: var(--serif);
+    font-size: 20px;
+    margin-bottom: 4px;
+  }
+  .garden-card-meta {
+    font-size: 12px;
+    color: var(--text-secondary);
+    margin-bottom: 14px;
+  }
+
+  /* Mini bed layout inside garden card */
+  .mini-beds {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+  }
+  .mini-bed {
+    padding: 6px 10px;
+    border-radius: 6px;
+    font-size: 11px;
+    font-weight: 500;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+  .mini-bed.sage-bg {
+    background: rgba(122, 139, 111, 0.1);
+    color: var(--lichen);
+    border: 1px solid rgba(122, 139, 111, 0.15);
+  }
+  .mini-bed.copper-bg {
+    background: rgba(212, 145, 94, 0.08);
+    color: var(--copper);
+    border: 1px solid rgba(212, 145, 94, 0.12);
+  }
+  .mini-bed.rose-bg {
+    background: rgba(184, 137, 122, 0.1);
+    color: var(--dried-rose);
+    border: 1px solid rgba(184, 137, 122, 0.15);
+  }
+  .mini-bed .bed-plant-count {
+    font-family: var(--mono);
+    font-size: 10px;
+    opacity: 0.6;
+  }
+
+  /* ============================
+     ADD BUTTON — floating
+     ============================ */
+  .fab {
+    position: absolute;
+    bottom: 100px;
+    right: 24px;
+    width: 52px;
+    height: 52px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, var(--terracotta), var(--copper));
+    border: none;
+    color: var(--parchment);
+    font-size: 24px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    box-shadow:
+      0 4px 16px rgba(196, 102, 74, 0.3),
+      0 2px 4px rgba(0,0,0,0.3);
+    transition: transform 0.3s ease;
+    z-index: 10;
+    opacity: 0;
+    animation: fadeUp 0.5s ease 0.9s forwards;
+  }
+  .fab:hover { transform: scale(1.08) rotate(90deg); }
+
+  /* ============================
+     NAVIGATION BAR (back button style)
+     ============================ */
+  .nav-bar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 20px 4px;
+  }
+  .nav-back {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 16px;
+    color: var(--copper);
+    cursor: pointer;
+    font-weight: 500;
+    background: none;
+    border: none;
+  }
+  .nav-back span {
+    font-size: 13px;
+    font-family: var(--sans);
+  }
+  .nav-actions {
+    display: flex;
+    gap: 12px;
+  }
+  .nav-action-btn {
+    width: 34px;
+    height: 34px;
+    border-radius: 50%;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text-secondary);
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+    transition: all 0.3s ease;
+  }
+  .nav-action-btn:hover { background: var(--clay); }
+
+  /* ============================
+     SEPARATOR
+     ============================ */
+  .screen-separator {
+    height: 80px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+  .screen-separator::before {
+    content: '';
+    width: 40px;
+    height: 1px;
+    background: var(--border-accent);
+  }
+  .screen-separator-label {
+    position: absolute;
+    font-family: var(--mono);
+    font-size: 9px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--text-tertiary);
+    background: var(--ink);
+    padding: 0 12px;
+  }
+
+  /* ============================
+     DESIGN NOTES
+     ============================ */
+  .design-notes {
+    max-width: 600px;
+    margin: 60px auto;
+    padding: 0 32px;
+  }
+  .design-notes h2 {
+    font-family: var(--serif);
+    font-size: 28px;
+    margin-bottom: 24px;
+    color: var(--text-primary);
+  }
+  .design-notes h3 {
+    font-family: var(--serif);
+    font-size: 18px;
+    margin: 28px 0 10px;
+    color: var(--copper);
+  }
+  .design-notes p, .design-notes li {
+    font-size: 14px;
+    color: var(--text-secondary);
+    line-height: 1.7;
+    margin-bottom: 8px;
+  }
+  .design-notes ul {
+    padding-left: 20px;
+    margin-bottom: 16px;
+  }
+
+  .color-swatch-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin: 16px 0;
+  }
+  .color-swatch {
+    width: 56px;
+    height: 56px;
+    border-radius: 12px;
+    border: 1px solid var(--border);
+    position: relative;
+  }
+  .color-swatch .swatch-label {
+    position: absolute;
+    bottom: -18px;
+    left: 0;
+    right: 0;
+    text-align: center;
+    font-size: 9px;
+    font-family: var(--mono);
+    color: var(--text-tertiary);
+    letter-spacing: 0.3px;
+  }
+
+  .type-sample {
+    padding: 20px 0;
+    border-bottom: 1px solid var(--border);
+    margin-bottom: 12px;
+  }
+  .type-sample-label {
+    font-family: var(--mono);
+    font-size: 10px;
+    color: var(--text-tertiary);
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  /* ============================
+     ANIMATIONS
+     ============================ */
+  @keyframes fadeUp {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+
+  /* Screen title animation */
+  @keyframes titleReveal {
+    from {
+      opacity: 0;
+      letter-spacing: 6px;
+    }
+    to {
+      opacity: 1;
+      letter-spacing: 2px;
+    }
+  }
+</style>
+</head>
+<body>
+
+<!-- ====================================
+     DESIGN PHILOSOPHY HEADER
+     ==================================== -->
+<div class="design-notes" style="margin-top: 80px;">
+  <p style="font-family: var(--mono); font-size: 10px; letter-spacing: 3px; text-transform: uppercase; color: var(--terracotta); margin-bottom: 12px;">Cultivation Redesign Proposal</p>
+  <h2>Botanical Field Journal</h2>
+  <p>A design direction that moves away from tech-glass-morphism toward something that feels like a curated garden journal crossed with modern editorial design. Warm, grounded, alive.</p>
+
+  <h3>Color Story</h3>
+  <p>Earth and copper over neon green. The palette draws from aged terracotta pots, dried sage bundles, weathered copper watering cans, and parchment field notes. Green appears as a status color and in garden beds, not as the brand identity itself.</p>
+
+  <div class="color-swatch-row" style="margin-bottom: 40px;">
+    <div>
+      <div class="color-swatch" style="background: #0D0B09;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Ink</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #1A1714;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Clay</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #C4664A;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Terracotta</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #D4915E;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Copper</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #7A8B6F;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Sage</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #4A5C3F;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Moss</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #B8897A;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Dried Rose</div>
+    </div>
+    <div>
+      <div class="color-swatch" style="background: #D4C5A9;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Wheat</div>
+    </div>
+  </div>
+
+  <h3>Typography</h3>
+  <p>Instrument Serif for headings evokes botanical illustration plates and garden journals. DM Sans for body text is clean and modern. JetBrains Mono for data gives a precision-instrument feel to numbers and stats.</p>
+
+  <div class="type-sample">
+    <div class="type-sample-label">Heading &mdash; Instrument Serif</div>
+    <div style="font-family: var(--serif); font-size: 32px;">Your garden is <em style="color: var(--copper);">thriving</em></div>
+  </div>
+  <div class="type-sample">
+    <div class="type-sample-label">Body &mdash; DM Sans</div>
+    <div style="font-family: var(--sans); font-size: 14px; color: var(--text-secondary); line-height: 1.6;">The basil cuttings you planted on March 12th are showing strong root development. Consider moving them to a larger pot within the next week.</div>
+  </div>
+  <div class="type-sample">
+    <div class="type-sample-label">Data &mdash; JetBrains Mono</div>
+    <div style="font-family: var(--mono); font-size: 18px; letter-spacing: -0.5px;">72&deg;F &nbsp; 3 overdue &nbsp; 12 plants &nbsp; Zone 8b</div>
+  </div>
+
+  <h3>Key Design Shifts</h3>
+  <ul>
+    <li><strong>Timeline over task list</strong> &mdash; Care tasks presented as a timeline with contextual urgency, not a flat checklist</li>
+    <li><strong>Editorial journal</strong> &mdash; Journal entries styled like magazine articles with hero images, not boring rows</li>
+    <li><strong>Sparkline care history</strong> &mdash; Visual 30-day care patterns at a glance, not just "last watered" dates</li>
+    <li><strong>Warm floating action</strong> &mdash; Terracotta FAB with rotation animation, not a flat green button</li>
+    <li><strong>Weather as garden intelligence</strong> &mdash; Weather strip gives actionable gardening insight, not just temperature</li>
+    <li><strong>Organic bed cards</strong> &mdash; Garden beds as individually-colored cards with health dot indicators</li>
+    <li><strong>Grain texture</strong> &mdash; Subtle noise overlay on backgrounds for tactile warmth</li>
+    <li><strong>Serif + mono contrast</strong> &mdash; Typographic tension between editorial elegance and data precision</li>
+  </ul>
+</div>
+
+<!-- ====================================
+     SCREEN 1: HOME TAB
+     ==================================== -->
+<div class="device-frame">
+  <div class="screen">
+    <div class="status-bar">
+      <div class="time">9:41</div>
+      <div class="icons">
+        <span>&#9679;&#9679;&#9679;&#9679;</span>
+        <span>&#x1F50B;</span>
+      </div>
+    </div>
+
+    <div class="screen-label" style="animation-delay: 0s;">Home</div>
+
+    <div class="hero">
+      <div class="hero-greeting">Good morning, Blake</div>
+      <div class="hero-title">Your garden is <em>waking up</em></div>
+      <div class="hero-subtitle">3 tasks need attention today. Spring equinox was 5 days ago &mdash; your cool-season crops are in their prime.</div>
+    </div>
+
+    <!-- Quick Stats -->
+    <div class="season-strip">
+      <div class="season-card">
+        <div class="value">3</div>
+        <div class="label">Overdue</div>
+      </div>
+      <div class="season-card">
+        <div class="value">5</div>
+        <div class="label">Due Today</div>
+      </div>
+      <div class="season-card">
+        <div class="value">12</div>
+        <div class="label">All Plants</div>
+      </div>
+    </div>
+
+    <!-- Care Timeline -->
+    <div class="section-header">
+      <div class="section-title">Care Timeline</div>
+      <a class="section-action">View All</a>
+    </div>
+
+    <div class="care-timeline">
+      <div class="timeline-item">
+        <div class="timeline-dot urgent">&#x1F4A7;</div>
+        <div class="timeline-content">
+          <div class="timeline-plant">Roma Tomatoes</div>
+          <div class="timeline-task">Watering overdue &mdash; soil moisture at 18%</div>
+          <div class="timeline-meta">
+            <span class="timeline-tag overdue">2 days late</span>
+            <span class="timeline-time">Raised Bed A</span>
+          </div>
+        </div>
+        <button class="timeline-action">&#x2713;</button>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot water">&#x1F4A7;</div>
+        <div class="timeline-content">
+          <div class="timeline-plant">Thai Basil</div>
+          <div class="timeline-task">Water today &mdash; afternoon sun expected</div>
+          <div class="timeline-meta">
+            <span class="timeline-tag today">Today</span>
+            <span class="timeline-time">Herb Garden</span>
+          </div>
+        </div>
+        <button class="timeline-action">&#x2713;</button>
+      </div>
+
+      <div class="timeline-item">
+        <div class="timeline-dot feed">&#x1F331;</div>
+        <div class="timeline-content">
+          <div class="timeline-plant">Meyer Lemon</div>
+          <div class="timeline-task">Fertilize with citrus feed &mdash; bi-weekly schedule</div>
+          <div class="timeline-meta">
+            <span class="timeline-tag optional">Suggested</span>
+            <span class="timeline-time">Container</span>
+          </div>
+        </div>
+        <button class="timeline-action">&#x2713;</button>
+      </div>
+    </div>
+
+    <!-- Garden Beds -->
+    <div class="section-header">
+      <div class="section-title">Your Beds</div>
+      <a class="section-action">Manage</a>
+    </div>
+
+    <div class="garden-beds">
+      <div class="bed-card herb">
+        <span class="bed-icon">&#x1F33F;</span>
+        <div class="bed-name">Herb Garden</div>
+        <div class="bed-count">4 plants</div>
+        <div class="bed-health-dots">
+          <span class="dot-good"></span>
+          <span class="dot-good"></span>
+          <span class="dot-good"></span>
+          <span class="dot-caution"></span>
+        </div>
+      </div>
+
+      <div class="bed-card tomato">
+        <span class="bed-icon">&#x1F345;</span>
+        <div class="bed-name">Raised Bed A</div>
+        <div class="bed-count">3 plants</div>
+        <div class="bed-health-dots">
+          <span class="dot-good"></span>
+          <span class="dot-alert"></span>
+          <span class="dot-good"></span>
+        </div>
+      </div>
+
+      <div class="bed-card featured flower">
+        <div class="bed-featured-info">
+          <div class="bed-name">Pollinator Strip</div>
+          <div class="bed-count">5 plants &middot; Full sun</div>
+          <div class="bed-health-dots">
+            <span class="dot-good"></span>
+            <span class="dot-good"></span>
+            <span class="dot-good"></span>
+            <span class="dot-good"></span>
+            <span class="dot-good"></span>
+          </div>
+        </div>
+        <div class="bed-featured-visual">&#x1F33B;</div>
+      </div>
+    </div>
+
+    <!-- Weather -->
+    <div class="weather-strip">
+      <div class="weather-icon">&#x26C5;</div>
+      <div class="weather-info">
+        <div class="weather-temp">72&deg;F &nbsp;<span style="font-size: 12px; color: var(--text-secondary);">/ 58&deg;</span></div>
+        <div class="weather-desc">Partly cloudy, light breeze from SW</div>
+        <div class="weather-insight">Perfect conditions for transplanting seedlings outdoors</div>
+      </div>
+    </div>
+
+    <!-- Journal Preview -->
+    <div class="section-header">
+      <div class="section-title">Latest Entry</div>
+      <a class="section-action">Journal</a>
+    </div>
+
+    <div class="journal-preview">
+      <div class="journal-image">
+        <span class="journal-image-date">Mar 23, 2026</span>
+        <span class="journal-image-tag">Growth Update</span>
+      </div>
+      <div class="journal-body">
+        <div class="journal-title">First blooms on the Meyer Lemon</div>
+        <div class="journal-excerpt">The fragrance hit me as soon as I opened the back door this morning. Three clusters of white blossoms have opened overnight, and the bees are already investigating...</div>
+      </div>
+    </div>
+
+    <div style="height: 60px;"></div>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item active">
+        <span class="tab-icon">&#x1F3E0;</span>
+        <span class="tab-label">Home</span>
+      </div>
+      <div class="tab-item">
+        <span class="tab-icon">&#x1F33F;</span>
+        <span class="tab-label">Garden</span>
+      </div>
+      <div class="tab-item">
+        <span class="tab-icon">&#x1F4D6;</span>
+        <span class="tab-label">Journal</span>
+      </div>
+      <div class="tab-item">
+        <span class="tab-icon">&#x1F464;</span>
+        <span class="tab-label">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- Screen separator -->
+<div class="screen-separator">
+  <span class="screen-separator-label">Plant Detail</span>
+</div>
+
+<!-- ====================================
+     SCREEN 2: PLANT DETAIL
+     ==================================== -->
+<div class="device-frame">
+  <div class="screen">
+    <div class="status-bar">
+      <div class="time">9:41</div>
+      <div class="icons">
+        <span>&#9679;&#9679;&#9679;&#9679;</span>
+        <span>&#x1F50B;</span>
+      </div>
+    </div>
+
+    <div class="nav-bar">
+      <button class="nav-back">&#x2039; <span>Garden</span></button>
+      <div class="nav-actions">
+        <button class="nav-action-btn">&#x270F;</button>
+        <button class="nav-action-btn">&#x22EE;</button>
+      </div>
+    </div>
+
+    <div class="plant-hero">
+      <div class="plant-hero-bg"></div>
+      <div class="plant-hero-icon">&#x1F345;</div>
+      <div class="plant-hero-content">
+        <div class="plant-botanical">Solanum lycopersicum</div>
+        <div class="plant-name">Roma Tomatoes</div>
+        <div class="plant-tags">
+          <span class="plant-tag health-good">Healthy</span>
+          <span class="plant-tag stage">Flowering</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Vitals -->
+    <div class="plant-vitals">
+      <div class="vital-card">
+        <span class="vital-icon">&#x2600;</span>
+        <div class="vital-value">Full</div>
+        <div class="vital-label">Sunlight</div>
+      </div>
+      <div class="vital-card">
+        <span class="vital-icon">&#x1F4A7;</span>
+        <div class="vital-value" style="color: var(--status-urgent);">18%</div>
+        <div class="vital-label">Moisture</div>
+      </div>
+      <div class="vital-card">
+        <span class="vital-icon">&#x1F321;</span>
+        <div class="vital-value">72&deg;</div>
+        <div class="vital-label">Temp</div>
+      </div>
+      <div class="vital-card">
+        <span class="vital-icon">&#x1F4C5;</span>
+        <div class="vital-value">Day 47</div>
+        <div class="vital-label">Age</div>
+      </div>
+    </div>
+
+    <!-- Care History Sparkline -->
+    <div class="care-history">
+      <div class="care-history-header">
+        <div class="care-history-title">Care Pattern</div>
+        <div class="care-history-range">Last 14 days</div>
+      </div>
+
+      <div class="sparkline-row">
+        <div class="sparkline-label">Watering</div>
+        <div class="sparkline-bar">
+          <div class="spark-dot done"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot skip"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot skip"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot missed"></div>
+          <div class="spark-dot missed"></div>
+          <div class="spark-dot future"></div>
+        </div>
+      </div>
+
+      <div class="sparkline-row">
+        <div class="sparkline-label">Feeding</div>
+        <div class="sparkline-bar">
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+        </div>
+      </div>
+
+      <div class="sparkline-row">
+        <div class="sparkline-label">Pruning</div>
+        <div class="sparkline-bar">
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot done"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+          <div class="spark-dot future"></div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section-header" style="margin-bottom: 14px;">
+      <div class="section-title">Quick Actions</div>
+    </div>
+
+    <div class="plant-actions">
+      <div class="plant-action-btn primary">
+        <span class="plant-action-icon">&#x1F4A7;</span>
+        <div class="plant-action-label">Water Now</div>
+      </div>
+      <div class="plant-action-btn">
+        <span class="plant-action-icon">&#x1F33F;</span>
+        <div class="plant-action-label">Fertilize</div>
+      </div>
+      <div class="plant-action-btn">
+        <span class="plant-action-icon">&#x1F4DD;</span>
+        <div class="plant-action-label">Journal</div>
+      </div>
+      <div class="plant-action-btn">
+        <span class="plant-action-icon">&#x1F514;</span>
+        <div class="plant-action-label">Remind</div>
+      </div>
+      <div class="plant-action-btn">
+        <span class="plant-action-icon">&#x1F4F7;</span>
+        <div class="plant-action-label">Photo</div>
+      </div>
+    </div>
+
+    <div style="height: 40px;"></div>
+  </div>
+</div>
+
+<!-- Screen separator -->
+<div class="screen-separator">
+  <span class="screen-separator-label">Garden Tab</span>
+</div>
+
+<!-- ====================================
+     SCREEN 3: GARDEN TAB
+     ==================================== -->
+<div class="device-frame">
+  <div class="screen">
+    <div class="status-bar">
+      <div class="time">9:41</div>
+      <div class="icons">
+        <span>&#9679;&#9679;&#9679;&#9679;</span>
+        <span>&#x1F50B;</span>
+      </div>
+    </div>
+
+    <div class="screen-label" style="animation-delay: 0s;">Gardens</div>
+
+    <div class="garden-hero-header">
+      <div class="garden-overline">Zone 8b &middot; Spring</div>
+      <div class="garden-hero-title">Blake's Gardens</div>
+      <div class="garden-hero-subtitle">3 gardens &middot; 12 plants &middot; 2 need attention</div>
+    </div>
+
+    <div class="filter-row">
+      <div class="filter-pill active">All Gardens</div>
+      <div class="filter-pill">Outdoor</div>
+      <div class="filter-pill">Indoor</div>
+      <div class="filter-pill">Containers</div>
+    </div>
+
+    <div class="garden-list">
+      <div class="garden-card">
+        <div class="garden-card-header">
+          <div class="garden-card-icon backyard">&#x1F33E;</div>
+          <span class="garden-card-badge alert">1 Alert</span>
+        </div>
+        <div class="garden-card-name">Backyard Garden</div>
+        <div class="garden-card-meta">7 plants &middot; 3 beds &middot; Established Mar 2025</div>
+        <div class="mini-beds">
+          <div class="mini-bed sage-bg">&#x1F33F; Herb Garden <span class="bed-plant-count">4</span></div>
+          <div class="mini-bed copper-bg">&#x1F345; Raised Bed A <span class="bed-plant-count">3</span></div>
+        </div>
+      </div>
+
+      <div class="garden-card">
+        <div class="garden-card-header">
+          <div class="garden-card-icon indoor">&#x1FAB4;</div>
+          <span class="garden-card-badge healthy">All Good</span>
+        </div>
+        <div class="garden-card-name">Living Room</div>
+        <div class="garden-card-meta">3 plants &middot; Indoor &middot; Year-round</div>
+        <div class="mini-beds">
+          <div class="mini-bed rose-bg">&#x1FAB4; Windowsill <span class="bed-plant-count">2</span></div>
+          <div class="mini-bed copper-bg">&#x1F33F; Corner Shelf <span class="bed-plant-count">1</span></div>
+        </div>
+      </div>
+
+      <div class="garden-card">
+        <div class="garden-card-header">
+          <div class="garden-card-icon balcony">&#x1F3D7;</div>
+          <span class="garden-card-badge alert">1 Alert</span>
+        </div>
+        <div class="garden-card-name">Balcony Containers</div>
+        <div class="garden-card-meta">2 plants &middot; Full sun &middot; 3rd floor</div>
+        <div class="mini-beds">
+          <div class="mini-bed sage-bg">&#x1F34B; Citrus Pot <span class="bed-plant-count">1</span></div>
+          <div class="mini-bed rose-bg">&#x1F33B; Pollinator Box <span class="bed-plant-count">1</span></div>
+        </div>
+      </div>
+    </div>
+
+    <div style="height: 60px;"></div>
+
+    <button class="fab">+</button>
+
+    <!-- Tab Bar -->
+    <div class="tab-bar">
+      <div class="tab-item">
+        <span class="tab-icon">&#x1F3E0;</span>
+        <span class="tab-label">Home</span>
+      </div>
+      <div class="tab-item active">
+        <span class="tab-icon">&#x1F33F;</span>
+        <span class="tab-label">Garden</span>
+      </div>
+      <div class="tab-item">
+        <span class="tab-icon">&#x1F4D6;</span>
+        <span class="tab-label">Journal</span>
+      </div>
+      <div class="tab-item">
+        <span class="tab-icon">&#x1F464;</span>
+        <span class="tab-label">Profile</span>
+      </div>
+    </div>
+  </div>
+</div>
+
+<div style="height: 80px;"></div>
+
+</body>
+</html>
