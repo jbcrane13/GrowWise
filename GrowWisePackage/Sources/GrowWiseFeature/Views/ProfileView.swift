@@ -17,6 +17,7 @@ public struct ProfileView: View {
     @State private var showSubscription = false
     @State private var showCommunity = false
     @State private var showAchievements = false
+    @State private var showForum = false
 
     public init() {}
 
@@ -61,6 +62,7 @@ public struct ProfileView: View {
                     userCard
                     statsRow
                     learningSection
+                    communitySection
                     settingsSection
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -82,6 +84,9 @@ public struct ProfileView: View {
             }
             .navigationDestination(isPresented: $showAchievements) {
                 AchievementsView()
+            }
+            .navigationDestination(isPresented: $showForum) {
+                ForumView()
             }
             .task {
                 loadStats()
@@ -200,6 +205,34 @@ public struct ProfileView: View {
         }
     }
 
+    // MARK: - Community Section
+
+    private var communitySection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            Text("Community")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            menuRow(
+                icon: "person.3.fill",
+                color: CultivationTheme.Colors.brandLeaf,
+                title: "Garden Showcase",
+                id: "profile_row_community"
+            ) {
+                showCommunity = true
+            }
+
+            menuRow(
+                icon: "bubble.left.and.bubble.right.fill",
+                color: CultivationTheme.Colors.brandLeaf,
+                title: "Q&A Forum",
+                id: "profile_row_forum"
+            ) {
+                showForum = true
+            }
+        }
+    }
+
     // MARK: - Settings Section
 
     private var settingsSection: some View {
@@ -224,15 +257,6 @@ public struct ProfileView: View {
                 id: "profile_row_subscription"
             ) {
                 showSubscription = true
-            }
-
-            menuRow(
-                icon: "person.3.fill",
-                color: CultivationTheme.Colors.brandLeaf,
-                title: "Community",
-                id: "profile_row_community"
-            ) {
-                showCommunity = true
             }
 
             menuRow(
@@ -285,9 +309,7 @@ public struct ProfileView: View {
 #Preview {
     // swiftlint:disable:next force_try
     let dataService = try! DataService()
-    let subscriptionService = SubscriptionService()
 
     ProfileView()
         .environment(dataService)
-        .environment(subscriptionService)
 }
