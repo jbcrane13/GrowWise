@@ -49,43 +49,45 @@ struct QuestionDetailView: View {
         }
         .background(CultivationTheme.Colors.background)
         .navigationTitle("Question")
-        .navigationBarTitleDisplayMode(.inline)
-        .toolbar {
-            ToolbarItem(placement: .primaryAction) {
-                Menu {
-                    if let recordID = question.recordID {
-                        Button(role: .destructive) {
-                            reportRecordID = recordID
-                            showReportConfirmation = true
-                        } label: {
-                            Label("Report Question", systemImage: "flag")
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
+            .toolbar {
+                ToolbarItem(placement: .primaryAction) {
+                    Menu {
+                        if let recordID = question.recordID {
+                            Button(role: .destructive) {
+                                reportRecordID = recordID
+                                showReportConfirmation = true
+                            } label: {
+                                Label("Report Question", systemImage: "flag")
+                            }
+                            .accessibilityIdentifier("forum_report_question")
                         }
-                        .accessibilityIdentifier("forum_report_question")
+                    } label: {
+                        Image(systemName: "ellipsis.circle")
+                            .font(.system(size: 16, weight: .medium))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
-                } label: {
-                    Image(systemName: "ellipsis.circle")
-                        .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                }
-                .accessibilityIdentifier("forum_question_menu")
-            }
-        }
-        .alert("Report Content", isPresented: $showReportConfirmation) {
-            Button("Report", role: .destructive) {
-                if let recordID = reportRecordID {
-                    Task<Void, Never> {
-                        try? await forumService.reportContent(recordID: recordID, reason: "Inappropriate content")
-                    }
+                    .accessibilityIdentifier("forum_question_menu")
                 }
             }
-            Button("Cancel", role: .cancel) {}
-        } message: {
-            Text("Are you sure you want to report this content as inappropriate?")
-        }
-        .task {
-            await loadAnswers()
-        }
-        .accessibilityIdentifier("forum_question_detail")
+            .alert("Report Content", isPresented: $showReportConfirmation) {
+                Button("Report", role: .destructive) {
+                    if let recordID = reportRecordID {
+                        Task<Void, Never> {
+                            try? await forumService.reportContent(recordID: recordID, reason: "Inappropriate content")
+                        }
+                    }
+                }
+                Button("Cancel", role: .cancel) {}
+            } message: {
+                Text("Are you sure you want to report this content as inappropriate?")
+            }
+            .task {
+                await loadAnswers()
+            }
+            .accessibilityIdentifier("forum_question_detail")
     }
 
     // MARK: - Question Section

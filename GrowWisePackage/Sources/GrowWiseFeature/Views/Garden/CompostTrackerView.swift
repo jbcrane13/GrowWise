@@ -543,7 +543,7 @@ private struct CompostBatchDetailSheet: View {
                 .font(.system(.caption, design: .rounded, weight: .semibold))
                 .foregroundStyle(color)
 
-            FlowLayout(spacing: 6) {
+            CompostFlowLayout(spacing: 6) {
                 ForEach(items, id: \.self) { item in
                     Text(item)
                         .font(.system(.caption2, design: .rounded, weight: .medium))
@@ -609,7 +609,7 @@ private struct CompostBatchDetailSheet: View {
 // MARK: - FlowLayout
 
 /// Simple flow layout for material chips that wraps to new lines.
-private struct FlowLayout: Layout {
+private struct CompostFlowLayout: Layout {
     var spacing: CGFloat = 6
 
     func sizeThatFits(proposal: ProposedViewSize, subviews: Subviews, cache _: inout ()) -> CGSize {
@@ -651,5 +651,95 @@ private struct FlowLayout: Layout {
             size: CGSize(width: maxWidth, height: currentY + lineHeight),
             positions: positions
         )
+    }
+}
+
+// MARK: - AddCompostBatchSheet
+
+struct AddCompostBatchSheet: View {
+    @Environment(\.modelContext)
+    private var modelContext
+    @Environment(\.dismiss)
+    private var dismiss
+
+    @State private var batchName = ""
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                TextField("Batch Name", text: $batchName)
+                    .accessibilityIdentifier("compost_add_textfield_name")
+            }
+            .navigationTitle("New Batch")
+            .gwNavigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("compost_add_button_cancel")
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Add") {
+                        let batch = CompostBatch(name: batchName.isEmpty ? "Unnamed Batch" : batchName)
+                        modelContext.insert(batch)
+                        dismiss()
+                    }
+                    .disabled(batchName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .accessibilityIdentifier("compost_add_button_save")
+                }
+            }
+        }
+    }
+}
+
+// MARK: - CompostLogEntrySheet
+
+struct CompostLogEntrySheet: View {
+    @Environment(\.modelContext)
+    private var modelContext
+    @Environment(\.dismiss)
+    private var dismiss
+
+    let batch: CompostBatch
+
+    @State private var temperature: Double = 120
+    @State private var moisture: Double = 50
+
+    var body: some View {
+        NavigationStack {
+            Form {
+                Section("Temperature (\u{00B0}F)") {
+                    Slider(value: $temperature, in: 60 ... 180, step: 1)
+                        .accessibilityIdentifier("compost_log_slider_temp")
+                    Text("\(Int(temperature))\u{00B0}F")
+                        .font(.system(.headline, design: .rounded))
+                        .accessibilityIdentifier("compost_log_label_temp")
+                }
+                Section("Moisture (%)") {
+                    Slider(value: $moisture, in: 0 ... 100, step: 1)
+                        .accessibilityIdentifier("compost_log_slider_moisture")
+                    Text("\(Int(moisture))%")
+                        .font(.system(.headline, design: .rounded))
+                        .accessibilityIdentifier("compost_log_label_moisture")
+                }
+            }
+            .navigationTitle("Log Entry")
+            .gwNavigationBarTitleDisplayMode(.inline)
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("compost_log_button_cancel")
+                }
+                ToolbarItem(placement: .confirmationAction) {
+                    Button("Save") {
+                        batch.temperatures.append(temperature)
+                        batch.moistureLevels.append(moisture)
+                        batch.logDates.append(Date())
+                        try? modelContext.save()
+                        dismiss()
+                    }
+                    .accessibilityIdentifier("compost_log_button_save")
+                }
+            }
+        }
     }
 }

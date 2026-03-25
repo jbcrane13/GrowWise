@@ -35,32 +35,34 @@ struct PublishGardenSheet: View {
             }
             .background(CultivationTheme.Colors.background)
             .navigationTitle("Publish Garden")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .accessibilityIdentifier("publish_button_cancel")
+                    }
+                }
+                .task {
+                    gardens = dataService.fetchGardens(offset: 0, limit: 50)
+                }
+                .alert("Error", isPresented: $showError, presenting: errorMessage) { _ in
+                    Button("OK", role: .cancel) {}
+                        .accessibilityIdentifier("publish_alert_ok")
+                } message: { message in
+                    Text(message)
+                }
+                .alert("Published!", isPresented: $showSuccess) {
+                    Button("Done") {
                         dismiss()
                     }
-                    .accessibilityIdentifier("publish_button_cancel")
+                    .accessibilityIdentifier("publish_alert_done")
+                } message: {
+                    Text("Your garden is now visible in the community showcase.")
                 }
-            }
-            .task {
-                gardens = dataService.fetchGardens(offset: 0, limit: 50)
-            }
-            .alert("Error", isPresented: $showError, presenting: errorMessage) { _ in
-                Button("OK", role: .cancel) {}
-                    .accessibilityIdentifier("publish_alert_ok")
-            } message: { message in
-                Text(message)
-            }
-            .alert("Published!", isPresented: $showSuccess) {
-                Button("Done") {
-                    dismiss()
-                }
-                .accessibilityIdentifier("publish_alert_done")
-            } message: {
-                Text("Your garden is now visible in the community showcase.")
-            }
         }
     }
 

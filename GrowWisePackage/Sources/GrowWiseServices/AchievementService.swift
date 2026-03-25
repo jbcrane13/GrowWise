@@ -58,6 +58,8 @@ public struct AchievementProgress: Identifiable, Sendable {
 @MainActor
 @Observable
 public final class AchievementService {
+    public init() {}
+
     // MARK: - All Achievements
 
     public static let allAchievements: [Achievement] = {

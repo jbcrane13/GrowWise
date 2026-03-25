@@ -56,24 +56,26 @@ public struct PaywallView: View {
         }
         .background(CultivationTheme.Colors.background)
         .navigationTitle("Choose Your Plan")
-        .navigationBarTitleDisplayMode(.inline)
-        .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
-            Button("OK", role: .cancel) {}
-                .accessibilityIdentifier("paywall_button_error_dismiss")
-        } message: { message in
-            Text(message)
-        }
-        .alert("Purchases Restored", isPresented: $showRestoreSuccess) {
-            Button("OK", role: .cancel) {}
-                .accessibilityIdentifier("paywall_button_restore_dismiss")
-        } message: {
-            Text("Your purchases have been restored successfully.")
-        }
-        .onAppear {
-            withAnimation(CultivationTheme.Animation.entrance) {
-                appeared = true
+        #if os(iOS)
+            .navigationBarTitleDisplayMode(.inline)
+        #endif
+            .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("paywall_button_error_dismiss")
+            } message: { message in
+                Text(message)
             }
-        }
+            .alert("Purchases Restored", isPresented: $showRestoreSuccess) {
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("paywall_button_restore_dismiss")
+            } message: {
+                Text("Your purchases have been restored successfully.")
+            }
+            .onAppear {
+                withAnimation(CultivationTheme.Animation.entrance) {
+                    appeared = true
+                }
+            }
     }
 
     // MARK: - Header

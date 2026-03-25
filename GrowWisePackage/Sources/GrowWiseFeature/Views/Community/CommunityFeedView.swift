@@ -213,18 +213,18 @@ public struct CommunityFeedView: View {
         }
 
         do {
-            let result = try await cloudSyncService.fetchPublicGardens(
+            let (fetchedGardens, newCursor) = try await cloudSyncService.fetchPublicGardens(
                 sortBy: sortOrder,
                 limit: 20,
                 cursor: reset ? nil : cursor
             )
             if reset {
-                gardens = result.gardens
+                gardens = fetchedGardens
             } else {
-                gardens.append(contentsOf: result.gardens)
+                gardens.append(contentsOf: fetchedGardens)
             }
-            cursor = result.cursor
-            hasMorePages = result.cursor != nil
+            cursor = newCursor
+            hasMorePages = newCursor != nil
         } catch {
             errorMessage = error.localizedDescription
         }

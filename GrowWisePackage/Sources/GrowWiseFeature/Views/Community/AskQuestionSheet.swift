@@ -134,21 +134,23 @@ struct AskQuestionSheet: View {
             }
             .background(CultivationTheme.Colors.background)
             .navigationTitle("Ask a Question")
-            .navigationBarTitleDisplayMode(.inline)
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") {
-                        dismiss()
+            #if os(iOS)
+                .navigationBarTitleDisplayMode(.inline)
+            #endif
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") {
+                            dismiss()
+                        }
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        .accessibilityIdentifier("forum_ask_cancel")
                     }
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    .accessibilityIdentifier("forum_ask_cancel")
                 }
-            }
-            .alert("Error", isPresented: $showError) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text(errorMessage)
-            }
+                .alert("Error", isPresented: $showError) {
+                    Button("OK", role: .cancel) {}
+                } message: {
+                    Text(errorMessage)
+                }
         }
     }
 

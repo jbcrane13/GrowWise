@@ -180,7 +180,7 @@ public struct AchievementsView: View {
             .frame(height: 6)
 
             Text("\(item.currentValue)/\(item.achievement.requirement)")
-                .font(.system(size: 10, design: .rounded, weight: .medium))
+                .font(.system(size: 10, weight: .medium, design: .rounded))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
     }
