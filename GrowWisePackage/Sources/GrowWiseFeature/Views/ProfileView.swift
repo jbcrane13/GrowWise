@@ -22,6 +22,7 @@ public struct ProfileView: View {
     @State private var showTutorials = false
     @State private var showNotifications = false
     @State private var showSubscription = false
+    @State private var showCommunity = false
 
     // Fixed product IDs matching SubscriptionService
     private let monthlyProductID = "com.growwise.premium.monthly"
@@ -85,6 +86,9 @@ public struct ProfileView: View {
             }
             .navigationDestination(isPresented: $showSubscription) {
                 subscriptionDestination
+            }
+            .navigationDestination(isPresented: $showCommunity) {
+                CommunityFeedView()
             }
             .task {
                 loadStats()
