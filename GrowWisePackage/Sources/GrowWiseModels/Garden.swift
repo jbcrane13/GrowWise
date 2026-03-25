@@ -30,6 +30,10 @@ public final class Garden {
 
     @Relationship(deleteRule: .cascade, inverse: \SoilLog.garden)
     public var soilLogs: [SoilLog]? = []
+
+    @Relationship(deleteRule: .cascade, inverse: \ShoppingItem.garden)
+    public var shoppingItems: [ShoppingItem]? = []
+
     public var user: User?
 
     // Metadata

@@ -17,6 +17,7 @@ struct GardenDetailView: View {
     @State private var selectedPlant: Plant?
     @State private var showAddPlant = false
     @State private var showCreateBed = false
+    @State private var showShoppingList = false
     @State private var plantToNavigate: Plant?
     @State private var isLoading = true
 
@@ -88,17 +89,31 @@ struct GardenDetailView: View {
         .gwNavigationBarTitleDisplayMode(.inline)
         .toolbar {
             ToolbarItem(placement: .primaryAction) {
-                Button {
-                    showAddPlant = true
-                } label: {
-                    Image(systemName: "plus")
-                        .font(.system(size: 15, weight: .semibold))
-                        .foregroundStyle(.white)
-                        .frame(width: 30, height: 30)
-                        .background(CultivationTheme.Gradients.ctaVertical)
-                        .clipShape(Circle())
+                HStack(spacing: 10) {
+                    NavigationLink {
+                        ShoppingListView(garden: garden)
+                    } label: {
+                        Image(systemName: "cart.fill")
+                            .font(.system(size: 14, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .frame(width: 30, height: 30)
+                            .background(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                            .clipShape(Circle())
+                    }
+                    .accessibilityIdentifier("gardendetail_button_shopping")
+
+                    Button {
+                        showAddPlant = true
+                    } label: {
+                        Image(systemName: "plus")
+                            .font(.system(size: 15, weight: .semibold))
+                            .foregroundStyle(.white)
+                            .frame(width: 30, height: 30)
+                            .background(CultivationTheme.Gradients.ctaVertical)
+                            .clipShape(Circle())
+                    }
+                    .accessibilityIdentifier("gardendetail_button_add")
                 }
-                .accessibilityIdentifier("gardendetail_button_add")
             }
         }
         .task { await rebuildGroups() }
