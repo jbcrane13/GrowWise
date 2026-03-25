@@ -1,21 +1,14 @@
 import GrowWiseModels
 import GrowWiseServices
-import StoreKit
 import SwiftUI
 
 public struct ProfileView: View {
     @Environment(DataService.self) private var dataService
-    @Environment(SubscriptionService.self) private var subscriptionService
 
     @State private var plantCount: Int = 0
     @State private var journalCount: Int = 0
     @State private var streakDays: Int = 0
     @State private var showShareComingSoon = false
-    @State private var selectedProductID: String?
-    @State private var purchaseError: String?
-    @State private var showPurchaseError = false
-    @State private var showRestoreSuccess = false
-    @State private var showAchievementsComingSoon = false
     @State private var showAppSettingsComingSoon = false
 
     // Navigation state
@@ -23,10 +16,7 @@ public struct ProfileView: View {
     @State private var showNotifications = false
     @State private var showSubscription = false
     @State private var showCommunity = false
-
-    // Fixed product IDs matching SubscriptionService
-    private let monthlyProductID = "com.growwise.premium.monthly"
-    private let yearlyProductID = "com.growwise.premium.yearly"
+    @State private var showAchievements = false
 
     public init() {}
 
@@ -85,10 +75,13 @@ public struct ProfileView: View {
                 RemindersListView()
             }
             .navigationDestination(isPresented: $showSubscription) {
-                subscriptionDestination
+                PaywallView()
             }
             .navigationDestination(isPresented: $showCommunity) {
                 CommunityFeedView()
+            }
+            .navigationDestination(isPresented: $showAchievements) {
+                AchievementsView()
             }
             .task {
                 loadStats()
@@ -98,25 +91,10 @@ public struct ProfileView: View {
             } message: {
                 Text("Garden sharing via iCloud is coming in a future update.")
             }
-            .alert("Coming Soon", isPresented: $showAchievementsComingSoon) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Achievements are coming in a future update.")
-            }
             .alert("Coming Soon", isPresented: $showAppSettingsComingSoon) {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("App Settings are coming in a future update.")
-            }
-            .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
-                Button("OK", role: .cancel) {}
-            } message: { message in
-                Text(message)
-            }
-            .alert("Purchases Restored", isPresented: $showRestoreSuccess) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Your purchases have been restored successfully.")
             }
         }
     }
@@ -217,7 +195,7 @@ public struct ProfileView: View {
                 title: "Achievements",
                 id: "profile_row_achievements"
             ) {
-                showAchievementsComingSoon = true
+                showAchievements = true
             }
         }
     }
@@ -246,6 +224,15 @@ public struct ProfileView: View {
                 id: "profile_row_subscription"
             ) {
                 showSubscription = true
+            }
+
+            menuRow(
+                icon: "person.3.fill",
+                color: CultivationTheme.Colors.brandLeaf,
+                title: "Community",
+                id: "profile_row_community"
+            ) {
+                showCommunity = true
             }
 
             menuRow(
@@ -286,213 +273,12 @@ public struct ProfileView: View {
         .accessibilityIdentifier(id)
     }
 
-    // MARK: - Subscription Destination
-
-    private var subscriptionDestination: some View {
-        ScrollView {
-            VStack(spacing: 20) {
-                subscriptionSection
-            }
-            .padding()
-        }
-        .navigationTitle("Subscription")
-        .background(CultivationTheme.Colors.background)
-    }
-
-    private var subscriptionSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            switch subscriptionService.subscriptionStatus {
-            case let .active(tier, expiryDate):
-                activeSubscriptionCard(tier: tier, expiryDate: expiryDate)
-
-            case .notSubscribed:
-                paywallView
-            }
-        }
-    }
-
-    private func activeSubscriptionCard(tier: SubscriptionTier, expiryDate: Date?) -> some View {
-        VStack(alignment: .leading, spacing: 8) {
-            HStack {
-                Image(systemName: "checkmark.seal.fill")
-                    .foregroundColor(.green)
-                    .font(.title2)
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(tier == .pro ? "GrowWise Pro" : "GrowWise Premium")
-                        .font(.headline)
-                    Text("Active subscription")
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-            }
-            if let expiry = expiryDate {
-                Text("Renews \(expiry.formatted(date: .abbreviated, time: .omitted))")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
-            }
-        }
-        .padding()
-        .glassCard()
-        .accessibilityIdentifier("profile_subscription_active")
-    }
-
-    // MARK: - Paywall
-
-    private var paywallView: some View {
-        VStack(spacing: 16) {
-            // Header
-            VStack(spacing: 6) {
-                ZStack {
-                    Circle()
-                        .fill(CultivationTheme.Gradients.ctaVertical)
-                        .frame(width: 64, height: 64)
-                    Image(systemName: "leaf.circle.fill")
-                        .font(.system(size: 32))
-                        .foregroundStyle(.white)
-                }
-                Text("Unlock GrowWise Premium")
-                    .font(.title3.bold())
-                Text("Get unlimited diagnoses, expert tips, and more.")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
-                    .multilineTextAlignment(.center)
-            }
-            .padding(.top, 4)
-
-            // Plan cards
-            VStack(spacing: 12) {
-                planCard(
-                    productID: monthlyProductID,
-                    title: "Monthly",
-                    price: "$2.99/mo",
-                    detail: "Billed monthly",
-                    accessibilityID: "profile_subscribe_monthly"
-                )
-                planCard(
-                    productID: yearlyProductID,
-                    title: "Yearly",
-                    price: "$19.99/yr",
-                    detail: "Save 44% — only $1.67/mo",
-                    accessibilityID: "profile_subscribe_yearly"
-                )
-            }
-
-            // Subscribe button
-            if subscriptionService.isLoading {
-                ProgressView("Processing...")
-                    .frame(maxWidth: .infinity)
-                    .padding()
-                    .accessibilityIdentifier("profile_subscribe_loading")
-            } else {
-                Button {
-                    Task { await subscribe() }
-                } label: {
-                    Text("Subscribe")
-                }
-                .buttonStyle(GradientButtonStyle(isDisabled: selectedProductID == nil))
-                .disabled(selectedProductID == nil)
-                .accessibilityIdentifier("profile_subscribe_button")
-            }
-
-            // Restore purchases
-            Button("Restore Purchases") {
-                Task { await restorePurchases() }
-            }
-            .font(.footnote)
-            .foregroundColor(.secondary)
-            .disabled(subscriptionService.isLoading)
-            .accessibilityIdentifier("profile_restore_purchases")
-
-            Text("Subscription auto-renews. Cancel anytime in Settings.")
-                .font(.caption2)
-                .foregroundColor(.secondary)
-                .multilineTextAlignment(.center)
-        }
-        .padding()
-        .glassCard()
-    }
-
-    private func planCard(
-        productID: String,
-        title: String,
-        price: String,
-        detail: String,
-        accessibilityID: String
-    ) -> some View {
-        let isSelected = selectedProductID == productID
-
-        return Button {
-            selectedProductID = productID
-        } label: {
-            HStack(spacing: 12) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text(title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
-                    Text(detail)
-                        .font(.caption)
-                        .foregroundColor(.secondary)
-                }
-                Spacer()
-                Text(price)
-                    .font(.subheadline.bold())
-                    .foregroundColor(isSelected ? .white : .primary)
-                if isSelected {
-                    Image(systemName: "checkmark.circle.fill")
-                        .foregroundColor(.white)
-                }
-            }
-            .padding()
-            .background(isSelected ? CultivationTheme.Colors.brandForest : CultivationTheme.Colors.cardSurface)
-            .clipShape(RoundedRectangle(cornerRadius: 10))
-            .overlay(
-                RoundedRectangle(cornerRadius: 10)
-                    .stroke(
-                        isSelected ? CultivationTheme.Colors.brandLeaf : CultivationTheme.Colors.cardBorder,
-                        lineWidth: 1.5
-                    )
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier(accessibilityID)
-    }
-
     // MARK: - Actions
 
     private func loadStats() {
         plantCount = dataService.getPlantCount()
         journalCount = dataService.getJournalEntryCount()
         streakDays = dataService.getCurrentUser()?.streakDays ?? 0
-    }
-
-    private func subscribe() async {
-        guard let productID = selectedProductID else { return }
-
-        // Find the matching product from the service
-        let product = subscriptionService.availableProducts.first { $0.id == productID }
-        guard let product else {
-            purchaseError = "Product not available. Please check your connection and try again."
-            showPurchaseError = true
-            return
-        }
-
-        do {
-            _ = try await subscriptionService.purchase(product)
-        } catch {
-            purchaseError = error.localizedDescription
-            showPurchaseError = true
-        }
-    }
-
-    private func restorePurchases() async {
-        do {
-            try await subscriptionService.restorePurchases()
-            showRestoreSuccess = true
-        } catch {
-            purchaseError = error.localizedDescription
-            showPurchaseError = true
-        }
     }
 }
 
