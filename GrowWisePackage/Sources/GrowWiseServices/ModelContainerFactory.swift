@@ -29,6 +29,7 @@ public struct ModelContainerFactory {
         PlantReminder.self,
         JournalEntry.self,
         SoilLog.self,
+        ShoppingItem.self,
     ] as [any PersistentModel.Type])
 
     // MARK: - Factory Methods
@@ -187,6 +188,7 @@ public struct ModelContainerFactory {
             PlantReminder.self,
             JournalEntry.self,
             SoilLog.self,
+            ShoppingItem.self,
         ] as [any PersistentModel.Type])
     }
 }
