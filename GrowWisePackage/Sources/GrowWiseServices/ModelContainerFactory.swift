@@ -30,6 +30,7 @@ public struct ModelContainerFactory {
         JournalEntry.self,
         SoilLog.self,
         ShoppingItem.self,
+        CompostBatch.self,
     ] as [any PersistentModel.Type])
 
     // MARK: - Factory Methods
@@ -188,6 +189,7 @@ public struct ModelContainerFactory {
             JournalEntry.self,
             SoilLog.self,
             ShoppingItem.self,
+            CompostBatch.self,
         ] as [any PersistentModel.Type])
     }
 }
