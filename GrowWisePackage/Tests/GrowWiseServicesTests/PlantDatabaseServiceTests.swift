@@ -1,8 +1,8 @@
-import Testing
 import Foundation
-import SwiftData
-@testable import GrowWiseServices
 @testable import GrowWiseModels
+@testable import GrowWiseServices
+import SwiftData
+import Testing
 
 // MARK: - PlantDatabaseService Tests
 
@@ -16,10 +16,8 @@ import SwiftData
 /// `PlantSeedingWorker` actor inserts plants via its own ModelContext and saves them, so
 /// the data reaches the shared container — but the main-context cache is stale.
 /// Each test calls `dataService.invalidateAllCaches()` after seeding to ensure fresh reads.
-@Suite("PlantDatabaseService Tests")
 @MainActor
 struct PlantDatabaseServiceTests {
-
     // MARK: - Shared setup helper
 
     /// Seeds the plant database and invalidates the DataService cache so subsequent
@@ -35,14 +33,14 @@ struct PlantDatabaseServiceTests {
     // MARK: - Initialization
 
     @Test("Service can be initialized with a DataService")
-    func testInitialization() throws {
+    func initialization() throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         _ = plantDBService
     }
 
     @Test("Initial plant database is empty before seeding")
-    func testInitialDatabaseIsEmpty() throws {
+    func initialDatabaseIsEmpty() throws {
         let dataService = try DataService.makeForTesting()
         #expect(dataService.getPlantDatabaseCount() == 0)
     }
@@ -50,14 +48,14 @@ struct PlantDatabaseServiceTests {
     // MARK: - Seeding
 
     @Test("seedPlantDatabase executes without throwing")
-    func testSeedPlantDatabaseSucceeds() async throws {
+    func seedPlantDatabaseSucceeds() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await plantDBService.seedPlantDatabase()
     }
 
     @Test("After seeding, database contains plants")
-    func testDatabaseContainsPlantsAfterSeeding() async throws {
+    func databaseContainsPlantsAfterSeeding() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -66,7 +64,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Seeded plants all have non-empty names")
-    func testAllSeededPlantsHaveNames() async throws {
+    func allSeededPlantsHaveNames() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -77,7 +75,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Seeded plants all have a plant type")
-    func testAllSeededPlantsHaveType() async throws {
+    func allSeededPlantsHaveType() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -87,7 +85,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains vegetables after seeding")
-    func testDatabaseContainsVegetables() async throws {
+    func databaseContainsVegetables() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -96,7 +94,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains herbs after seeding")
-    func testDatabaseContainsHerbs() async throws {
+    func databaseContainsHerbs() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -104,7 +102,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains flowers after seeding")
-    func testDatabaseContainsFlowers() async throws {
+    func databaseContainsFlowers() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -112,7 +110,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains houseplants after seeding")
-    func testDatabaseContainsHouseplants() async throws {
+    func databaseContainsHouseplants() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -120,7 +118,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains succulents after seeding")
-    func testDatabaseContainsSucculents() async throws {
+    func databaseContainsSucculents() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -128,7 +126,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains fruits after seeding")
-    func testDatabaseContainsFruits() async throws {
+    func databaseContainsFruits() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -136,7 +134,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("Database contains multiple distinct plant types")
-    func testDatabaseContainsMultipleDistinctTypes() async throws {
+    func databaseContainsMultipleDistinctTypes() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -145,20 +143,20 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("getPlantDatabaseCount returns correct count after seeding")
-    func testGetPlantDatabaseCountAfterSeeding() async throws {
+    func getPlantDatabaseCountAfterSeeding() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await plantDBService.seedPlantDatabase()
         // Use the cache-free count API to verify all plants were persisted
-        // 8 vegetables + 8 herbs + 5 flowers + 5 houseplants + 1 fruit + 3 succulents = 30
-        #expect(dataService.getPlantDatabaseCount() == 30)
+        // Expanded database: 50+ plants across vegetables, herbs, flowers, houseplants, fruits, succulents, trees, shrubs
+        #expect(dataService.getPlantDatabaseCount() >= 50)
         _ = plantDBService
     }
 
     // MARK: - Idempotency
 
     @Test("Calling seedPlantDatabase twice does not duplicate plants")
-    func testSeedingIsIdempotent() async throws {
+    func seedingIsIdempotent() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await plantDBService.seedPlantDatabase()
@@ -181,7 +179,7 @@ struct PlantDatabaseServiceTests {
     // MARK: - Search
 
     @Test("searchPlants returns results for known plant name")
-    func testSearchPlantsFindsKnownPlant() async throws {
+    func searchPlantsFindsKnownPlant() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -191,7 +189,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("searchPlants returns results for scientific name query")
-    func testSearchPlantsByScientificName() async throws {
+    func searchPlantsByScientificName() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -201,7 +199,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("searchPlants returns empty for unknown query")
-    func testSearchPlantsReturnsEmptyForUnknownQuery() async throws {
+    func searchPlantsReturnsEmptyForUnknownQuery() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -209,7 +207,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("searchPlants is case-insensitive")
-    func testSearchPlantsIsCaseInsensitive() async throws {
+    func searchPlantsIsCaseInsensitive() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -222,7 +220,7 @@ struct PlantDatabaseServiceTests {
     // MARK: - Filter
 
     @Test("filterPlants by type returns only plants of that type")
-    func testFilterPlantsByTypeReturnsCorrectResults() async throws {
+    func filterPlantsByTypeReturnsCorrectResults() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -234,7 +232,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("filterPlants by difficulty level returns correct plants")
-    func testFilterPlantsByDifficultyReturnsCorrectResults() async throws {
+    func filterPlantsByDifficultyReturnsCorrectResults() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -283,7 +281,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("getAvailablePlantTypes returns sorted unique types")
-    func testGetAvailablePlantTypesIsSorted() async throws {
+    func getAvailablePlantTypesIsSorted() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -295,7 +293,7 @@ struct PlantDatabaseServiceTests {
     // MARK: - Recommendations
 
     @Test("getRecommendedPlants returns results for a beginner profile")
-    func testGetRecommendedPlantsForBeginnerProfile() async throws {
+    func getRecommendedPlantsForBeginnerProfile() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -311,7 +309,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("getRecommendedPlants compatibility scores are between 0 and 100")
-    func testRecommendationCompatibilityScoresAreValid() async throws {
+    func recommendationCompatibilityScoresAreValid() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -328,7 +326,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("getRecommendedPlants returns non-empty reasons for each recommendation")
-    func testRecommendationReasonsAreNonEmpty() async throws {
+    func recommendationReasonsAreNonEmpty() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -344,7 +342,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("getRecommendedPlants are sorted by descending compatibility score")
-    func testRecommendationsAreSortedByScore() async throws {
+    func recommendationsAreSortedByScore() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -365,7 +363,7 @@ struct PlantDatabaseServiceTests {
     // MARK: - Season Filtering
 
     @Test("getPlantsBySeason spring returns spring-appropriate plants")
-    func testGetPlantsBySeasonSpring() async throws {
+    func getPlantsBySeasonSpring() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -373,7 +371,7 @@ struct PlantDatabaseServiceTests {
     }
 
     @Test("getPlantsBySeason winter returns only houseplants and succulents")
-    func testGetPlantsBySeasonWinter() async throws {
+    func getPlantsBySeasonWinter() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
@@ -387,7 +385,7 @@ struct PlantDatabaseServiceTests {
     // MARK: - Companion Plants
 
     @Test("getCompanionPlants for a vegetable returns herbs or flowers")
-    func testGetCompanionPlantsForVegetableReturnsHerbsOrFlowers() async throws {
+    func getCompanionPlantsForVegetableReturnsHerbsOrFlowers() async throws {
         let dataService = try DataService.makeForTesting()
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
