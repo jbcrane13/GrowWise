@@ -5,6 +5,7 @@ import PackageDescription
 
 let package = Package(
     name: "GrowWiseFeature",
+    defaultLocalization: "en",
     platforms: [
         .iOS(.v17),
         .macOS(.v14),
@@ -42,7 +43,8 @@ let package = Package(
         .target(
             name: "GrowWiseFeature",
             dependencies: ["GrowWiseModels", "GrowWiseServices"],
-            exclude: ["AGENTS.md"]
+            exclude: ["AGENTS.md"],
+            resources: [.process("Resources")]
         ),
 
         // Data models and SwiftData persistence
