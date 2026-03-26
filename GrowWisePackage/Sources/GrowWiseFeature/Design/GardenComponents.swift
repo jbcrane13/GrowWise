@@ -125,7 +125,7 @@ struct PlantRow: View {
                             .padding(.vertical, 5)
                             .background {
                                 Capsule()
-                                    .fill(CultivationTheme.Gradients.cta)
+                                    .fill(CultivationTheme.Gradients.warmAccent)
                             }
                     }
                     .buttonStyle(.plain)
@@ -295,7 +295,7 @@ struct TaskRow: View {
                         .padding(.vertical, 7)
                         .background {
                             Capsule()
-                                .fill(CultivationTheme.Gradients.cta)
+                                .fill(CultivationTheme.Gradients.warmAccent)
                         }
                 }
                 .buttonStyle(.plain)
@@ -307,16 +307,16 @@ struct TaskRow: View {
                 } label: {
                     Text("Done")
                         .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
                         .background {
                             Capsule()
-                                .fill(CultivationTheme.Colors.brandLeaf.opacity(0.08))
+                                .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
                         }
                         .overlay {
                             Capsule()
-                                .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.35), lineWidth: 1)
+                                .stroke(CultivationTheme.Colors.accentCoral.opacity(0.3), lineWidth: 1)
                         }
                 }
                 .buttonStyle(.plain)
