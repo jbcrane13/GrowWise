@@ -12,6 +12,7 @@ final class HomeViewModel {
     var overdueReminders: [PlantReminder] = []
     var dueTodayReminders: [PlantReminder] = []
     var allGoodCount: Int = 0
+    var totalPlantCount: Int = 0
     var isLoading = false
     var userName: String = ""
 
@@ -50,6 +51,8 @@ final class HomeViewModel {
         // "All Good" = enabled reminders that aren't overdue or due today
         let urgentIDs = Set((overdueReminders + dueTodayReminders).map(\.id))
         allGoodCount = all.count(where: { !urgentIDs.contains($0.id) })
+
+        totalPlantCount = (try? dataService.plants.fetchAll().count) ?? 0
 
         isLoading = false
     }

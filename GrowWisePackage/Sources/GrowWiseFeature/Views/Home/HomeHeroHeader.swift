@@ -1,12 +1,13 @@
 import SwiftUI
 
 /// Hero header for the Home tab — dark background with green glow orb,
-/// time-based greeting, user name, and three quick-stat cards.
+/// time-based greeting, seasonal note, and three quick-stat cards.
 struct HomeHeroHeader: View {
     let userName: String
     let overdueCount: Int
     let dueTodayCount: Int
     let allGoodCount: Int
+    let totalPlantCount: Int
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -17,22 +18,43 @@ struct HomeHeroHeader: View {
         }
     }
 
+    private var seasonalNote: String {
+        let month = Calendar.current.component(.month, from: Date())
+        let taskCount = overdueCount + dueTodayCount
+        let taskPhrase = taskCount == 1 ? "1 task needs" : "\(taskCount) tasks need"
+        switch month {
+        case 3 ... 5: return "\(taskPhrase) attention. Your spring garden is waking up."
+        case 6 ... 8: return "\(taskPhrase) attention. Peak growing season is here."
+        case 9 ... 11: return "\(taskPhrase) attention. Time to prepare for the harvest."
+        default: return "\(taskPhrase) attention. Plan ahead for next season."
+        }
+    }
+
     var body: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Greeting block
-            VStack(alignment: .leading, spacing: 2) {
-                Text(greeting)
-                    .font(.system(size: 14, design: .rounded))
+            VStack(alignment: .leading, spacing: 4) {
+                Text(greeting + ", " + (userName.isEmpty ? "Gardener" : userName))
+                    .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     .accessibilityIdentifier("home_label_greeting")
 
-                Text(userName.isEmpty ? "Gardener" : userName)
-                    .font(.system(.title, design: .rounded, weight: .bold))
-                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                    .accessibilityIdentifier("home_label_username")
+                (
+                    Text("Your garden is ")
+                        .font(.system(.title, design: .serif)) +
+                        Text("thriving")
+                        .font(.system(.title, design: .serif))
+                        .italic()
+                        .foregroundColor(CultivationTheme.Colors.accentAmber)
+                )
+                .accessibilityIdentifier("home_label_username")
+
+                Text(seasonalNote)
+                    .font(.system(size: 14))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .padding(.top, 2)
+                    .accessibilityIdentifier("home_label_seasonal_note")
             }
 
-            // Quick stat cards
             HStack(spacing: 10) {
                 QuickStatCard(
                     value: overdueCount,
@@ -49,11 +71,11 @@ struct HomeHeroHeader: View {
                 .accessibilityIdentifier("home_stat_duetoday")
 
                 QuickStatCard(
-                    value: allGoodCount,
-                    label: "All Good",
-                    color: CultivationTheme.Colors.statusHealthy
+                    value: totalPlantCount,
+                    label: "Plants",
+                    color: CultivationTheme.Colors.brandLeaf
                 )
-                .accessibilityIdentifier("home_stat_allgood")
+                .accessibilityIdentifier("home_stat_plants")
             }
         }
         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -68,6 +90,7 @@ struct HomeHeroHeader: View {
         userName: "Blake",
         overdueCount: 2,
         dueTodayCount: 4,
-        allGoodCount: 7
+        allGoodCount: 7,
+        totalPlantCount: 12
     )
 }

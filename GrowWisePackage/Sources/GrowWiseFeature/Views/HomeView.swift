@@ -113,7 +113,8 @@ public struct HomeView: View {
                     userName: viewModel.userName,
                     overdueCount: overdueVisible.count,
                     dueTodayCount: dueTodayVisible.count,
-                    allGoodCount: viewModel.allGoodCount
+                    allGoodCount: viewModel.allGoodCount,
+                    totalPlantCount: viewModel.totalPlantCount
                 )
             }
             .toolbarBackground(.hidden)
@@ -142,7 +143,7 @@ public struct HomeView: View {
 
             VStack(spacing: 6) {
                 Text("Your garden is thriving")
-                    .font(.system(.headline, design: .rounded, weight: .bold))
+                    .font(.system(.headline, design: .serif))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text("No overdue or pending tasks — great work!")
