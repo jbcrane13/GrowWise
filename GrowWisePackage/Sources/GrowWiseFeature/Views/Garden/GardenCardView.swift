@@ -52,7 +52,7 @@ struct GardenCardView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(garden.name ?? "Garden")
-                            .font(.system(.headline, design: .rounded, weight: .semibold))
+                            .font(.system(.headline, design: .serif))
                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
                             .lineLimit(1)
 
@@ -186,14 +186,14 @@ struct GardenMiniLayout: View {
     }
 
     private static let bedColors: [Color] = [
-        Color(hex: "52B788"), // leaf green
-        Color(hex: "7A9D68"), // sage
-        Color(hex: "E9C46A"), // gold
-        Color(hex: "9DC5BB"), // teal
-        Color(hex: "B7E4C7"), // mint
-        Color(hex: "D4A373"), // terracotta
-        Color(hex: "A8DADC"), // sky blue
-        Color(hex: "CDB4DB"), // lavender
+        Color(hex: "7A917A"), // sage
+        Color(hex: "D4725C"), // coral
+        Color(hex: "E0A456"), // amber
+        Color(hex: "96AC96"), // lichen
+        Color(hex: "B09090"), // dusty rose
+        Color(hex: "C0CCC5"), // frost
+        Color(hex: "4A6650"), // moss
+        Color(hex: "C8C4AE"), // wheat
     ]
 
     var body: some View {
@@ -375,7 +375,7 @@ struct AddGardenCard: View {
             VStack(spacing: 12) {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 32, weight: .light))
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf.opacity(0.6))
+                    .foregroundStyle(CultivationTheme.Colors.accentCoral.opacity(0.6))
 
                 VStack(spacing: 2) {
                     Text("New Garden")
@@ -391,12 +391,12 @@ struct AddGardenCard: View {
             .frame(minHeight: 160)
             .background {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.03))
+                    .fill(CultivationTheme.Colors.accentCoral.opacity(0.03))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .stroke(
-                        CultivationTheme.Colors.brandLeaf.opacity(0.3),
+                        CultivationTheme.Colors.accentCoral.opacity(0.3),
                         style: StrokeStyle(lineWidth: 1.5, dash: [8, 6])
                     )
             }
