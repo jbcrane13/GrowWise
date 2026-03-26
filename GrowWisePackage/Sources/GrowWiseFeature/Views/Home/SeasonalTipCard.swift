@@ -7,16 +7,15 @@ struct SeasonalTipCard: View {
         HStack(spacing: 12) {
             IconBubble(
                 systemName: seasonIcon,
-                color: CultivationTheme.Colors.brandGold,
+                color: CultivationTheme.Colors.accentAmber,
                 size: 40,
                 iconSize: 17
             )
 
             VStack(alignment: .leading, spacing: 3) {
                 Text("Seasonal Tip")
-                    .font(.system(size: 11, weight: .semibold))
-                    .foregroundStyle(CultivationTheme.Colors.brandGold)
-                    .tracking(0.5)
+                    .font(.system(size: 13, design: .serif))
+                    .foregroundStyle(CultivationTheme.Colors.accentAmber)
                     .accessibilityIdentifier("home_label_seasonal_tip_header")
 
                 Text(seasonalTip)
