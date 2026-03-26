@@ -4,6 +4,7 @@ import Testing
 
 // MARK: - LocalizationService Tests
 
+@Suite("LocalizationService Tests")
 @MainActor
 struct LocalizationServiceTests {
     // MARK: - UserDefaults Cleanup

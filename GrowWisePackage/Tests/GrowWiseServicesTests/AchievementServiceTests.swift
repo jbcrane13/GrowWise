@@ -6,6 +6,7 @@ import Testing
 
 // MARK: - AchievementService Tests
 
+@Suite("AchievementService Tests")
 @MainActor
 struct AchievementServiceTests {
     // MARK: - Helpers
