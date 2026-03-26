@@ -132,7 +132,7 @@ public struct MainAppView: View {
                 .tag(TabSelection.profile)
                 .accessibilityIdentifier("tab_profile")
         }
-        .tint(Color(hex: "52B788"))
+        .tint(CultivationTheme.Colors.accentCoral)
     }
 
     private var shouldShowOnboarding: Bool {
