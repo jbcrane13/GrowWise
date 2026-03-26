@@ -60,7 +60,7 @@ extension View {
 
 // MARK: - Hero Header Background
 
-/// Dark background with subtle green glow orb for Home and Garden tab headers.
+/// Dark background with dual glow orbs for Home and Garden tab headers.
 struct HeroBackgroundModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
@@ -68,12 +68,19 @@ struct HeroBackgroundModifier: ViewModifier {
                 ZStack(alignment: .topTrailing) {
                     CultivationTheme.Colors.background
 
-                    // Subtle green glow orb
+                    // Subtle coral glow orb (top-right)
                     Circle()
-                        .fill(CultivationTheme.Colors.heroGlow)
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.05))
                         .frame(width: 200, height: 200)
                         .blur(radius: 60)
                         .offset(x: 60, y: -40)
+
+                    // Subtle sage glow orb (center-left)
+                    Circle()
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.04))
+                        .frame(width: 180, height: 180)
+                        .blur(radius: 50)
+                        .offset(x: -80, y: 60)
                 }
             }
     }
@@ -175,10 +182,10 @@ struct GlassPill: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular, design: .rounded))
+                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
                 .foregroundStyle(
                     isSelected
-                        ? CultivationTheme.Colors.brandLeaf
+                        ? CultivationTheme.Colors.accentCoral
                         : CultivationTheme.Colors.textSecondary
                 )
                 .padding(.horizontal, 14)
@@ -187,7 +194,7 @@ struct GlassPill: View {
                     Capsule()
                         .fill(
                             isSelected
-                                ? CultivationTheme.Colors.brandLeaf.opacity(0.15)
+                                ? CultivationTheme.Colors.accentCoral.opacity(0.12)
                                 : CultivationTheme.Colors.cardSurface
                         )
                 }
@@ -195,7 +202,7 @@ struct GlassPill: View {
                     Capsule()
                         .stroke(
                             isSelected
-                                ? CultivationTheme.Colors.brandLeaf.opacity(0.35)
+                                ? CultivationTheme.Colors.accentCoral.opacity(0.3)
                                 : CultivationTheme.Colors.cardBorder,
                             lineWidth: 1
                         )
@@ -218,11 +225,11 @@ struct QuickStatCard: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(value)")
-                .font(.system(.title2, design: .rounded, weight: .bold))
+                .font(.system(.title2, design: .monospaced, weight: .medium))
                 .foregroundStyle(color)
 
             Text(label)
-                .font(.system(size: 11, design: .rounded))
+                .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(color.opacity(0.7))
         }
         .frame(maxWidth: .infinity)
