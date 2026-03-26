@@ -28,14 +28,14 @@ public enum CultivationTheme {
         public static let brandLeaf = Color(hex: "7A917A") // sage — primary green
         public static let brandMint = Color(hex: "C0CCC5") // frost — light sage
         public static let brandCream = Color(hex: "F4F5F2") // parchment
-        public static let brandGold = Color(hex: "E0A456") // amber — warm accent
         public static let brandSage = Color(hex: "96AC96") // lichen — mid sage
 
         // Accent — coral and amber (the new warm identity)
         public static let accentCoral = Color(hex: "D4725C")
         public static let accentAmber = Color(hex: "E0A456")
+        public static let brandGold = accentAmber // legacy alias — prefer accentAmber
 
-        /// Hero glow — subtle sage instead of bright green
+        /// Hero glow — subtle sage for background orbs
         public static let heroGlow = Color(hex: "7A917A").opacity(0.06)
 
         // Interactive

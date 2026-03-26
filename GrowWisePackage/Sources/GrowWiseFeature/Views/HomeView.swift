@@ -113,7 +113,6 @@ public struct HomeView: View {
                     userName: viewModel.userName,
                     overdueCount: overdueVisible.count,
                     dueTodayCount: dueTodayVisible.count,
-                    allGoodCount: viewModel.allGoodCount,
                     totalPlantCount: viewModel.totalPlantCount
                 )
             }

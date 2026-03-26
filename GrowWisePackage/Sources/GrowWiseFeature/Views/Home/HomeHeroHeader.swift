@@ -6,7 +6,6 @@ struct HomeHeroHeader: View {
     let userName: String
     let overdueCount: Int
     let dueTodayCount: Int
-    let allGoodCount: Int
     let totalPlantCount: Int
 
     private var greeting: String {
@@ -21,12 +20,16 @@ struct HomeHeroHeader: View {
     private var seasonalNote: String {
         let month = Calendar.current.component(.month, from: Date())
         let taskCount = overdueCount + dueTodayCount
-        let taskPhrase = taskCount == 1 ? "1 task needs" : "\(taskCount) tasks need"
+        let taskPrefix: String = if taskCount == 0 {
+            "Everything is on track."
+        } else {
+            taskCount == 1 ? "1 task needs attention." : "\(taskCount) tasks need attention."
+        }
         switch month {
-        case 3 ... 5: return "\(taskPhrase) attention. Your spring garden is waking up."
-        case 6 ... 8: return "\(taskPhrase) attention. Peak growing season is here."
-        case 9 ... 11: return "\(taskPhrase) attention. Time to prepare for the harvest."
-        default: return "\(taskPhrase) attention. Plan ahead for next season."
+        case 3 ... 5: return "\(taskPrefix) Your spring garden is waking up."
+        case 6 ... 8: return "\(taskPrefix) Peak growing season is here."
+        case 9 ... 11: return "\(taskPrefix) Time to prepare for the harvest."
+        default: return "\(taskPrefix) Plan ahead for next season."
         }
     }
 
@@ -46,7 +49,7 @@ struct HomeHeroHeader: View {
                         .italic()
                         .foregroundColor(CultivationTheme.Colors.accentAmber)
                 )
-                .accessibilityIdentifier("home_label_username")
+                .accessibilityIdentifier("home_label_headline")
 
                 Text(seasonalNote)
                     .font(.system(size: 14))
@@ -90,7 +93,6 @@ struct HomeHeroHeader: View {
         userName: "Blake",
         overdueCount: 2,
         dueTodayCount: 4,
-        allGoodCount: 7,
         totalPlantCount: 12
     )
 }
