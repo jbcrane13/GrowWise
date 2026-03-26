@@ -28,9 +28,9 @@ struct AchievementServiceTests {
 
     // MARK: - Static Catalog Tests
 
-    @Test("allAchievements contains exactly 20 achievements")
+    @Test("allAchievements contains exactly 21 achievements")
     func allAchievementsCount() {
-        #expect(AchievementService.allAchievements.count == 20)
+        #expect(AchievementService.allAchievements.count == 21)
     }
 
     @Test("allAchievements covers all 6 categories")
