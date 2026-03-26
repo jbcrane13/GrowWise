@@ -13,13 +13,15 @@ struct PlantDiagnosticServiceExtendedTests {
         PlantDiagnosticService()
     }
 
-    private func makeUser(
+    /// Returns both the DataService and User. Callers MUST retain the DataService for the
+    /// lifetime of the test — releasing it destroys the ModelContext and invalidates the User.
+    private func makeUserWithContext(
         tier: SubscriptionTier = .free,
         diagnosesUsed: Int = 0,
         lastReset: Date? = Date()
-    ) throws -> User {
-        let service = try DataService.makeForTesting()
-        let user = try service.createUser(
+    ) throws -> (dataService: DataService, user: User) {
+        let dataService = try DataService.makeForTesting()
+        let user = try dataService.createUser(
             email: "diagtest@growwise.test",
             displayName: "Diag Tester",
             skillLevel: .beginner
@@ -27,7 +29,7 @@ struct PlantDiagnosticServiceExtendedTests {
         user.subscriptionTier = tier
         user.aiDiagnosesUsed = diagnosesUsed
         user.lastDiagnosisReset = lastReset
-        return user
+        return (dataService, user)
     }
 
     // MARK: - summarize: Confidence Thresholds
@@ -133,69 +135,76 @@ struct PlantDiagnosticServiceExtendedTests {
 
     @Test("Free tier user with 0 uses can diagnose")
     func freeTierUserWithZeroUsesCanDiagnose() throws {
-        let service = makeService()
-        let user = try makeUser(tier: .free, diagnosesUsed: 0)
+        let diagnosticService = makeService()
+        let (dataService, user) = try makeUserWithContext(tier: .free, diagnosesUsed: 0)
+        _ = dataService // retain to keep ModelContext alive
 
-        #expect(service.canDiagnose(user: user) == true)
-        #expect(service.remainingDiagnoses(user: user) == 3)
+        #expect(diagnosticService.canDiagnose(user: user) == true)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == 3)
     }
 
     @Test("Free tier user at limit (3 uses) cannot diagnose")
     func freeTierUserAtLimitCannotDiagnose() throws {
-        let service = makeService()
-        let user = try makeUser(tier: .free, diagnosesUsed: 3)
+        let diagnosticService = makeService()
+        let (dataService, user) = try makeUserWithContext(tier: .free, diagnosesUsed: 3)
+        _ = dataService
 
-        #expect(service.canDiagnose(user: user) == false)
-        #expect(service.remainingDiagnoses(user: user) == 0)
+        #expect(diagnosticService.canDiagnose(user: user) == false)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == 0)
     }
 
     @Test("Free tier user with 2 uses has 1 remaining diagnosis")
     func freeTierUserWithTwoUsesHasOneRemaining() throws {
-        let service = makeService()
-        let user = try makeUser(tier: .free, diagnosesUsed: 2)
+        let diagnosticService = makeService()
+        let (dataService, user) = try makeUserWithContext(tier: .free, diagnosesUsed: 2)
+        _ = dataService
 
-        #expect(service.canDiagnose(user: user) == true)
-        #expect(service.remainingDiagnoses(user: user) == 1)
+        #expect(diagnosticService.canDiagnose(user: user) == true)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == 1)
     }
 
     @Test("Premium user always can diagnose and returns -1 (unlimited)")
     func premiumUserAlwaysCanDiagnose() throws {
-        let service = makeService()
-        let user = try makeUser(tier: .premium, diagnosesUsed: 100)
+        let diagnosticService = makeService()
+        let (dataService, user) = try makeUserWithContext(tier: .premium, diagnosesUsed: 100)
+        _ = dataService
 
-        #expect(service.canDiagnose(user: user) == true)
-        #expect(service.remainingDiagnoses(user: user) == -1)
+        #expect(diagnosticService.canDiagnose(user: user) == true)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == -1)
     }
 
     @Test("Pro user always can diagnose and returns -1 (unlimited)")
     func proUserAlwaysCanDiagnose() throws {
-        let service = makeService()
-        let user = try makeUser(tier: .pro, diagnosesUsed: 50)
+        let diagnosticService = makeService()
+        let (dataService, user) = try makeUserWithContext(tier: .pro, diagnosesUsed: 50)
+        _ = dataService
 
-        #expect(service.canDiagnose(user: user) == true)
-        #expect(service.remainingDiagnoses(user: user) == -1)
+        #expect(diagnosticService.canDiagnose(user: user) == true)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == -1)
     }
 
     @Test("Monthly reset: user with uses from previous month gets full quota")
     func monthlyResetAllowsFullQuotaAfterNewMonth() throws {
-        let service = makeService()
+        let diagnosticService = makeService()
         // Set lastReset to a date in a prior month
         let pastMonth = try #require(Calendar.current.date(byAdding: .month, value: -1, to: Date()))
-        let user = try makeUser(tier: .free, diagnosesUsed: 3, lastReset: pastMonth)
+        let (dataService, user) = try makeUserWithContext(tier: .free, diagnosesUsed: 3, lastReset: pastMonth)
+        _ = dataService
 
         // Even though aiDiagnosesUsed == 3, it was set last month, so effectively 0 used this month
-        #expect(service.canDiagnose(user: user) == true)
-        #expect(service.remainingDiagnoses(user: user) == 3)
+        #expect(diagnosticService.canDiagnose(user: user) == true)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == 3)
     }
 
     @Test("User with nil lastDiagnosisReset counts all recorded uses against quota")
     func nilLastResetCountsAllUsesAgainstQuota() throws {
-        let service = makeService()
-        let user = try makeUser(tier: .free, diagnosesUsed: 3, lastReset: nil)
+        let diagnosticService = makeService()
+        let (dataService, user) = try makeUserWithContext(tier: .free, diagnosesUsed: 3, lastReset: nil)
+        _ = dataService
 
         // No reset date means we can't confirm a month boundary — all uses count
-        #expect(service.canDiagnose(user: user) == false)
-        #expect(service.remainingDiagnoses(user: user) == 0)
+        #expect(diagnosticService.canDiagnose(user: user) == false)
+        #expect(diagnosticService.remainingDiagnoses(user: user) == 0)
     }
 
     // MARK: - setSampleDiagnosis
