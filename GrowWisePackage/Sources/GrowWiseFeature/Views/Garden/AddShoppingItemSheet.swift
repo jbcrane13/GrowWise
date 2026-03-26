@@ -26,7 +26,7 @@ struct AddShoppingItemSheet: View {
                         Text("ITEM NAME")
                             .sectionLabelStyle()
                         TextField("e.g. Tomato seeds", text: $name)
-                            .font(.system(.body, design: .rounded))
+                            .font(.system(.body))
                             .padding(12)
                             .glassCard()
                             .accessibilityIdentifier("shopping_add_name")
@@ -46,13 +46,13 @@ struct AddShoppingItemSheet: View {
                                             .font(.system(size: 15))
                                             .foregroundStyle(
                                                 category == cat
-                                                    ? CultivationTheme.Colors.brandLeaf
+                                                    ? CultivationTheme.Colors.accentCoral
                                                     : CultivationTheme.Colors.textTertiary
                                             )
                                             .frame(width: 24)
 
                                         Text(cat.displayName)
-                                            .font(.system(.body, design: .rounded))
+                                            .font(.system(.body))
                                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                                         Spacer()
@@ -60,7 +60,7 @@ struct AddShoppingItemSheet: View {
                                         if category == cat {
                                             Image(systemName: "checkmark")
                                                 .font(.system(size: 13, weight: .bold))
-                                                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                                .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                         }
                                     }
                                     .padding(.horizontal, CultivationTheme.Spacing.cardPadding)
@@ -84,7 +84,7 @@ struct AddShoppingItemSheet: View {
                         Text("QUANTITY")
                             .sectionLabelStyle()
                         TextField("e.g. 2 bags, 1 packet", text: $quantity)
-                            .font(.system(.body, design: .rounded))
+                            .font(.system(.body))
                             .padding(12)
                             .glassCard()
                             .accessibilityIdentifier("shopping_add_quantity")
@@ -95,7 +95,7 @@ struct AddShoppingItemSheet: View {
                         Text("NOTES")
                             .sectionLabelStyle()
                         TextField("Optional notes", text: $notes, axis: .vertical)
-                            .font(.system(.body, design: .rounded))
+                            .font(.system(.body))
                             .lineLimit(3, reservesSpace: true)
                             .padding(12)
                             .glassCard()

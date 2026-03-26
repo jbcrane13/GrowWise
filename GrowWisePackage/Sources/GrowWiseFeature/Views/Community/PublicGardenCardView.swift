@@ -52,7 +52,7 @@ struct PublicGardenCardView: View {
                     .font(.system(size: 32, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.brandLeaf.opacity(0.4))
                 Text(garden.gardenType ?? "Garden")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
         }
@@ -63,7 +63,7 @@ struct PublicGardenCardView: View {
     private var gardenInfo: some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(garden.name)
-                .font(.system(.headline, design: .rounded, weight: .bold))
+                .font(.system(.headline, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .lineLimit(1)
 
@@ -72,19 +72,19 @@ struct PublicGardenCardView: View {
                     .font(.system(size: 10, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 Text(garden.authorName)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
 
             if let description = garden.description, !description.isEmpty {
                 Text(description)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     .lineLimit(2)
             }
 
             Text(garden.publishedDate, style: .relative)
-                .font(.system(size: 11, design: .rounded))
+                .font(.system(size: 11))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
     }
@@ -105,7 +105,7 @@ struct PublicGardenCardView: View {
                         .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(isLiked ? .red : CultivationTheme.Colors.textSecondary)
                     Text("\(garden.likeCount + (isLiked ? 1 : 0))")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .font(.system(.caption, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
             }
@@ -119,7 +119,7 @@ struct PublicGardenCardView: View {
                     .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 Text("\(garden.viewCount)")
-                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .font(.system(.caption, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
             .accessibilityIdentifier("community_view_count_\(garden.id)")

@@ -49,7 +49,7 @@ struct PlantQuickCard: View {
             VStack(alignment: .leading, spacing: 4) {
                 HStack {
                     Text(plant.name ?? "Plant")
-                        .font(.system(.title3, design: .rounded, weight: .bold))
+                        .font(.system(.title3, design: .serif, weight: .regular))
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     Spacer()
                     StatusDot(status: uiHealthStatus)
@@ -101,7 +101,7 @@ struct PlantQuickCard: View {
                 .font(.system(size: 16))
                 .foregroundStyle(color)
             Text(value)
-                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .font(.system(size: 13, weight: .semibold))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .lineLimit(1)
                 .minimumScaleFactor(0.75)
@@ -149,7 +149,7 @@ struct PlantQuickCard: View {
     ) -> some View {
         Button(action: action) {
             Label(label, systemImage: icon)
-                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .font(.system(.subheadline, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .frame(maxWidth: .infinity, minHeight: 44)
                 .glassCard()
@@ -164,11 +164,11 @@ struct PlantQuickCard: View {
         Button(action: onViewDetails) {
             HStack {
                 Text("View Full Details")
-                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .font(.system(.subheadline, weight: .medium))
                 Image(systemName: "arrow.right")
                     .font(.system(size: 13, weight: .medium))
             }
-            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            .foregroundStyle(CultivationTheme.Colors.accentCoral)
         }
         .buttonStyle(.plain)
         .accessibilityIdentifier("quickcard_button_viewdetails")

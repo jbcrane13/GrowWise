@@ -49,7 +49,7 @@ public struct JournalEntryRow: View {
             VStack(alignment: .leading, spacing: 4) {
                 // Plant name row
                 Text(plantName)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .font(.system(.subheadline, weight: .semibold))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     .lineLimit(1)
 
@@ -151,7 +151,7 @@ public struct JournalEntryRow: View {
                             MeasurementBadge(
                                 icon: "ruler",
                                 value: "\(String(format: "%.1f", height))\"",
-                                color: CultivationTheme.Colors.brandLeaf
+                                color: CultivationTheme.Colors.accentCoral
                             )
                         }
 
@@ -159,7 +159,7 @@ public struct JournalEntryRow: View {
                             MeasurementBadge(
                                 icon: "thermometer",
                                 value: "\(Int(temp))°",
-                                color: CultivationTheme.Colors.brandGold
+                                color: CultivationTheme.Colors.accentAmber
                             )
                         }
 

@@ -28,12 +28,12 @@ struct NotificationPermissionView: View {
 
                 VStack(spacing: 10) {
                     Text("Never miss a care moment")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .regular, design: .serif))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
 
                     Text("Smart reminders keep your plants\nthriving and on schedule.")
-                        .font(.system(size: 16, design: .rounded))
+                        .font(.system(size: 16))
                         .foregroundStyle(.white.opacity(0.55))
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
@@ -46,7 +46,7 @@ struct NotificationPermissionView: View {
                         // Time picker in glass card
                         VStack(spacing: 8) {
                             Text("Best time for reminders?")
-                                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                                .font(.system(size: 14, weight: .semibold))
                                 .foregroundStyle(.white.opacity(0.75))
 
                             DatePicker(
@@ -81,20 +81,14 @@ struct NotificationPermissionView: View {
                                         .font(.system(size: 18, weight: .medium))
                                 }
                                 Text(isRequesting ? "Requesting…" : "Enable Notifications")
-                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 16, weight: .semibold))
                             }
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 54)
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
-                                    .fill(
-                                        LinearGradient(
-                                            colors: [Color.botanicalForest, Color.botanicalLeaf],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
-                                    )
-                                    .shadow(color: Color.botanicalForest.opacity(0.40), radius: 12, y: 4)
+                                    .fill(CultivationTheme.Gradients.warmAccent)
+                                    .shadow(color: CultivationTheme.Colors.accentCoral.opacity(0.40), radius: 12, y: 4)
                             )
                         }
                         .disabled(isRequesting)
@@ -103,7 +97,7 @@ struct NotificationPermissionView: View {
                         Button("Maybe Later") {
                             userProfile.hasNotificationPermission = false
                         }
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.white.opacity(0.40))
                         .accessibilityIdentifier("onboarding_notifications_skip")
                     }

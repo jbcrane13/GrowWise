@@ -24,12 +24,12 @@ struct OnboardingStepHeader: View {
 
             VStack(spacing: 8) {
                 Text(title)
-                    .font(.system(size: 24, weight: .bold, design: .rounded))
+                    .font(.system(size: 24, weight: .regular, design: .serif))
                     .foregroundColor(Color.botanicalForest)
                     .multilineTextAlignment(.center)
 
                 Text(subtitle)
-                    .font(.system(size: 15, design: .rounded))
+                    .font(.system(size: 15))
                     .foregroundColor(Color.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
@@ -59,7 +59,7 @@ struct PermissionGrantedBadge: View {
             }
 
             Text(message)
-                .font(.system(size: 15, weight: .semibold, design: .rounded))
+                .font(.system(size: 15, weight: .semibold))
                 .foregroundColor(Color.botanicalForest)
 
             Spacer()
@@ -99,11 +99,11 @@ struct BenefitRow: View {
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
-                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                    .font(.system(size: 15, weight: .semibold))
                     .foregroundColor(Color.botanicalForest)
 
                 Text(description)
-                    .font(.system(size: 13, design: .rounded))
+                    .font(.system(size: 13))
                     .foregroundColor(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
@@ -126,7 +126,7 @@ struct PrivacyNote: View {
                 .foregroundColor(Color.botanicalLeaf)
 
             Text(text)
-                .font(.system(size: 12, design: .rounded))
+                .font(.system(size: 12))
                 .foregroundColor(Color.secondary)
                 .multilineTextAlignment(.leading)
         }

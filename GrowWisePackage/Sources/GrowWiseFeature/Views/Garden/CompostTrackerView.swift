@@ -66,7 +66,7 @@ public struct CompostTrackerView: View {
                         .font(.system(size: 15, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 30, height: 30)
-                        .background(CultivationTheme.Gradients.ctaVertical)
+                        .background(CultivationTheme.Gradients.warmAccent)
                         .clipShape(Circle())
                 }
                 .accessibilityIdentifier("compost_add_button")
@@ -104,11 +104,11 @@ public struct CompostTrackerView: View {
     private var header: some View {
         VStack(alignment: .leading, spacing: 2) {
             Text("COMPOSTING")
-                .font(.system(size: 12, design: .rounded))
+                .font(.system(size: 12))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .tracking(0.5)
             Text("Compost Batches")
-                .font(.system(.title, design: .rounded, weight: .bold))
+                .font(.system(.title, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
         }
         .padding(.top, 16)
@@ -151,7 +151,7 @@ public struct CompostTrackerView: View {
                 iconSize: 28
             )
             Text(filterActive ? "No active batches" : "No completed batches")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .serif))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
             Text(
                 filterActive
@@ -230,11 +230,11 @@ private struct CompostBatchCard: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(batch.name ?? "Unnamed Batch")
-                            .font(.system(.body, design: .rounded, weight: .semibold))
+                            .font(.system(.body, weight: .semibold))
                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                         Text("\(daysActive) days active")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption))
                             .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
 
@@ -275,17 +275,17 @@ private struct CompostBatchCard: View {
                         onLog()
                     } label: {
                         Text("Log")
-                            .font(.system(size: 13, weight: .semibold, design: .rounded))
-                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .font(.system(size: 13, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
                             .padding(.horizontal, 14)
                             .padding(.vertical, 7)
                             .background {
                                 Capsule()
-                                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.08))
+                                    .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
                             }
                             .overlay {
                                 Capsule()
-                                    .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.35), lineWidth: 1)
+                                    .stroke(CultivationTheme.Colors.accentCoral.opacity(0.35), lineWidth: 1)
                             }
                     }
                     .buttonStyle(.plain)
@@ -326,7 +326,7 @@ private struct CompostBatchCard: View {
                 .font(.system(size: 11, weight: .medium))
                 .foregroundStyle(color)
             Text(value)
-                .font(.system(.caption, design: .rounded, weight: .medium))
+                .font(.system(.caption, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
     }
@@ -413,11 +413,11 @@ private struct CompostBatchDetailSheet: View {
                             )
                             VStack(alignment: .leading, spacing: 2) {
                                 Text(batch.name ?? "Unnamed Batch")
-                                    .font(.system(.title2, design: .rounded, weight: .bold))
+                                    .font(.system(.title2, design: .serif, weight: .regular))
                                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
                                 if let startDate = batch.startDate {
                                     Text("Started \(startDate, style: .date)")
-                                        .font(.system(.caption, design: .rounded))
+                                        .font(.system(.caption))
                                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                                 }
                             }
@@ -439,7 +439,7 @@ private struct CompostBatchDetailSheet: View {
                             QuickStatCard(
                                 value: batch.turnDates.count,
                                 label: "Turns",
-                                color: CultivationTheme.Colors.brandGold
+                                color: CultivationTheme.Colors.accentAmber
                             )
                         }
                     }
@@ -461,7 +461,7 @@ private struct CompostBatchDetailSheet: View {
                                 materialRow(
                                     label: "Browns",
                                     items: batch.brownMaterials,
-                                    color: CultivationTheme.Colors.brandGold
+                                    color: CultivationTheme.Colors.accentAmber
                                 )
                             }
                         }
@@ -473,7 +473,7 @@ private struct CompostBatchDetailSheet: View {
                             Text("Notes")
                                 .sectionLabelStyle()
                             Text(notes)
-                                .font(.system(.subheadline, design: .rounded))
+                                .font(.system(.subheadline))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                                 .padding(CultivationTheme.Spacing.cardPadding)
                                 .frame(maxWidth: .infinity, alignment: .leading)
@@ -540,13 +540,13 @@ private struct CompostBatchDetailSheet: View {
     private func materialRow(label: String, items: [String], color: Color) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(label)
-                .font(.system(.caption, design: .rounded, weight: .semibold))
+                .font(.system(.caption, weight: .semibold))
                 .foregroundStyle(color)
 
             CompostFlowLayout(spacing: 6) {
                 ForEach(items, id: \.self) { item in
                     Text(item)
-                        .font(.system(.caption2, design: .rounded, weight: .medium))
+                        .font(.system(.caption2, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .padding(.horizontal, 10)
                         .padding(.vertical, 5)
@@ -570,10 +570,10 @@ private struct CompostBatchDetailSheet: View {
         HStack(spacing: 12) {
             VStack(alignment: .leading, spacing: 2) {
                 Text(date, style: .date)
-                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .font(.system(.subheadline, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 Text(date, style: .time)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
 
@@ -585,7 +585,7 @@ private struct CompostBatchDetailSheet: View {
                         .font(.system(size: 11))
                         .foregroundStyle(CultivationTheme.Colors.statusWarning)
                     Text("\(Int(batch.temperatures[index]))\u{00B0}F")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .font(.system(.caption, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
             }
@@ -594,9 +594,9 @@ private struct CompostBatchDetailSheet: View {
                 HStack(spacing: 4) {
                     Image(systemName: "drop.fill")
                         .font(.system(size: 11))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     Text("\(Int(batch.moistureLevels[index]))%")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .font(.system(.caption, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
             }
@@ -711,14 +711,14 @@ struct CompostLogEntrySheet: View {
                     Slider(value: $temperature, in: 60 ... 180, step: 1)
                         .accessibilityIdentifier("compost_log_slider_temp")
                     Text("\(Int(temperature))\u{00B0}F")
-                        .font(.system(.headline, design: .rounded))
+                        .font(.system(.headline, design: .serif))
                         .accessibilityIdentifier("compost_log_label_temp")
                 }
                 Section("Moisture (%)") {
                     Slider(value: $moisture, in: 0 ... 100, step: 1)
                         .accessibilityIdentifier("compost_log_slider_moisture")
                     Text("\(Int(moisture))%")
-                        .font(.system(.headline, design: .rounded))
+                        .font(.system(.headline, design: .serif))
                         .accessibilityIdentifier("compost_log_label_moisture")
                 }
             }

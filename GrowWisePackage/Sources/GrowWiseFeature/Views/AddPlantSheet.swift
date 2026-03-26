@@ -76,7 +76,7 @@ public struct AddPlantSheet: View {
                                     placeholder: "Plant Name",
                                     text: $plantName,
                                     systemImage: "leaf.fill",
-                                    color: CultivationTheme.Colors.brandLeaf,
+                                    color: CultivationTheme.Colors.accentCoral,
                                     accessibilityID: "addplant_textfield_name"
                                 )
                                 .onChange(of: plantName) { _, newValue in
@@ -103,17 +103,17 @@ public struct AddPlantSheet: View {
                                                     applyTemplate(suggestion)
                                                 } label: {
                                                     Text(suggestion.name ?? "")
-                                                        .font(.system(.caption, design: .rounded, weight: .medium))
-                                                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                                        .font(.system(.caption, weight: .medium))
+                                                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                                         .padding(.horizontal, 12)
                                                         .padding(.vertical, 6)
                                                         .background {
                                                             Capsule()
-                                                                .fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                                                                .fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
                                                                 .overlay {
                                                                     Capsule()
                                                                         .stroke(
-                                                                            CultivationTheme.Colors.brandLeaf.opacity(0.3),
+                                                                            CultivationTheme.Colors.accentCoral.opacity(0.3),
                                                                             lineWidth: 1
                                                                         )
                                                                 }
@@ -163,12 +163,12 @@ public struct AddPlantSheet: View {
                                 HStack {
                                     IconBubble(
                                         systemName: "star.fill",
-                                        color: CultivationTheme.Colors.brandGold,
+                                        color: CultivationTheme.Colors.accentAmber,
                                         size: 28,
                                         iconSize: 13
                                     )
                                     Text("Difficulty")
-                                        .font(.system(.subheadline, design: .rounded))
+                                        .font(.system(.subheadline))
                                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                                     Spacer()
                                     Picker("", selection: $selectedDifficultyLevel) {
@@ -193,7 +193,7 @@ public struct AddPlantSheet: View {
                                         iconSize: 13
                                     )
                                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
-                                        .font(.system(.subheadline, design: .rounded))
+                                        .font(.system(.subheadline))
                                         .accessibilityIdentifier("addplant_datepicker_plantingdate")
                                 }
 
@@ -204,7 +204,7 @@ public struct AddPlantSheet: View {
                                     HStack {
                                         IconBubble(
                                             systemName: "location.fill",
-                                            color: CultivationTheme.Colors.brandLeaf,
+                                            color: CultivationTheme.Colors.accentCoral,
                                             size: 28,
                                             iconSize: 13
                                         )
@@ -233,9 +233,9 @@ public struct AddPlantSheet: View {
                                             Image(systemName: "plus.circle")
                                                 .font(.system(size: 14, weight: .medium))
                                             Text("New Garden")
-                                                .font(.system(.subheadline, design: .rounded))
+                                                .font(.system(.subheadline))
                                         }
-                                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                         .frame(maxWidth: .infinity, alignment: .leading)
                                     }
                                     .buttonStyle(.plain)
@@ -273,10 +273,10 @@ public struct AddPlantSheet: View {
                                                 Image(systemName: "plus.circle")
                                                     .font(.system(size: 14, weight: .medium))
                                                 Text("New Container")
-                                                    .font(.system(.subheadline, design: .rounded))
+                                                    .font(.system(.subheadline))
                                             }
-                                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
-                                            .frame(maxWidth: .infinity, alignment: .leading)
+                                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                                        .frame(maxWidth: .infinity, alignment: .leading)
                                         }
                                         .buttonStyle(.plain)
                                         .accessibilityIdentifier("addplant_button_newcontainer")
@@ -330,17 +330,17 @@ public struct AddPlantSheet: View {
                                 HStack(spacing: 10) {
                                     IconBubble(
                                         systemName: "photo.on.rectangle.angled",
-                                        color: CultivationTheme.Colors.brandLeaf,
+                                        color: CultivationTheme.Colors.accentCoral,
                                         size: 28,
                                         iconSize: 13
                                     )
                                     Text("Add Photos")
-                                        .font(.system(.subheadline, design: .rounded))
-                                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                        .font(.system(.subheadline))
+                                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                     Spacer()
                                     if !photoURLs.isEmpty {
                                         Text("\(photoURLs.count) selected")
-                                            .font(.system(.caption, design: .rounded))
+                                            .font(.system(.caption))
                                             .foregroundStyle(CultivationTheme.Colors.textTertiary)
                                     }
                                 }
@@ -581,7 +581,7 @@ struct CompanionPlantingSection: View {
                         showDetails = true
                     }
                     .font(.caption)
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     .accessibilityIdentifier("addplant_button_companiondetails")
                 }
 

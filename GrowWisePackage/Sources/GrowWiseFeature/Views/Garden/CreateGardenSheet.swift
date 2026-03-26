@@ -45,11 +45,11 @@ struct CreateGardenSheet: View {
                             HStack(spacing: 10) {
                                 Image(systemName: selectedType.iconName)
                                     .font(.system(size: 18, weight: .medium))
-                                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                     .frame(width: 28)
 
                                 TextField("e.g. Backyard, Herb Window, Patio", text: $gardenName)
-                                    .font(.system(.body, design: .rounded))
+                                    .font(.system(.body))
                                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
                                     .accessibilityIdentifier("creategarden_textfield_name")
                             }
@@ -211,7 +211,7 @@ private struct GardenTypeChip: View {
                 Image(systemName: gardenType.iconName)
                     .font(.system(size: 20, weight: .medium))
                 Text(gardenType.displayName)
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .font(.system(.caption2, weight: .medium))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .frame(width: 76)
@@ -222,14 +222,14 @@ private struct GardenTypeChip: View {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .fill(
                         isSelected
-                            ? CultivationTheme.Colors.brandLeaf.opacity(0.15)
+                            ? CultivationTheme.Colors.accentCoral.opacity(0.15)
                             : CultivationTheme.Colors.cardSurface
                     )
                     .overlay {
                         RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                             .stroke(
                                 isSelected
-                                    ? CultivationTheme.Colors.brandLeaf
+                                    ? CultivationTheme.Colors.accentCoral
                                     : CultivationTheme.Colors.cardBorder,
                                 lineWidth: isSelected ? 1.5 : 1
                             )
@@ -237,7 +237,7 @@ private struct GardenTypeChip: View {
             }
             .foregroundStyle(
                 isSelected
-                    ? CultivationTheme.Colors.brandLeaf
+                    ? CultivationTheme.Colors.accentCoral
                     : CultivationTheme.Colors.textSecondary
             )
         }
@@ -282,7 +282,7 @@ private struct SunExposureRow: View {
                     .frame(width: 24)
 
                 Text(exposure.displayName)
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline))
                     .foregroundStyle(
                         isSelected
                             ? CultivationTheme.Colors.textPrimary
@@ -294,7 +294,7 @@ private struct SunExposureRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 18))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 }
             }
             .padding(12)
@@ -302,7 +302,7 @@ private struct SunExposureRow: View {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .fill(
                         isSelected
-                            ? CultivationTheme.Colors.brandLeaf.opacity(0.08)
+                            ? CultivationTheme.Colors.accentCoral.opacity(0.08)
                             : CultivationTheme.Colors.cardSurface
                     )
             }
@@ -310,7 +310,7 @@ private struct SunExposureRow: View {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .stroke(
                         isSelected
-                            ? CultivationTheme.Colors.brandLeaf.opacity(0.3)
+                            ? CultivationTheme.Colors.accentCoral.opacity(0.3)
                             : CultivationTheme.Colors.cardBorder,
                         lineWidth: 1
                     )

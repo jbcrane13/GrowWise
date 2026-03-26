@@ -131,25 +131,25 @@ public struct ProfileView: View {
         HStack(spacing: 16) {
             ZStack {
                 Circle()
-                    .fill(CultivationTheme.Gradients.ctaVertical)
+                    .fill(CultivationTheme.Gradients.warmAccent)
                     .frame(width: 72, height: 72)
                 Text(initials)
-                    .font(.system(.title2, design: .rounded, weight: .bold))
+                    .font(.system(.title2, design: .serif, weight: .regular))
                     .foregroundStyle(.white)
             }
             .accessibilityIdentifier("profile_avatar")
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(displayName)
-                    .font(.system(.title3, design: .rounded, weight: .bold))
+                    .font(.system(.title3, design: .serif, weight: .regular))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 HStack(spacing: 6) {
                     Image(systemName: "leaf.fill")
                         .font(.system(size: 11, weight: .medium))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     Text(skillLevelText)
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
 
@@ -158,7 +158,7 @@ public struct ProfileView: View {
                         .font(.system(size: 11, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                     Text(zoneText)
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline))
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
             }
@@ -186,10 +186,10 @@ public struct ProfileView: View {
     private func statCard(value: Int, label: String) -> some View {
         VStack(spacing: 4) {
             Text("\(value)")
-                .font(.system(.title2, design: .rounded, weight: .bold))
+                .font(.system(.title2, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
             Text(label)
-                .font(.system(size: 11, design: .rounded))
+                .font(.system(size: 11))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -236,7 +236,7 @@ public struct ProfileView: View {
 
             menuRow(
                 icon: "person.3.fill",
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 title: "Garden Showcase",
                 id: "profile_row_community"
             ) {
@@ -245,7 +245,7 @@ public struct ProfileView: View {
 
             menuRow(
                 icon: "bubble.left.and.bubble.right.fill",
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 title: "Q&A Forum",
                 id: "profile_row_forum"
             ) {
@@ -273,7 +273,7 @@ public struct ProfileView: View {
 
             menuRow(
                 icon: "crown.fill",
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 title: "Subscription",
                 id: "profile_row_subscription"
             ) {
@@ -304,7 +304,7 @@ public struct ProfileView: View {
             HStack(spacing: 14) {
                 IconBubble(systemName: icon, color: color, size: 36, iconSize: 16)
                 Text(title)
-                    .font(.system(.body, design: .rounded))
+                    .font(.system(.body))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 Spacer()
                 Image(systemName: "chevron.right")
@@ -377,7 +377,7 @@ public struct ProfileView: View {
             VStack(spacing: 6) {
                 ZStack {
                     Circle()
-                        .fill(CultivationTheme.Gradients.ctaVertical)
+                        .fill(CultivationTheme.Gradients.warmAccent)
                         .frame(width: 64, height: 64)
                     Image(systemName: "leaf.circle.fill")
                         .font(.system(size: 32))
@@ -481,7 +481,7 @@ public struct ProfileView: View {
             .overlay(
                 RoundedRectangle(cornerRadius: 10)
                     .stroke(
-                        isSelected ? CultivationTheme.Colors.brandLeaf : CultivationTheme.Colors.cardBorder,
+                        isSelected ? CultivationTheme.Colors.accentCoral : CultivationTheme.Colors.cardBorder,
                         lineWidth: 1.5
                     )
             )

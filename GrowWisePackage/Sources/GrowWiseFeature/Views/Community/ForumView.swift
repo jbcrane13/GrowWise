@@ -47,7 +47,7 @@ public struct ForumView: View {
                     } label: {
                         Image(systemName: "square.and.pencil")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     }
                     .accessibilityIdentifier("forum_ask_button")
                 }
@@ -78,7 +78,7 @@ public struct ForumView: View {
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
 
             TextField("Search questions...", text: $searchText)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .submitLabel(.search)
                 .onSubmit {
@@ -184,18 +184,18 @@ public struct ForumView: View {
                 Image(systemName: question.topic.icon)
                     .font(.system(size: 10, weight: .medium))
                 Text(question.topic.displayName)
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold))
             }
-            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            .foregroundStyle(CultivationTheme.Colors.accentCoral)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background {
-                Capsule().fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                Capsule().fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
             }
 
             // Title
             Text(question.title)
-                .font(.system(.body, design: .rounded, weight: .semibold))
+                .font(.system(.body, weight: .semibold))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .lineLimit(2)
                 .multilineTextAlignment(.leading)
@@ -206,9 +206,9 @@ public struct ForumView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "arrow.up.circle.fill")
                         .font(.system(size: 13))
-                        .foregroundStyle(CultivationTheme.Colors.brandGold)
+                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
                     Text("\(question.voteCount)")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
 
@@ -216,9 +216,9 @@ public struct ForumView: View {
                 HStack(spacing: 4) {
                     Image(systemName: "bubble.left.fill")
                         .font(.system(size: 12))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     Text("\(question.answerCount)")
-                        .font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .font(.system(size: 12, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
 
@@ -226,7 +226,7 @@ public struct ForumView: View {
 
                 // Author + time
                 Text("\(question.authorName) \(Self.timeAgo(question.createdDate))")
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.system(size: 11))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                     .lineLimit(1)
             }
@@ -241,17 +241,17 @@ public struct ForumView: View {
         VStack(spacing: 12) {
             IconBubble(
                 systemName: "bubble.left.and.bubble.right",
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 size: 56,
                 iconSize: 24
             )
 
             Text("No questions yet")
-                .font(.system(.headline, design: .rounded, weight: .semibold))
+                .font(.system(.headline, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
             Text("Be the first to ask the community!")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
             Button {
@@ -306,8 +306,8 @@ public struct ForumView: View {
                     .frame(maxWidth: .infinity)
             } else {
                 Text("Load More")
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .font(.system(.subheadline, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     .frame(maxWidth: .infinity)
             }
         }

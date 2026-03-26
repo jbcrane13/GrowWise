@@ -61,7 +61,7 @@ private struct GoalCard: View {
                 }
 
                 Text(goal.displayName)
-                    .font(.system(size: 13, weight: .semibold, design: .rounded))
+                    .font(.system(size: 13, weight: .semibold))
                     .foregroundStyle(.white)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)

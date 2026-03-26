@@ -99,7 +99,7 @@ struct OnboardingNavigationView: View {
                         }
 
                         Text(isSaving ? "Setting up…" : nextLabel)
-                            .font(.system(size: 16, weight: .semibold, design: .rounded))
+                            .font(.system(size: 16, weight: .semibold))
 
                         if !isSaving, !isLastStep, currentStep != .welcome {
                             Image(systemName: "chevron.right")
@@ -112,11 +112,7 @@ struct OnboardingNavigationView: View {
                         RoundedRectangle(cornerRadius: 16)
                             .fill(
                                 canProceed
-                                    ? LinearGradient(
-                                        colors: [Color.botanicalForest, Color.botanicalLeaf],
-                                        startPoint: .leading,
-                                        endPoint: .trailing
-                                    )
+                                    ? CultivationTheme.Gradients.warmAccent
                                     : LinearGradient(
                                         colors: [Color.botanicalSage.opacity(0.4), Color.botanicalSage.opacity(0.3)],
                                         startPoint: .leading,
@@ -124,7 +120,7 @@ struct OnboardingNavigationView: View {
                                     )
                             )
                             .shadow(
-                                color: canProceed ? Color.botanicalForest.opacity(0.25) : .clear,
+                                color: canProceed ? CultivationTheme.Colors.accentCoral.opacity(0.25) : .clear,
                                 radius: 8,
                                 y: 3
                             )

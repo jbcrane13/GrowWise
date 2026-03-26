@@ -26,15 +26,15 @@ struct AskQuestionSheet: View {
                     VStack(spacing: 8) {
                         IconBubble(
                             systemName: "questionmark.bubble.fill",
-                            color: CultivationTheme.Colors.brandLeaf,
+                            color: CultivationTheme.Colors.accentCoral,
                             size: 56,
                             iconSize: 24
                         )
                         Text("Ask the Community")
-                            .font(.system(.title2, design: .rounded, weight: .bold))
+                            .font(.system(.title2, design: .serif, weight: .regular))
                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         Text("Get help from fellow gardeners")
-                            .font(.system(.subheadline, design: .rounded))
+                            .font(.system(.subheadline))
                             .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
                     .padding(.top, 8)
@@ -44,7 +44,7 @@ struct AskQuestionSheet: View {
                         // Author name
                         fieldSection(label: "Your Name") {
                             TextField("Enter your name", text: $authorName)
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body))
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
                                 .background {
@@ -61,7 +61,7 @@ struct AskQuestionSheet: View {
                         // Title
                         fieldSection(label: "Question Title") {
                             TextField("What's your gardening question?", text: $title)
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body))
                                 .padding(.horizontal, 14)
                                 .padding(.vertical, 10)
                                 .background {

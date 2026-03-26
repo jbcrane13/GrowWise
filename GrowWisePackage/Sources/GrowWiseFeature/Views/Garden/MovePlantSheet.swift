@@ -84,12 +84,12 @@ struct MovePlantSheet: View {
                     } label: {
                         HStack {
                             Text(garden.name ?? "Unnamed Garden")
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body))
                                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                             Spacer()
                             if garden.id == plant.garden?.id {
                                 Text("Current")
-                                    .font(.system(.caption, design: .rounded))
+                                    .font(.system(.caption))
                                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                             }
                             Image(systemName: "chevron.right")
@@ -130,12 +130,12 @@ struct MovePlantSheet: View {
                     HStack {
                         IconBubble(systemName: "tray", color: CultivationTheme.Colors.textSecondary, size: 28, iconSize: 13)
                         Text("Unassigned")
-                            .font(.system(.body, design: .rounded))
+                            .font(.system(.body))
                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         Spacer()
                         if plant.bed == nil, selectedGarden?.id == plant.garden?.id {
                             Text("Current")
-                                .font(.system(.caption, design: .rounded))
+                                .font(.system(.caption))
                                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         }
                     }
@@ -155,17 +155,17 @@ struct MovePlantSheet: View {
                         HStack {
                             IconBubble(
                                 systemName: bed.bedType?.iconName ?? "tray",
-                                color: CultivationTheme.Colors.brandLeaf,
+                                color: CultivationTheme.Colors.accentCoral,
                                 size: 28,
                                 iconSize: 13
                             )
                             Text(bed.name ?? "Unnamed")
-                                .font(.system(.body, design: .rounded))
+                                .font(.system(.body))
                                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                             Spacer()
                             if bed.id == plant.bed?.id {
                                 Text("Current")
-                                    .font(.system(.caption, design: .rounded))
+                                    .font(.system(.caption))
                                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                             }
                         }

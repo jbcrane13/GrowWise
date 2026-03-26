@@ -16,27 +16,27 @@ struct LocationSetupView: View {
                 // Hero icon
                 ZStack {
                     Circle()
-                        .fill(Color.botanicalLeaf.opacity(0.12))
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
                         .frame(width: 110, height: 110)
                         .overlay(
-                            Circle().stroke(Color.botanicalLeaf.opacity(0.20), lineWidth: 1)
+                            Circle().stroke(CultivationTheme.Colors.accentCoral.opacity(0.20), lineWidth: 1)
                         )
                     Circle()
-                        .fill(Color.botanicalLeaf.opacity(0.18))
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.18))
                         .frame(width: 80, height: 80)
                     Image(systemName: "location.fill")
                         .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Color.botanicalLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 }
 
                 VStack(spacing: 10) {
                     Text("Know your climate")
-                        .font(.system(size: 28, weight: .bold, design: .rounded))
+                        .font(.system(size: 28, weight: .regular, design: .serif))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
 
                     Text("Get weather-aware care tips and\nseasonal planting guidance.")
-                        .font(.system(size: 16, design: .rounded))
+                        .font(.system(size: 16))
                         .foregroundStyle(.white.opacity(0.55))
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
@@ -50,9 +50,9 @@ struct LocationSetupView: View {
                             HStack(spacing: 8) {
                                 Image(systemName: "map.fill")
                                     .font(.system(size: 13, weight: .medium))
-                                    .foregroundStyle(Color.botanicalLeaf)
+                                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                 Text("Hardiness Zone: \(zone)")
-                                    .font(.system(size: 15, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 15, weight: .semibold))
                                     .foregroundStyle(.white)
                             }
                         }
@@ -69,20 +69,16 @@ struct LocationSetupView: View {
                                         .font(.system(size: 18, weight: .medium))
                                 }
                                 Text(isRequesting ? "Requesting…" : "Enable Location")
-                                    .font(.system(size: 16, weight: .semibold, design: .rounded))
+                                    .font(.system(size: 16, weight: .semibold))
                             }
                             .foregroundStyle(.white)
                             .frame(maxWidth: .infinity, minHeight: 54)
                             .background(
                                 RoundedRectangle(cornerRadius: 16)
                                     .fill(
-                                        LinearGradient(
-                                            colors: [Color.botanicalForest, Color.botanicalLeaf],
-                                            startPoint: .leading,
-                                            endPoint: .trailing
-                                        )
+                                        CultivationTheme.Gradients.warmAccent
                                     )
-                                    .shadow(color: Color.botanicalForest.opacity(0.40), radius: 12, y: 4)
+                                    .shadow(color: CultivationTheme.Colors.accentCoral.opacity(0.40), radius: 12, y: 4)
                             )
                         }
                         .disabled(isRequesting)
@@ -91,7 +87,7 @@ struct LocationSetupView: View {
                         Button("Skip for Now") {
                             userProfile.hasLocationPermission = false
                         }
-                        .font(.system(size: 14, weight: .medium, design: .rounded))
+                        .font(.system(size: 14, weight: .medium))
                         .foregroundStyle(.white.opacity(0.40))
                         .accessibilityIdentifier("onboarding_location_skip")
                     }
