@@ -5,34 +5,38 @@ public enum CultivationTheme {
     // MARK: - Colors
 
     public enum Colors {
-        // Backgrounds
-        public static let background = Color(light: Color(hex: "FAFAF8"), dark: Color(hex: "0C0C0C"))
-        public static let backgroundSecondary = Color(light: Color(hex: "F0EDE6"), dark: Color(hex: "141414"))
+        // Backgrounds — cool charcoal, not warm brown
+        public static let background = Color(light: Color(hex: "F4F5F2"), dark: Color(hex: "0B0D0E"))
+        public static let backgroundSecondary = Color(light: Color(hex: "E8EAE5"), dark: Color(hex: "151819"))
 
-        // Card surfaces — use with .glassCard() modifier
+        // Card surfaces — stone-toned
         public static let cardSurface = Color(light: .white, dark: Color(white: 1, opacity: 0.04))
-        public static let cardBorder = Color(light: Color(white: 0, opacity: 0.07), dark: Color(white: 1, opacity: 0.08))
+        public static let cardBorder = Color(light: Color(white: 0, opacity: 0.07), dark: Color(white: 1, opacity: 0.07))
 
-        // Text
-        public static let textPrimary = Color(light: Color(hex: "1A1A1A"), dark: Color(hex: "E5E5E5"))
-        public static let textSecondary = Color(light: Color(hex: "666666"), dark: Color(white: 1, opacity: 0.4))
-        public static let textTertiary = Color(light: Color(hex: "999999"), dark: Color(hex: "666666"))
+        // Text — neutral cool cast
+        public static let textPrimary = Color(light: Color(hex: "1A1A1A"), dark: Color(hex: "E4E6E4"))
+        public static let textSecondary = Color(light: Color(hex: "666666"), dark: Color(white: 0.89, opacity: 0.55))
+        public static let textTertiary = Color(light: Color(hex: "999999"), dark: Color(white: 0.89, opacity: 0.3))
 
-        // Status — Apple system colors, vivid on dark bg
-        public static let statusAlert = Color(light: Color(hex: "D70015"), dark: Color(hex: "FF453A"))
-        public static let statusWarning = Color(light: Color(hex: "9D7200"), dark: Color(hex: "FFD60A"))
-        public static let statusHealthy = Color(light: Color(hex: "1A7F37"), dark: Color(hex: "30D158"))
+        // Status — clean, vivid
+        public static let statusAlert = Color(light: Color(hex: "D42020"), dark: Color(hex: "E05848"))
+        public static let statusWarning = Color(light: Color(hex: "9D7200"), dark: Color(hex: "DBA640"))
+        public static let statusHealthy = Color(light: Color(hex: "2D7A3A"), dark: Color(hex: "5EA06A"))
 
-        // Brand
-        public static let brandForest = Color(hex: "2D6A4F")
-        public static let brandLeaf = Color(hex: "52B788")
-        public static let brandMint = Color(hex: "B7E4C7")
-        public static let brandCream = Color(hex: "F5F0E8")
-        public static let brandGold = Color(hex: "E9C46A")
-        public static let brandSage = Color(hex: "7A9D68")
+        // Brand — stone & sage with coral/amber accents
+        public static let brandForest = Color(hex: "4A6650") // moss — deep green anchor
+        public static let brandLeaf = Color(hex: "7A917A") // sage — primary green
+        public static let brandMint = Color(hex: "C0CCC5") // frost — light sage
+        public static let brandCream = Color(hex: "F4F5F2") // parchment
+        public static let brandGold = Color(hex: "E0A456") // amber — warm accent
+        public static let brandSage = Color(hex: "96AC96") // lichen — mid sage
 
-        /// Hero glow
-        public static let heroGlow = Color(hex: "4CAF50").opacity(0.08)
+        // Accent — coral and amber (the new warm identity)
+        public static let accentCoral = Color(hex: "D4725C")
+        public static let accentAmber = Color(hex: "E0A456")
+
+        /// Hero glow — subtle sage instead of bright green
+        public static let heroGlow = Color(hex: "7A917A").opacity(0.06)
 
         // Interactive
         public static let divider = Color(light: Color(white: 0, opacity: 0.08), dark: Color(white: 1, opacity: 0.06))
@@ -54,10 +58,17 @@ public enum CultivationTheme {
             endPoint: .bottomTrailing
         )
 
+        /// Warm accent gradient for FAB and primary CTAs
+        public static let warmAccent = LinearGradient(
+            colors: [Colors.accentCoral, Colors.accentAmber],
+            startPoint: .topLeading,
+            endPoint: .bottomTrailing
+        )
+
         public static let hero = LinearGradient(
             colors: [
-                Color(light: Color(hex: "F0EDE6"), dark: Color(hex: "0C0C0C")),
-                Color(light: Color(hex: "FAFAF8"), dark: Color(hex: "0C0C0C")),
+                Color(light: Color(hex: "E8EAE5"), dark: Color(hex: "0B0D0E")),
+                Color(light: Color(hex: "F4F5F2"), dark: Color(hex: "0B0D0E")),
             ],
             startPoint: .top,
             endPoint: .bottom
@@ -100,15 +111,15 @@ public enum CultivationTheme {
 
     public enum Typography {
         public static func largeTitle(_ text: String) -> Text {
-            Text(text).font(.system(.largeTitle, design: .rounded, weight: .bold))
+            Text(text).font(.system(.largeTitle, design: .serif, weight: .regular))
         }
 
         public static func title(_ text: String) -> Text {
-            Text(text).font(.system(.title2, design: .rounded, weight: .bold))
+            Text(text).font(.system(.title2, design: .serif, weight: .regular))
         }
 
         public static func headline(_ text: String) -> Text {
-            Text(text).font(.system(.headline, design: .rounded, weight: .semibold))
+            Text(text).font(.system(.headline, design: .serif, weight: .regular))
         }
 
         public static func body(_ text: String) -> Text {
@@ -126,8 +137,14 @@ public enum CultivationTheme {
                 .textCase(.uppercase)
         }
 
+        /// Monospaced stat display — for data/numbers
         public static func stat(_ text: String) -> Text {
-            Text(text).font(.system(.title2, design: .rounded, weight: .bold))
+            Text(text).font(.system(.title2, design: .monospaced, weight: .medium))
+        }
+
+        /// Monospaced data label — for small numeric values
+        public static func dataLabel(_ text: String) -> Text {
+            Text(text).font(.system(size: 13, weight: .medium, design: .monospaced))
         }
     }
 }
