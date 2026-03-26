@@ -155,8 +155,8 @@ struct PlantDetailView: View {
                 ZStack {
                     LinearGradient(
                         colors: [
-                            CultivationTheme.Colors.brandForest.opacity(0.25),
-                            CultivationTheme.Colors.brandLeaf.opacity(0.12),
+                            CultivationTheme.Colors.brandForest.opacity(0.2),
+                            CultivationTheme.Colors.accentCoral.opacity(0.08),
                         ],
                         startPoint: .topLeading,
                         endPoint: .bottomTrailing
@@ -177,7 +177,7 @@ struct PlantDetailView: View {
                         )
 
                         Text(plant.name ?? "Unknown Plant")
-                            .font(.system(.title3, design: .rounded, weight: .semibold))
+                            .font(.system(.title3, design: .serif))
                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     }
                 }
@@ -457,7 +457,7 @@ struct PlantDetailView: View {
                     // Navigate to full journal view
                 }
                 .font(.system(.caption, design: .rounded))
-                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 .accessibilityIdentifier("plantdetail_button_viewallactivity")
             }
 
@@ -489,7 +489,7 @@ struct PlantDetailView: View {
                     // Navigate to reminder management
                 }
                 .font(.system(.caption, design: .rounded))
-                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 .accessibilityIdentifier("plantdetail_button_managereminders")
             }
 
