@@ -220,7 +220,7 @@ struct CompanionTipCard: View {
         HStack(alignment: .top, spacing: 10) {
             IconBubble(
                 systemName: "lightbulb.fill",
-                color: CultivationTheme.Colors.accentAmber,
+                color: CultivationTheme.Colors.brandLeaf,
                 size: CultivationTheme.Spacing.iconSizeSmall,
                 iconSize: 14
             )
