@@ -92,16 +92,20 @@ public struct GardenView: View {
 
     private var dashboardHeader: some View {
         VStack(alignment: .leading, spacing: 16) {
-            // Title row
             HStack(alignment: .top) {
-                VStack(alignment: .leading, spacing: 2) {
-                    Text("MY GARDENS")
-                        .font(.system(size: 12, design: .rounded))
-                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                        .tracking(0.5)
-                    Text("Gardens")
-                        .font(.system(.title, design: .rounded, weight: .bold))
+                VStack(alignment: .leading, spacing: 4) {
+                    Text("GARDENS")
+                        .font(.system(size: 10, weight: .medium, design: .monospaced))
+                        .tracking(2)
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+
+                    Text(viewModel.userName.isEmpty ? "My Gardens" : "\(viewModel.userName)'s Gardens")
+                        .font(.system(.title, design: .serif))
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                    Text("\(viewModel.gardens.count) gardens \u{00B7} \(viewModel.totalPlantsAllGardens) plants")
+                        .font(.system(size: 13))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
 
                 Spacer()
@@ -112,14 +116,14 @@ public struct GardenView: View {
                     Image(systemName: "plus")
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
-                        .frame(width: 36, height: 36)
-                        .background(CultivationTheme.Gradients.ctaVertical)
+                        .frame(width: 44, height: 44)
+                        .background(CultivationTheme.Gradients.warmAccent)
                         .clipShape(Circle())
+                        .shadow(color: CultivationTheme.Colors.accentCoral.opacity(0.3), radius: 8, y: 3)
                 }
                 .accessibilityIdentifier("garden_button_add")
             }
 
-            // Global stats
             if !viewModel.gardens.isEmpty {
                 HStack(spacing: 10) {
                     QuickStatCard(
@@ -222,7 +226,7 @@ public struct GardenView: View {
 
             VStack(spacing: 6) {
                 Text("Plant your first garden")
-                    .font(.system(.title3, design: .rounded, weight: .semibold))
+                    .font(.system(.title3, design: .serif))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text("Create a garden for your backyard, balcony,\nwindowsill, or anywhere you grow")
@@ -274,7 +278,7 @@ private struct QuickStartChip: View {
             VStack(spacing: 6) {
                 Image(systemName: icon)
                     .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 Text(label)
                     .font(.system(.caption, design: .rounded, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)

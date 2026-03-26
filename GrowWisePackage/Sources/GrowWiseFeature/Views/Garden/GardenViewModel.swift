@@ -70,6 +70,9 @@ public final class GardenViewModel {
     /// Per-garden summaries for dashboard cards.
     public var gardenSummaries: [GardenSummary] = []
 
+    /// Display name of the current user, populated on load.
+    public var userName: String = ""
+
     // MARK: - Computed Properties
 
     /// Groups filtered by `searchText`. Empty groups are dropped.
@@ -145,6 +148,7 @@ public final class GardenViewModel {
             selectedGarden = gardens.first
         }
 
+        userName = dataService.getCurrentUser()?.displayName ?? ""
         rebuildGroups()
         rebuildSummaries()
         isLoading = false
