@@ -139,7 +139,7 @@ struct ShoppingListServiceTests {
     }
 
     @Test("seed item quantity is 1 packet")
-    func seedItemQuantityIsOnePacket() {
+    func seedItemQuantityIsOnePacket() throws {
         let service = makeService()
         let garden = makeGarden()
         let plant = makePlant(growthStage: .seed, lastFertilized: Date(), containerType: .inGround)
@@ -307,7 +307,7 @@ struct ShoppingListServiceTests {
     }
 
     @Test("fertilizer item quantity is 1 bag")
-    func fertilizerItemQuantityIsOneBag() {
+    func fertilizerItemQuantityIsOneBag() throws {
         let service = makeService()
         let garden = makeGarden()
         let plant = makePlant(growthStage: .mature, lastFertilized: nil, containerType: .inGround)
