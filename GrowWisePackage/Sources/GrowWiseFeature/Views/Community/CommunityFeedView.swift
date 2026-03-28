@@ -17,6 +17,7 @@ public struct CommunityFeedView: View {
     @State private var hasMorePages = true
     @State private var errorMessage: String?
     @State private var showPublishSheet = false
+    @State private var showLikeError = false
     @State private var appeared = false
 
     public init() {}
@@ -47,6 +48,12 @@ public struct CommunityFeedView: View {
                 }
                 .accessibilityIdentifier("community_publish_button")
             }
+        }
+        .alert("Couldn't Like Garden", isPresented: $showLikeError) {
+            Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("community_button_like_error_dismiss")
+        } message: {
+            Text(errorMessage ?? "An error occurred. Please try again.")
         }
         .sheet(isPresented: $showPublishSheet) {
             PublishGardenSheet()
@@ -169,7 +176,12 @@ public struct CommunityFeedView: View {
             ForEach(gardens) { garden in
                 PublicGardenCardView(garden: garden) {
                     Task<Void, Never> {
-                        try? await cloudSyncService.likeGarden(garden)
+                        do {
+                            try await cloudSyncService.likeGarden(garden)
+                        } catch {
+                            errorMessage = error.localizedDescription
+                            showLikeError = true
+                        }
                     }
                 }
                 .onAppear {

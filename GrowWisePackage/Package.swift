@@ -79,12 +79,6 @@ let package = Package(
             dependencies: ["GrowWiseServices"],
             exclude: [
                 "AGENTS.md",
-                "DataServiceNilSelfTests.swift",
-                "DataServiceStorageConfigurationTests.swift",
-                "DataServiceTests.swift",
-                "DataTransformationServiceTests.swift",
-                "NotificationServiceTests.swift",
-                "ValidationServiceTests.swift",
             ]
         ),
     ]

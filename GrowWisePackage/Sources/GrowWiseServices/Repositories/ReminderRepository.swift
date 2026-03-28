@@ -16,16 +16,27 @@ public final class ReminderRepository {
     }
 
     public func fetchActive(limit: Int = 50) throws -> [PlantReminder] {
-        let calendar = Calendar.current
-        let currentDate = calendar.startOfDay(for: Date())
-
         var descriptor = FetchDescriptor<PlantReminder>(
             predicate: #Predicate<PlantReminder> { reminder in
-                reminder.isEnabled == true && reminder.nextDueDate >= currentDate
+                reminder.isEnabled == true
             },
             sortBy: [SortDescriptor(\.nextDueDate)]
         )
         descriptor.fetchLimit = limit
+
+        return try context.fetch(descriptor)
+    }
+
+    public func fetchOverdue() throws -> [PlantReminder] {
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
+
+        let descriptor = FetchDescriptor<PlantReminder>(
+            predicate: #Predicate<PlantReminder> { reminder in
+                reminder.isEnabled == true && reminder.nextDueDate < startOfToday
+            },
+            sortBy: [SortDescriptor(\.nextDueDate)]
+        )
 
         return try context.fetch(descriptor)
     }

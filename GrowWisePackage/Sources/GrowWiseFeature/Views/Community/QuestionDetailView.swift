@@ -16,6 +16,8 @@ struct QuestionDetailView: View {
     @State private var showReportConfirmation = false
     @State private var reportRecordID: CKRecord.ID?
     @State private var hasUpvotedQuestion = false
+    @State private var showUpvoteError = false
+    @State private var upvoteErrorMessage: String?
 
     /// Track upvoted answer IDs to prevent double-voting in the session
     @State private var upvotedAnswerIDs: Set<UUID> = []
@@ -71,6 +73,12 @@ struct QuestionDetailView: View {
                     }
                     .accessibilityIdentifier("forum_question_menu")
                 }
+            }
+            .alert("Vote Failed", isPresented: $showUpvoteError) {
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("forum_button_upvote_error_dismiss")
+            } message: {
+                Text(upvoteErrorMessage ?? "Could not register your vote. Please try again.")
             }
             .alert("Report Content", isPresented: $showReportConfirmation) {
                 Button("Report", role: .destructive) {
@@ -139,7 +147,13 @@ struct QuestionDetailView: View {
                     guard !hasUpvotedQuestion else { return }
                     hasUpvotedQuestion = true
                     Task<Void, Never> {
-                        try? await forumService.upvoteQuestion(question)
+                        do {
+                            try await forumService.upvoteQuestion(question)
+                        } catch {
+                            hasUpvotedQuestion = false
+                            upvoteErrorMessage = error.localizedDescription
+                            showUpvoteError = true
+                        }
                     }
                 } label: {
                     HStack(spacing: 6) {
@@ -248,7 +262,13 @@ struct QuestionDetailView: View {
                     guard !hasUpvoted else { return }
                     upvotedAnswerIDs.insert(answer.id)
                     Task<Void, Never> {
-                        try? await forumService.upvoteAnswer(answer)
+                        do {
+                            try await forumService.upvoteAnswer(answer)
+                        } catch {
+                            upvotedAnswerIDs.remove(answer.id)
+                            upvoteErrorMessage = error.localizedDescription
+                            showUpvoteError = true
+                        }
                     }
                 } label: {
                     HStack(spacing: 4) {
@@ -369,7 +389,8 @@ struct QuestionDetailView: View {
         do {
             answers = try await forumService.fetchAnswers(for: question)
         } catch {
-            // Errors handled via service state
+            upvoteErrorMessage = error.localizedDescription
+            showUpvoteError = true
         }
     }
 
@@ -387,7 +408,8 @@ struct QuestionDetailView: View {
             answerText = ""
             await loadAnswers()
         } catch {
-            // Error handled via service state
+            upvoteErrorMessage = error.localizedDescription
+            showUpvoteError = true
         }
     }
 }
