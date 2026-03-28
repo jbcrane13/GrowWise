@@ -20,6 +20,9 @@ final class HomeViewModel {
     /// from the list with a slide-away animation before the next data reload.
     var completedIDs: Set<UUID> = []
 
+    /// Error message surfaced to the user when a complete operation fails.
+    var errorMessage: String?
+
     // MARK: - Derived
 
     var allTasksDone: Bool {
@@ -67,7 +70,16 @@ final class HomeViewModel {
         }
 
         // Persist
-        try? dataService.completeReminder(reminder)
+        do {
+            try dataService.completeReminder(reminder)
+        } catch {
+            // Roll back optimistic UI and surface the error
+            _ = withAnimation(CultivationTheme.Animation.card) {
+                completedIDs.remove(reminder.id)
+            }
+            errorMessage = "Failed to complete reminder: \(error.localizedDescription)"
+            return
+        }
 
         // After animation settles, reload to get fresh state (updated nextDueDate etc.)
         try? await Task.sleep(nanoseconds: 400_000_000)

@@ -124,6 +124,18 @@ public struct HomeView: View {
                 await viewModel.load(dataService: dataService)
             }
             .background(CultivationTheme.Colors.background)
+            .alert(
+                "Action Failed",
+                isPresented: Binding(
+                    get: { viewModel.errorMessage != nil },
+                    set: { if !$0 { viewModel.errorMessage = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("home_alert_button_ok")
+            } message: {
+                Text(viewModel.errorMessage ?? "")
+            }
             .accessibilityIdentifier("home_screen")
         }
     }

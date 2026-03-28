@@ -1,6 +1,3 @@
-// INTEGRATION GAP: HomeViewModel.complete() uses `try? dataService.completeReminder(reminder)`
-// which silently swallows errors. No error state is set.
-
 import Foundation
 @testable import GrowWiseFeature
 @testable import GrowWiseModels
@@ -220,6 +217,28 @@ struct HomeViewModelTests {
 
         // Verify the reminder was completed — a non-recurring reminder becomes disabled
         #expect(reminder.isEnabled == false)
+    }
+
+    @Test("complete() does not set errorMessage on success")
+    func completeDoesNotSetErrorOnSuccess() async throws {
+        let dataService = try DataService.makeForTesting()
+        let plant = try dataService.createPlant(name: "Tomato", type: .vegetable)
+        let todayDate = Date()
+        let reminder = try dataService.createReminder(
+            title: "Water",
+            message: "Water it",
+            type: .watering,
+            frequency: .once,
+            dueDate: todayDate,
+            plant: plant
+        )
+
+        let vm = HomeViewModel()
+        await vm.load(dataService: dataService)
+        await vm.complete(reminder: reminder, dataService: dataService)
+
+        #expect(vm.errorMessage == nil)
+        #expect(vm.completedIDs.contains(reminder.id))
     }
 
     @Test("complete() persists the completion and allTasksDone reflects it via completedIDs")
