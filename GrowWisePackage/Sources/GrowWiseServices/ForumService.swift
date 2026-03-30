@@ -383,7 +383,7 @@ public final class ForumService {
 
     // MARK: - Record Mapping
 
-    private static func questionFromRecord(_ record: CKRecord) -> ForumQuestion? {
+    static func questionFromRecord(_ record: CKRecord) -> ForumQuestion? {
         guard
             let title = record["title"] as? String,
             let body = record["body"] as? String,
@@ -410,7 +410,7 @@ public final class ForumService {
         )
     }
 
-    private static func answerFromRecord(_ record: CKRecord) -> ForumAnswer? {
+    static func answerFromRecord(_ record: CKRecord) -> ForumAnswer? {
         guard
             let body = record["body"] as? String,
             let authorName = record["authorName"] as? String
