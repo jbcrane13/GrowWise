@@ -20,6 +20,7 @@ public struct GardenView: View {
     @State private var showDeleteConfirmation = false
     @State private var showPlantDatabase = false
     @State private var showPlantScanner = false
+    @State private var shoppingListGarden: Garden?
 
     public init() {}
 
@@ -38,6 +39,9 @@ public struct GardenView: View {
                     } else {
                         // Garden cards grid
                         gardenGrid
+
+                        // Shopping List link
+                        shoppingListSection
                     }
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -52,6 +56,9 @@ public struct GardenView: View {
             }
             .navigationDestination(item: $gardenToNavigate) { garden in
                 GardenDetailView(garden: garden)
+            }
+            .navigationDestination(item: $shoppingListGarden) { garden in
+                ShoppingListView(garden: garden)
             }
             .sheet(
                 isPresented: $showCreateGarden,
@@ -214,6 +221,52 @@ public struct GardenView: View {
                 showCreateGarden = true
             }
         }
+    }
+
+    // MARK: - Shopping List
+
+    private var shoppingListSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("SHOPPING")
+                .sectionLabelStyle()
+                .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+                .padding(.top, CultivationTheme.Spacing.sectionGap)
+
+            ForEach(viewModel.gardens) { garden in
+                Button {
+                    shoppingListGarden = garden
+                } label: {
+                    HStack(spacing: 12) {
+                        IconBubble(
+                            systemName: "cart.fill",
+                            color: CultivationTheme.Colors.accentAmber,
+                            size: 36,
+                            iconSize: 16
+                        )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(garden.name ?? "Garden")
+                                .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                            Text("Shopping list")
+                                .font(.system(.caption))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    }
+                    .padding(CultivationTheme.Spacing.cardPadding)
+                    .glassCard()
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("garden_button_shopping_\(garden.id?.uuidString ?? "unknown")")
+            }
+        }
+        .padding(.top, CultivationTheme.Spacing.rowGap)
     }
 
     // MARK: - States
