@@ -10,6 +10,7 @@ public struct HomeView: View {
     private var dataService
 
     @State private var viewModel = HomeViewModel()
+    @State private var showPlantDatabase = false
 
     public init() {}
 
@@ -105,7 +106,38 @@ public struct HomeView: View {
                     SeasonalTipCard()
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
-                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+
+                    // Browse Plant Guide
+                    Button {
+                        showPlantDatabase = true
+                    } label: {
+                        HStack(spacing: 12) {
+                            Image(systemName: "leaf.circle.fill")
+                                .font(.system(size: 28))
+                                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Browse Plant Guide")
+                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                                Text("Explore 50+ plants with care instructions")
+                                    .font(.system(.caption))
+                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                            }
+
+                            Spacer()
+
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 13, weight: .semibold))
+                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        }
+                        .padding(CultivationTheme.Spacing.cardPadding)
+                        .glassCard()
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+                    .accessibilityIdentifier("home_button_plantguide")
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -135,6 +167,9 @@ public struct HomeView: View {
                     .accessibilityIdentifier("home_alert_button_ok")
             } message: {
                 Text(viewModel.errorMessage ?? "")
+            }
+            .sheet(isPresented: $showPlantDatabase) {
+                PlantDatabaseView()
             }
             .accessibilityIdentifier("home_screen")
         }

@@ -18,6 +18,8 @@ public struct GardenView: View {
     @State private var gardenToNavigate: Garden?
     @State private var gardenToDelete: Garden?
     @State private var showDeleteConfirmation = false
+    @State private var showPlantDatabase = false
+    @State private var showPlantScanner = false
 
     public init() {}
 
@@ -83,6 +85,30 @@ public struct GardenView: View {
                     let suffix = plantCount == 1 ? "" : "s"
                     Text("This will permanently delete \"\(gardenName)\" and its \(plantCount) plant\(suffix).")
                 }
+            }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        showPlantDatabase = true
+                    } label: {
+                        Image(systemName: "book.fill")
+                    }
+                    .accessibilityIdentifier("garden_button_plantguide")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showPlantScanner = true
+                    } label: {
+                        Image(systemName: "camera.viewfinder")
+                    }
+                    .accessibilityIdentifier("garden_button_scanplant")
+                }
+            }
+            .sheet(isPresented: $showPlantDatabase) {
+                PlantDatabaseView()
+            }
+            .sheet(isPresented: $showPlantScanner) {
+                PlantScannerView()
             }
         }
         .accessibilityIdentifier("screen_garden")
