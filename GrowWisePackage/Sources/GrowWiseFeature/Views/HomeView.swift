@@ -8,9 +8,15 @@ import SwiftUI
 public struct HomeView: View {
     @Environment(DataService.self)
     private var dataService
+    @Environment(TutorialService.self)
+    private var tutorialService
+    @Environment(LocationService.self)
+    private var locationService
 
     @State private var viewModel = HomeViewModel()
     @State private var showPlantDatabase = false
+    @State private var showTutorials = false
+    @State private var tutorials: [TutorialTopic] = []
 
     public init() {}
 
@@ -136,8 +142,16 @@ public struct HomeView: View {
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                    .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                     .accessibilityIdentifier("home_button_plantguide")
+
+                    // Weather card
+                    weatherCard
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+
+                    // Learning section
+                    learningSection
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
@@ -171,7 +185,208 @@ public struct HomeView: View {
             .sheet(isPresented: $showPlantDatabase) {
                 PlantDatabaseView()
             }
+            .sheet(isPresented: $showTutorials) {
+                TutorialsView()
+            }
+            .task {
+                tutorials = Array(tutorialService.getAllTutorials().prefix(3))
+            }
             .accessibilityIdentifier("home_screen")
+        }
+    }
+
+    // MARK: - Weather Card
+
+    private var weatherCard: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("GARDEN WEATHER")
+                .sectionLabelStyle()
+                .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+
+            if let weatherData = locationService.weatherData {
+                HStack(spacing: 14) {
+                    VStack(alignment: .leading, spacing: 4) {
+                        HStack(spacing: 6) {
+                            Image(systemName: weatherConditionIcon(for: weatherData))
+                                .font(.system(size: 22))
+                                .foregroundStyle(CultivationTheme.Colors.accentAmber)
+
+                            Text(temperatureString(for: weatherData))
+                                .font(.system(.title2, design: .monospaced, weight: .medium))
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        }
+
+                        Text(weatherConditionLabel(for: weatherData))
+                            .font(.system(.caption))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    }
+
+                    Spacer()
+
+                    VStack(alignment: .trailing, spacing: 4) {
+                        Text(gardenWeatherTip(for: weatherData))
+                            .font(.system(.caption))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                            .multilineTextAlignment(.trailing)
+                            .lineLimit(2)
+                    }
+                }
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .glassCard()
+                .accessibilityIdentifier("home_card_weather")
+            } else {
+                HStack(spacing: 12) {
+                    Image(systemName: seasonalWeatherIcon)
+                        .font(.system(size: 22))
+                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(seasonalContextTitle)
+                            .font(.system(.subheadline, design: .serif, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        Text(seasonalContextSubtitle)
+                            .font(.system(.caption))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    }
+
+                    Spacer()
+                }
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .glassCard()
+                .accessibilityIdentifier("home_card_weather_seasonal")
+            }
+        }
+    }
+
+    private func weatherConditionIcon(for data: WeatherData) -> String {
+        let temp = data.current.temperature.converted(to: .fahrenheit).value
+        if temp <= 32 { return "snowflake" }
+        if temp >= 95 { return "sun.max.trianglebadge.exclamationmark.fill" }
+        if data.current.condition == .rain || data.current.condition == .heavyRain {
+            return "cloud.rain.fill"
+        }
+        if data.current.condition == .cloudy || data.current.condition == .mostlyCloudy {
+            return "cloud.fill"
+        }
+        return "sun.max.fill"
+    }
+
+    private func temperatureString(for data: WeatherData) -> String {
+        let temp = data.current.temperature.converted(to: .fahrenheit).value
+        return "\(Int(temp))°F"
+    }
+
+    private func weatherConditionLabel(for data: WeatherData) -> String {
+        data.current.condition.description
+    }
+
+    private func gardenWeatherTip(for data: WeatherData) -> String {
+        let temp = data.current.temperature.converted(to: .fahrenheit).value
+        if temp <= 32 { return "Frost risk — protect tender plants" }
+        if temp >= 95 { return "Heat stress — water early morning" }
+        if data.current.condition == .rain || data.current.condition == .heavyRain {
+            return "Skip watering — rain has you covered"
+        }
+        if temp >= 75 { return "Great growing weather — check moisture" }
+        return "Mild conditions — ideal for garden work"
+    }
+
+    private var seasonalWeatherIcon: String {
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 3 ... 5: return "leaf.fill"
+        case 6 ... 8: return "sun.max.fill"
+        case 9 ... 11: return "wind"
+        default: return "snowflake"
+        }
+    }
+
+    private var seasonalContextTitle: String {
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 3 ... 5: return "Spring Growing Season"
+        case 6 ... 8: return "Peak Summer Growth"
+        case 9 ... 11: return "Fall Harvest Season"
+        default: return "Winter Planning Season"
+        }
+    }
+
+    private var seasonalContextSubtitle: String {
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 3 ... 5: return "Warm days ahead — great time to plant cool-season crops"
+        case 6 ... 8: return "Water deeply and mulch to retain moisture"
+        case 9 ... 11: return "Harvest regularly and prepare beds for winter"
+        default: return "Plan your spring garden and order seeds"
+        }
+    }
+
+    // MARK: - Learning Section
+
+    private var learningSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack {
+                Text("LEARNING")
+                    .sectionLabelStyle()
+                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+
+                Spacer()
+
+                Button {
+                    showTutorials = true
+                } label: {
+                    Text("See All")
+                        .font(.system(.caption, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                }
+                .accessibilityIdentifier("home_button_seeall_tutorials")
+            }
+
+            ForEach(tutorials) { tutorial in
+                Button {
+                    showTutorials = true
+                } label: {
+                    HStack(spacing: 12) {
+                        IconBubble(
+                            systemName: tutorialIcon(for: tutorial.category),
+                            color: CultivationTheme.Colors.brandLeaf,
+                            size: 40,
+                            iconSize: 17
+                        )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(tutorial.title)
+                                .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                                .lineLimit(1)
+
+                            Text("\(tutorial.estimatedDuration) min · \(tutorial.difficultyLevel.displayName)")
+                                .font(.system(.caption))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    }
+                    .padding(CultivationTheme.Spacing.cardPadding)
+                    .glassCard()
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_card_tutorial_\(tutorial.id)")
+            }
+        }
+    }
+
+    private func tutorialIcon(for category: TutorialCategory) -> String {
+        switch category {
+        case .planning: "map.fill"
+        case .preparation: "shovel.fill"
+        case .care: "drop.fill"
+        case .environment: "sun.max.fill"
+        case .problemSolving: "ant.fill"
         }
     }
 
