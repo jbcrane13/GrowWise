@@ -125,6 +125,15 @@ public struct MainAppView: View {
                 .tag(TabSelection.journal)
                 .accessibilityIdentifier("tab_journal")
 
+            NavigationStack {
+                RemindersListView()
+            }
+            .tabItem {
+                Label("Reminders", systemImage: "bell.fill")
+            }
+            .tag(TabSelection.reminders)
+            .accessibilityIdentifier("tab_reminders")
+
             ProfileView()
                 .tabItem {
                     Label("Profile", systemImage: "person.fill")
@@ -231,6 +240,7 @@ public enum TabSelection: String, CaseIterable {
     case home
     case garden
     case journal
+    case reminders
     case profile
 }
 
