@@ -10,7 +10,7 @@ PRODUCT_NAME = Cultivation
 PRODUCT_DISPLAY_NAME = Cultivation
 PRODUCT_BUNDLE_IDENTIFIER = com.growwiser.app
 MARKETING_VERSION = 1.0
-CURRENT_PROJECT_VERSION = 2
+CURRENT_PROJECT_VERSION = 4
 
 // ==========================================
 // Platform Configuration
