@@ -69,9 +69,24 @@ final class HomeViewModel {
             completedIDs.insert(reminder.id)
         }
 
-        // Persist
+        // Persist reminder completion and update plant care date
         do {
             try dataService.completeReminder(reminder)
+
+            // Update the plant's last-care timestamp for the relevant type
+            // SwiftData auto-persists property mutations on managed objects.
+            if let plant = reminder.plant {
+                switch reminder.reminderType {
+                case .watering:
+                    plant.lastWatered = Date()
+                case .fertilizing:
+                    plant.lastFertilized = Date()
+                case .pruning:
+                    plant.lastPruned = Date()
+                default:
+                    break
+                }
+            }
         } catch {
             // Roll back optimistic UI and surface the error
             _ = withAnimation(CultivationTheme.Animation.card) {

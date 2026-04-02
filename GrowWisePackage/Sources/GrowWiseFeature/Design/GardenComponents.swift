@@ -259,7 +259,11 @@ struct TaskRow: View {
     let locationLabel: String?
     let statusColor: Color
     var isUrgent: Bool = false
+    var quickActionIcon: String = "checkmark.circle.fill"
+    var quickActionColor: Color = CultivationTheme.Colors.textTertiary
     var onComplete: (() -> Void)?
+
+    @State private var showCheckmark = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -283,45 +287,48 @@ struct TaskRow: View {
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            if isUrgent {
-                // Gradient complete button for urgent tasks
-                Button {
-                    onComplete?()
-                } label: {
-                    Text("Done")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(.white)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background {
-                            Capsule()
-                                .fill(CultivationTheme.Gradients.warmAccent)
-                        }
+            Button {
+                withAnimation(.spring(duration: 0.3)) {
+                    showCheckmark = true
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
-            } else {
-                // Outline complete button for normal tasks
-                Button {
-                    onComplete?()
-                } label: {
-                    Text("Done")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
-                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                        .padding(.horizontal, 14)
-                        .padding(.vertical, 7)
-                        .background {
-                            Capsule()
-                                .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
+                onComplete?()
+            } label: {
+                Group {
+                    if showCheckmark {
+                        Image(systemName: "checkmark")
+                            .font(.system(size: 13, weight: .bold))
+                            .foregroundStyle(.white)
+                            .transition(.scale.combined(with: .opacity))
+                    } else {
+                        HStack(spacing: 5) {
+                            Image(systemName: quickActionIcon)
+                                .font(.system(size: 12, weight: .semibold))
+                            Text("Done")
+                                .font(.system(size: 13, weight: .semibold, design: .rounded))
                         }
-                        .overlay {
-                            Capsule()
-                                .stroke(CultivationTheme.Colors.accentCoral.opacity(0.3), lineWidth: 1)
-                        }
+                        .foregroundStyle(isUrgent ? .white : quickActionColor)
+                        .transition(.scale.combined(with: .opacity))
+                    }
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background {
+                    Capsule()
+                        .fill(
+                            isUrgent || showCheckmark
+                                ? AnyShapeStyle(CultivationTheme.Gradients.warmAccent)
+                                : AnyShapeStyle(quickActionColor.opacity(0.08))
+                        )
+                }
+                .overlay {
+                    if !isUrgent, !showCheckmark {
+                        Capsule()
+                            .stroke(quickActionColor.opacity(0.3), lineWidth: 1)
+                    }
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
         }
         .padding(CultivationTheme.Spacing.cardPadding)
         .glassCard()
@@ -342,6 +349,22 @@ extension TaskRow {
             ? CultivationTheme.Colors.statusAlert
             : CultivationTheme.Colors.brandLeaf
         self.isUrgent = isUrgent
+
+        switch reminder.reminderType {
+        case .watering:
+            self.quickActionIcon = "drop.fill"
+            self.quickActionColor = .blue
+        case .fertilizing:
+            self.quickActionIcon = "leaf.fill"
+            self.quickActionColor = CultivationTheme.Colors.brandLeaf
+        case .pruning:
+            self.quickActionIcon = "scissors"
+            self.quickActionColor = .orange
+        default:
+            self.quickActionIcon = "checkmark.circle.fill"
+            self.quickActionColor = CultivationTheme.Colors.textTertiary
+        }
+
         self.onComplete = onComplete
     }
 }
