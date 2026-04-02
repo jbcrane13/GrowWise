@@ -13,6 +13,8 @@ struct PlantDetailView: View {
     private var photoService
     @Environment(ReminderService.self)
     private var reminderService
+    @Environment(PlantCareAdviceService.self)
+    private var careAdviceService
     @State private var showingEditPlant = false
     @State private var showingDeleteConfirmation = false
     @State private var showingJournalEntry = false
@@ -21,6 +23,8 @@ struct PlantDetailView: View {
     @State private var showingPhotoViewer = false
     @State private var showingAssignGarden = false
     @State private var showMovePlant = false
+
+    @State private var careTips: [CareTip] = []
 
     // Care action states
     @State private var isPerformingCareAction = false
@@ -35,6 +39,7 @@ struct PlantDetailView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
                     heroImageSection
+                    careTipsSection
                     plantInfoSections
                 }
                 .padding(.bottom, 32)
@@ -55,6 +60,10 @@ struct PlantDetailView: View {
             Button("OK") {}
         } message: {
             Text(careActionMessage)
+        }
+        .task {
+            let user = dataService.getCurrentUser()
+            careTips = careAdviceService.getContextualTips(for: plant, in: plant.garden, user: user)
         }
         .sheet(isPresented: $showingEditPlant) {
             Text("Edit Plant View - To be implemented")
@@ -188,6 +197,23 @@ struct PlantDetailView: View {
             }
         }
         .padding(.top, 8)
+    }
+
+    // MARK: - Care Tips Section
+
+    @ViewBuilder
+    private var careTipsSection: some View {
+        if !careTips.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Care Tips")
+                    .sectionLabelStyle()
+
+                ForEach(careTips) { tip in
+                    CareTipCard(tip: tip)
+                }
+            }
+            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+        }
     }
 
     // MARK: - Basic Info Section
@@ -719,6 +745,46 @@ enum SortOption: CaseIterable {
         case .healthStatus: "Health Status"
         case .wateringSchedule: "Watering Schedule"
         }
+    }
+}
+
+// MARK: - Care Tip Card
+
+private struct CareTipCard: View {
+    let tip: CareTip
+
+    private var urgencyColor: Color {
+        switch tip.urgency {
+        case .urgent: CultivationTheme.Colors.statusAlert
+        case .warning: CultivationTheme.Colors.statusWarning
+        case .suggestion: CultivationTheme.Colors.brandLeaf
+        case .info: CultivationTheme.Colors.textSecondary
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            IconBubble(
+                systemName: tip.icon,
+                color: urgencyColor,
+                size: CultivationTheme.Spacing.iconSizeSmall,
+                iconSize: 14
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(tip.title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                Text(tip.description)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .glassCard()
+        .accessibilityIdentifier("plantdetail_caretip_\(tip.title)")
     }
 }
 

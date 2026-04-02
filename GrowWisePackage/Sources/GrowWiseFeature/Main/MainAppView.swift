@@ -49,6 +49,7 @@ public struct MainAppView: View {
         let tutorialService: TutorialService
         let subscriptionService: SubscriptionService
         let companionPlantingService: CompanionPlantingService
+        let plantCareAdviceService: PlantCareAdviceService
     }
 
     public var body: some View {
@@ -88,6 +89,7 @@ public struct MainAppView: View {
                     .environment(services.tutorialService)
                     .environment(services.subscriptionService)
                     .environment(services.companionPlantingService)
+                    .environment(services.plantCareAdviceService)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -163,7 +165,8 @@ public struct MainAppView: View {
                 plantDatabaseService: PlantDatabaseService(dataService: service),
                 tutorialService: TutorialService(dataService: service),
                 subscriptionService: SubscriptionService(),
-                companionPlantingService: CompanionPlantingService()
+                companionPlantingService: CompanionPlantingService(),
+                plantCareAdviceService: PlantCareAdviceService()
             )
             isInitializing = false
             return
@@ -180,7 +183,8 @@ public struct MainAppView: View {
             plantDatabaseService: PlantDatabaseService(dataService: service),
             tutorialService: TutorialService(dataService: service),
             subscriptionService: SubscriptionService(),
-            companionPlantingService: CompanionPlantingService()
+            companionPlantingService: CompanionPlantingService(),
+            plantCareAdviceService: PlantCareAdviceService()
         )
         cloudSyncService.attach(dataService: service)
 
