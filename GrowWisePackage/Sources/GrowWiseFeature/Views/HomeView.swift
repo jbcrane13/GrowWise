@@ -144,6 +144,41 @@ public struct HomeView: View {
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                     .accessibilityIdentifier("home_button_plantguide")
 
+                    // Garden health score
+                    GardenHealthCardView()
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+
+                    // Seasonal planner link
+                    NavigationLink {
+                        SeasonalPlannerView()
+                    } label: {
+                        HStack(spacing: 10) {
+                            IconBubble(
+                                systemName: "calendar.badge.clock",
+                                color: CultivationTheme.Colors.brandSage,
+                                size: CultivationTheme.Spacing.iconSizeSmall,
+                                iconSize: 14
+                            )
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Seasonal Planner")
+                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                                Text("See what to plant this month")
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        }
+                        .padding(CultivationTheme.Spacing.cardPadding)
+                        .glassCard()
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    .accessibilityIdentifier("home_button_seasonalplanner")
+
                     // Weather card
                     weatherCard
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
