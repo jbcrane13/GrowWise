@@ -23,6 +23,7 @@ struct PlantDetailView: View {
     @State private var showingPhotoViewer = false
     @State private var showingAssignGarden = false
     @State private var showMovePlant = false
+    @State private var showingDiagnostic = false
 
     @State private var careTips: [CareTip] = []
 
@@ -81,6 +82,9 @@ struct PlantDetailView: View {
         }
         .sheet(isPresented: $showMovePlant) {
             MovePlantSheet(plant: plant)
+        }
+        .sheet(isPresented: $showingDiagnostic) {
+            CommonPlantIssuesView(plant: plant)
         }
     }
 
@@ -466,6 +470,30 @@ struct PlantDetailView: View {
                     showingReminderView = true
                 }
             }
+
+            // Diagnostic button
+            Button {
+                showingDiagnostic = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "stethoscope")
+                    Text("Something Wrong?")
+                }
+                .font(.system(.subheadline, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.statusWarning)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background {
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .fill(CultivationTheme.Colors.statusWarning.opacity(0.08))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .stroke(CultivationTheme.Colors.statusWarning.opacity(0.3), lineWidth: 1)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("plantdetail_button_diagnostic")
         }
     }
 
