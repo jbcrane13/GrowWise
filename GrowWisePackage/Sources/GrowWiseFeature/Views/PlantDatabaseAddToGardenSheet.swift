@@ -9,6 +9,8 @@ struct AddPlantToGardenFromDatabaseSheet: View {
     private var dismiss
     @Environment(DataService.self)
     private var dataService
+    @Environment(ReminderService.self)
+    private var reminderService
 
     // Customization fields
     @State private var selectedGarden: Garden?
@@ -20,6 +22,9 @@ struct AddPlantToGardenFromDatabaseSheet: View {
     @State private var isLoading = false
     @State private var showingError = false
     @State private var errorMessage = ""
+    @State private var showWateringSchedule = false
+    @State private var wateringSchedule: WateringSchedule?
+    @State private var savedPlant: Plant?
 
     var body: some View {
         NavigationStack {
@@ -173,6 +178,15 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             } message: {
                 Text(errorMessage)
             }
+            .sheet(isPresented: $showWateringSchedule, onDismiss: { dismiss() }, content: {
+                if let schedule = wateringSchedule, let plant = savedPlant {
+                    WateringScheduleConfirmationSheet(
+                        plant: plant,
+                        schedule: schedule,
+                        reminderService: reminderService
+                    )
+                }
+            })
             .task {
                 loadData()
             }
@@ -230,7 +244,10 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 plant: userPlant
             )
 
-            dismiss()
+            savedPlant = userPlant
+            wateringSchedule = reminderService.suggestWateringSchedule(for: userPlant, in: selectedGarden)
+            isLoading = false
+            showWateringSchedule = true
         } catch {
             isLoading = false
             errorMessage = "Failed to add plant: \(error.localizedDescription)"

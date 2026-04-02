@@ -340,6 +340,90 @@ public final class ReminderService {
         baseDate
     }
 
+    // MARK: - Watering Schedule Suggestion
+
+    /// Suggests a watering schedule for a plant in a given garden,
+    /// adjusting frequency based on sun exposure, container type, season, and soil.
+    public func suggestWateringSchedule(for plant: Plant, in garden: Garden?) -> WateringSchedule {
+        let baseDays = plant.wateringFrequency?.days ?? 3
+        var adjustedDays = Double(baseDays)
+        var reasons: [String] = []
+
+        // Sun exposure adjustment
+        if let sun = garden?.sunExposure {
+            switch sun {
+            case .fullSun:
+                adjustedDays *= 0.75
+                reasons.append("Full sun increases evaporation")
+            case .fullShade:
+                adjustedDays *= 1.25
+                reasons.append("Shade retains moisture longer")
+            case .partialSun, .partialShade, .artificial:
+                break
+            }
+        }
+
+        // Container type adjustment
+        if let container = plant.containerType {
+            switch container {
+            case .container, .hangingBasket, .windowBox:
+                adjustedDays *= 0.8
+                reasons.append("Containers dry out faster than ground soil")
+            case .inGround, .raisedBed, .greenhouse, .indoor:
+                break
+            }
+        }
+
+        // Seasonal adjustment
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 6 ... 8: // Summer
+            adjustedDays *= 0.75
+            reasons.append("Summer heat requires more frequent watering")
+        case 12, 1, 2: // Winter
+            adjustedDays *= 1.5
+            reasons.append("Winter dormancy reduces water needs")
+        default:
+            break
+        }
+
+        // Soil type adjustment
+        if let soil = garden?.soilType {
+            switch soil {
+            case .clay:
+                adjustedDays *= 1.3
+                reasons.append("Clay soil retains water longer")
+            case .sand:
+                adjustedDays *= 0.7
+                reasons.append("Sandy soil drains quickly")
+            default:
+                break
+            }
+        }
+
+        let finalDays = max(1, Int(adjustedDays.rounded()))
+        let frequency = closestReminderFrequency(days: finalDays)
+        let nextDate = Calendar.current.date(byAdding: .day, value: finalDays, to: Date()) ?? Date()
+
+        return WateringSchedule(
+            frequencyDays: finalDays,
+            frequency: frequency,
+            adjustedReason: reasons.isEmpty ? "Based on plant defaults" : reasons.joined(separator: ". "),
+            nextDate: nextDate
+        )
+    }
+
+    private func closestReminderFrequency(days: Int) -> ReminderFrequency {
+        switch days {
+        case 1: .daily
+        case 2: .everyOtherDay
+        case 3: .twiceWeekly
+        case 4 ... 7: .weekly
+        case 8 ... 14: .biweekly
+        default: .monthly
+        }
+    }
+
     // MARK: - Seasonal Care Automation
 
     public func createSeasonalCareSchedule(for plant: Plant) async throws {
@@ -902,6 +986,22 @@ public enum Season: String, CaseIterable, Codable {
         case .fall: "Fall"
         case .winter: "Winter"
         }
+    }
+}
+
+// MARK: - Watering Schedule
+
+public struct WateringSchedule: Sendable {
+    public let frequencyDays: Int
+    public let frequency: ReminderFrequency
+    public let adjustedReason: String
+    public let nextDate: Date
+
+    public init(frequencyDays: Int, frequency: ReminderFrequency, adjustedReason: String, nextDate: Date) {
+        self.frequencyDays = frequencyDays
+        self.frequency = frequency
+        self.adjustedReason = adjustedReason
+        self.nextDate = nextDate
     }
 }
 
