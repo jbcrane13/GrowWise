@@ -23,6 +23,7 @@ struct GardenDetailView: View {
     @State private var plantToNavigate: Plant?
     @State private var alertCount: Int = 0
     @State private var isLoading = true
+    @State private var showRecommendedPlants = false
 
     private var filteredGroups: [PlantGroup] {
         guard !searchText.isEmpty else { return groupedPlants }
@@ -80,6 +81,9 @@ struct GardenDetailView: View {
                             }
                         )
                     }
+
+                    // Suggested plants section
+                    SuggestedPlantsSection(garden: garden)
 
                     addBedButton
                 }
@@ -150,6 +154,9 @@ struct GardenDetailView: View {
             )
             .presentationDetents([.medium, .large])
             .presentationDragIndicator(.hidden)
+        }
+        .sheet(isPresented: $showRecommendedPlants) {
+            RecommendedPlantsView(garden: garden)
         }
         .sheet(
             isPresented: $showCreateBed,
@@ -264,6 +271,10 @@ struct GardenDetailView: View {
                 Button("Add Plant") { showAddPlant = true }
                     .buttonStyle(GradientButtonStyle())
                     .accessibilityIdentifier("gardendetail_button_addplant_empty")
+
+                Button("Suggestions") { showRecommendedPlants = true }
+                    .buttonStyle(OutlineButtonStyle())
+                    .accessibilityIdentifier("gardendetail_button_suggestions_empty")
             }
             .padding(.horizontal, 20)
         }
