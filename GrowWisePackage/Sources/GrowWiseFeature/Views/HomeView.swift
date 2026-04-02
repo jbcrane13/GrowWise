@@ -186,7 +186,38 @@ public struct HomeView: View {
                     // Learning section
                     learningSection
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+
+                    // Community card
+                    NavigationLink {
+                        CommunityFeedView()
+                    } label: {
+                        HStack(spacing: 10) {
+                            IconBubble(
+                                systemName: "person.2.fill",
+                                color: CultivationTheme.Colors.accentCoral,
+                                size: CultivationTheme.Spacing.iconSizeSmall,
+                                iconSize: 14
+                            )
+                            VStack(alignment: .leading, spacing: 2) {
+                                Text("Community")
+                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                                Text("See what other gardeners are growing")
+                                    .font(.system(.caption, design: .rounded))
+                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                            }
+                            Spacer()
+                            Image(systemName: "chevron.right")
+                                .font(.system(size: 12, weight: .semibold))
+                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        }
+                        .padding(CultivationTheme.Spacing.cardPadding)
+                        .glassCard()
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+                    .accessibilityIdentifier("home_button_community")
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
