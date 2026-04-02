@@ -20,6 +20,9 @@ public struct GardenView: View {
     @State private var showDeleteConfirmation = false
     @State private var showPlantDatabase = false
     @State private var showPlantScanner = false
+    @State private var showAddPlantMenu = false
+    @State private var showAddPlantSheet = false
+    @State private var showFAB = false
     @State private var shoppingListGarden: Garden?
 
     public init() {}
@@ -46,6 +49,30 @@ public struct GardenView: View {
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.bottom, 32)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Button {
+                    showAddPlantMenu = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.white)
+                        .frame(width: 56, height: 56)
+                        .background(CultivationTheme.Colors.brandLeaf)
+                        .clipShape(Circle())
+                        .shadow(color: CultivationTheme.Colors.brandLeaf.opacity(0.35), radius: 10, y: 4)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, CultivationTheme.Spacing.screenPadding)
+                .padding(.bottom, 24)
+                .scaleEffect(showFAB ? 1 : 0.5)
+                .opacity(showFAB ? 1 : 0)
+                .accessibilityIdentifier("garden_fab_addplant")
+            }
+            .onAppear {
+                withAnimation(.spring(duration: 0.4, bounce: 0.3)) {
+                    showFAB = true
+                }
             }
             .background(CultivationTheme.Colors.background.ignoresSafeArea())
             .task {
@@ -116,6 +143,27 @@ public struct GardenView: View {
             }
             .sheet(isPresented: $showPlantScanner) {
                 PlantScannerView()
+            }
+            .sheet(isPresented: $showAddPlantSheet) {
+                AddPlantSheet()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+            }
+            .confirmationDialog("Add a Plant", isPresented: $showAddPlantMenu, titleVisibility: .visible) {
+                Button("Browse Plant Database") {
+                    showPlantDatabase = true
+                }
+                .accessibilityIdentifier("garden_fab_option_browse")
+
+                Button("Scan a Plant") {
+                    showPlantScanner = true
+                }
+                .accessibilityIdentifier("garden_fab_option_scan")
+
+                Button("Add Manually") {
+                    showAddPlantSheet = true
+                }
+                .accessibilityIdentifier("garden_fab_option_manual")
             }
         }
         .accessibilityIdentifier("screen_garden")
