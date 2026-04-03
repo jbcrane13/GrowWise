@@ -2,6 +2,8 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SeedInventoryService is in GrowWiseServices (imported above)
+
 /// Observable view-model for the Home tab care dashboard.
 /// Loads active reminders from DataService and separates them into
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
@@ -15,6 +17,11 @@ final class HomeViewModel {
     var totalPlantCount: Int = 0
     var isLoading = false
     var userName: String = ""
+
+    /// Seeds that are ready to start indoors based on zone and current date.
+    var readyToPlantSeeds: [Seed] = []
+    /// User's hardiness zone, resolved on load.
+    var hardinessZone: String?
 
     /// IDs of reminders the user has tapped "Done" on — used to filter them
     /// from the list with a slide-away animation before the next data reload.
@@ -56,6 +63,13 @@ final class HomeViewModel {
         allGoodCount = all.count(where: { !urgentIDs.contains($0.id) })
 
         totalPlantCount = (try? dataService.plants.fetchAll().count) ?? 0
+
+        // Resolve ready-to-plant seeds
+        let user = dataService.getCurrentUser()
+        hardinessZone = user?.hardinessZone
+        let allSeeds = (try? dataService.seeds.fetchAll()) ?? []
+        let seedService = SeedInventoryService()
+        readyToPlantSeeds = seedService.readyToPlant(seeds: allSeeds, zone: hardinessZone ?? "6", currentDate: Date())
 
         isLoading = false
     }

@@ -11,6 +11,7 @@ public struct SeasonalPlannerView: View {
     @State private var selectedMonth: Int = Calendar.current.component(.month, from: Date())
     @State private var activities: [PlantActivity] = []
     @State private var plants: [Plant] = []
+    @State private var seeds: [Seed] = []
     @State private var userZone: String?
     @State private var frostDate: FrostDate?
 
@@ -282,11 +283,20 @@ public struct SeasonalPlannerView: View {
         let allPlants = (try? dataService.plants.fetchAll()) ?? []
         plants = allPlants.filter { $0.garden != nil }
 
+        // Load seeds that have indoor start data for the planner
+        let allSeeds = (try? dataService.seeds.fetchAll()) ?? []
+        seeds = allSeeds.filter { ($0.indoorStartWeeks ?? 0) > 0 }
+
         refreshActivities()
     }
 
     private func refreshActivities() {
         let service = SeasonalPlannerService(dataService: dataService)
-        activities = service.getMonthlyActivities(for: selectedMonth, plants: plants, zone: userZone)
+        activities = service.getMonthlyActivities(
+            for: selectedMonth,
+            plants: plants,
+            seeds: seeds,
+            zone: userZone
+        )
     }
 }

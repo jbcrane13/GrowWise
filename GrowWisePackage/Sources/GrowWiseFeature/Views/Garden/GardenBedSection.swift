@@ -4,12 +4,13 @@ import SwiftUI
 // MARK: - GardenBedSection
 
 /// One grouped section in the Garden tab list.
-/// Shows the bed/location header, all plant rows, and an optional companion tip.
+/// Shows the bed/location header, all plant rows, companion tip, and suggested seeds.
 struct GardenBedSection: View {
     let group: PlantGroup
     let onPlantTap: (Plant) -> Void
     let onQuickAction: (Plant) -> Void
     let onDelete: (Plant) -> Void
+    var onPlantSeedInBed: ((Seed, GardenBed) -> Void)?
 
     var body: some View {
         VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
@@ -42,6 +43,13 @@ struct GardenBedSection: View {
             // Companion tip shown when a location group has 2+ plants
             if group.plants.count >= 2 {
                 CompanionTipCard(tip: companionTip(for: group))
+            }
+
+            // Suggested seeds for this bed (only for named beds)
+            if let bed = group.bed, let plantSeedCallback = onPlantSeedInBed {
+                SuggestedSeedsCard(bed: bed, onPlantSeed: { seed in
+                    plantSeedCallback(seed, bed)
+                })
             }
         }
     }

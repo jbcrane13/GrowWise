@@ -113,6 +113,12 @@ public struct HomeView: View {
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
 
+                    // Ready to Plant — seeds in their indoor start window
+                    if !viewModel.readyToPlantSeeds.isEmpty {
+                        ReadyToPlantCard(seeds: viewModel.readyToPlantSeeds)
+                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    }
+
                     // Browse Plant Guide
                     Button {
                         showPlantDatabase = true

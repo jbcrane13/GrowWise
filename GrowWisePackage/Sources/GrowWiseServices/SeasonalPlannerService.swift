@@ -160,6 +160,73 @@ public final class SeasonalPlannerService {
         return activities.sorted { $0.activityType.displayName < $1.activityType.displayName }
     }
 
+    /// Returns monthly activities including "Start seeds indoors" tasks from the user's seed inventory.
+    ///
+    /// Seeds with `indoorStartWeeks` are checked against the zone's last frost date.
+    /// When `month` falls within the ideal start window (±1 month), a `.startIndoors` activity is generated.
+    public func getMonthlyActivities(
+        for month: Int,
+        plants: [Plant],
+        seeds: [Seed],
+        zone: String?
+    ) -> [PlantActivity] {
+        var activities = getMonthlyActivities(for: month, plants: plants, zone: zone)
+
+        guard let frostDate = FrostDate.forZone(zone) else {
+            return activities
+        }
+
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: Date())
+
+        for seed in seeds {
+            guard let indoorWeeks = seed.indoorStartWeeks, indoorWeeks > 0,
+                  let varietyName = seed.varietyName, !varietyName.isEmpty
+            else { continue }
+
+            // Build a Date for the last spring frost this year
+            guard let frostDateThisYear = calendar.date(from: DateComponents(
+                year: year,
+                month: frostDate.lastSpringFrost,
+                day: frostDate.lastSpringFrostDay
+            )) else { continue }
+
+            // Ideal indoor start = frostDate - indoorStartWeeks
+            guard let idealStart = calendar.date(
+                byAdding: .weekOfYear,
+                value: -indoorWeeks,
+                to: frostDateThisYear
+            ) else { continue }
+
+            let idealMonth = calendar.component(.month, from: idealStart)
+
+            // Generate activity for the ideal month and 1 month on either side
+            let targetMonths: Set<Int> = [
+                idealMonth,
+                idealMonth == 1 ? 12 : idealMonth - 1,
+                idealMonth == 12 ? 1 : idealMonth + 1,
+            ]
+
+            guard targetMonths.contains(month) else { continue }
+
+            // Avoid duplicates — only add if no plant-based startIndoors activity for same name exists
+            let alreadyPresent = activities.contains {
+                $0.activityType == .startIndoors &&
+                    $0.plantName.lowercased() == varietyName.lowercased()
+            }
+            guard !alreadyPresent else { continue }
+
+            activities.append(PlantActivity(
+                plantName: varietyName,
+                activityType: .startIndoors,
+                description: "Start \(varietyName) seeds indoors — \(indoorWeeks) weeks before last frost (\(frostDate.lastSpringFrostDescription))",
+                icon: SeasonalActivity.startIndoors.icon
+            ))
+        }
+
+        return activities.sorted { $0.activityType.displayName < $1.activityType.displayName }
+    }
+
     public func getFrostDate(for zone: String?) -> FrostDate? {
         FrostDate.forZone(zone)
     }
