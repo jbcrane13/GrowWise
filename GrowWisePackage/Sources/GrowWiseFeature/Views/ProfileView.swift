@@ -10,7 +10,7 @@ public struct ProfileView: View {
     @State private var journalCount: Int = 0
     @State private var streakDays: Int = 0
     @State private var showShareComingSoon = false
-    @State private var showAppSettingsComingSoon = false
+    @State private var showAppSettings = false
 
     // Navigation state
     @State private var showTutorials = false
@@ -97,6 +97,9 @@ public struct ProfileView: View {
             .navigationDestination(isPresented: $showForum) {
                 ForumView()
             }
+            .navigationDestination(isPresented: $showAppSettings) {
+                AppSettingsView()
+            }
             .task {
                 loadStats()
             }
@@ -104,11 +107,6 @@ public struct ProfileView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Garden sharing via iCloud is coming in a future update.")
-            }
-            .alert("Coming Soon", isPresented: $showAppSettingsComingSoon) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("App Settings are coming in a future update.")
             }
             .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
                 Button("OK", role: .cancel) {}
@@ -286,7 +284,7 @@ public struct ProfileView: View {
                 title: "App Settings",
                 id: "profile_row_settings"
             ) {
-                showAppSettingsComingSoon = true
+                showAppSettings = true
             }
         }
     }
