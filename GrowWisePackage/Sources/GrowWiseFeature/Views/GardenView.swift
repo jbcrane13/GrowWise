@@ -24,6 +24,7 @@ public struct GardenView: View {
     @State private var showAddPlantSheet = false
     @State private var showFAB = false
     @State private var shoppingListGarden: Garden?
+    @State private var showSeedInventory = false
 
     public init() {}
 
@@ -86,6 +87,9 @@ public struct GardenView: View {
             }
             .navigationDestination(item: $shoppingListGarden) { garden in
                 ShoppingListView(garden: garden)
+            }
+            .navigationDestination(isPresented: $showSeedInventory) {
+                SeedInventoryView()
             }
             .sheet(
                 isPresented: $showCreateGarden,
@@ -171,6 +175,10 @@ public struct GardenView: View {
 
     // MARK: - Dashboard Header
 
+    private var seedCount: Int {
+        (try? dataService.seeds.fetchAll().count) ?? 0
+    }
+
     private var dashboardHeader: some View {
         VStack(alignment: .leading, spacing: 16) {
             HStack(alignment: .top) {
@@ -224,6 +232,13 @@ public struct GardenView: View {
                             ? CultivationTheme.Colors.statusAlert
                             : CultivationTheme.Colors.textTertiary
                     )
+                    QuickStatCard(
+                        value: seedCount,
+                        label: "Seeds",
+                        color: CultivationTheme.Colors.accentCoral
+                    )
+                    .onTapGesture { showSeedInventory = true }
+                    .accessibilityIdentifier("garden_stat_seeds")
                 }
             }
         }
