@@ -1,5 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftUI
 
 struct SuggestedSeedsCard: View {
@@ -10,6 +11,7 @@ struct SuggestedSeedsCard: View {
 
     @State private var suggestedSeeds: [Seed] = []
 
+    private let logger = Logger(subsystem: "com.growwise.seeds", category: "SuggestedSeedsCard")
     private let service = SeedInventoryService()
 
     var body: some View {
@@ -77,11 +79,27 @@ struct SuggestedSeedsCard: View {
 
     private func loadSuggestions() {
         guard let garden = bed.garden else { return }
-        let unassigned = (try? dataService.seeds.fetchUnassigned(for: garden)) ?? []
+
+        let unassigned: [Seed]
+        do {
+            unassigned = try dataService.seeds.fetchUnassigned(for: garden)
+        } catch {
+            logger.warning("Failed to fetch unassigned seeds: \(error.localizedDescription, privacy: .public)")
+            unassigned = []
+        }
+
+        let plants: [Plant]
+        do {
+            plants = try dataService.plants.fetchAll()
+        } catch {
+            logger.warning("Failed to fetch plant database: \(error.localizedDescription, privacy: .public)")
+            plants = []
+        }
+
         suggestedSeeds = service.compatibleSeeds(
             for: bed,
             unassignedSeeds: unassigned,
-            plantDatabase: (try? dataService.plants.fetchAll()) ?? []
+            plantDatabase: plants
         )
     }
 }

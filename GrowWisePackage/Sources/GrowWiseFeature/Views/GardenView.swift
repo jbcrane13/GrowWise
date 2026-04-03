@@ -176,6 +176,7 @@ public struct GardenView: View {
     // MARK: - Dashboard Header
 
     private var seedCount: Int {
+        // Non-critical display value — 0 on error is acceptable for stat chip
         (try? dataService.seeds.fetchAll().count) ?? 0
     }
 

@@ -1,5 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftUI
 
 // MARK: - SeedInventoryView
@@ -9,9 +10,12 @@ struct SeedInventoryView: View {
     @Environment(DataService.self)
     private var dataService
 
+    private let logger = Logger(subsystem: "com.growwise.seeds", category: "SeedInventoryView")
+
     @State private var seeds: [Seed] = []
     @State private var searchText: String = ""
     @State private var showAddSheet = false
+    @State private var loadError: String?
 
     private var filteredSeeds: [Seed] {
         if searchText.trimmingCharacters(in: .whitespacesAndNewlines).isEmpty {
@@ -66,6 +70,13 @@ struct SeedInventoryView: View {
                     .presentationDragIndicator(.hidden)
             }
         )
+        .alert("Error", isPresented: .constant(loadError != nil)) {
+            Button("OK", role: .cancel) {
+                loadError = nil
+            }
+        } message: {
+            Text(loadError ?? "An unknown error occurred.")
+        }
     }
 
     // MARK: - Search Bar
@@ -229,7 +240,9 @@ struct SeedInventoryView: View {
         do {
             seeds = try dataService.seeds.fetchAll()
         } catch {
+            logger.error("Failed to load seeds: \(error.localizedDescription, privacy: .public)")
             seeds = []
+            loadError = "Failed to load seed inventory. Please try again."
         }
     }
 
