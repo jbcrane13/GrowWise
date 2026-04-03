@@ -207,4 +207,93 @@ struct SeedRepositoryTests {
         #expect(allSeeds.count == 1)
         #expect(allSeeds.first?.gardenBed == nil)
     }
+
+    // MARK: - Edge Cases
+
+    @Test("Update seed persists changes")
+    func updateSeed() throws {
+        let container = try makeContainer()
+        let repo = SeedRepository(context: container.mainContext)
+
+        let seed = Seed(varietyName: "Roma Tomato", plantType: .vegetable, quantity: 3)
+        try repo.add(seed)
+
+        seed.varietyName = "San Marzano"
+        seed.quantity = 10
+        try repo.update(seed)
+
+        let fetched = try repo.fetchAll()
+        #expect(fetched.count == 1)
+        #expect(fetched.first?.varietyName == "San Marzano")
+        #expect(fetched.first?.quantity == 10)
+    }
+
+    @Test("Quantity zero is valid — out of stock seed")
+    func quantityZero() throws {
+        let container = try makeContainer()
+        let repo = SeedRepository(context: container.mainContext)
+
+        let seed = Seed(varietyName: "Ghost Pepper", plantType: .vegetable, quantity: 0)
+        try repo.add(seed)
+
+        let fetched = try repo.fetchAll()
+        #expect(fetched.count == 1)
+        #expect(fetched.first?.quantity == 0)
+    }
+
+    @Test("Search nonexistent term returns empty array")
+    func searchEmptyResults() throws {
+        let container = try makeContainer()
+        let repo = SeedRepository(context: container.mainContext)
+
+        try repo.add(Seed(varietyName: "Tomato", plantType: .vegetable))
+        try repo.add(Seed(varietyName: "Basil", plantType: .herb))
+
+        let results = try repo.search(query: "zzz_nonexistent")
+        #expect(results.isEmpty)
+    }
+
+    @Test("Garden deletion does not cascade-delete seeds")
+    func gardenDeletionOrphansSeeds() throws {
+        let container = try makeContainer()
+        let repo = SeedRepository(context: container.mainContext)
+        let ctx = container.mainContext
+
+        let garden = Garden(name: "Doomed Garden")
+        ctx.insert(garden)
+        try ctx.save()
+
+        let seed = Seed(varietyName: "Kale", plantType: .vegetable)
+        seed.garden = garden
+        try repo.add(seed)
+
+        // Delete the garden
+        ctx.delete(garden)
+        try ctx.save()
+
+        // Seed should still exist with nil garden
+        let allSeeds = try repo.fetchAll()
+        #expect(allSeeds.count == 1)
+        #expect(allSeeds.first?.varietyName == "Kale")
+        #expect(allSeeds.first?.garden == nil)
+    }
+
+    @Test("Seed count accuracy after add and delete")
+    func seedCountAccuracy() throws {
+        let container = try makeContainer()
+        let repo = SeedRepository(context: container.mainContext)
+
+        let seed1 = Seed(varietyName: "Carrot", plantType: .vegetable)
+        let seed2 = Seed(varietyName: "Beet", plantType: .vegetable)
+        let seed3 = Seed(varietyName: "Radish", plantType: .vegetable)
+        try repo.add(seed1)
+        try repo.add(seed2)
+        try repo.add(seed3)
+
+        #expect(try repo.fetchAll().count == 3)
+
+        try repo.delete(seed2)
+
+        #expect(try repo.fetchAll().count == 2)
+    }
 }

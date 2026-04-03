@@ -216,4 +216,158 @@ struct SeedInventoryServiceTests {
 
         #expect(result == nil)
     }
+
+    // MARK: - Edge Cases: compatibleSeeds
+
+    @Test("Plant database link fallback filters seed by linked plant sun requirement")
+    func compatibleSeedsFallbackToPlantDatabaseSun() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let garden = Garden(name: "Shade Garden")
+        garden.sunExposure = .partialShade
+        context.insert(garden)
+
+        let bed = GardenBed(name: "Bed D", bedType: .raisedBed, garden: garden)
+        context.insert(bed)
+
+        // Plant in database with fullSun requirement
+        let dbPlant = Plant(name: "Sun Lover", plantType: .vegetable)
+        dbPlant.sunlightRequirement = .fullSun
+        context.insert(dbPlant)
+        try context.save()
+
+        // Seed has NO direct sunRequirement but links to the full-sun plant
+        let seed = Seed(varietyName: "Sun Lover Hybrid", plantType: .vegetable)
+        seed.sunRequirement = nil
+        seed.plantDatabaseID = dbPlant.id?.uuidString
+
+        let result = service.compatibleSeeds(
+            for: bed,
+            unassignedSeeds: [seed],
+            plantDatabase: [dbPlant]
+        )
+
+        // partialShade (1) < fullSun (3), seed should be filtered out
+        #expect(result.isEmpty)
+    }
+
+    @Test("Artificial sun garden accepts full-sun seeds")
+    func compatibleSeedsArtificialSunAcceptsFullSun() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        let garden = Garden(name: "Indoor Garden")
+        garden.sunExposure = .artificial
+        context.insert(garden)
+
+        let bed = GardenBed(name: "Grow Light Shelf", bedType: .raisedBed, garden: garden)
+        context.insert(bed)
+
+        let seed = Seed(varietyName: "Full Sun Tomato", plantType: .vegetable)
+        seed.sunRequirement = .fullSun
+
+        let result = service.compatibleSeeds(
+            for: bed,
+            unassignedSeeds: [seed],
+            plantDatabase: []
+        )
+
+        // artificial (3) >= fullSun (3), seed should pass
+        #expect(result.count == 1)
+        #expect(result.first?.varietyName == "Full Sun Tomato")
+    }
+
+    // MARK: - Edge Cases: readyToPlant
+
+    @Test("Ready to plant for cold zone 3a — 8 weeks indoor start on April 6")
+    func readyToPlantColdZone() throws {
+        // Zone 3 last frost = June 1
+        // 8 weeks before June 1 = ~April 6
+        // Window: 1 week before/after = March 30 – April 13
+        let seed = Seed(varietyName: "Cold Hardy Tomato", plantType: .vegetable)
+        seed.indoorStartWeeks = 8
+
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: Date())
+        let testDate = try #require(calendar.date(from: DateComponents(year: year, month: 4, day: 6)))
+
+        let result = service.readyToPlant(seeds: [seed], zone: "3a", currentDate: testDate)
+
+        #expect(result.count == 1)
+        #expect(result.first?.varietyName == "Cold Hardy Tomato")
+    }
+
+    @Test("Ready to plant for warm zone 10a — 4 weeks indoor start on Jan 5")
+    func readyToPlantWarmZone() throws {
+        // Zone 10 last frost = January 31
+        // 4 weeks before Jan 31 = ~January 3
+        // Window: 1 week before/after = Dec 27 – Jan 10
+        let seed = Seed(varietyName: "Warm Pepper", plantType: .vegetable)
+        seed.indoorStartWeeks = 4
+
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: Date())
+        let testDate = try #require(calendar.date(from: DateComponents(year: year, month: 1, day: 5)))
+
+        let result = service.readyToPlant(seeds: [seed], zone: "10a", currentDate: testDate)
+
+        #expect(result.count == 1)
+        #expect(result.first?.varietyName == "Warm Pepper")
+    }
+
+    @Test("Ready to plant with invalid zone returns empty array")
+    func readyToPlantInvalidZone() throws {
+        let seed = Seed(varietyName: "Mystery Plant", plantType: .vegetable)
+        seed.indoorStartWeeks = 6
+
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: Date())
+        let testDate = try #require(calendar.date(from: DateComponents(year: year, month: 3, day: 5)))
+
+        let result = service.readyToPlant(seeds: [seed], zone: "xyz", currentDate: testDate)
+
+        #expect(result.isEmpty)
+    }
+
+    // MARK: - Edge Cases: suggestPlantDatabaseLink
+
+    @Test("Word-level match — shared significant word triggers match")
+    func suggestLinkWordLevelMatch() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        // "Garden Fennel" and "Bronze Fennel" share the word "Fennel" (>2 chars)
+        // Neither name is a substring of the other, so only word-level match fires.
+        let plant = Plant(name: "Garden Fennel", plantType: .herb)
+        context.insert(plant)
+        try context.save()
+
+        let seed = Seed(varietyName: "Bronze Fennel", plantType: .herb)
+
+        let result = service.suggestPlantDatabaseLink(for: seed, plantDatabase: [plant])
+
+        #expect(result == plant.id?.uuidString)
+    }
+
+    @Test("Short words excluded from word-level matching")
+    func suggestLinkNoShortWordMatch() throws {
+        let container = try makeContainer()
+        let context = container.mainContext
+
+        // Plant name has only short words (<=2 chars) so word-level match
+        // filters them all out. Names are chosen so neither is a substring
+        // of the other, preventing substring match from firing.
+        let plant = Plant(name: "Qx Zy", plantType: .vegetable)
+        context.insert(plant)
+        try context.save()
+
+        let seed = Seed(varietyName: "Jm Zy Qx", plantType: .vegetable)
+
+        let result = service.suggestPlantDatabaseLink(for: seed, plantDatabase: [plant])
+
+        // Substring check: "jm zy qx" does not contain "qx zy" and vice versa
+        // Word-level check: all words ("jm", "zy", "qx") are <=2 chars, filtered out
+        #expect(result == nil)
+    }
 }
