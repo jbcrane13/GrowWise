@@ -17,7 +17,7 @@ struct StatsRepositoryTests {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
-        #expect(repo.getPlantCount() == 0)
+        #expect(try repo.getPlantCount() == 0)
     }
 
     @Test("totalPlantCount returns the correct count after inserting plants")
@@ -32,7 +32,7 @@ struct StatsRepositoryTests {
         container.mainContext.insert(plant2)
         container.mainContext.insert(plant3)
 
-        #expect(repo.getPlantCount() == 3)
+        #expect(try repo.getPlantCount() == 3)
     }
 
     // MARK: - healthyPlantCount (via getGardeningStats / healthyDescriptor)
@@ -52,7 +52,7 @@ struct StatsRepositoryTests {
         container.mainContext.insert(sickPlant)
         container.mainContext.insert(dyingPlant)
 
-        let stats = repo.getGardeningStats()
+        let stats = try repo.getGardeningStats()
         #expect(stats.healthyPlants == 1)
     }
 
@@ -69,7 +69,7 @@ struct StatsRepositoryTests {
         container.mainContext.insert(sick)
         container.mainContext.insert(dead)
 
-        let stats = repo.getGardeningStats()
+        let stats = try repo.getGardeningStats()
         #expect(stats.healthyPlants == 0)
     }
 
@@ -105,7 +105,7 @@ struct StatsRepositoryTests {
         disabled.isEnabled = false
         container.mainContext.insert(disabled)
 
-        #expect(repo.getReminderCount(activeOnly: true) == 1)
+        #expect(try repo.getReminderCount(activeOnly: true) == 1)
     }
 
     @Test("activeReminderCount excludes past-due reminders")
@@ -127,7 +127,7 @@ struct StatsRepositoryTests {
         past.isEnabled = true
         container.mainContext.insert(past)
 
-        #expect(repo.getReminderCount(activeOnly: true) == 0)
+        #expect(try repo.getReminderCount(activeOnly: true) == 0)
     }
 
     // MARK: - totalJournalEntryCount (getJournalEntryCount)
@@ -145,7 +145,7 @@ struct StatsRepositoryTests {
         container.mainContext.insert(entry1)
         container.mainContext.insert(entry2)
 
-        #expect(repo.getJournalEntryCount() == 2)
+        #expect(try repo.getJournalEntryCount() == 2)
     }
 
     @Test("totalJournalEntryCount returns 0 for empty store")
@@ -153,7 +153,7 @@ struct StatsRepositoryTests {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
-        #expect(repo.getJournalEntryCount() == 0)
+        #expect(try repo.getJournalEntryCount() == 0)
     }
 
     // MARK: - getGardeningStats (composite)
@@ -180,7 +180,7 @@ struct StatsRepositoryTests {
         let entry = JournalEntry(title: "Note", content: "Looking great", entryType: .note, plant: plant)
         container.mainContext.insert(entry)
 
-        let stats = repo.getGardeningStats()
+        let stats = try repo.getGardeningStats()
         #expect(stats.totalPlants == 1)
         #expect(stats.healthyPlants == 1)
         #expect(stats.activeReminders == 1)
@@ -192,7 +192,7 @@ struct StatsRepositoryTests {
         let container = try makeContainer()
         let repo = StatsRepository(context: container.mainContext)
 
-        let stats = repo.getGardeningStats()
+        let stats = try repo.getGardeningStats()
         #expect(stats.totalPlants == 0)
         #expect(stats.healthyPlants == 0)
         #expect(stats.activeReminders == 0)

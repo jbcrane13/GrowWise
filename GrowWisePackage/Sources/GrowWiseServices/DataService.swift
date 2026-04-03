@@ -211,7 +211,13 @@ public final class DataService {
             return cachedGardens
         }
 
-        let result = (try? gardens.fetchAll(offset: clampedOffset, limit: clampedLimit)) ?? []
+        let result: [Garden]
+        do {
+            result = try gardens.fetchAll(offset: clampedOffset, limit: clampedLimit)
+        } catch {
+            logger.error("[DataService] Failed to fetch gardens: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
 
         // Cache the result — gardens use medium TTL (5 min).
         // Note: cached @Model objects must be used on the same ModelContext.
@@ -244,7 +250,13 @@ public final class DataService {
             return cachedPlants
         }
 
-        let result = (try? plants.fetchPaginated(for: garden, offset: offset, limit: limit)) ?? []
+        let result: [Plant]
+        do {
+            result = try plants.fetchPaginated(for: garden, offset: offset, limit: limit)
+        } catch {
+            logger.error("[DataService] Failed to fetch plants: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
 
         // Cache the result — user plants use medium TTL (5 min).
         // Note: cached @Model objects are tied to the current ModelContext.
@@ -291,7 +303,13 @@ public final class DataService {
             return cachedPlants
         }
 
-        let result = (try? plants.fetchDatabasePage(offset: offset, limit: limit)) ?? []
+        let result: [Plant]
+        do {
+            result = try plants.fetchDatabasePage(offset: offset, limit: limit)
+        } catch {
+            logger.error("[DataService] Failed to fetch plant database page: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
         cache.set(cacheKey, value: result, policy: .long)
         return result
     }
@@ -343,7 +361,13 @@ public final class DataService {
             return cachedReminders
         }
 
-        let result = (try? reminders.fetchActive(limit: 50)) ?? []
+        let result: [PlantReminder]
+        do {
+            result = try reminders.fetchActive(limit: 50)
+        } catch {
+            logger.error("[DataService] Failed to fetch active reminders: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
 
         // Active reminders use short TTL (2 min) as they're time-sensitive
         cache.set(cacheKey, value: result, policy: .short)
@@ -357,7 +381,13 @@ public final class DataService {
             return cachedReminders
         }
 
-        let result = (try? reminders.fetchUpcoming(days: days, offset: offset, limit: limit)) ?? []
+        let result: [PlantReminder]
+        do {
+            result = try reminders.fetchUpcoming(days: days, offset: offset, limit: limit)
+        } catch {
+            logger.error("[DataService] Failed to fetch upcoming reminders: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
         cache.set(cacheKey, value: result, policy: .short)
         return result
     }
@@ -427,7 +457,13 @@ public final class DataService {
             return cachedEntries
         }
 
-        let result = (try? journals.fetchForPlant(plant, offset: offset, limit: limit)) ?? []
+        let result: [JournalEntry]
+        do {
+            result = try journals.fetchForPlant(plant, offset: offset, limit: limit)
+        } catch {
+            logger.error("[DataService] Failed to fetch journal entries for plant: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
         cache.set(cacheKey, value: result, policy: .medium)
         return result
     }
@@ -440,7 +476,13 @@ public final class DataService {
             return cachedEntries
         }
 
-        let result = (try? journals.fetchRecent(limit: safeLimit)) ?? []
+        let result: [JournalEntry]
+        do {
+            result = try journals.fetchRecent(limit: safeLimit)
+        } catch {
+            logger.error("[DataService] Failed to fetch recent journal entries: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
         cache.set(cacheKey, value: result, policy: .medium)
         return result
     }
@@ -452,7 +494,13 @@ public final class DataService {
         if trimmedQuery.isEmpty { return [] }
         let cacheKey = "plants:search:\(trimmedQuery):limit:\(limit)"
         if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
-        let result = (try? plants.search(query: query, limit: limit)) ?? []
+        let result: [Plant]
+        do {
+            result = try plants.search(query: query, limit: limit)
+        } catch {
+            logger.error("[DataService] Failed to search plants: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
         cache.set(cacheKey, value: result, policy: .short)
         return result
     }
@@ -469,13 +517,19 @@ public final class DataService {
         let sunKey = sunlightRequirement?.rawValue ?? "all"
         let cacheKey = "plants:filter:\(typeKey):\(diffKey):\(sunKey):limit:\(limit):offset:\(offset)"
         if let cached = cache.get(cacheKey, as: [Plant].self) { return cached }
-        let result = (try? plants.filter(
-            byType: type,
-            difficultyLevel: difficultyLevel,
-            sunlightRequirement: sunlightRequirement,
-            offset: offset,
-            limit: limit
-        )) ?? []
+        let result: [Plant]
+        do {
+            result = try plants.filter(
+                byType: type,
+                difficultyLevel: difficultyLevel,
+                sunlightRequirement: sunlightRequirement,
+                offset: offset,
+                limit: limit
+            )
+        } catch {
+            logger.error("[DataService] Failed to filter plants: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
         cache.set(cacheKey, value: result, policy: .medium)
         return result
     }
@@ -488,49 +542,79 @@ public final class DataService {
             return cached
         }
 
-        let gardeningStats = stats.getGardeningStats()
-        cache.set(cacheKey, value: gardeningStats, policy: .medium)
-        return gardeningStats
+        do {
+            let gardeningStats = try stats.getGardeningStats()
+            cache.set(cacheKey, value: gardeningStats, policy: .medium)
+            return gardeningStats
+        } catch {
+            logger.error("[DataService] Failed to fetch gardening stats: \(error.localizedDescription, privacy: .public)")
+            return GardeningStats(totalPlants: 0, healthyPlants: 0, activeReminders: 0, totalJournalEntries: 0)
+        }
     }
 
     public func getPlantCount(for garden: Garden? = nil) -> Int {
         let cacheKey = "stats:count:plants:\(garden?.id?.uuidString ?? "all")"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
-        let count = stats.getPlantCount(for: garden)
-        cache.set(cacheKey, value: count, policy: .long)
-        return count
+        do {
+            let count = try stats.getPlantCount(for: garden)
+            cache.set(cacheKey, value: count, policy: .long)
+            return count
+        } catch {
+            logger.error("[DataService] Failed to fetch plant count: \(error.localizedDescription, privacy: .public)")
+            return 0
+        }
     }
 
     public func getGardenCount() -> Int {
         let cacheKey = "stats:count:gardens"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
-        let count = stats.getGardenCount()
-        cache.set(cacheKey, value: count, policy: .long)
-        return count
+        do {
+            let count = try stats.getGardenCount()
+            cache.set(cacheKey, value: count, policy: .long)
+            return count
+        } catch {
+            logger.error("[DataService] Failed to fetch garden count: \(error.localizedDescription, privacy: .public)")
+            return 0
+        }
     }
 
     public func getReminderCount(activeOnly: Bool = false) -> Int {
         let cacheKey = "stats:count:reminders:\(activeOnly)"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
-        let count = stats.getReminderCount(activeOnly: activeOnly)
-        cache.set(cacheKey, value: count, policy: .long)
-        return count
+        do {
+            let count = try stats.getReminderCount(activeOnly: activeOnly)
+            cache.set(cacheKey, value: count, policy: .long)
+            return count
+        } catch {
+            logger.error("[DataService] Failed to fetch reminder count: \(error.localizedDescription, privacy: .public)")
+            return 0
+        }
     }
 
     public func getJournalEntryCount(for plant: Plant? = nil) -> Int {
         let cacheKey = "stats:count:journals:\(plant?.id?.uuidString ?? "all")"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
-        let count = stats.getJournalEntryCount(for: plant)
-        cache.set(cacheKey, value: count, policy: .long)
-        return count
+        do {
+            let count = try stats.getJournalEntryCount(for: plant)
+            cache.set(cacheKey, value: count, policy: .long)
+            return count
+        } catch {
+            logger.error("[DataService] Failed to fetch journal entry count: \(error.localizedDescription, privacy: .public)")
+            return 0
+        }
     }
 
     public func getPlantDatabaseCount() -> Int {
         let cacheKey = "stats:count:plantdatabase"
         if let count = cache.get(cacheKey, as: Int.self) { return count }
-        let count = stats.getPlantDatabaseCount()
-        cache.set(cacheKey, value: count, policy: .long)
-        return count
+        do {
+            let count = try stats.getPlantDatabaseCount()
+            cache.set(cacheKey, value: count, policy: .long)
+            return count
+        } catch {
+            logger.error("[DataService] Failed to fetch plant database count: \(error.localizedDescription, privacy: .public)")
+            return 0
+        }
     }
 
     // MARK: - Data Export
@@ -584,7 +668,13 @@ public final class DataService {
             descriptor.fetchLimit = 50
         }
 
-        let fetchedPlants = (try? mainContext.fetch(descriptor)) ?? []
+        let fetchedPlants: [Plant]
+        do {
+            fetchedPlants = try mainContext.fetch(descriptor)
+        } catch {
+            logger.error("[DataService] Failed to batch load plants: \(error.localizedDescription, privacy: .public)")
+            fetchedPlants = []
+        }
 
         let result: [Plant]
         if !plantIds.isEmpty {
