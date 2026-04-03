@@ -86,27 +86,32 @@ GrowWiseUITests/                 # XCUITest (some skipped post-redesign)
 
 **External deps:** Sentry (error tracking), Amplitude (analytics), swift-docc-plugin
 
-## Navigation — 4 Tabs
+## Navigation — 5 Tabs
 
 ```
-MainAppView (TabView)
-├── Home       — Care task dashboard (today's tasks, urgency grouped)
-├── Garden     — Grouped plant list by bed/area (hero header, primary tab)
+MainAppView (TabView, coral accent tint)
+├── Home       — Care task dashboard (urgency-grouped tasks, weather, health score, seasonal planner)
+├── Garden     — Hero header → grouped plant list by bed/area → PlantQuickCard → PlantDetailView
 ├── Journal    — Timeline of plant journal entries
-└── Profile    — Settings + tutorials
+├── Reminders  — Dedicated reminder list (own NavigationStack)
+└── Profile    — Settings + tutorials (via .sheet)
 ```
 
-**Garden tab flow:** GardenHeroHeader (selector chips) → grouped LazyVStack of GardenBedSection → plant tap → PlantQuickCard bottom sheet → "View Full Details" → dismisses sheet, 350ms delay, pushes PlantDetailView via navigationDestination(item:).
+**Garden tab flow:** GardenHeroHeader (serif title, selector chips) → grouped LazyVStack of GardenBedSection → plant tap → PlantQuickCard bottom sheet → "View Full Details" → dismisses sheet, 350ms delay, pushes PlantDetailView via navigationDestination(item:).
 
-## Design System — CultivationTheme
+**Home tab features:** Urgency-grouped tasks with inline quick-care icons (💧/🌿/✂️), weather card, tutorial cards, plant guide, garden health score card, seasonal planner, community card.
+
+## Design System — CultivationTheme ("Botanical Field Journal")
 
 **Single source of truth:** `GrowWiseFeature/Design/CultivationTheme.swift`
 
-Design language: clean minimal + premium glass-morphism. Dark-first adaptive colors.
+Design language: **Botanical Field Journal** — serif typography, warm earth tones (stone/sage), coral accents, premium glass-morphism. Dark-first adaptive (`#0C0C0C` background).
 
-Key tokens: `CultivationTheme.Colors.*`, `CultivationTheme.Spacing.*`, `CultivationTheme.Radius.*`, `CultivationTheme.Animation.*`, `CultivationTheme.Gradients.ctaGradient`
+Key tokens: `CultivationTheme.Colors.*` (incl. `accentCoral`), `Spacing.*`, `Radius.*`, `Animation.*`, `Gradients.ctaGradient`
 
 **Shared components in ViewModifiers.swift:** `.glassCard()`, `GlassPill`, `IconBubble`, `StatusDot`, `GradientButtonStyle`, `QuickStatCard`
+
+**Anti-patterns:** No system font defaults, no teal/purple gradients, no generic tech aesthetics.
 
 ## Key Services
 
@@ -120,6 +125,13 @@ Key tokens: `CultivationTheme.Colors.*`, `CultivationTheme.Spacing.*`, `Cultivat
 | `CloudSyncService` | CloudKit private user data + public garden showcase |
 | `SubscriptionService` | StoreKit 2 in-app purchases |
 | `ValidationService` | Input validation (Sendable singleton) |
+| `PlantCareAdviceService` | Contextual care tips for plant detail (#139) |
+| `GardenHealthService` | Garden health score computation (#142) |
+| `SeasonalPlannerService` | Zone-based seasonal calendar (#141) |
+| `PlantDiagnosticService` | AI-powered plant health diagnostics (#140) |
+| `ShoppingListService` | Shopping list management (#132, #133) |
+| `AchievementService` | 21 achievements, progress milestones |
+| `ForumService` | Community Q&A forum (CloudKit) |
 
 ## SwiftData & CloudKit
 
@@ -170,7 +182,7 @@ let service = try await DataService.makeForTesting()
 
 ## Issue Tracking
 
-Uses **GitHub Issues** via `gh` CLI. Repo: `jbcrane13/GrowWise`.
+Uses **GitHub Issues** via `gh` CLI. Repo: `jbcrane13/GrowWise`. **Beads (`bd`) is deprecated — do not use it.**
 
 ```bash
 gh issue list --repo jbcrane13/GrowWise --state open
