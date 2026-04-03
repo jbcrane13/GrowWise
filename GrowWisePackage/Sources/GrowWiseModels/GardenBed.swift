@@ -11,6 +11,8 @@ public final class GardenBed {
     public var garden: Garden?
     @Relationship(deleteRule: .cascade, inverse: \Plant.bed)
     public var plants: [Plant]? = []
+    @Relationship(deleteRule: .nullify, inverse: \Seed.gardenBed)
+    public var seeds: [Seed]? = []
 
     public init(name: String, bedType: BedType, garden: Garden? = nil) {
         id = UUID()

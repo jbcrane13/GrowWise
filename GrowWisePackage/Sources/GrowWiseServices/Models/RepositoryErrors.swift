@@ -31,3 +31,17 @@ public enum UserRepositoryError: Error, LocalizedError {
     case notFound
     case saveFailed(Error)
 }
+
+public enum SeedError: Error, LocalizedError {
+    case notFound
+    case saveFailed(Error)
+    case insufficientQuantity
+
+    public var errorDescription: String? {
+        switch self {
+        case .notFound: "Seed not found in the database."
+        case .saveFailed(let err): "Failed to save seed: \(err.localizedDescription)"
+        case .insufficientQuantity: "Not enough seeds remaining."
+        }
+    }
+}
