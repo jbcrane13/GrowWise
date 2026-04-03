@@ -439,6 +439,7 @@ public struct AppSettingsView: View {
     }
 
     private func shareData(_ data: Data) {
+        #if canImport(UIKit) && !os(macOS)
         let tempURL = FileManager.default.temporaryDirectory
             .appendingPathComponent("cultivation-export-\(Date().ISO8601Format()).json")
         do {
@@ -450,7 +451,6 @@ public struct AppSettingsView: View {
             if let windowScene = UIApplication.shared.connectedScenes.first as? UIWindowScene,
                let rootVC = windowScene.windows.first?.rootViewController
             {
-                // Find the topmost presented controller
                 var presenter = rootVC
                 while let presented = presenter.presentedViewController {
                     presenter = presented
@@ -461,26 +461,29 @@ public struct AppSettingsView: View {
             exportErrorMessage = error.localizedDescription
             showExportError = true
         }
+        #endif
     }
 
     private func resetAllData() {
         if let domain = Bundle.main.bundleIdentifier {
             UserDefaults.standard.removePersistentDomain(forName: domain)
         }
-        // DataService handles SwiftData deletion
-        // The user will need to restart the app for a clean state
     }
 
     private func requestReview() {
+        #if canImport(UIKit) && !os(macOS)
         guard let scene = UIApplication.shared.connectedScenes
             .first(where: { $0.activationState == .foregroundActive }) as? UIWindowScene
         else { return }
         SKStoreReviewController.requestReview(in: scene)
+        #endif
     }
 
     private func openURL(_ urlString: String) {
         guard let url = URL(string: urlString) else { return }
+        #if canImport(UIKit) && !os(macOS)
         UIApplication.shared.open(url)
+        #endif
     }
 }
 

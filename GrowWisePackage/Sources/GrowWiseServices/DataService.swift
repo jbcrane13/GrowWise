@@ -29,6 +29,7 @@ public final class DataService {
     public let journals: JournalRepository
     public let users: UserRepository
     public let stats: StatsRepository
+    public let seeds: SeedRepository
 
     /// Expose ModelContainer for background operations (e.g., PlantSeedingWorker)
     /// Workers can create their own background ModelContext for safe concurrency
@@ -72,6 +73,7 @@ public final class DataService {
         self.journals = JournalRepository(context: ctx)
         self.users = UserRepository(context: ctx)
         self.stats = StatsRepository(context: ctx)
+        self.seeds = SeedRepository(context: ctx)
 
         // Validate storage configuration
         validateStorageConfiguration()
@@ -152,6 +154,7 @@ public final class DataService {
         self.journals = JournalRepository(context: ctx)
         self.users = UserRepository(context: ctx)
         self.stats = StatsRepository(context: ctx)
+        self.seeds = SeedRepository(context: ctx)
     }
 
     /// Private initializer that accepts an explicit (possibly nil) CloudKit container.
@@ -167,6 +170,7 @@ public final class DataService {
         self.journals = JournalRepository(context: ctx)
         self.users = UserRepository(context: ctx)
         self.stats = StatsRepository(context: ctx)
+        self.seeds = SeedRepository(context: ctx)
     }
 
     // MARK: - User Management
