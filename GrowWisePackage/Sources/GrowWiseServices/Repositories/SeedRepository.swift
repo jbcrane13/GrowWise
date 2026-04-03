@@ -52,27 +52,14 @@ public final class SeedRepository {
     }
 
     public func fetchByPlantType(_ type: PlantType, garden: Garden? = nil) throws -> [Seed] {
-        // SwiftData #Predicate can't capture enum values directly — use rawValue
-        let typeRaw = type.rawValue
+        // SwiftData #Predicate can't compare captured enum values or use .rawValue on
+        // model properties — filter in memory instead
         if let garden {
-            let gardenID = garden.id
-            var descriptor = FetchDescriptor<Seed>(
-                predicate: #Predicate<Seed> { seed in
-                    seed.plantType?.rawValue == typeRaw && seed.garden?.id == gardenID
-                },
-                sortBy: [SortDescriptor(\.varietyName)]
-            )
-            descriptor.fetchLimit = 200
-            return try context.fetch(descriptor)
+            let all = try fetchAll(for: garden)
+            return all.filter { $0.plantType == type }
         } else {
-            var descriptor = FetchDescriptor<Seed>(
-                predicate: #Predicate<Seed> { seed in
-                    seed.plantType?.rawValue == typeRaw
-                },
-                sortBy: [SortDescriptor(\.varietyName)]
-            )
-            descriptor.fetchLimit = 200
-            return try context.fetch(descriptor)
+            let all = try fetchAll()
+            return all.filter { $0.plantType == type }
         }
     }
 
