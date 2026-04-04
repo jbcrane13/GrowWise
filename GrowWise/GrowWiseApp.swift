@@ -9,8 +9,14 @@ struct CultivationApp: App {
     @State private var locationService = LocationService()
     @State private var notificationService = NotificationService()
     @State private var cloudSyncService = CloudSyncService()
+    @State private var perenualAPIService = PerenualAPIService()
 
     init() {
+        // Store Perenual API key securely on first launch
+        if !PerenualAPIService.hasAPIKey {
+            PerenualAPIService.storeAPIKey("sk-LSIM69d0612798a7616109")
+        }
+
         let launchArgs = ProcessInfo.processInfo.arguments
         let launchEnv = ProcessInfo.processInfo.environment
 
@@ -44,6 +50,7 @@ struct CultivationApp: App {
                 .environment(locationService)
                 .environment(notificationService)
                 .environment(cloudSyncService)
+                .environment(perenualAPIService)
         }
     }
 }

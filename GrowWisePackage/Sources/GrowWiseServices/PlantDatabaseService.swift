@@ -157,6 +157,40 @@ public final class PlantDatabaseService {
         dataService.fetchPlantDatabase().count
     }
 
+    /// Insert a single plant from an external API source (e.g. Perenual) into the local database.
+    /// Checks for duplicates by scientific name before inserting.
+    public func insertExternalPlant(
+        name: String,
+        scientificName: String?,
+        type: PlantType,
+        difficulty: DifficultyLevel,
+        sunlight: SunlightLevel,
+        watering: WateringFrequency,
+        space: SpaceRequirement,
+        notes: String
+    ) throws {
+        // Deduplicate by scientific name
+        if let sci = scientificName {
+            let existing = dataService.fetchPlantDatabase()
+            if existing.contains(where: { $0.scientificName == sci }) {
+                logger.info("[External] Skipping duplicate: \(sci, privacy: .public)")
+                return
+            }
+        }
+
+        try dataService.insertDatabasePlant(
+            name: name,
+            scientificName: scientificName,
+            type: type,
+            difficulty: difficulty,
+            sunlight: sunlight,
+            watering: watering,
+            space: space,
+            notes: notes
+        )
+        logger.info("[External] Inserted plant: \(name, privacy: .public)")
+    }
+
     public func getAvailablePlantTypes() -> [PlantType] {
         let allPlants = dataService.fetchPlantDatabase()
         let uniqueTypes = Set(allPlants.compactMap(\.plantType))

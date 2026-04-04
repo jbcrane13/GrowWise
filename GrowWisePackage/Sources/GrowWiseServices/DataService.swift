@@ -243,6 +243,28 @@ public final class DataService {
         try plants.create(name: name, type: type, difficultyLevel: difficultyLevel, garden: garden)
     }
 
+    /// Insert a fully-configured database plant (e.g. from an external API).
+    /// Sets `isUserPlant = false` automatically.
+    public func insertDatabasePlant(
+        name: String,
+        scientificName: String?,
+        type: PlantType,
+        difficulty: DifficultyLevel,
+        sunlight: SunlightLevel,
+        watering: WateringFrequency,
+        space: SpaceRequirement,
+        notes: String
+    ) throws {
+        let plant = Plant(name: name, plantType: type, difficultyLevel: difficulty)
+        plant.scientificName = scientificName
+        plant.sunlightRequirement = sunlight
+        plant.wateringFrequency = watering
+        plant.spaceRequirement = space
+        plant.isUserPlant = false
+        plant.notes = notes
+        try plants.add(plant)
+    }
+
     public func fetchPlants(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) -> [Plant] {
         let cacheKey = "plants:\(garden?.id?.uuidString ?? "all"):offset:\(offset):limit:\(limit)"
 
