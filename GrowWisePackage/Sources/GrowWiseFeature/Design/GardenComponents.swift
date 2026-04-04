@@ -1,4 +1,5 @@
 import GrowWiseModels
+import GrowWiseServices
 import SwiftUI
 
 // MARK: - GardenType Icon Extension
@@ -77,13 +78,8 @@ struct PlantRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Icon bubble tinted by health status
-            IconBubble(
-                systemName: plantTypeIcon,
-                color: isUrgent ? CultivationTheme.Colors.statusAlert : healthStatus.accentColor,
-                size: CultivationTheme.Spacing.iconSize,
-                iconSize: 20
-            )
+            // Perenual-enriched thumbnail (falls back to icon bubble if no API data)
+            PerenualEnrichmentThumbnail(plant: plant)
 
             // Name + care subtitle
             VStack(alignment: .leading, spacing: 2) {

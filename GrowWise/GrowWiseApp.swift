@@ -10,6 +10,7 @@ struct CultivationApp: App {
     @State private var notificationService = NotificationService()
     @State private var cloudSyncService = CloudSyncService()
     @State private var perenualAPIService = PerenualAPIService()
+    @State private var perenualEnrichmentService: PerenualEnrichmentService?
 
     init() {
         // Store Perenual API key securely on first launch
@@ -51,6 +52,12 @@ struct CultivationApp: App {
                 .environment(notificationService)
                 .environment(cloudSyncService)
                 .environment(perenualAPIService)
+                .environment(perenualEnrichmentService ?? PerenualEnrichmentService(api: perenualAPIService))
+                .onAppear {
+                    if perenualEnrichmentService == nil {
+                        perenualEnrichmentService = PerenualEnrichmentService(api: perenualAPIService)
+                    }
+                }
         }
     }
 }
