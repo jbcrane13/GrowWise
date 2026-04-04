@@ -32,6 +32,10 @@ public struct ModelContainerFactory {
         ShoppingItem.self,
         CompostBatch.self,
         Seed.self,
+        GardenClub.self,
+        ClubActivity.self,
+        ClubMessage.self,
+        ClubEvent.self,
     ] as [any PersistentModel.Type])
 
     // MARK: - Factory Methods
@@ -192,6 +196,10 @@ public struct ModelContainerFactory {
             ShoppingItem.self,
             CompostBatch.self,
             Seed.self,
+            GardenClub.self,
+            ClubActivity.self,
+            ClubMessage.self,
+            ClubEvent.self,
         ] as [any PersistentModel.Type])
     }
 }
