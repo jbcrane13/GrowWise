@@ -19,6 +19,7 @@ public struct ProfileView: View {
     @State private var showCommunity = false
     @State private var showAchievements = false
     @State private var showForum = false
+    @State private var showGardenClubs = false
     @State private var selectedProductID: String?
     @State private var purchaseError: String?
     @State private var showPurchaseError = false
@@ -96,6 +97,10 @@ public struct ProfileView: View {
             }
             .navigationDestination(isPresented: $showForum) {
                 ForumView()
+            }
+            .navigationDestination(isPresented: $showGardenClubs) {
+                ClubListView()
+                    .environment(dataService)
             }
             .navigationDestination(isPresented: $showAppSettings) {
                 AppSettingsView()
@@ -248,6 +253,15 @@ public struct ProfileView: View {
                 id: "profile_row_forum"
             ) {
                 showForum = true
+            }
+
+            menuRow(
+                icon: "person.3.fill",
+                color: CultivationTheme.Colors.brandForest,
+                title: "Garden Clubs",
+                id: "profile_row_garden_clubs"
+            ) {
+                showGardenClubs = true
             }
         }
     }
