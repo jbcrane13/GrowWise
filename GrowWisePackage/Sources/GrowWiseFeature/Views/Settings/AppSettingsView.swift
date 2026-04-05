@@ -489,12 +489,12 @@ public struct AppSettingsView: View {
 
 // MARK: - Supporting Types
 
-enum AppAppearance: String, CaseIterable {
+public enum AppAppearance: String, CaseIterable {
     case system
     case light
     case dark
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .system: "System"
         case .light: "Light"
