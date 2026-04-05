@@ -68,6 +68,12 @@ public struct ClubDetailView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
+            .navigationDestination(isPresented: $navigateToChat) {
+                ClubChatView(club: club)
+            }
+            .navigationDestination(isPresented: $navigateToEvents) {
+                ClubEventsView(club: club)
+            }
     }
 
     // MARK: - Scroll Content
@@ -304,35 +310,60 @@ public struct ClubDetailView: View {
         }
     }
 
+    // MARK: - Navigation Destinations
+
+    @State private var navigateToChat = false
+    @State private var navigateToEvents = false
+
     // MARK: - Toolbar
 
     @ToolbarContentBuilder
     private var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
-            Menu {
-                if let code = club.inviteCode {
-                    ShareLink(
-                        item: "Join my garden club on GrowWise! Invite code: \(code)",
-                        subject: Text("Garden Club Invite"),
-                        message: Text("Use code \(code) to join on GrowWise")
-                    ) {
-                        Label("Share Invite Code", systemImage: "square.and.arrow.up")
-                    }
+            HStack(spacing: 16) {
+                Button {
+                    navigateToChat = true
+                } label: {
+                    Image(systemName: "bubble.left.and.bubble.right.fill")
+                        .font(.system(size: 18))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                 }
-                if !isOwner {
-                    Divider()
-                    Button(role: .destructive) {
-                        showLeaveAlert = true
-                    } label: {
-                        Label("Leave Club", systemImage: "person.badge.minus")
-                    }
+                .accessibilityIdentifier("club_detail_chat_button")
+
+                Button {
+                    navigateToEvents = true
+                } label: {
+                    Image(systemName: "calendar.badge.clock")
+                        .font(.system(size: 18))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                 }
-            } label: {
-                Image(systemName: "ellipsis.circle")
-                    .font(.system(size: 20))
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .accessibilityIdentifier("club_detail_events_button")
+
+                Menu {
+                    if let code = club.inviteCode {
+                        ShareLink(
+                            item: "Join my garden club on GrowWise! Invite code: \(code)",
+                            subject: Text("Garden Club Invite"),
+                            message: Text("Use code \(code) to join on GrowWise")
+                        ) {
+                            Label("Share Invite Code", systemImage: "square.and.arrow.up")
+                        }
+                    }
+                    if !isOwner {
+                        Divider()
+                        Button(role: .destructive) {
+                            showLeaveAlert = true
+                        } label: {
+                            Label("Leave Club", systemImage: "person.badge.minus")
+                        }
+                    }
+                } label: {
+                    Image(systemName: "ellipsis.circle")
+                        .font(.system(size: 20))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                }
+                .accessibilityIdentifier("club_detail_menu")
             }
-            .accessibilityIdentifier("club_detail_menu")
         }
     }
 
