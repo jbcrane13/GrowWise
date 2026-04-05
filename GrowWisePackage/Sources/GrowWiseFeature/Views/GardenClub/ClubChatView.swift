@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import PhotosUI
 import SwiftUI
+#if os(iOS)
+import UIKit
+#endif
 
 public struct ClubChatView: View {
     @Environment(DataService.self) private var dataService
@@ -100,13 +103,15 @@ public struct ClubChatView: View {
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
 
-                if let photoData = message.photoData, let uiImage = UIImage(data: photoData) {
+                if let photoData = message.photoData {
                     #if os(iOS)
-                    Image(uiImage: uiImage)
-                        .resizable()
-                        .scaledToFill()
-                        .frame(maxWidth: 200, maxHeight: 200)
-                        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                    if let uiImage = UIImage(data: photoData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: 200, maxHeight: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                    }
                     #endif
                 }
 
