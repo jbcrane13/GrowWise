@@ -7,40 +7,40 @@
 <link href="https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&family=DM+Sans:opsz,wght@9..40,300;9..40,400;9..40,500;9..40,600&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
 <style>
   :root {
-    /* Warm earth palette — intentionally NOT the expected bright greens */
-    --ink: #0D0B09;
-    --parchment: #F7F3ED;
-    --parchment-dim: #EDE8DF;
-    --clay: #1A1714;
-    --clay-mid: #2A2520;
-    --clay-light: #3A3530;
+    /* Stone & sage — earthy but clean, not brown */
+    --ink: #0B0D0E;
+    --parchment: #F4F5F2;
+    --parchment-dim: #E8EAE5;
+    --clay: #151819;
+    --clay-mid: #222628;
+    --clay-light: #323638;
 
-    /* Accent: terracotta/copper warmth */
-    --terracotta: #C4664A;
-    --terracotta-soft: rgba(196, 102, 74, 0.12);
-    --copper: #D4915E;
-    --copper-glow: rgba(212, 145, 94, 0.08);
+    /* Accent: warm coral/amber — reads warm without reading brown */
+    --terracotta: #D4725C;
+    --terracotta-soft: rgba(212, 114, 92, 0.12);
+    --copper: #E0A456;
+    --copper-glow: rgba(224, 164, 86, 0.08);
 
-    /* Nature tones — muted, sophisticated */
-    --sage: #7A8B6F;
-    --sage-soft: rgba(122, 139, 111, 0.12);
-    --moss: #4A5C3F;
-    --lichen: #9AA88F;
-    --dried-rose: #B8897A;
-    --wheat: #D4C5A9;
-    --frost: #C8D0C5;
+    /* Nature tones — sage-forward, cooler greens */
+    --sage: #7A917A;
+    --sage-soft: rgba(122, 145, 122, 0.12);
+    --moss: #4A6650;
+    --lichen: #96AC96;
+    --dried-rose: #B09090;
+    --wheat: #C8C4AE;
+    --frost: #C0CCC5;
 
-    /* Functional */
-    --text-primary: #E8E3DB;
-    --text-secondary: rgba(232, 227, 219, 0.55);
-    --text-tertiary: rgba(232, 227, 219, 0.3);
-    --border: rgba(232, 227, 219, 0.07);
-    --border-accent: rgba(232, 227, 219, 0.12);
+    /* Functional — cooler neutral text */
+    --text-primary: #E4E6E4;
+    --text-secondary: rgba(228, 230, 228, 0.55);
+    --text-tertiary: rgba(228, 230, 228, 0.3);
+    --border: rgba(228, 230, 228, 0.07);
+    --border-accent: rgba(228, 230, 228, 0.12);
 
-    /* Status — warm-shifted */
-    --status-urgent: #E05A3A;
-    --status-caution: #D4A03C;
-    --status-good: #6B9B5E;
+    /* Status — clean, vivid */
+    --status-urgent: #E05848;
+    --status-caution: #DBA640;
+    --status-good: #5EA06A;
 
     --serif: 'Instrument Serif', Georgia, serif;
     --sans: 'DM Sans', -apple-system, sans-serif;
@@ -71,7 +71,7 @@
     margin: 40px auto;
     position: relative;
     border-radius: 48px;
-    border: 3px solid #2A2520;
+    border: 3px solid #222628;
     overflow: hidden;
     box-shadow:
       0 0 0 1px rgba(255,255,255,0.03),
@@ -95,9 +95,9 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 300px 400px at 85% 8%, rgba(196, 102, 74, 0.06), transparent),
-      radial-gradient(ellipse 250px 350px at 15% 45%, rgba(122, 139, 111, 0.04), transparent),
-      radial-gradient(ellipse 200px 200px at 60% 85%, rgba(212, 145, 94, 0.03), transparent);
+      radial-gradient(ellipse 300px 400px at 85% 8%, rgba(212, 114, 92, 0.05), transparent),
+      radial-gradient(ellipse 250px 350px at 15% 45%, rgba(122, 145, 122, 0.05), transparent),
+      radial-gradient(ellipse 200px 200px at 60% 85%, rgba(224, 164, 86, 0.03), transparent);
     pointer-events: none;
     z-index: 0;
   }
@@ -415,20 +415,20 @@
 
   /* Each bed gets its own warm tone */
   .bed-card.herb {
-    background: linear-gradient(145deg, rgba(122, 139, 111, 0.15), rgba(74, 92, 63, 0.08));
-    border: 1px solid rgba(122, 139, 111, 0.2);
+    background: linear-gradient(145deg, rgba(122, 145, 122, 0.15), rgba(74, 102, 80, 0.08));
+    border: 1px solid rgba(122, 145, 122, 0.2);
   }
   .bed-card.tomato {
-    background: linear-gradient(145deg, rgba(196, 102, 74, 0.15), rgba(196, 102, 74, 0.05));
-    border: 1px solid rgba(196, 102, 74, 0.2);
+    background: linear-gradient(145deg, rgba(212, 114, 92, 0.14), rgba(212, 114, 92, 0.04));
+    border: 1px solid rgba(212, 114, 92, 0.2);
   }
   .bed-card.flower {
-    background: linear-gradient(145deg, rgba(184, 137, 122, 0.15), rgba(184, 137, 122, 0.05));
-    border: 1px solid rgba(184, 137, 122, 0.2);
+    background: linear-gradient(145deg, rgba(176, 144, 144, 0.14), rgba(176, 144, 144, 0.04));
+    border: 1px solid rgba(176, 144, 144, 0.18);
   }
   .bed-card.raised {
-    background: linear-gradient(145deg, rgba(212, 197, 169, 0.12), rgba(212, 197, 169, 0.04));
-    border: 1px solid rgba(212, 197, 169, 0.18);
+    background: linear-gradient(145deg, rgba(192, 204, 197, 0.1), rgba(192, 204, 197, 0.03));
+    border: 1px solid rgba(192, 204, 197, 0.15);
   }
 
   /* Featured bed — spans full width */
@@ -544,9 +544,9 @@
     height: 160px;
     background: linear-gradient(
       135deg,
-      rgba(122, 139, 111, 0.3) 0%,
-      rgba(74, 92, 63, 0.2) 40%,
-      rgba(196, 102, 74, 0.15) 100%
+      rgba(122, 145, 122, 0.3) 0%,
+      rgba(74, 102, 80, 0.2) 40%,
+      rgba(212, 114, 92, 0.12) 100%
     );
     position: relative;
     display: flex;
@@ -652,8 +652,8 @@
     position: absolute;
     inset: 0;
     background:
-      radial-gradient(ellipse 200px 200px at 70% 30%, rgba(122, 139, 111, 0.25), transparent),
-      radial-gradient(ellipse 150px 200px at 30% 70%, rgba(196, 102, 74, 0.12), transparent),
+      radial-gradient(ellipse 200px 200px at 70% 30%, rgba(122, 145, 122, 0.25), transparent),
+      radial-gradient(ellipse 150px 200px at 30% 70%, rgba(212, 114, 92, 0.10), transparent),
       var(--ink);
   }
 
@@ -1060,7 +1060,7 @@
     align-items: center;
     justify-content: center;
     box-shadow:
-      0 4px 16px rgba(196, 102, 74, 0.3),
+      0 4px 16px rgba(212, 114, 92, 0.3),
       0 2px 4px rgba(0,0,0,0.3);
     transition: transform 0.3s ease;
     z-index: 10;
@@ -1248,40 +1248,40 @@
   <p>A design direction that moves away from tech-glass-morphism toward something that feels like a curated garden journal crossed with modern editorial design. Warm, grounded, alive.</p>
 
   <h3>Color Story</h3>
-  <p>Earth and copper over neon green. The palette draws from aged terracotta pots, dried sage bundles, weathered copper watering cans, and parchment field notes. Green appears as a status color and in garden beds, not as the brand identity itself.</p>
+  <p>Stone and sage over brown. The dark base is a cool charcoal, not warm mud. Accents are a clean coral and golden amber — warm without being heavy. Sage greens appear naturally in garden context. The overall feel is a stone garden wall at dawn, not a dusty potting shed.</p>
 
   <div class="color-swatch-row" style="margin-bottom: 40px;">
     <div>
-      <div class="color-swatch" style="background: #0D0B09;"></div>
+      <div class="color-swatch" style="background: #0B0D0E;"></div>
       <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Ink</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #1A1714;"></div>
-      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Clay</div>
+      <div class="color-swatch" style="background: #151819;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Stone</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #C4664A;"></div>
-      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Terracotta</div>
+      <div class="color-swatch" style="background: #D4725C;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Coral</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #D4915E;"></div>
-      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Copper</div>
+      <div class="color-swatch" style="background: #E0A456;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Amber</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #7A8B6F;"></div>
+      <div class="color-swatch" style="background: #7A917A;"></div>
       <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Sage</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #4A5C3F;"></div>
+      <div class="color-swatch" style="background: #4A6650;"></div>
       <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Moss</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #B8897A;"></div>
-      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Dried Rose</div>
+      <div class="color-swatch" style="background: #B09090;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Dusty Rose</div>
     </div>
     <div>
-      <div class="color-swatch" style="background: #D4C5A9;"></div>
-      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Wheat</div>
+      <div class="color-swatch" style="background: #C0CCC5;"></div>
+      <div class="swatch-label" style="margin-top: 6px; font-family: var(--mono); font-size: 9px; color: var(--text-tertiary);">Frost</div>
     </div>
   </div>
 

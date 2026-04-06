@@ -37,6 +37,9 @@ public final class Garden {
     @Relationship(deleteRule: .cascade, inverse: \CompostBatch.garden)
     public var compostBatches: [CompostBatch]? = []
 
+    @Relationship(deleteRule: .nullify, inverse: \Seed.garden)
+    public var seeds: [Seed]? = []
+
     public var user: User?
 
     // Metadata

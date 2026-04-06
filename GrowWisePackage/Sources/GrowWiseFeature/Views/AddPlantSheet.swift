@@ -14,6 +14,8 @@ public struct AddPlantSheet: View {
     private var companionService
     @Environment(PlantDatabaseService.self)
     private var plantDatabaseService
+    @Environment(ReminderService.self)
+    private var reminderService
     @Environment(\.modelContext)
     private var modelContext
 
@@ -47,6 +49,11 @@ public struct AddPlantSheet: View {
     // Companion planting analysis
     @State private var compatibilityAnalysis: GardenCompatibilityAnalysis?
     @State private var showCompanionDetails = false
+
+    // Watering schedule
+    @State private var showWateringSchedule = false
+    @State private var wateringSchedule: WateringSchedule?
+    @State private var savedPlant: Plant?
 
     // Inline creation
     @State private var showCreateGarden = false
@@ -390,6 +397,15 @@ public struct AddPlantSheet: View {
                     CompanionDetailsSheet(analysis: analysis)
                 }
             }
+            .sheet(isPresented: $showWateringSchedule, onDismiss: { dismiss() }, content: {
+                if let schedule = wateringSchedule, let plant = savedPlant {
+                    WateringScheduleConfirmationSheet(
+                        plant: plant,
+                        schedule: schedule,
+                        reminderService: reminderService
+                    )
+                }
+            })
             .alert("New Garden", isPresented: $showCreateGarden) {
                 TextField("Garden name", text: $newGardenName)
                     .accessibilityIdentifier("addplant_alert_textfield_gardenname")
@@ -546,7 +562,9 @@ public struct AddPlantSheet: View {
 
         newPlant.garden = selectedGarden
         modelContext.insert(newPlant)
-        dismiss()
+        savedPlant = newPlant
+        wateringSchedule = reminderService.suggestWateringSchedule(for: newPlant, in: selectedGarden)
+        showWateringSchedule = true
     }
 }
 

@@ -51,6 +51,9 @@ public struct OnboardingView: View {
                         NotificationPermissionView(userProfile: $userProfile)
                             .tag(OnboardingStep.notifications)
 
+                        FirstPlantStepView(userProfile: $userProfile)
+                            .tag(OnboardingStep.firstPlant)
+
                         CompletionView(userProfile: $userProfile)
                             .tag(OnboardingStep.completion)
                     }
@@ -124,6 +127,7 @@ public enum OnboardingStep: String, CaseIterable {
     case gardenSetup
     case location
     case notifications
+    case firstPlant
     case completion
 
     var title: String {
@@ -134,6 +138,7 @@ public enum OnboardingStep: String, CaseIterable {
         case .gardenSetup: "Setup"
         case .location: "Location"
         case .notifications: "Reminders"
+        case .firstPlant: "First Plant"
         case .completion: "All Set"
         }
     }
@@ -156,6 +161,7 @@ public struct UserProfile {
     var hasLocationPermission: Bool = false
     var hasNotificationPermission: Bool = false
     var preferredNotificationTime: Date = Calendar.current.date(from: DateComponents(hour: 9)) ?? Date()
+    var selectedFirstPlantName: String?
 }
 
 public enum GardeningGoal: String, CaseIterable, Identifiable {

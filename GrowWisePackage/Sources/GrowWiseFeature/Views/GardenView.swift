@@ -18,6 +18,13 @@ public struct GardenView: View {
     @State private var gardenToNavigate: Garden?
     @State private var gardenToDelete: Garden?
     @State private var showDeleteConfirmation = false
+    @State private var showPlantDatabase = false
+    @State private var showPlantScanner = false
+    @State private var showAddPlantMenu = false
+    @State private var showAddPlantSheet = false
+    @State private var showFAB = false
+    @State private var shoppingListGarden: Garden?
+    @State private var showSeedInventory = false
 
     public init() {}
 
@@ -36,10 +43,37 @@ public struct GardenView: View {
                     } else {
                         // Garden cards grid
                         gardenGrid
+
+                        // Shopping List link
+                        shoppingListSection
                     }
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.bottom, 32)
+            }
+            .overlay(alignment: .bottomTrailing) {
+                Button {
+                    showAddPlantMenu = true
+                } label: {
+                    Image(systemName: "plus.circle.fill")
+                        .font(.system(size: 28))
+                        .foregroundStyle(.white)
+                        .frame(width: 56, height: 56)
+                        .background(CultivationTheme.Colors.brandLeaf)
+                        .clipShape(Circle())
+                        .shadow(color: CultivationTheme.Colors.brandLeaf.opacity(0.35), radius: 10, y: 4)
+                }
+                .buttonStyle(.plain)
+                .padding(.trailing, CultivationTheme.Spacing.screenPadding)
+                .padding(.bottom, 24)
+                .scaleEffect(showFAB ? 1 : 0.5)
+                .opacity(showFAB ? 1 : 0)
+                .accessibilityIdentifier("garden_fab_addplant")
+            }
+            .onAppear {
+                withAnimation(.spring(duration: 0.4, bounce: 0.3)) {
+                    showFAB = true
+                }
             }
             .background(CultivationTheme.Colors.background.ignoresSafeArea())
             .task {
@@ -50,6 +84,12 @@ public struct GardenView: View {
             }
             .navigationDestination(item: $gardenToNavigate) { garden in
                 GardenDetailView(garden: garden)
+            }
+            .navigationDestination(item: $shoppingListGarden) { garden in
+                ShoppingListView(garden: garden)
+            }
+            .navigationDestination(isPresented: $showSeedInventory) {
+                SeedInventoryView()
             }
             .sheet(
                 isPresented: $showCreateGarden,
@@ -84,11 +124,61 @@ public struct GardenView: View {
                     Text("This will permanently delete \"\(gardenName)\" and its \(plantCount) plant\(suffix).")
                 }
             }
+            .toolbar {
+                ToolbarItem(placement: .cancellationAction) {
+                    Button {
+                        showPlantDatabase = true
+                    } label: {
+                        Image(systemName: "book.fill")
+                    }
+                    .accessibilityIdentifier("garden_button_plantguide")
+                }
+                ToolbarItem(placement: .primaryAction) {
+                    Button {
+                        showPlantScanner = true
+                    } label: {
+                        Image(systemName: "camera.viewfinder")
+                    }
+                    .accessibilityIdentifier("garden_button_scanplant")
+                }
+            }
+            .sheet(isPresented: $showPlantDatabase) {
+                PlantDatabaseView()
+            }
+            .sheet(isPresented: $showPlantScanner) {
+                PlantScannerView()
+            }
+            .sheet(isPresented: $showAddPlantSheet) {
+                AddPlantSheet()
+                    .presentationDetents([.large])
+                    .presentationDragIndicator(.hidden)
+            }
+            .confirmationDialog("Add a Plant", isPresented: $showAddPlantMenu, titleVisibility: .visible) {
+                Button("Browse Plant Database") {
+                    showPlantDatabase = true
+                }
+                .accessibilityIdentifier("garden_fab_option_browse")
+
+                Button("Scan a Plant") {
+                    showPlantScanner = true
+                }
+                .accessibilityIdentifier("garden_fab_option_scan")
+
+                Button("Add Manually") {
+                    showAddPlantSheet = true
+                }
+                .accessibilityIdentifier("garden_fab_option_manual")
+            }
         }
         .accessibilityIdentifier("screen_garden")
     }
 
     // MARK: - Dashboard Header
+
+    private var seedCount: Int {
+        // Non-critical display value — 0 on error is acceptable for stat chip
+        (try? dataService.seeds.fetchAll().count) ?? 0
+    }
 
     private var dashboardHeader: some View {
         VStack(alignment: .leading, spacing: 16) {
@@ -143,6 +233,13 @@ public struct GardenView: View {
                             ? CultivationTheme.Colors.statusAlert
                             : CultivationTheme.Colors.textTertiary
                     )
+                    QuickStatCard(
+                        value: seedCount,
+                        label: "Seeds",
+                        color: CultivationTheme.Colors.accentCoral
+                    )
+                    .onTapGesture { showSeedInventory = true }
+                    .accessibilityIdentifier("garden_stat_seeds")
                 }
             }
         }
@@ -188,6 +285,52 @@ public struct GardenView: View {
                 showCreateGarden = true
             }
         }
+    }
+
+    // MARK: - Shopping List
+
+    private var shoppingListSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("SHOPPING")
+                .sectionLabelStyle()
+                .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+                .padding(.top, CultivationTheme.Spacing.sectionGap)
+
+            ForEach(viewModel.gardens) { garden in
+                Button {
+                    shoppingListGarden = garden
+                } label: {
+                    HStack(spacing: 12) {
+                        IconBubble(
+                            systemName: "cart.fill",
+                            color: CultivationTheme.Colors.accentAmber,
+                            size: 36,
+                            iconSize: 16
+                        )
+
+                        VStack(alignment: .leading, spacing: 2) {
+                            Text(garden.name ?? "Garden")
+                                .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                            Text("Shopping list")
+                                .font(.system(.caption))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        }
+
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    }
+                    .padding(CultivationTheme.Spacing.cardPadding)
+                    .glassCard()
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("garden_button_shopping_\(garden.id?.uuidString ?? "unknown")")
+            }
+        }
+        .padding(.top, CultivationTheme.Spacing.rowGap)
     }
 
     // MARK: - States

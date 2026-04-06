@@ -18,6 +18,8 @@ struct CreateGardenSheet: View {
     @State private var selectedSun: SunExposure = .fullSun
     @State private var selectedSize: GrowWiseModels.SpaceSize = .medium
     @State private var isSaving = false
+    @State private var createdGarden: Garden?
+    @State private var showRecommendations = false
 
     private var isValid: Bool {
         !gardenName.trimmingCharacters(in: .whitespaces).isEmpty
@@ -171,6 +173,11 @@ struct CreateGardenSheet: View {
                         .accessibilityIdentifier("creategarden_button_cancel")
                 }
             }
+            .sheet(isPresented: $showRecommendations, onDismiss: { dismiss() }, content: {
+                if let garden = createdGarden {
+                    RecommendedPlantsView(garden: garden)
+                }
+            })
         }
     }
 
@@ -191,7 +198,8 @@ struct CreateGardenSheet: View {
             garden.spaceAvailable = selectedSize
             try dataService.mainContext.save()
             onCreated(garden)
-            dismiss()
+            createdGarden = garden
+            showRecommendations = true
         } catch {
             isSaving = false
         }

@@ -5,6 +5,7 @@ import SwiftUI
 
 public struct PlantDatabaseView: View {
     @Environment(DataService.self) private var dataService
+    @Environment(PerenualAPIService.self) private var perenualAPI
     @State private var databasePlants: [Plant] = []
     @State private var searchText = ""
     @State private var selectedPlantType: PlantType?
@@ -14,25 +15,42 @@ public struct PlantDatabaseView: View {
     @State private var isLoading = true
     @State private var selectedSortOption: DatabaseSortOption = .name
     @State private var showingPlantDetail: Plant?
+    @State private var selectedTab: PlantDatabaseTab = .local
+
+    private enum PlantDatabaseTab { case local, perenual }
 
     public init() {}
 
     public var body: some View {
         NavigationStack {
             VStack(spacing: 0) {
-                // Filter Tags (when active)
-                if hasActiveFilters {
-                    activeFiltersSection
+                // Source picker — Local (52 plants) vs Perenual (10K+)
+                Picker("Source", selection: $selectedTab) {
+                    Text("My Library").tag(PlantDatabaseTab.local)
+                    Text("Perenual (10K+)").tag(PlantDatabaseTab.perenual)
                 }
+                .pickerStyle(.segmented)
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                .padding(.vertical, 10)
 
-                // Plant Database Content
-                plantDatabaseContent
+                if selectedTab == .local {
+                    // Filter Tags (when active)
+                    if hasActiveFilters {
+                        activeFiltersSection
+                    }
+                    // Plant Database Content
+                    plantDatabaseContent
+                } else {
+                    PerenualBrowseView()
+                }
             }
             .navigationTitle("Plant Guide")
             .toolbar {
-                ToolbarItemGroup(placement: .primaryAction) {
-                    sortMenuButton
-                    filterButton
+                if selectedTab == .local {
+                    ToolbarItemGroup(placement: .primaryAction) {
+                        sortMenuButton
+                        filterButton
+                    }
                 }
             }
             .sheet(isPresented: $showingFilters) {

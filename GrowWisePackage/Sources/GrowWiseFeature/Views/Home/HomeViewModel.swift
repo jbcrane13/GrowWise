@@ -2,6 +2,8 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SeedInventoryService is in GrowWiseServices (imported above)
+
 /// Observable view-model for the Home tab care dashboard.
 /// Loads active reminders from DataService and separates them into
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
@@ -16,9 +18,17 @@ final class HomeViewModel {
     var isLoading = false
     var userName: String = ""
 
+    /// Seeds that are ready to start indoors based on zone and current date.
+    var readyToPlantSeeds: [Seed] = []
+    /// User's hardiness zone, resolved on load.
+    var hardinessZone: String?
+
     /// IDs of reminders the user has tapped "Done" on — used to filter them
     /// from the list with a slide-away animation before the next data reload.
     var completedIDs: Set<UUID> = []
+
+    /// Error message surfaced to the user when a complete operation fails.
+    var errorMessage: String?
 
     // MARK: - Derived
 
@@ -54,6 +64,13 @@ final class HomeViewModel {
 
         totalPlantCount = (try? dataService.plants.fetchAll().count) ?? 0
 
+        // Resolve ready-to-plant seeds
+        let user = dataService.getCurrentUser()
+        hardinessZone = user?.hardinessZone
+        let allSeeds = (try? dataService.seeds.fetchAll()) ?? []
+        let seedService = SeedInventoryService()
+        readyToPlantSeeds = seedService.readyToPlant(seeds: allSeeds, zone: hardinessZone ?? "6", currentDate: Date())
+
         isLoading = false
     }
 
@@ -66,8 +83,32 @@ final class HomeViewModel {
             completedIDs.insert(reminder.id)
         }
 
-        // Persist
-        try? dataService.completeReminder(reminder)
+        // Persist reminder completion and update plant care date
+        do {
+            try dataService.completeReminder(reminder)
+
+            // Update the plant's last-care timestamp for the relevant type
+            // SwiftData auto-persists property mutations on managed objects.
+            if let plant = reminder.plant {
+                switch reminder.reminderType {
+                case .watering:
+                    plant.lastWatered = Date()
+                case .fertilizing:
+                    plant.lastFertilized = Date()
+                case .pruning:
+                    plant.lastPruned = Date()
+                default:
+                    break
+                }
+            }
+        } catch {
+            // Roll back optimistic UI and surface the error
+            _ = withAnimation(CultivationTheme.Animation.card) {
+                completedIDs.remove(reminder.id)
+            }
+            errorMessage = "Failed to complete reminder: \(error.localizedDescription)"
+            return
+        }
 
         // After animation settles, reload to get fresh state (updated nextDueDate etc.)
         try? await Task.sleep(nanoseconds: 400_000_000)

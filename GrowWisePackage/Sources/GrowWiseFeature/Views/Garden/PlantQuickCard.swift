@@ -1,4 +1,5 @@
 import GrowWiseModels
+import GrowWiseServices
 import SwiftUI
 
 // MARK: - PlantQuickCard
@@ -39,12 +40,7 @@ struct PlantQuickCard: View {
 
     private var plantHeader: some View {
         HStack(spacing: 14) {
-            IconBubble(
-                systemName: plantIconName,
-                color: healthAccentColor,
-                size: 52,
-                iconSize: 22
-            )
+            PerenualEnrichmentThumbnail(plant: plant)
 
             VStack(alignment: .leading, spacing: 4) {
                 HStack {

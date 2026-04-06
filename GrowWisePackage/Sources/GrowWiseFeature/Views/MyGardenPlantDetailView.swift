@@ -13,6 +13,10 @@ struct PlantDetailView: View {
     private var photoService
     @Environment(ReminderService.self)
     private var reminderService
+    @Environment(PlantCareAdviceService.self)
+    private var careAdviceService
+    @Environment(PerenualEnrichmentService.self)
+    private var perenualEnrichment
     @State private var showingEditPlant = false
     @State private var showingDeleteConfirmation = false
     @State private var showingJournalEntry = false
@@ -21,6 +25,9 @@ struct PlantDetailView: View {
     @State private var showingPhotoViewer = false
     @State private var showingAssignGarden = false
     @State private var showMovePlant = false
+    @State private var showingDiagnostic = false
+
+    @State private var careTips: [CareTip] = []
 
     // Care action states
     @State private var isPerformingCareAction = false
@@ -35,6 +42,7 @@ struct PlantDetailView: View {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
                     heroImageSection
+                    careTipsSection
                     plantInfoSections
                 }
                 .padding(.bottom, 32)
@@ -56,6 +64,10 @@ struct PlantDetailView: View {
         } message: {
             Text(careActionMessage)
         }
+        .task {
+            let user = dataService.getCurrentUser()
+            careTips = careAdviceService.getContextualTips(for: plant, in: plant.garden, user: user)
+        }
         .sheet(isPresented: $showingEditPlant) {
             Text("Edit Plant View - To be implemented")
         }
@@ -72,6 +84,9 @@ struct PlantDetailView: View {
         }
         .sheet(isPresented: $showMovePlant) {
             MovePlantSheet(plant: plant)
+        }
+        .sheet(isPresented: $showingDiagnostic) {
+            CommonPlantIssuesView(plant: plant)
         }
     }
 
@@ -107,6 +122,11 @@ struct PlantDetailView: View {
         VStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
             basicInfoSection
             careRequirementsSection
+
+            // Perenual API enrichment — shows extra data when available
+            PerenualEnrichmentCard(plant: plant)
+                .padding(.horizontal, 0)
+
             healthStatusSection
             actionButtonsSection
             careHistorySection
@@ -150,44 +170,91 @@ struct PlantDetailView: View {
                     }
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 }
-            } else {
-                // Gradient placeholder hero with IconBubble
-                ZStack {
-                    LinearGradient(
-                        colors: [
-                            CultivationTheme.Colors.brandForest.opacity(0.2),
-                            CultivationTheme.Colors.accentCoral.opacity(0.08),
-                        ],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    )
-
-                    // Subtle green glow orb
-                    Circle()
-                        .fill(CultivationTheme.Colors.heroGlow)
-                        .frame(width: 200, height: 200)
-                        .blur(radius: 50)
-
-                    VStack(spacing: 12) {
-                        IconBubble(
-                            systemName: plant.plantType?.iconName ?? "leaf.fill",
-                            color: CultivationTheme.Colors.brandLeaf,
-                            size: 80,
-                            iconSize: 36
-                        )
-
-                        Text(plant.name ?? "Unknown Plant")
-                            .font(.system(.title3, design: .serif))
-                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
+            } else if let apiImageURL = perenualEnrichment.enrichment(for: plant)?.defaultImage?.bestURL,
+                      let url = URL(string: apiImageURL)
+            {
+                // Perenual API hero image when no user photos
+                AsyncImage(url: url) { phase in
+                    switch phase {
+                    case .success(let image):
+                        image
+                            .resizable()
+                            .aspectRatio(contentMode: .fill)
+                            .frame(maxWidth: .infinity)
+                            .frame(height: 220)
+                            .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                            .overlay(alignment: .bottomTrailing) {
+                                Text("Photo: Perenual")
+                                    .font(.system(size: 9, weight: .medium, design: .rounded))
+                                    .foregroundStyle(.white.opacity(0.7))
+                                    .padding(.horizontal, 6)
+                                    .padding(.vertical, 2)
+                                    .background(.black.opacity(0.3))
+                                    .clipShape(Capsule())
+                                    .padding(8)
+                            }
+                    default:
+                        gradientPlaceholderHero
                     }
                 }
-                .frame(maxWidth: .infinity)
-                .frame(height: 220)
-                .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+            } else {
+                gradientPlaceholderHero
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
             }
         }
         .padding(.top, 8)
+    }
+
+    private var gradientPlaceholderHero: some View {
+        ZStack {
+            LinearGradient(
+                colors: [
+                    CultivationTheme.Colors.brandForest.opacity(0.2),
+                    CultivationTheme.Colors.accentCoral.opacity(0.08),
+                ],
+                startPoint: .topLeading,
+                endPoint: .bottomTrailing
+            )
+
+            Circle()
+                .fill(CultivationTheme.Colors.heroGlow)
+                .frame(width: 200, height: 200)
+                .blur(radius: 50)
+
+            VStack(spacing: 12) {
+                IconBubble(
+                    systemName: plant.plantType?.iconName ?? "leaf.fill",
+                    color: CultivationTheme.Colors.brandLeaf,
+                    size: 80,
+                    iconSize: 36
+                )
+
+                Text(plant.name ?? "Unknown Plant")
+                    .font(.system(.title3, design: .serif))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+            }
+        }
+        .frame(maxWidth: .infinity)
+        .frame(height: 220)
+        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+    }
+
+    // MARK: - Care Tips Section
+
+    @ViewBuilder
+    private var careTipsSection: some View {
+        if !careTips.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Care Tips")
+                    .sectionLabelStyle()
+
+                ForEach(careTips) { tip in
+                    CareTipCard(tip: tip)
+                }
+            }
+            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+        }
     }
 
     // MARK: - Basic Info Section
@@ -440,6 +507,30 @@ struct PlantDetailView: View {
                     showingReminderView = true
                 }
             }
+
+            // Diagnostic button
+            Button {
+                showingDiagnostic = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "stethoscope")
+                    Text("Something Wrong?")
+                }
+                .font(.system(.subheadline, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.statusWarning)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
+                .background {
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .fill(CultivationTheme.Colors.statusWarning.opacity(0.08))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .stroke(CultivationTheme.Colors.statusWarning.opacity(0.3), lineWidth: 1)
+                }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("plantdetail_button_diagnostic")
         }
     }
 
@@ -719,6 +810,46 @@ enum SortOption: CaseIterable {
         case .healthStatus: "Health Status"
         case .wateringSchedule: "Watering Schedule"
         }
+    }
+}
+
+// MARK: - Care Tip Card
+
+private struct CareTipCard: View {
+    let tip: CareTip
+
+    private var urgencyColor: Color {
+        switch tip.urgency {
+        case .urgent: CultivationTheme.Colors.statusAlert
+        case .warning: CultivationTheme.Colors.statusWarning
+        case .suggestion: CultivationTheme.Colors.brandLeaf
+        case .info: CultivationTheme.Colors.textSecondary
+        }
+    }
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            IconBubble(
+                systemName: tip.icon,
+                color: urgencyColor,
+                size: CultivationTheme.Spacing.iconSizeSmall,
+                iconSize: 14
+            )
+
+            VStack(alignment: .leading, spacing: 4) {
+                Text(tip.title)
+                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                Text(tip.description)
+                    .font(.system(.caption, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .fixedSize(horizontal: false, vertical: true)
+            }
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .glassCard()
+        .accessibilityIdentifier("plantdetail_caretip_\(tip.title)")
     }
 }
 

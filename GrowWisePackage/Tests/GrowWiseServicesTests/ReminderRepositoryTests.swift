@@ -1,13 +1,11 @@
 import Foundation
-import Testing
-import SwiftData
-@testable import GrowWiseServices
 @testable import GrowWiseModels
+@testable import GrowWiseServices
+import SwiftData
+import Testing
 
-@Suite("ReminderRepository Tests")
 @MainActor
 struct ReminderRepositoryTests {
-
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: PlantReminder.self,
@@ -18,7 +16,7 @@ struct ReminderRepositoryTests {
     // MARK: - add()
 
     @Test("add() inserts reminder into context")
-    func addInsertsReminder() async throws {
+    func addInsertsReminder() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -30,7 +28,7 @@ struct ReminderRepositoryTests {
             message: "Give it 250ml",
             reminderType: .watering,
             frequency: .daily,
-            nextDueDate: Date().addingTimeInterval(3_600),
+            nextDueDate: Date().addingTimeInterval(3600),
             plant: plant
         )
         try repo.add(reminder)
@@ -41,7 +39,7 @@ struct ReminderRepositoryTests {
     }
 
     @Test("add() does not throw with a valid in-memory context")
-    func addDoesNotThrowWithValidContext() async throws {
+    func addDoesNotThrowWithValidContext() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -53,7 +51,7 @@ struct ReminderRepositoryTests {
             message: "Cut back leggy growth",
             reminderType: .pruning,
             frequency: .monthly,
-            nextDueDate: Date().addingTimeInterval(86_400),
+            nextDueDate: Date().addingTimeInterval(86400),
             plant: plant
         )
         #expect(throws: Never.self) {
@@ -64,7 +62,7 @@ struct ReminderRepositoryTests {
     // MARK: - fetchActive()
 
     @Test("fetchActive() returns enabled reminders with nextDueDate on or after start of today")
-    func fetchActiveReturnsEnabledCurrentReminders() async throws {
+    func fetchActiveReturnsEnabledCurrentReminders() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -88,7 +86,7 @@ struct ReminderRepositoryTests {
     }
 
     @Test("fetchActive() excludes disabled reminders")
-    func fetchActiveExcludesDisabled() async throws {
+    func fetchActiveExcludesDisabled() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -110,18 +108,18 @@ struct ReminderRepositoryTests {
         #expect(results.isEmpty)
     }
 
-    @Test("fetchActive() excludes reminders with nextDueDate before start of today")
-    func fetchActiveExcludesBeforeStartOfDay() async throws {
+    @Test("fetchActive() includes overdue reminders with nextDueDate before start of today")
+    func fetchActiveIncludesOverdue() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
         let plant = Plant(name: "Mint", plantType: .herb)
         container.mainContext.insert(plant)
 
-        let yesterday = Date().addingTimeInterval(-25 * 3_600)
+        let yesterday = Date().addingTimeInterval(-25 * 3600)
         let pastReminder = PlantReminder(
             title: "Missed Yesterday",
-            message: "Overdue and before startOfDay",
+            message: "Overdue — should be included in active reminders",
             reminderType: .watering,
             frequency: .daily,
             nextDueDate: yesterday,
@@ -131,20 +129,57 @@ struct ReminderRepositoryTests {
         try repo.add(pastReminder)
 
         let results = try repo.fetchActive()
-        #expect(results.isEmpty)
+        #expect(results.count == 1)
+        #expect(results.first?.title == "Missed Yesterday")
+    }
+
+    @Test("fetchOverdue() returns only reminders with nextDueDate before start of today")
+    func fetchOverdueReturnsPastDue() throws {
+        let container = try makeContainer()
+        let repo = ReminderRepository(context: container.mainContext)
+
+        let plant = Plant(name: "Basil", plantType: .herb)
+        container.mainContext.insert(plant)
+
+        let yesterday = Date().addingTimeInterval(-25 * 3600)
+        let overdueReminder = PlantReminder(
+            title: "Overdue Water",
+            message: "Should appear in overdue",
+            reminderType: .watering,
+            frequency: .daily,
+            nextDueDate: yesterday,
+            plant: plant
+        )
+        overdueReminder.isEnabled = true
+        try repo.add(overdueReminder)
+
+        let todayReminder = PlantReminder(
+            title: "Today Water",
+            message: "Should not appear in overdue",
+            reminderType: .watering,
+            frequency: .daily,
+            nextDueDate: Date(),
+            plant: plant
+        )
+        todayReminder.isEnabled = true
+        try repo.add(todayReminder)
+
+        let results = try repo.fetchOverdue()
+        #expect(results.count == 1)
+        #expect(results.first?.title == "Overdue Water")
     }
 
     // MARK: - fetchUpcoming(days:)
 
     @Test("fetchUpcoming(days:) returns enabled reminders within the time window")
-    func fetchUpcomingReturnsWithinWindow() async throws {
+    func fetchUpcomingReturnsWithinWindow() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
         let plant = Plant(name: "Lavender", plantType: .herb)
         container.mainContext.insert(plant)
 
-        let threeDaysOut = Date().addingTimeInterval(3 * 86_400)
+        let threeDaysOut = Date().addingTimeInterval(3 * 86400)
         let insideWindow = PlantReminder(
             title: "Inside Window",
             message: "Due in 3 days",
@@ -155,7 +190,7 @@ struct ReminderRepositoryTests {
         )
         insideWindow.isEnabled = true
 
-        let tenDaysOut = Date().addingTimeInterval(10 * 86_400)
+        let tenDaysOut = Date().addingTimeInterval(10 * 86400)
         let outsideWindow = PlantReminder(
             title: "Outside Window",
             message: "Due in 10 days",
@@ -175,14 +210,14 @@ struct ReminderRepositoryTests {
     }
 
     @Test("fetchUpcoming(days:) excludes disabled reminders within the window")
-    func fetchUpcomingExcludesDisabledWithinWindow() async throws {
+    func fetchUpcomingExcludesDisabledWithinWindow() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
         let plant = Plant(name: "Oregano", plantType: .herb)
         container.mainContext.insert(plant)
 
-        let twoDaysOut = Date().addingTimeInterval(2 * 86_400)
+        let twoDaysOut = Date().addingTimeInterval(2 * 86400)
         let disabledUpcoming = PlantReminder(
             title: "Disabled Upcoming",
             message: "Would be upcoming but disabled",
@@ -201,7 +236,7 @@ struct ReminderRepositoryTests {
     // MARK: - delete()
 
     @Test("delete() removes reminder from context")
-    func deleteRemovesReminder() async throws {
+    func deleteRemovesReminder() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -213,7 +248,7 @@ struct ReminderRepositoryTests {
             message: "Temporary reminder",
             reminderType: .watering,
             frequency: .once,
-            nextDueDate: Date().addingTimeInterval(3_600),
+            nextDueDate: Date().addingTimeInterval(3600),
             plant: plant
         )
         try repo.add(reminder)
@@ -230,7 +265,7 @@ struct ReminderRepositoryTests {
     // MARK: - complete() / update lastModified
 
     @Test("complete() sets lastModified date on the reminder")
-    func completeSetsLastModified() async throws {
+    func completeSetsLastModified() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -242,7 +277,7 @@ struct ReminderRepositoryTests {
             message: "Give 500ml",
             reminderType: .watering,
             frequency: .daily,
-            nextDueDate: Date().addingTimeInterval(3_600),
+            nextDueDate: Date().addingTimeInterval(3600),
             plant: plant
         )
         try repo.add(reminder)
@@ -254,7 +289,7 @@ struct ReminderRepositoryTests {
     }
 
     @Test("complete() marks lastCompletedDate on a recurring reminder")
-    func completeSetsLastCompletedDate() async throws {
+    func completeSetsLastCompletedDate() throws {
         let container = try makeContainer()
         let repo = ReminderRepository(context: container.mainContext)
 
@@ -266,7 +301,7 @@ struct ReminderRepositoryTests {
             message: "Use balanced feed",
             reminderType: .fertilizing,
             frequency: .weekly,
-            nextDueDate: Date().addingTimeInterval(3_600),
+            nextDueDate: Date().addingTimeInterval(3600),
             plant: plant
         )
         reminder.isRecurring = true

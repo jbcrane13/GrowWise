@@ -26,7 +26,7 @@ struct OnboardingNavigationView: View {
 
     private var canProceed: Bool {
         switch currentStep {
-        case .welcome, .skillAssessment, .gardenSetup, .location, .notifications, .completion:
+        case .welcome, .skillAssessment, .gardenSetup, .location, .notifications, .firstPlant, .completion:
             true
 
         case .goals:
@@ -183,6 +183,7 @@ struct OnboardingNavigationView: View {
                 )
 
                 await saveUserPreferences(user: user)
+                await createFirstPlantIfSelected(user: user)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
                 await MainActor.run {
@@ -200,6 +201,35 @@ struct OnboardingNavigationView: View {
         isSaving = false
         errorMessage = message
         showingError = true
+    }
+
+    @MainActor
+    private func createFirstPlantIfSelected(user: User) async {
+        guard let plantName = userProfile.selectedFirstPlantName, !plantName.isEmpty else { return }
+
+        let plant = Plant(
+            name: plantName,
+            plantType: .flower,
+            difficultyLevel: .beginner
+        )
+        plant.plantingDate = Date()
+
+        do {
+            try dataService.plants.add(plant)
+
+            // Auto-create a watering reminder due tomorrow
+            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
+            _ = try dataService.createReminder(
+                title: "Water \(plantName)",
+                message: "Time to water your new \(plantName)!",
+                type: .watering,
+                frequency: .weekly,
+                dueDate: tomorrow,
+                plant: plant
+            )
+        } catch {
+            // Non-critical — plant creation failure shouldn't block onboarding
+        }
     }
 
     private func saveUserPreferences(user: User) async {

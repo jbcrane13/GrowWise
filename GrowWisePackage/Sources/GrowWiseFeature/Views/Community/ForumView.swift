@@ -11,6 +11,7 @@ public struct ForumView: View {
     @State private var sortOrder: ForumSortOrder = .newest
     @State private var showAskQuestion = false
     @State private var hasMorePages = false
+    @State private var showError = false
 
     public init() {}
 
@@ -58,6 +59,12 @@ public struct ForumView: View {
                         await refreshQuestions()
                     }
                 })
+            }
+            .alert("Error", isPresented: $showError, presenting: forumService.errorMessage) { _ in
+                Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("forum_button_error_dismiss")
+            } message: { message in
+                Text(message)
             }
             .refreshable {
                 await refreshQuestions()
@@ -297,7 +304,7 @@ public struct ForumView: View {
                         sortOrder: sortOrder
                     )
                 } catch {
-                    // Error is handled via forumService.errorMessage
+                    showError = true
                 }
             }
         } label: {
@@ -328,7 +335,7 @@ public struct ForumView: View {
             )
             hasMorePages = result.cursor != nil
         } catch {
-            // Error state is managed in ForumService
+            showError = true
         }
     }
 

@@ -9,8 +9,18 @@ struct CultivationApp: App {
     @State private var locationService = LocationService()
     @State private var notificationService = NotificationService()
     @State private var cloudSyncService = CloudSyncService()
+    @State private var perenualAPIService = PerenualAPIService()
+    @State private var perenualEnrichmentService: PerenualEnrichmentService?
+
+    // Appearance preference persisted via AppStorage
+    @AppStorage("app_appearance") private var appearance: AppAppearance = .system
 
     init() {
+        // Store Perenual API key securely on first launch
+        if !PerenualAPIService.hasAPIKey {
+            PerenualAPIService.storeAPIKey("sk-LSIM69d0612798a7616109")
+        }
+
         let launchArgs = ProcessInfo.processInfo.arguments
         let launchEnv = ProcessInfo.processInfo.environment
 
@@ -38,12 +48,28 @@ struct CultivationApp: App {
         }
     }
 
+    private var colorScheme: ColorScheme? {
+        switch appearance {
+        case .system: nil
+        case .light: .light
+        case .dark: .dark
+        }
+    }
+
     var body: some Scene {
         WindowGroup {
             MainAppView()
                 .environment(locationService)
                 .environment(notificationService)
                 .environment(cloudSyncService)
+                .environment(perenualAPIService)
+                .environment(perenualEnrichmentService ?? PerenualEnrichmentService(api: perenualAPIService))
+                .preferredColorScheme(colorScheme)
+                .onAppear {
+                    if perenualEnrichmentService == nil {
+                        perenualEnrichmentService = PerenualEnrichmentService(api: perenualAPIService)
+                    }
+                }
         }
     }
 }

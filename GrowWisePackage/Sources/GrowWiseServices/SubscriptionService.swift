@@ -196,7 +196,11 @@ public final class SubscriptionService {
 
             logger.info("Subscription status updated: \(hasActiveSubscription ? "active" : "not subscribed")")
         } catch {
-            logger.error("Failed to update subscription status: \(error.localizedDescription)")
+            let message = error.localizedDescription
+            await MainActor.run {
+                self.errorMessage = "Unable to verify subscription: \(message)"
+            }
+            logger.error("Failed to update subscription status: \(message)")
         }
     }
 

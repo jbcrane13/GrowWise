@@ -1,6 +1,9 @@
 import Foundation
 import GrowWiseModels
+import os
 import SwiftData
+
+private let logger = Logger(subsystem: "com.growwise", category: "StatsRepository")
 
 @MainActor
 public final class StatsRepository {
@@ -10,7 +13,7 @@ public final class StatsRepository {
         self.context = context
     }
 
-    public func getPlantCount(for garden: Garden? = nil) -> Int {
+    public func getPlantCount(for garden: Garden? = nil) throws -> Int {
         var descriptor = FetchDescriptor<Plant>()
 
         if let garden {
@@ -20,15 +23,15 @@ public final class StatsRepository {
             }
         }
 
-        return (try? context.fetchCount(descriptor)) ?? 0
+        return try context.fetchCount(descriptor)
     }
 
-    public func getGardenCount() -> Int {
+    public func getGardenCount() throws -> Int {
         let descriptor = FetchDescriptor<Garden>()
-        return (try? context.fetchCount(descriptor)) ?? 0
+        return try context.fetchCount(descriptor)
     }
 
-    public func getReminderCount(activeOnly: Bool = false) -> Int {
+    public func getReminderCount(activeOnly: Bool = false) throws -> Int {
         var descriptor = FetchDescriptor<PlantReminder>()
 
         if activeOnly {
@@ -38,10 +41,10 @@ public final class StatsRepository {
             }
         }
 
-        return (try? context.fetchCount(descriptor)) ?? 0
+        return try context.fetchCount(descriptor)
     }
 
-    public func getJournalEntryCount(for plant: Plant? = nil) -> Int {
+    public func getJournalEntryCount(for plant: Plant? = nil) throws -> Int {
         var descriptor = FetchDescriptor<JournalEntry>()
 
         if let plant, let plantId = plant.id {
@@ -50,26 +53,26 @@ public final class StatsRepository {
             }
         }
 
-        return (try? context.fetchCount(descriptor)) ?? 0
+        return try context.fetchCount(descriptor)
     }
 
-    public func getPlantDatabaseCount() -> Int {
+    public func getPlantDatabaseCount() throws -> Int {
         var descriptor = FetchDescriptor<Plant>()
         descriptor.predicate = #Predicate<Plant> { $0.isUserPlant == false || $0.isUserPlant == nil }
-        return (try? context.fetchCount(descriptor)) ?? 0
+        return try context.fetchCount(descriptor)
     }
 
     /// Compute gardening stats using predicate-based counting instead of full-table scan.
-    public func getGardeningStats() -> GardeningStats {
-        let totalPlants = getPlantCount()
+    public func getGardeningStats() throws -> GardeningStats {
+        let totalPlants = try getPlantCount()
 
         // SwiftData #Predicate has issues comparing optional enum properties in-memory,
         // so fetch all plants and filter. Plant count is bounded by user's garden size.
-        let allPlants = (try? context.fetch(FetchDescriptor<Plant>())) ?? []
+        let allPlants = try context.fetch(FetchDescriptor<Plant>())
         let healthyPlants = allPlants.count(where: { $0.healthStatus == .healthy })
 
-        let activeReminders = getReminderCount(activeOnly: true)
-        let totalJournalEntries = getJournalEntryCount()
+        let activeReminders = try getReminderCount(activeOnly: true)
+        let totalJournalEntries = try getJournalEntryCount()
 
         return GardeningStats(
             totalPlants: totalPlants,

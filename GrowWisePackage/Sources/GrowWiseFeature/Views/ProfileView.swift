@@ -10,7 +10,7 @@ public struct ProfileView: View {
     @State private var journalCount: Int = 0
     @State private var streakDays: Int = 0
     @State private var showShareComingSoon = false
-    @State private var showAppSettingsComingSoon = false
+    @State private var showAppSettings = false
 
     // Navigation state
     @State private var showTutorials = false
@@ -19,6 +19,7 @@ public struct ProfileView: View {
     @State private var showCommunity = false
     @State private var showAchievements = false
     @State private var showForum = false
+    @State private var showGardenClubs = false
     @State private var selectedProductID: String?
     @State private var purchaseError: String?
     @State private var showPurchaseError = false
@@ -97,6 +98,13 @@ public struct ProfileView: View {
             .navigationDestination(isPresented: $showForum) {
                 ForumView()
             }
+            .navigationDestination(isPresented: $showGardenClubs) {
+                ClubListView()
+                    .environment(dataService)
+            }
+            .navigationDestination(isPresented: $showAppSettings) {
+                AppSettingsView()
+            }
             .task {
                 loadStats()
             }
@@ -104,11 +112,6 @@ public struct ProfileView: View {
                 Button("OK", role: .cancel) {}
             } message: {
                 Text("Garden sharing via iCloud is coming in a future update.")
-            }
-            .alert("Coming Soon", isPresented: $showAppSettingsComingSoon) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("App Settings are coming in a future update.")
             }
             .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
                 Button("OK", role: .cancel) {}
@@ -251,6 +254,15 @@ public struct ProfileView: View {
             ) {
                 showForum = true
             }
+
+            menuRow(
+                icon: "person.3.fill",
+                color: CultivationTheme.Colors.brandForest,
+                title: "Garden Clubs",
+                id: "profile_row_garden_clubs"
+            ) {
+                showGardenClubs = true
+            }
         }
     }
 
@@ -286,7 +298,7 @@ public struct ProfileView: View {
                 title: "App Settings",
                 id: "profile_row_settings"
             ) {
-                showAppSettingsComingSoon = true
+                showAppSettings = true
             }
         }
     }

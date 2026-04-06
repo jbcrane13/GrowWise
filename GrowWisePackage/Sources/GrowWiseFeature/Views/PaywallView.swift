@@ -71,6 +71,12 @@ public struct PaywallView: View {
             } message: {
                 Text("Your purchases have been restored successfully.")
             }
+            .onChange(of: subscriptionService.errorMessage) { _, newValue in
+                if let message = newValue, purchaseError == nil {
+                    purchaseError = message
+                    showPurchaseError = true
+                }
+            }
             .onAppear {
                 withAnimation(CultivationTheme.Animation.entrance) {
                     appeared = true

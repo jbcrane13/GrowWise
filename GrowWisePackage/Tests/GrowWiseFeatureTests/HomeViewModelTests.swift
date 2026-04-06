@@ -1,30 +1,20 @@
-// INTEGRATION GAP: HomeViewModel.complete() uses `try? dataService.completeReminder(reminder)`
-// which silently swallows errors. No error state is set.
-
-import Testing
 import Foundation
 @testable import GrowWiseFeature
 @testable import GrowWiseModels
 import GrowWiseServices
+import Testing
 
 // MARK: - HomeViewModelTests
 
-@Suite("HomeViewModel Tests")
 @MainActor
 struct HomeViewModelTests {
-
     // MARK: - load() — bucket separation
 
-    @Test("load excludes past-day reminders from overdueReminders due to fetchActiveReminders predicate")
+    @Test("load populates overdueReminders with past-day reminders")
     func loadSeparatesOverdueReminders() async throws {
-        // INTEGRATION GAP: fetchActiveReminders() delegates to ReminderRepository.fetchActive()
-        // whose predicate is `nextDueDate >= startOfDay(today)`. Reminders from previous days
-        // are never returned, so overdueReminders is always empty for truly past-due items.
-        // The fix would require a separate fetchOverdueReminders() query.
-        // See INTEGRATION GAP note at top of file.
         let dataService = try DataService.makeForTesting()
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable)
-        let pastDate = Date(timeIntervalSinceNow: -86_400) // 24 h ago
+        let pastDate = Date(timeIntervalSinceNow: -86400) // 24 h ago
         _ = try dataService.createReminder(
             title: "Water",
             message: "Water the tomato",
@@ -37,8 +27,9 @@ struct HomeViewModelTests {
         let vm = HomeViewModel()
         await vm.load(dataService: dataService)
 
-        // Past-day reminders are filtered out at the DB layer — overdueReminders is empty.
-        #expect(vm.overdueReminders.isEmpty)
+        // fetchActive() now includes overdue reminders; HomeViewModel sorts them into overdueReminders
+        #expect(vm.overdueReminders.count == 1)
+        #expect(vm.overdueReminders.first?.title == "Water")
     }
 
     @Test("load() places reminders due today into dueTodayReminders")
@@ -69,7 +60,7 @@ struct HomeViewModelTests {
         let dataService = try DataService.makeForTesting()
         let plant = try dataService.createPlant(name: "Mint", type: .herb)
 
-        let futureDate = Date(timeIntervalSinceNow: 2 * 86_400) // 2 days from now
+        let futureDate = Date(timeIntervalSinceNow: 2 * 86400) // 2 days from now
         _ = try dataService.createReminder(
             title: "Fertilize",
             message: "Add fertilizer",
@@ -228,6 +219,28 @@ struct HomeViewModelTests {
         #expect(reminder.isEnabled == false)
     }
 
+    @Test("complete() does not set errorMessage on success")
+    func completeDoesNotSetErrorOnSuccess() async throws {
+        let dataService = try DataService.makeForTesting()
+        let plant = try dataService.createPlant(name: "Tomato", type: .vegetable)
+        let todayDate = Date()
+        let reminder = try dataService.createReminder(
+            title: "Water",
+            message: "Water it",
+            type: .watering,
+            frequency: .once,
+            dueDate: todayDate,
+            plant: plant
+        )
+
+        let vm = HomeViewModel()
+        await vm.load(dataService: dataService)
+        await vm.complete(reminder: reminder, dataService: dataService)
+
+        #expect(vm.errorMessage == nil)
+        #expect(vm.completedIDs.contains(reminder.id))
+    }
+
     @Test("complete() persists the completion and allTasksDone reflects it via completedIDs")
     func completeReloadsDataAfterDelay() async throws {
         let dataService = try DataService.makeForTesting()
@@ -262,8 +275,8 @@ struct HomeViewModelTests {
         //
         // What we CAN assert: persistence worked, and allTasksDone is true because
         // completedIDs accounts for the visually-completed reminder.
-        #expect(reminder.isEnabled == false)            // markCompleted() ran
+        #expect(reminder.isEnabled == false) // markCompleted() ran
         #expect(vm.completedIDs.contains(reminder.id)) // optimistic id retained after reload
-        #expect(vm.allTasksDone)                        // completedIDs hides the stale row
+        #expect(vm.allTasksDone) // completedIDs hides the stale row
     }
 }

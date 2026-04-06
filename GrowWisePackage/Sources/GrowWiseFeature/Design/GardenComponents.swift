@@ -1,4 +1,5 @@
 import GrowWiseModels
+import GrowWiseServices
 import SwiftUI
 
 // MARK: - GardenType Icon Extension
@@ -77,13 +78,8 @@ struct PlantRow: View {
 
     var body: some View {
         HStack(spacing: 12) {
-            // Icon bubble tinted by health status
-            IconBubble(
-                systemName: plantTypeIcon,
-                color: isUrgent ? CultivationTheme.Colors.statusAlert : healthStatus.accentColor,
-                size: CultivationTheme.Spacing.iconSize,
-                iconSize: 20
-            )
+            // Perenual-enriched thumbnail (falls back to icon bubble if no API data)
+            PerenualEnrichmentThumbnail(plant: plant)
 
             // Name + care subtitle
             VStack(alignment: .leading, spacing: 2) {
@@ -259,7 +255,11 @@ struct TaskRow: View {
     let locationLabel: String?
     let statusColor: Color
     var isUrgent: Bool = false
+    var quickActionIcon: String = "checkmark.circle.fill"
+    var quickActionColor: Color = CultivationTheme.Colors.textTertiary
     var onComplete: (() -> Void)?
+
+    @State private var showCheckmark = false
 
     var body: some View {
         HStack(spacing: 12) {
@@ -318,10 +318,29 @@ struct TaskRow: View {
                             Capsule()
                                 .stroke(CultivationTheme.Colors.accentCoral.opacity(0.3), lineWidth: 1)
                         }
+                        .foregroundStyle(isUrgent ? .white : quickActionColor)
+                        .transition(.scale.combined(with: .opacity))
+                    }
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
+                .padding(.horizontal, 14)
+                .padding(.vertical, 7)
+                .background {
+                    Capsule()
+                        .fill(
+                            isUrgent || showCheckmark
+                                ? AnyShapeStyle(CultivationTheme.Gradients.warmAccent)
+                                : AnyShapeStyle(quickActionColor.opacity(0.08))
+                        )
+                }
+                .overlay {
+                    if !isUrgent, !showCheckmark {
+                        Capsule()
+                            .stroke(quickActionColor.opacity(0.3), lineWidth: 1)
+                    }
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
         }
         .padding(CultivationTheme.Spacing.cardPadding)
         .glassCard()
@@ -342,6 +361,22 @@ extension TaskRow {
             ? CultivationTheme.Colors.statusAlert
             : CultivationTheme.Colors.brandLeaf
         self.isUrgent = isUrgent
+
+        switch reminder.reminderType {
+        case .watering:
+            self.quickActionIcon = "drop.fill"
+            self.quickActionColor = .blue
+        case .fertilizing:
+            self.quickActionIcon = "leaf.fill"
+            self.quickActionColor = CultivationTheme.Colors.brandLeaf
+        case .pruning:
+            self.quickActionIcon = "scissors"
+            self.quickActionColor = .orange
+        default:
+            self.quickActionIcon = "checkmark.circle.fill"
+            self.quickActionColor = CultivationTheme.Colors.textTertiary
+        }
+
         self.onComplete = onComplete
     }
 }
