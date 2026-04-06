@@ -9,7 +9,7 @@ on:
 jobs:
   lint:
     name: SwiftLint
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
@@ -21,7 +21,7 @@ jobs:
 
   format:
     name: SwiftFormat Check
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
@@ -42,7 +42,7 @@ jobs:
 
   test:
     name: Unit Tests
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
@@ -254,7 +254,7 @@ jobs:
 
   sonarcloud:
     name: SonarCloud Analysis
-    runs-on: macos-14
+    runs-on: macos-15
     if: github.event_name == 'push' || github.event_name == 'pull_request'
     steps:
       - uses: actions/checkout@v4
@@ -279,7 +279,7 @@ jobs:
             -Dsonar.organization=growwise
   dead-code:
     name: Dead Code Detection (Periphery)
-    runs-on: macos-14
+    runs-on: macos-15
     steps:
       - uses: actions/checkout@v4
 
