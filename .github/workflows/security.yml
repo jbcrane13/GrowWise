@@ -32,14 +32,20 @@ jobs:
       - name: Build for CodeQL
         run: |
           xcodebuild \
+            -resolvePackageDependencies \
+            -workspace GrowWise.xcworkspace \
+            -scheme GrowWise \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/SourcePackages"
+
+          xcodebuild \
             -workspace GrowWise.xcworkspace \
             -scheme GrowWise \
             -sdk iphonesimulator \
             -destination 'platform=iOS Simulator,name=iPhone 16' \
-            build \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/SourcePackages" \
             CODE_SIGNING_ALLOWED=NO \
-            2>&1 | tail -10
-
+            CODE_SIGNING_REQUIRED=NO \
+            build
       - name: Perform CodeQL Analysis
         uses: github/codeql-action/analyze@v3
         with:
