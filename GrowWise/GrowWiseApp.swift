@@ -12,7 +12,7 @@ struct CultivationApp: App {
     @State private var perenualAPIService = PerenualAPIService()
     @State private var perenualEnrichmentService: PerenualEnrichmentService?
 
-    // Appearance preference persisted via AppStorage
+    /// Appearance preference persisted via AppStorage
     @AppStorage("app_appearance") private var appearance: AppAppearance = .system
 
     init() {

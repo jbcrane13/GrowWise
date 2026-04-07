@@ -52,7 +52,7 @@ struct ARPlantPlacementView: View {
                 .foregroundStyle(.white)
 
             Text("Select a plant, then tap a surface to place it")
-                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                .font(.system(.subheadline, weight: .medium))
                 .foregroundStyle(.white)
         }
         .padding(.horizontal, 16)
@@ -116,7 +116,7 @@ struct ARPlantPlacementView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(plant.name ?? "Plant")
-                            .font(.system(.headline, design: .rounded))
+                            .font(.system(.headline, design: .serif))
                             .foregroundStyle(.white)
 
                         if let space = plant.spaceRequirement {
@@ -124,7 +124,7 @@ struct ARPlantPlacementView: View {
                                 Image(systemName: "arrow.left.and.right")
                                     .font(.system(size: 10))
                                 Text("Spacing: \(space.displayName)")
-                                    .font(.system(.caption, design: .rounded))
+                                    .font(.system(.caption))
                             }
                             .foregroundStyle(.white.opacity(0.7))
                         }
@@ -136,8 +136,8 @@ struct ARPlantPlacementView: View {
                         showPlantPicker = true
                     } label: {
                         Text("Change")
-                            .font(.system(.caption, design: .rounded, weight: .semibold))
-                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .font(.system(.caption, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 6)
                             .background(CultivationTheme.Colors.brandLeaf.opacity(0.2))
@@ -152,15 +152,15 @@ struct ARPlantPlacementView: View {
                     HStack(spacing: 10) {
                         Image(systemName: "plus.circle.fill")
                             .font(.title2)
-                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
 
                         VStack(alignment: .leading, spacing: 2) {
                             Text("Select a Plant")
-                                .font(.system(.headline, design: .rounded))
+                                .font(.system(.headline, design: .serif))
                                 .foregroundStyle(.white)
 
                             Text("Choose from your garden to place in AR")
-                                .font(.system(.caption, design: .rounded))
+                                .font(.system(.caption))
                                 .foregroundStyle(.white.opacity(0.6))
                         }
 
@@ -203,7 +203,7 @@ struct ARPlantPlacementView: View {
                                 .font(.system(size: 12))
                                 .foregroundStyle(type.color)
                             Text("\(count)")
-                                .font(.system(.caption, design: .rounded, weight: .bold))
+                                .font(.system(.caption, weight: .bold))
                                 .foregroundStyle(.white)
                         }
                         .padding(.horizontal, 10)
@@ -218,7 +218,7 @@ struct ARPlantPlacementView: View {
                             .font(.system(size: 12))
                             .foregroundStyle(.white.opacity(0.6))
                         Text("\(placedPlants.count) total")
-                            .font(.system(.caption, design: .rounded, weight: .medium))
+                            .font(.system(.caption, weight: .medium))
                             .foregroundStyle(.white.opacity(0.8))
                     }
                     .padding(.horizontal, 10)
@@ -246,7 +246,7 @@ struct ARPlantPlacementView: View {
                     Image(systemName: "trash")
                         .font(.system(size: 14, weight: .medium))
                     Text("Clear All")
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .font(.system(.subheadline, weight: .semibold))
                 }
                 .foregroundStyle(
                     placedPlants.isEmpty
@@ -279,11 +279,11 @@ struct ARPlantPlacementView: View {
                     Image(systemName: "checkmark")
                         .font(.system(size: 14, weight: .bold))
                     Text("Done")
-                        .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                        .font(.system(.subheadline, weight: .semibold))
                 }
                 .foregroundStyle(.white)
                 .frame(maxWidth: .infinity, minHeight: 44)
-                .background(CultivationTheme.Gradients.cta)
+                .background(CultivationTheme.Gradients.warmAccent)
                 .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.button))
                 .shadow(
                     color: CultivationTheme.Colors.brandForest.opacity(0.3),

@@ -107,9 +107,9 @@ struct GardenDetailView: View {
                     } label: {
                         Image(systemName: "cart.fill")
                             .font(.system(size: 14, weight: .semibold))
-                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
                             .frame(width: 30, height: 30)
-                            .background(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                            .background(CultivationTheme.Colors.accentCoral.opacity(0.12))
                             .clipShape(Circle())
                     }
                     .accessibilityIdentifier("gardendetail_button_shopping")
@@ -121,7 +121,7 @@ struct GardenDetailView: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(width: 30, height: 30)
-                            .background(CultivationTheme.Gradients.ctaVertical)
+                            .background(CultivationTheme.Gradients.warmAccent)
                             .clipShape(Circle())
                     }
                     .accessibilityIdentifier("gardendetail_button_add")
@@ -235,7 +235,7 @@ struct GardenDetailView: View {
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
 
             TextField("Search plants\u{2026}", text: $searchText)
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .accessibilityIdentifier("gardendetail_search_field")
 
             if !searchText.isEmpty {
@@ -257,7 +257,7 @@ struct GardenDetailView: View {
             ProgressView()
                 .tint(CultivationTheme.Colors.brandLeaf)
             Text("Loading plants\u{2026}")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -268,12 +268,12 @@ struct GardenDetailView: View {
         VStack(spacing: 16) {
             IconBubble(
                 systemName: "leaf",
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 size: 64,
                 iconSize: 28
             )
             Text("No plants yet")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .serif))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
             Text("Start by adding beds and plants to this garden")
                 .font(.system(.subheadline))
@@ -302,7 +302,7 @@ struct GardenDetailView: View {
     private var noResultsState: some View {
         VStack(spacing: 8) {
             Text("No results")
-                .font(.system(.headline, design: .rounded))
+                .font(.system(.headline, design: .serif))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
             Text("Try a different search term")
                 .font(.system(.subheadline))
@@ -320,14 +320,14 @@ struct GardenDetailView: View {
                 Image(systemName: "plus.circle")
                 Text("Add Bed or Area")
             }
-            .font(.system(.subheadline, design: .rounded, weight: .medium))
-            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            .font(.system(.subheadline, weight: .medium))
+            .foregroundStyle(CultivationTheme.Colors.accentCoral)
             .frame(maxWidth: .infinity)
             .padding(.vertical, 14)
             .background {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .stroke(
-                        CultivationTheme.Colors.brandLeaf.opacity(0.3),
+                        CultivationTheme.Colors.accentCoral.opacity(0.3),
                         style: StrokeStyle(lineWidth: 1, dash: [6])
                     )
             }
@@ -439,7 +439,7 @@ private struct InfoChip: View {
             Image(systemName: icon)
                 .font(.system(size: 10, weight: .medium))
             Text(text)
-                .font(.system(.caption2, design: .rounded, weight: .medium))
+                .font(.system(.caption2, weight: .medium))
                 .lineLimit(1)
         }
         .foregroundStyle(CultivationTheme.Colors.textSecondary)
@@ -461,16 +461,16 @@ private struct InfoChip: View {
 struct OutlineButtonStyle: ButtonStyle {
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(.headline, design: .rounded, weight: .semibold))
-            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            .font(.system(.headline, design: .serif, weight: .regular))
+            .foregroundStyle(CultivationTheme.Colors.accentCoral)
             .frame(maxWidth: .infinity, minHeight: 50)
             .background {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
-                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.08))
+                    .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
             }
             .overlay {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
-                    .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.35), lineWidth: 1)
+                    .stroke(CultivationTheme.Colors.accentCoral.opacity(0.35), lineWidth: 1)
             }
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(CultivationTheme.Animation.card, value: configuration.isPressed)

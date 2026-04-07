@@ -139,11 +139,11 @@ public struct AddReminderView: View {
 
                     VStack(alignment: .leading, spacing: 2) {
                         Text(selectedPlant.name ?? "Unknown Plant")
-                            .font(.system(.headline, design: .rounded))
+                            .font(.system(.headline, design: .serif))
                             .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                         Text(selectedPlant.plantType?.displayName ?? "Unknown Type")
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption))
                             .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
 
@@ -152,8 +152,8 @@ public struct AddReminderView: View {
                     Button("Change") {
                         showingPlantPicker = true
                     }
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .font(.system(.subheadline))
+                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                     .accessibilityIdentifier("addreminder_button_changeplant")
                 }
             } else {
@@ -161,13 +161,13 @@ public struct AddReminderView: View {
                     HStack(spacing: 10) {
                         IconBubble(
                             systemName: "plus.circle.fill",
-                            color: CultivationTheme.Colors.brandLeaf,
+                            color: CultivationTheme.Colors.accentCoral,
                             size: 32,
                             iconSize: 15
                         )
                         Text("Select Plant")
-                            .font(.system(.subheadline, design: .rounded))
-                            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                            .font(.system(.subheadline))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         Spacer()
                     }
                 })
@@ -201,7 +201,7 @@ public struct AddReminderView: View {
                 }
 
                 Text(reminderType.defaultMessage)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
         }
@@ -228,7 +228,7 @@ public struct AddReminderView: View {
                 if case .custom = frequency {
                     HStack {
                         Text("Every")
-                            .font(.system(.subheadline, design: .rounded))
+                            .font(.system(.subheadline))
                             .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
                         Spacer()
@@ -239,13 +239,13 @@ public struct AddReminderView: View {
                             .accessibilityIdentifier("addreminder_textfield_customdays")
 
                         Text("days")
-                            .font(.system(.subheadline, design: .rounded))
+                            .font(.system(.subheadline))
                             .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
                 }
 
                 Text("This plant will be watered \(frequencyDescription)")
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
         }
@@ -261,7 +261,7 @@ public struct AddReminderView: View {
                         selection: $preferredTime,
                         displayedComponents: .hourAndMinute
                     )
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline))
                     .accessibilityIdentifier("addreminder_datepicker_time")
                 }
 
@@ -269,9 +269,9 @@ public struct AddReminderView: View {
                     .background(CultivationTheme.Colors.divider)
 
                 HStack {
-                    IconBubble(systemName: "cloud.sun.fill", color: CultivationTheme.Colors.brandGold, size: 28, iconSize: 13)
+                    IconBubble(systemName: "cloud.sun.fill", color: CultivationTheme.Colors.accentAmber, size: 28, iconSize: 13)
                     Text("Smart Weather Adjustment")
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline))
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     Spacer()
                     Toggle("", isOn: $enableWeatherAdjustment)
@@ -280,7 +280,7 @@ public struct AddReminderView: View {
 
                 if enableWeatherAdjustment {
                     Text("Reminders will adjust based on weather conditions")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption))
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
             }
@@ -521,7 +521,7 @@ struct PlantPickerView: View {
 
                         if selectedPlant?.id == plant.id {
                             Image(systemName: "checkmark.circle.fill")
-                                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         }
                     }
                 })

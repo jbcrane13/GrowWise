@@ -84,11 +84,11 @@ struct PlantRow: View {
             // Name + care subtitle
             VStack(alignment: .leading, spacing: 2) {
                 Text(plant.name ?? "Unnamed Plant")
-                    .font(.system(.body, design: .rounded, weight: .semibold))
+                    .font(.system(.body, weight: .semibold))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text(careSubtitle)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -115,7 +115,7 @@ struct PlantRow: View {
                         onComplete?()
                     } label: {
                         Text("Done")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .font(.system(size: 12, weight: .semibold))
                             .foregroundStyle(.white)
                             .padding(.horizontal, 12)
                             .padding(.vertical, 5)
@@ -157,31 +157,31 @@ struct BedGroupHeader: View {
         HStack(spacing: 10) {
             IconBubble(
                 systemName: "rectangle.on.rectangle",
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 size: CultivationTheme.Spacing.iconSizeSmall,
                 iconSize: 15
             )
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .font(.system(.subheadline, weight: .semibold))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text(subtitle)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
             // Plant count pill
             Text("\(plantCount)")
-                .font(.system(size: 12, weight: .semibold, design: .rounded))
-                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 .padding(.horizontal, 8)
                 .padding(.vertical, 3)
                 .background {
                     Capsule()
-                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
                 }
 
             if showMenu {
@@ -222,7 +222,7 @@ struct CompanionTipCard: View {
             )
 
             Text(tip)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -272,35 +272,51 @@ struct TaskRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(description)
-                    .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                    .font(.system(.subheadline, weight: .semibold))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 if let locationLabel {
                     Text(locationLabel)
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
-            Button {
-                withAnimation(.spring(duration: 0.3)) {
-                    showCheckmark = true
+            if isUrgent {
+                // Gradient complete button for urgent tasks
+                Button {
+                    onComplete?()
+                } label: {
+                    Text("Done")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background {
+                            Capsule()
+                                .fill(CultivationTheme.Gradients.warmAccent)
+                        }
                 }
-                onComplete?()
-            } label: {
-                Group {
-                    if showCheckmark {
-                        Image(systemName: "checkmark")
-                            .font(.system(size: 13, weight: .bold))
-                            .foregroundStyle(.white)
-                            .transition(.scale.combined(with: .opacity))
-                    } else {
-                        HStack(spacing: 5) {
-                            Image(systemName: quickActionIcon)
-                                .font(.system(size: 12, weight: .semibold))
-                            Text("Done")
-                                .font(.system(size: 13, weight: .semibold, design: .rounded))
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
+            } else {
+                // Outline complete button for normal tasks
+                Button {
+                    onComplete?()
+                } label: {
+                    Text("Done")
+                        .font(.system(size: 13, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background {
+                            Capsule()
+                                .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
+                        }
+                        .overlay {
+                            Capsule()
+                                .stroke(CultivationTheme.Colors.accentCoral.opacity(0.3), lineWidth: 1)
                         }
                         .foregroundStyle(isUrgent ? .white : quickActionColor)
                         .transition(.scale.combined(with: .opacity))

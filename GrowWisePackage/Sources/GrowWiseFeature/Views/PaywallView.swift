@@ -90,7 +90,7 @@ public struct PaywallView: View {
         VStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(CultivationTheme.Gradients.ctaVertical)
+                    .fill(CultivationTheme.Gradients.warmAccent)
                     .frame(width: 80, height: 80)
                 Image(systemName: "leaf.circle.fill")
                     .font(.system(size: 40))
@@ -100,11 +100,11 @@ public struct PaywallView: View {
             .offset(y: appeared ? 0 : 12)
 
             Text("Grow Without Limits")
-                .font(.system(.title2, design: .rounded, weight: .bold))
+                .font(.system(.title2, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
             Text("Choose the plan that fits your garden")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -150,13 +150,13 @@ public struct PaywallView: View {
         Button(action: action) {
             HStack(spacing: 4) {
                 Text(label)
-                    .font(.system(.subheadline, design: .rounded, weight: isActive ? .semibold : .regular))
+                    .font(.system(.subheadline, weight: isActive ? .semibold : .regular))
                 if let badge {
                     Text(badge)
-                        .font(.system(size: 9, weight: .bold, design: .rounded))
+                        .font(.system(size: 9, weight: .bold))
                         .padding(.horizontal, 6)
                         .padding(.vertical, 2)
-                        .background(CultivationTheme.Colors.brandGold)
+                        .background(CultivationTheme.Colors.accentAmber)
                         .foregroundStyle(.black)
                         .clipShape(Capsule())
                 }
@@ -167,7 +167,7 @@ public struct PaywallView: View {
             .background {
                 if isActive {
                     Capsule()
-                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.15))
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.15))
                 }
             }
         }
@@ -202,7 +202,7 @@ public struct PaywallView: View {
                     "Weather adjustments",
                     "Priority support",
                 ],
-                color: CultivationTheme.Colors.brandLeaf,
+                color: CultivationTheme.Colors.accentCoral,
                 isCurrent: currentTierIs(.premium)
             )
             .accessibilityIdentifier("paywall_card_premium")
@@ -219,7 +219,7 @@ public struct PaywallView: View {
                     "Community features",
                     "Advanced analytics",
                 ],
-                color: CultivationTheme.Colors.brandGold,
+                color: CultivationTheme.Colors.accentAmber,
                 isCurrent: currentTierIs(.pro),
                 isPopular: true
             )
@@ -269,22 +269,22 @@ public struct PaywallView: View {
                     VStack(alignment: .leading, spacing: 1) {
                         HStack(spacing: 6) {
                             Text(name)
-                                .font(.system(.headline, design: .rounded, weight: .bold))
+                                .font(.system(.headline, design: .serif, weight: .regular))
                                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                             if isPopular {
                                 Text("POPULAR")
-                                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                                    .font(.system(size: 9, weight: .bold))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
-                                    .background(CultivationTheme.Colors.brandGold)
+                                    .background(CultivationTheme.Colors.accentAmber)
                                     .foregroundStyle(.black)
                                     .clipShape(Capsule())
                             }
 
                             if isCurrent {
                                 Text("CURRENT")
-                                    .font(.system(size: 9, weight: .bold, design: .rounded))
+                                    .font(.system(size: 9, weight: .bold))
                                     .padding(.horizontal, 6)
                                     .padding(.vertical, 2)
                                     .background(CultivationTheme.Colors.statusHealthy.opacity(0.2))
@@ -295,7 +295,7 @@ public struct PaywallView: View {
 
                         if tier == .free {
                             Text("Free forever")
-                                .font(.system(.caption, design: .rounded))
+                                .font(.system(.caption))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
                     }
@@ -305,10 +305,10 @@ public struct PaywallView: View {
                     if tier != .free {
                         VStack(alignment: .trailing, spacing: 0) {
                             Text(price)
-                                .font(.system(.title3, design: .rounded, weight: .bold))
+                                .font(.system(.title3, design: .serif, weight: .regular))
                                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                             Text(period)
-                                .font(.system(.caption2, design: .rounded))
+                                .font(.system(.caption2))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
                     }
@@ -322,7 +322,7 @@ public struct PaywallView: View {
                                 .font(.system(size: 14))
                                 .foregroundStyle(color)
                             Text(feature)
-                                .font(.system(.subheadline, design: .rounded))
+                                .font(.system(.subheadline))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
                     }
@@ -359,20 +359,20 @@ public struct PaywallView: View {
                 // Header row
                 HStack {
                     Text("Feature")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
                     Text("Free")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
+                        .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(width: 50)
                     Text("Premium")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .font(.system(.caption, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         .frame(width: 66)
                     Text("Pro")
-                        .font(.system(.caption, design: .rounded, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.brandGold)
+                        .font(.system(.caption, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
                         .frame(width: 40)
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.cardPadding)
@@ -405,7 +405,7 @@ public struct PaywallView: View {
         VStack(spacing: 0) {
             HStack {
                 Text(feature)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -439,7 +439,7 @@ public struct PaywallView: View {
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         case .text(let label):
             Text(label)
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
     }
@@ -471,7 +471,7 @@ public struct PaywallView: View {
                     await restorePurchases()
                 }
             }
-            .font(.system(.footnote, design: .rounded))
+            .font(.system(.footnote))
             .foregroundStyle(CultivationTheme.Colors.textSecondary)
             .disabled(subscriptionService.isLoading)
             .accessibilityIdentifier("paywall_button_restore")
@@ -492,7 +492,7 @@ public struct PaywallView: View {
     private var legalFooter: some View {
         VStack(spacing: 6) {
             Text("Subscription auto-renews. Cancel anytime in Settings.")
-                .font(.system(.caption2, design: .rounded))
+                .font(.system(.caption2))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 .multilineTextAlignment(.center)
 
@@ -502,7 +502,7 @@ public struct PaywallView: View {
                 Button("Privacy Policy") {}
                     .accessibilityIdentifier("paywall_button_privacy")
             }
-            .font(.system(.caption2, design: .rounded))
+            .font(.system(.caption2))
             .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
         .padding(.top, 4)

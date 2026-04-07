@@ -99,7 +99,7 @@ struct GradientButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(.headline, design: .rounded, weight: .semibold))
+            .font(.system(.headline, design: .serif, weight: .regular))
             .foregroundStyle(.white)
             .frame(maxWidth: .infinity, minHeight: 50)
             .background {
@@ -107,7 +107,7 @@ struct GradientButtonStyle: ButtonStyle {
                     .fill(
                         isDisabled
                             ? AnyShapeStyle(CultivationTheme.Colors.textTertiary)
-                            : AnyShapeStyle(CultivationTheme.Gradients.cta)
+                            : AnyShapeStyle(CultivationTheme.Gradients.warmAccent)
                     )
                     .shadow(
                         color: isDisabled ? .clear : CultivationTheme.Colors.brandForest.opacity(0.30),

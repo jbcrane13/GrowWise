@@ -44,7 +44,7 @@ public struct CommunityFeedView: View {
                 } label: {
                     Image(systemName: "plus.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 }
                 .accessibilityIdentifier("community_publish_button")
             }
@@ -73,7 +73,7 @@ public struct CommunityFeedView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(CultivationTheme.Gradients.ctaVertical)
+                    .fill(CultivationTheme.Gradients.warmAccent)
                     .frame(width: 56, height: 56)
                 Image(systemName: "person.3.fill")
                     .font(.system(size: 22, weight: .medium))
@@ -81,11 +81,11 @@ public struct CommunityFeedView: View {
             }
 
             Text("Garden Showcase")
-                .font(.system(.title2, design: .rounded, weight: .bold))
+                .font(.system(.title2, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
             Text("Discover and share gardens from the community")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -134,7 +134,7 @@ public struct CommunityFeedView: View {
             ProgressView()
                 .controlSize(.large)
             Text("Loading gardens...")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity)
@@ -149,11 +149,11 @@ public struct CommunityFeedView: View {
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
 
             Text("No Gardens Yet")
-                .font(.system(.title3, design: .rounded, weight: .bold))
+                .font(.system(.title3, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
             Text("Be the first to share your garden with the community!")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
 
@@ -206,7 +206,7 @@ public struct CommunityFeedView: View {
 
             if let error = errorMessage {
                 Text(error)
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.statusAlert)
                     .frame(maxWidth: .infinity)
                     .padding()

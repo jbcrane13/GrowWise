@@ -77,8 +77,8 @@ public struct JournalView: View {
                                     Button("Load More") {
                                         loadMoreEntries()
                                     }
-                                    .font(.system(.subheadline, design: .rounded, weight: .medium))
-                                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                                    .font(.system(.subheadline, weight: .medium))
+                                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                     .padding()
                                     .accessibilityIdentifier("journal_button_loadmore")
                                 }
@@ -147,7 +147,7 @@ public struct JournalView: View {
             // Title row
             HStack {
                 Text("Journal")
-                    .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                    .font(.system(.largeTitle, design: .serif, weight: .regular))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Spacer()
@@ -159,7 +159,7 @@ public struct JournalView: View {
                         .font(.system(size: 17, weight: .semibold))
                         .foregroundStyle(.white)
                         .frame(width: 36, height: 36)
-                        .background(CultivationTheme.Gradients.ctaVertical)
+                        .background(CultivationTheme.Gradients.warmAccent)
                         .clipShape(Circle())
                 }
                 .accessibilityIdentifier("journal_button_add")

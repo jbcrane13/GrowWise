@@ -21,11 +21,11 @@ struct GardenHeroHeader: View {
             HStack(alignment: .top) {
                 VStack(alignment: .leading, spacing: 2) {
                     Text("My Garden")
-                        .font(.system(size: 12, design: .rounded))
+                        .font(.system(size: 12))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .tracking(0.5)
                     Text(selectedGarden?.name ?? "Garden")
-                        .font(.system(.title, design: .rounded, weight: .bold))
+                        .font(.system(.title, design: .serif, weight: .regular))
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 }
 
@@ -47,7 +47,7 @@ struct GardenHeroHeader: View {
                             .font(.system(size: 17, weight: .semibold))
                             .foregroundStyle(.white)
                             .frame(width: 36, height: 36)
-                            .background(CultivationTheme.Gradients.ctaVertical)
+                            .background(CultivationTheme.Gradients.warmAccent)
                             .clipShape(Circle())
                     }
                     .accessibilityIdentifier("garden_button_add")

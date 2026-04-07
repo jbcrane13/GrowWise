@@ -72,12 +72,12 @@ struct WelcomeStepView: View {
             // App name + tagline
             VStack(spacing: 10) {
                 Text("Cultivation")
-                    .font(.system(size: 40, weight: .bold, design: .rounded))
+                    .font(.system(size: 40, weight: .bold, design: .serif))
                     .foregroundColor(.white)
                     .tracking(-0.5)
 
                 Text("Your garden, beautifully managed")
-                    .font(.system(size: 17, weight: .medium, design: .rounded))
+                    .font(.system(size: 17, weight: .medium))
                     .foregroundColor(.white.opacity(0.75))
                     .multilineTextAlignment(.center)
             }

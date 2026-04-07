@@ -48,21 +48,21 @@ private struct SkillLevelCard: View {
                 // Icon bubble
                 ZStack {
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(isSelected ? Color.white.opacity(0.18) : Color.botanicalLeaf.opacity(0.12))
+                        .fill(isSelected ? Color.white.opacity(0.18) : CultivationTheme.Colors.accentCoral.opacity(0.12))
                         .frame(width: 52, height: 52)
 
                     Image(systemName: level.iconName)
                         .font(.system(size: 22, weight: .medium))
-                        .foregroundStyle(isSelected ? .white : Color.botanicalLeaf)
+                        .foregroundStyle(isSelected ? .white : CultivationTheme.Colors.accentCoral)
                 }
 
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.displayName)
-                        .font(.system(size: 16, weight: .semibold, design: .rounded))
+                        .font(.system(size: 16, weight: .semibold))
                         .foregroundStyle(.white)
 
                     Text(level.description)
-                        .font(.system(size: 13, design: .rounded))
+                        .font(.system(size: 13))
                         .foregroundStyle(.white.opacity(isSelected ? 0.80 : 0.45))
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)

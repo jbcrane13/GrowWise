@@ -51,7 +51,7 @@ public struct AchievementsView: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(CultivationTheme.Gradients.ctaVertical)
+                    .fill(CultivationTheme.Gradients.warmAccent)
                     .frame(width: 64, height: 64)
                 Image(systemName: "trophy.fill")
                     .font(.system(size: 28, weight: .medium))
@@ -61,18 +61,18 @@ public struct AchievementsView: View {
             .opacity(appeared ? 1.0 : 0.0)
 
             Text("\(totalPoints)")
-                .font(.system(.largeTitle, design: .rounded, weight: .bold))
+                .font(.system(.largeTitle, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                 .accessibilityIdentifier("achievements_total_points")
 
             Text("Achievement Points")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
             let unlocked = progressItems.filter(\.isUnlocked).count
             let total = progressItems.count
             Text("\(unlocked) of \(total) unlocked")
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity)
@@ -117,7 +117,7 @@ public struct AchievementsView: View {
             RoundedRectangle(cornerRadius: CultivationTheme.Radius.icon)
                 .fill(
                     item.isUnlocked
-                        ? CultivationTheme.Colors.brandGold.opacity(0.18)
+                        ? CultivationTheme.Colors.accentAmber.opacity(0.18)
                         : Color.gray.opacity(0.1)
                 )
                 .frame(width: 44, height: 44)
@@ -126,7 +126,7 @@ public struct AchievementsView: View {
                 .font(.system(size: 18, weight: .medium))
                 .foregroundStyle(
                     item.isUnlocked
-                        ? CultivationTheme.Colors.brandGold
+                        ? CultivationTheme.Colors.accentAmber
                         : CultivationTheme.Colors.textTertiary
                 )
 
@@ -142,7 +142,7 @@ public struct AchievementsView: View {
     private func achievementDetails(_ item: AchievementProgress) -> some View {
         VStack(alignment: .leading, spacing: 4) {
             Text(item.achievement.name)
-                .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                .font(.system(.subheadline, weight: .semibold))
                 .foregroundStyle(
                     item.isUnlocked
                         ? CultivationTheme.Colors.textPrimary
@@ -150,7 +150,7 @@ public struct AchievementsView: View {
                 )
 
             Text(item.achievement.description)
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 .lineLimit(2)
 
@@ -169,7 +169,7 @@ public struct AchievementsView: View {
                         .frame(height: 6)
 
                     RoundedRectangle(cornerRadius: 3)
-                        .fill(CultivationTheme.Gradients.cta)
+                        .fill(CultivationTheme.Gradients.warmAccent)
                         .frame(
                             width: geometry.size.width * item.progress,
                             height: 6
@@ -180,7 +180,7 @@ public struct AchievementsView: View {
             .frame(height: 6)
 
             Text("\(item.currentValue)/\(item.achievement.requirement)")
-                .font(.system(size: 10, weight: .medium, design: .rounded))
+                .font(.system(size: 10, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
     }
@@ -188,14 +188,14 @@ public struct AchievementsView: View {
     private func achievementPoints(_ item: AchievementProgress) -> some View {
         VStack(spacing: 2) {
             Text("\(item.achievement.pointsValue)")
-                .font(.system(.subheadline, design: .rounded, weight: .bold))
+                .font(.system(.subheadline, weight: .bold))
                 .foregroundStyle(
                     item.isUnlocked
-                        ? CultivationTheme.Colors.brandGold
+                        ? CultivationTheme.Colors.accentAmber
                         : CultivationTheme.Colors.textTertiary
                 )
             Text("pts")
-                .font(.system(size: 10, design: .rounded))
+                .font(.system(size: 10))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
     }

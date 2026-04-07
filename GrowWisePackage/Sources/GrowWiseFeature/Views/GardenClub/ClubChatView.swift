@@ -71,7 +71,7 @@ public struct ClubChatView: View {
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.vertical, CultivationTheme.Spacing.sectionGap)
             }
-            .onChange(of: messages.count) { _, newCount in
+            .onChange(of: messages.count) { _, _ in
                 if let last = messages.last {
                     withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
                 }
@@ -174,9 +174,9 @@ public struct ClubChatView: View {
                 .padding(.vertical, 8)
                 .background(CultivationTheme.Colors.cardSurface)
                 .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
-                #if os(iOS)
+            #if os(iOS)
                 .textInputAutocapitalization(.sentences)
-                #endif
+            #endif
 
             Button {
                 Task { await sendMessage() }
@@ -244,7 +244,7 @@ public struct ClubChatView: View {
 
     @MainActor
     private func loadPhoto(from item: PhotosPickerItem?) async {
-        guard let item = item else { return }
+        guard let item else { return }
         do {
             if let data = try await item.loadTransferable(type: Data.self) {
                 selectedPhotoData = data
@@ -265,7 +265,7 @@ public struct ClubChatView: View {
     }
 
     private func formatTime(_ date: Date?) -> String {
-        guard let date = date else { return "" }
+        guard let date else { return "" }
         let f = DateFormatter()
         f.dateStyle = .none
         f.timeStyle = .short

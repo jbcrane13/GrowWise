@@ -72,7 +72,7 @@ struct PublishGardenSheet: View {
         VStack(spacing: 8) {
             ZStack {
                 Circle()
-                    .fill(CultivationTheme.Gradients.ctaVertical)
+                    .fill(CultivationTheme.Gradients.warmAccent)
                     .frame(width: 64, height: 64)
                 Image(systemName: "globe")
                     .font(.system(size: 28, weight: .medium))
@@ -80,11 +80,11 @@ struct PublishGardenSheet: View {
             }
 
             Text("Share with the Community")
-                .font(.system(.title3, design: .rounded, weight: .bold))
+                .font(.system(.title3, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
             Text("Publish one of your gardens for others to discover and get inspired by.")
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .multilineTextAlignment(.center)
         }
@@ -101,7 +101,7 @@ struct PublishGardenSheet: View {
 
             if gardens.isEmpty {
                 Text("No gardens available. Create a garden first.")
-                    .font(.system(.subheadline, design: .rounded))
+                    .font(.system(.subheadline))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                     .frame(maxWidth: .infinity, alignment: .center)
                     .padding(CultivationTheme.Spacing.cardPadding)
@@ -124,19 +124,19 @@ struct PublishGardenSheet: View {
             HStack(spacing: 12) {
                 IconBubble(
                     systemName: "leaf.fill",
-                    color: isSelected ? CultivationTheme.Colors.brandLeaf : CultivationTheme.Colors.textTertiary,
+                    color: isSelected ? CultivationTheme.Colors.accentCoral : CultivationTheme.Colors.textTertiary,
                     size: 36,
                     iconSize: 16
                 )
 
                 VStack(alignment: .leading, spacing: 2) {
                     Text(garden.name ?? "Unnamed Garden")
-                        .font(.system(.body, design: .rounded, weight: isSelected ? .semibold : .regular))
+                        .font(.system(.body, weight: isSelected ? .semibold : .regular))
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                     if let gardenType = garden.gardenType {
                         Text(gardenType.displayName)
-                            .font(.system(.caption, design: .rounded))
+                            .font(.system(.caption))
                             .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
                 }
@@ -146,7 +146,7 @@ struct PublishGardenSheet: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -154,7 +154,7 @@ struct PublishGardenSheet: View {
             .overlay {
                 if isSelected {
                     RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                        .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.4), lineWidth: 1.5)
+                        .stroke(CultivationTheme.Colors.accentCoral.opacity(0.4), lineWidth: 1.5)
                 }
             }
         }
@@ -171,7 +171,7 @@ struct PublishGardenSheet: View {
                 .padding(.leading, 4)
 
             TextField("Your name or nickname", text: $authorName)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body))
                 .padding(CultivationTheme.Spacing.cardPadding)
                 .glassCard()
                 .accessibilityIdentifier("publish_textfield_author")
@@ -187,7 +187,7 @@ struct PublishGardenSheet: View {
                 .padding(.leading, 4)
 
             TextField("Tell others about your garden...", text: $gardenDescription, axis: .vertical)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body))
                 .lineLimit(3 ... 6)
                 .padding(CultivationTheme.Spacing.cardPadding)
                 .glassCard()

@@ -107,18 +107,18 @@ struct QuestionDetailView: View {
                 Image(systemName: question.topic.icon)
                     .font(.system(size: 10, weight: .medium))
                 Text(question.topic.displayName)
-                    .font(.system(size: 11, weight: .semibold, design: .rounded))
+                    .font(.system(size: 11, weight: .semibold))
             }
-            .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            .foregroundStyle(CultivationTheme.Colors.accentCoral)
             .padding(.horizontal, 8)
             .padding(.vertical, 4)
             .background {
-                Capsule().fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                Capsule().fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
             }
 
             // Title
             Text(question.title)
-                .font(.system(.title2, design: .rounded, weight: .bold))
+                .font(.system(.title2, design: .serif, weight: .regular))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
             // Author + date
@@ -127,11 +127,11 @@ struct QuestionDetailView: View {
                     .font(.system(size: 14))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 Text(question.authorName)
-                    .font(.system(.subheadline, design: .rounded, weight: .medium))
+                    .font(.system(.subheadline, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
                 Text(ForumView.timeAgo(question.createdDate))
-                    .font(.system(.caption, design: .rounded))
+                    .font(.system(.caption))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
 
@@ -160,11 +160,11 @@ struct QuestionDetailView: View {
                         Image(systemName: hasUpvotedQuestion ? "arrow.up.circle.fill" : "arrow.up.circle")
                             .font(.system(size: 18, weight: .medium))
                         Text("\(question.voteCount + (hasUpvotedQuestion ? 1 : 0))")
-                            .font(.system(.subheadline, design: .rounded, weight: .semibold))
+                            .font(.system(.subheadline, weight: .semibold))
                     }
                     .foregroundStyle(
                         hasUpvotedQuestion
-                            ? CultivationTheme.Colors.brandGold
+                            ? CultivationTheme.Colors.accentAmber
                             : CultivationTheme.Colors.textSecondary
                     )
                     .padding(.horizontal, 12)
@@ -172,14 +172,14 @@ struct QuestionDetailView: View {
                     .background {
                         Capsule().fill(
                             hasUpvotedQuestion
-                                ? CultivationTheme.Colors.brandGold.opacity(0.12)
+                                ? CultivationTheme.Colors.accentAmber.opacity(0.12)
                                 : CultivationTheme.Colors.cardSurface
                         )
                     }
                     .overlay {
                         Capsule().stroke(
                             hasUpvotedQuestion
-                                ? CultivationTheme.Colors.brandGold.opacity(0.3)
+                                ? CultivationTheme.Colors.accentAmber.opacity(0.3)
                                 : CultivationTheme.Colors.cardBorder,
                             lineWidth: 1
                         )
@@ -194,7 +194,7 @@ struct QuestionDetailView: View {
                     Image(systemName: "bubble.left.fill")
                         .font(.system(size: 14))
                     Text("\(answers.count) answers")
-                        .font(.system(.subheadline, design: .rounded))
+                        .font(.system(.subheadline))
                 }
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
@@ -216,10 +216,10 @@ struct QuestionDetailView: View {
             } else if answers.isEmpty {
                 VStack(spacing: 8) {
                     Text("No answers yet")
-                        .font(.system(.subheadline, design: .rounded, weight: .medium))
+                        .font(.system(.subheadline, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     Text("Be the first to help!")
-                        .font(.system(.caption, design: .rounded))
+                        .font(.system(.caption))
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
                 .padding(.vertical, 20)
@@ -244,7 +244,7 @@ struct QuestionDetailView: View {
                     Image(systemName: "checkmark.seal.fill")
                         .font(.system(size: 12))
                     Text("Accepted Answer")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold))
                 }
                 .foregroundStyle(CultivationTheme.Colors.statusHealthy)
             }
@@ -275,11 +275,11 @@ struct QuestionDetailView: View {
                         Image(systemName: hasUpvoted ? "arrow.up.circle.fill" : "arrow.up.circle")
                             .font(.system(size: 15, weight: .medium))
                         Text("\(answer.voteCount + (hasUpvoted ? 1 : 0))")
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
+                            .font(.system(size: 12, weight: .semibold))
                     }
                     .foregroundStyle(
                         hasUpvoted
-                            ? CultivationTheme.Colors.brandGold
+                            ? CultivationTheme.Colors.accentAmber
                             : CultivationTheme.Colors.textSecondary
                     )
                 }
@@ -291,7 +291,7 @@ struct QuestionDetailView: View {
 
                 // Author + time
                 Text("\(answer.authorName) \(ForumView.timeAgo(answer.createdDate))")
-                    .font(.system(size: 11, design: .rounded))
+                    .font(.system(size: 11))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
 
                 // Report menu
@@ -332,7 +332,7 @@ struct QuestionDetailView: View {
                 .padding(.leading, 4)
 
             TextField("Your name", text: $authorName)
-                .font(.system(.body, design: .rounded))
+                .font(.system(.body))
                 .padding(.horizontal, 14)
                 .padding(.vertical, 10)
                 .background {

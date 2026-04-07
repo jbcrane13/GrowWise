@@ -37,12 +37,12 @@ struct CompletionView: View {
 
                 VStack(spacing: 8) {
                     Text("Your garden awaits!")
-                        .font(.system(size: 30, weight: .bold, design: .rounded))
+                        .font(.system(size: 30, weight: .regular, design: .serif))
                         .foregroundStyle(.white)
                         .multilineTextAlignment(.center)
 
                     Text("Everything's set up. Let's grow.")
-                        .font(.system(size: 16, design: .rounded))
+                        .font(.system(size: 16))
                         .foregroundStyle(.white.opacity(0.50))
                 }
                 .opacity(heroVisible ? 1 : 0)
@@ -57,7 +57,7 @@ struct CompletionView: View {
                     Image(systemName: "person.crop.circle.fill")
                         .foregroundStyle(Color.botanicalLeaf)
                     Text("Your Profile")
-                        .font(.system(size: 13, weight: .semibold, design: .rounded))
+                        .font(.system(size: 13, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.70))
                     Spacer()
                 }
@@ -140,11 +140,11 @@ private struct CompletionSummaryRow: View {
                     .foregroundStyle(iconColor)
             }
             Text(label)
-                .font(.system(size: 14, design: .rounded))
+                .font(.system(size: 14))
                 .foregroundStyle(.white.opacity(0.45))
             Spacer()
             Text(value)
-                .font(.system(size: 14, weight: .semibold, design: .rounded))
+                .font(.system(size: 14, weight: .semibold))
                 .foregroundStyle(.white.opacity(0.85))
         }
         .padding(.horizontal, 16)

@@ -344,10 +344,18 @@ public final class PerenualAPIService {
         lastError = nil
         defer { isLoading = false }
 
-        logger.debug("Perenual request: \(finalURL.path, privacy: .public)")
+        var request = URLRequest(url: finalURL)
+        request.injectTraceHeaders()
+
+        let trace = TraceContext.current
+        if trace.isActive {
+            logger.traced(level: .debug, "Perenual request: \(finalURL.path)")
+        } else {
+            logger.debug("Perenual request: \(finalURL.path, privacy: .public)")
+        }
 
         do {
-            let (data, response) = try await session.data(from: finalURL)
+            let (data, response) = try await session.data(for: request)
 
             guard let httpResponse = response as? HTTPURLResponse else {
                 throw PerenualError.invalidResponse

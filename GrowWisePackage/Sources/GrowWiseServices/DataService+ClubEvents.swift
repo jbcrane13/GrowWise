@@ -39,11 +39,11 @@ public extension DataService {
     /// Update an existing event.
     @MainActor
     func updateClubEvent(_ event: ClubEvent, title: String? = nil, description: String? = nil, location: String? = nil, startDate: Date? = nil, endDate: Date? = nil) throws {
-        if let title = title { event.title = title }
-        if let description = description { event.eventDescription = description }
-        if let location = location { event.location = location }
-        if let startDate = startDate { event.startDate = startDate }
-        if let endDate = endDate { event.endDate = endDate }
+        if let title { event.title = title }
+        if let description { event.eventDescription = description }
+        if let location { event.location = location }
+        if let startDate { event.startDate = startDate }
+        if let endDate { event.endDate = endDate }
         let ctx = ModelContext(container)
         let repo = ClubEventRepository(context: ctx)
         try repo.save(event)
@@ -85,7 +85,7 @@ public extension DataService {
 
 /// RSVP response options.
 public enum ClubRSVPResponse: String, CaseIterable {
-    case accepted = "accepted"
-    case declined = "declined"
-    case maybe = "maybe"
+    case accepted
+    case declined
+    case maybe
 }

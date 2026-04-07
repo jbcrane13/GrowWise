@@ -284,7 +284,7 @@ struct PlantDetailView: View {
                     title: "Difficulty",
                     value: plant.difficultyLevel?.displayName ?? "Unknown",
                     systemImage: "star.fill",
-                    color: CultivationTheme.Colors.brandGold
+                    color: CultivationTheme.Colors.accentAmber
                 )
 
                 if let plantingDate = plant.plantingDate {
@@ -333,7 +333,7 @@ struct PlantDetailView: View {
                                 iconSize: 13
                             )
                             Text("Notes")
-                                .font(.system(.caption, design: .rounded, weight: .medium))
+                                .font(.system(.caption, weight: .medium))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
                         Text(notes)
@@ -361,7 +361,7 @@ struct PlantDetailView: View {
                         title: "Sunlight",
                         value: sunlight.displayName,
                         systemImage: "sun.max.fill",
-                        color: CultivationTheme.Colors.brandGold
+                        color: CultivationTheme.Colors.accentAmber
                     )
                 }
 
@@ -404,13 +404,13 @@ struct PlantDetailView: View {
                     IconBubble(systemName: "heart.fill", color: healthStatusColor, size: 28, iconSize: 13)
 
                     Text("Current Health")
-                        .font(.system(.caption, design: .rounded, weight: .medium))
+                        .font(.system(.caption, weight: .medium))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
                     Spacer()
 
                     Text(plant.healthStatus?.displayName ?? "Unknown")
-                        .font(.system(.body, design: .rounded, weight: .semibold))
+                        .font(.system(.body, weight: .semibold))
                         .foregroundStyle(healthStatusColor)
                 }
 
@@ -480,7 +480,7 @@ struct PlantDetailView: View {
                 GlassActionButton(
                     title: "Fertilize",
                     systemImage: "leaf.fill",
-                    color: CultivationTheme.Colors.brandLeaf,
+                    color: CultivationTheme.Colors.accentCoral,
                     isLoading: isPerformingCareAction,
                     accessibilityID: "plantdetail_button_fertilize"
                 ) {
@@ -500,7 +500,7 @@ struct PlantDetailView: View {
                 GlassActionButton(
                     title: "Reminder",
                     systemImage: "bell.fill",
-                    color: CultivationTheme.Colors.brandGold,
+                    color: CultivationTheme.Colors.accentAmber,
                     isLoading: false,
                     accessibilityID: "plantdetail_button_setreminder"
                 ) {
@@ -547,7 +547,7 @@ struct PlantDetailView: View {
                 Button("View All") {
                     // Navigate to full journal view
                 }
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption))
                 .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 .accessibilityIdentifier("plantdetail_button_viewallactivity")
             }
@@ -579,7 +579,7 @@ struct PlantDetailView: View {
                 Button("Manage") {
                     // Navigate to reminder management
                 }
-                .font(.system(.caption, design: .rounded))
+                .font(.system(.caption))
                 .foregroundStyle(CultivationTheme.Colors.accentCoral)
                 .accessibilityIdentifier("plantdetail_button_managereminders")
             }
@@ -604,7 +604,7 @@ struct PlantDetailView: View {
         HStack(spacing: 10) {
             IconBubble(systemName: icon, color: CultivationTheme.Colors.textTertiary, size: 32, iconSize: 15)
             Text(message)
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
         .frame(maxWidth: .infinity, alignment: .leading)
@@ -706,13 +706,13 @@ private struct DetailInfoRow: View {
             IconBubble(systemName: systemImage, color: color, size: 28, iconSize: 13)
 
             Text(title)
-                .font(.system(.caption, design: .rounded, weight: .medium))
+                .font(.system(.caption, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
             Spacer()
 
             Text(value)
-                .font(.system(.subheadline, design: .rounded))
+                .font(.system(.subheadline))
                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
         }
     }
@@ -742,7 +742,7 @@ private struct GlassActionButton: View {
                 }
 
                 Text(title)
-                    .font(.system(.caption, design: .rounded, weight: .medium))
+                    .font(.system(.caption, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity)

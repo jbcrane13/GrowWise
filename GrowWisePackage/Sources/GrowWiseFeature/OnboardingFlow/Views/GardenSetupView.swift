@@ -17,7 +17,7 @@ struct GardenSetupView: View {
                 // Garden type — horizontal chip row
                 VStack(alignment: .leading, spacing: 10) {
                     Text("GARDEN TYPE")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.35))
                         .tracking(1.0)
                         .padding(.horizontal, 20)
@@ -43,7 +43,7 @@ struct GardenSetupView: View {
                 // Space size — vertical list, fills remaining height
                 VStack(alignment: .leading, spacing: 10) {
                     Text("YOUR SPACE")
-                        .font(.system(size: 11, weight: .semibold, design: .rounded))
+                        .font(.system(size: 11, weight: .semibold))
                         .foregroundStyle(.white.opacity(0.35))
                         .tracking(1.0)
                         .padding(.horizontal, 20)
@@ -87,7 +87,7 @@ private struct GardenTypeChip: View {
                     .font(.system(size: 13, weight: .medium))
                     .foregroundStyle(isSelected ? .white : Color.botanicalLeaf)
                 Text(type.displayName)
-                    .font(.system(size: 14, weight: .medium, design: .rounded))
+                    .font(.system(size: 14, weight: .medium))
                     .foregroundStyle(isSelected ? .white : .white.opacity(0.75))
             }
             .padding(.horizontal, 14)
@@ -142,12 +142,12 @@ private struct SpaceSizeRow: View {
                 VStack(alignment: .leading, spacing: 2) {
                     HStack(spacing: 5) {
                         Text(size.displayName)
-                            .font(.system(size: 15, weight: .semibold, design: .rounded))
+                            .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.white)
                         Text("·")
                             .foregroundStyle(.white.opacity(0.30))
                         Text(size.subtitle)
-                            .font(.system(size: 13, design: .rounded))
+                            .font(.system(size: 13))
                             .foregroundStyle(.white.opacity(0.45))
                     }
                 }

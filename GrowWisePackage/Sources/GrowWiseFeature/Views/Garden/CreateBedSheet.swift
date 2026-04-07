@@ -61,7 +61,7 @@ struct CreateBedSheet: View {
                         HStack(spacing: 10) {
                             IconBubble(
                                 systemName: selectedType.iconName,
-                                color: CultivationTheme.Colors.brandLeaf,
+                                color: CultivationTheme.Colors.accentCoral,
                                 size: 28,
                                 iconSize: 13
                             )
@@ -123,7 +123,7 @@ private struct BedTypeChip: View {
                 Image(systemName: bedType.iconName)
                     .font(.system(size: 18, weight: .medium))
                 Text(bedType.displayName)
-                    .font(.system(.caption2, design: .rounded, weight: .medium))
+                    .font(.system(.caption2, weight: .medium))
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .frame(width: 72)
@@ -134,14 +134,14 @@ private struct BedTypeChip: View {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .fill(
                         isSelected
-                            ? CultivationTheme.Colors.brandLeaf.opacity(0.15)
+                            ? CultivationTheme.Colors.accentCoral.opacity(0.15)
                             : CultivationTheme.Colors.cardSurface
                     )
                     .overlay {
                         RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                             .stroke(
                                 isSelected
-                                    ? CultivationTheme.Colors.brandLeaf
+                                    ? CultivationTheme.Colors.accentCoral
                                     : CultivationTheme.Colors.cardBorder,
                                 lineWidth: isSelected ? 1.5 : 1
                             )
@@ -149,7 +149,7 @@ private struct BedTypeChip: View {
             }
             .foregroundStyle(
                 isSelected
-                    ? CultivationTheme.Colors.brandLeaf
+                    ? CultivationTheme.Colors.accentCoral
                     : CultivationTheme.Colors.textSecondary
             )
         }
