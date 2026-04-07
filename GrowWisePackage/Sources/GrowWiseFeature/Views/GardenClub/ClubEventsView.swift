@@ -240,12 +240,12 @@ public struct ClubEventsView: View {
     }
 
     private func formatDateRange(_ start: Date?, end: Date?) -> String {
-        guard let start = start else { return "" }
+        guard let start else { return "" }
         let f = DateFormatter()
         f.dateStyle = .medium
         f.timeStyle = .short
 
-        if let end = end, !Calendar.current.isDate(start, inSameDayAs: end) {
+        if let end, !Calendar.current.isDate(start, inSameDayAs: end) {
             return "\(f.string(from: start)) – \(f.string(from: end))"
         }
         return f.string(from: start)
@@ -282,24 +282,24 @@ struct CreateEventSheet: View {
             }
             .navigationTitle("New Event")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Cancel") { dismiss() }
-                }
-                ToolbarItem(placement: .confirmationAction) {
-                    Button("Create") {
-                        Task { await createEvent() }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Cancel") { dismiss() }
                     }
-                    .disabled(title.isEmpty || isCreating)
+                    ToolbarItem(placement: .confirmationAction) {
+                        Button("Create") {
+                            Task { await createEvent() }
+                        }
+                        .disabled(title.isEmpty || isCreating)
+                    }
                 }
-            }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") { errorMessage = nil }
-            } message: {
-                Text(errorMessage ?? "")
-            }
+                .alert("Error", isPresented: .constant(errorMessage != nil)) {
+                    Button("OK") { errorMessage = nil }
+                } message: {
+                    Text(errorMessage ?? "")
+                }
         }
     }
 
@@ -307,20 +307,20 @@ struct CreateEventSheet: View {
         Form {
             Section("Details") {
                 TextField("Event Title", text: $title)
-                    #if os(iOS)
+                #if os(iOS)
                     .textInputAutocapitalization(.words)
-                    #endif
+                #endif
                 TextField("Description (optional)", text: $description)
-                    #if os(iOS)
+                #if os(iOS)
                     .textInputAutocapitalization(.sentences)
-                    #endif
+                #endif
             }
 
             Section("Location") {
                 TextField("Location (optional)", text: $location)
-                    #if os(iOS)
+                #if os(iOS)
                     .textInputAutocapitalization(.words)
-                    #endif
+                #endif
             }
 
             Section("Date & Time") {
@@ -396,18 +396,18 @@ struct EventDetailSheet: View {
             }
             .navigationTitle(event.title ?? "Event")
             #if os(iOS)
-            .navigationBarTitleDisplayMode(.inline)
+                .navigationBarTitleDisplayMode(.inline)
             #endif
-            .toolbar {
-                ToolbarItem(placement: .cancellationAction) {
-                    Button("Done") { dismiss() }
+                .toolbar {
+                    ToolbarItem(placement: .cancellationAction) {
+                        Button("Done") { dismiss() }
+                    }
                 }
-            }
-            .alert("Error", isPresented: .constant(errorMessage != nil)) {
-                Button("OK") { errorMessage = nil }
-            } message: {
-                Text(errorMessage ?? "")
-            }
+                .alert("Error", isPresented: .constant(errorMessage != nil)) {
+                    Button("OK") { errorMessage = nil }
+                } message: {
+                    Text(errorMessage ?? "")
+                }
         }
     }
 
@@ -501,7 +501,7 @@ struct EventDetailSheet: View {
             let going = event.rsvpAccepted ?? []
             let maybe = event.rsvpMaybe ?? []
 
-            if going.isEmpty && maybe.isEmpty {
+            if going.isEmpty, maybe.isEmpty {
                 Text("No attendees yet")
                     .font(.system(.subheadline, design: .rounded))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
@@ -564,12 +564,12 @@ struct EventDetailSheet: View {
     }
 
     private func formatDateRange(_ start: Date?, end: Date?) -> String {
-        guard let start = start else { return "" }
+        guard let start else { return "" }
         let f = DateFormatter()
         f.dateStyle = .long
         f.timeStyle = .short
 
-        if let end = end, !Calendar.current.isDate(start, inSameDayAs: end) {
+        if let end, !Calendar.current.isDate(start, inSameDayAs: end) {
             return "\(f.string(from: start)) – \(f.string(from: end))"
         }
         return f.string(from: start)

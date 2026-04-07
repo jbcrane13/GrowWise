@@ -76,20 +76,36 @@ public final class ObservabilityService {
     // MARK: - Error Capture
 
     /// Capture a non-fatal error with structured context.
+    /// Automatically attaches the current TraceContext (if active) for log correlation.
     public func capture(error: Error, context: [String: String] = [:]) {
+        let trace = TraceContext.current
         SentrySDK.capture(error: error) { scope in
-            if !context.isEmpty {
-                scope.setContext(value: context, key: "app_context")
+            var ctx = context
+            if trace.isActive {
+                ctx["trace_id"] = trace.traceID
+                ctx["span_id"] = trace.spanID
+                ctx["operation"] = trace.operation
+            }
+            if !ctx.isEmpty {
+                scope.setContext(value: ctx, key: "app_context")
             }
         }
     }
 
     /// Capture a non-fatal message (for errors that don't throw).
+    /// Automatically attaches the current TraceContext (if active) for log correlation.
     public func capture(message: String, level: SentryLevel = .error, context: [String: String] = [:]) {
+        let trace = TraceContext.current
         SentrySDK.capture(message: message) { scope in
             scope.setLevel(level)
-            if !context.isEmpty {
-                scope.setContext(value: context, key: "app_context")
+            var ctx = context
+            if trace.isActive {
+                ctx["trace_id"] = trace.traceID
+                ctx["span_id"] = trace.spanID
+                ctx["operation"] = trace.operation
+            }
+            if !ctx.isEmpty {
+                scope.setContext(value: ctx, key: "app_context")
             }
         }
     }

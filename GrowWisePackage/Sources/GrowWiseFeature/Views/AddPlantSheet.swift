@@ -283,7 +283,7 @@ public struct AddPlantSheet: View {
                                                     .font(.system(.subheadline))
                                             }
                                             .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                                        .frame(maxWidth: .infinity, alignment: .leading)
+                                            .frame(maxWidth: .infinity, alignment: .leading)
                                         }
                                         .buttonStyle(.plain)
                                         .accessibilityIdentifier("addplant_button_newcontainer")

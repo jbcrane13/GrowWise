@@ -10,10 +10,14 @@ jobs:
     name: Automated Quality Review
     runs-on: macos-14
     if: github.event.pull_request.draft == false
+    permissions:
+      contents: write
     steps:
       - uses: actions/checkout@v4
         with:
           fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
 
       - name: Install tools
         run: |
@@ -32,11 +36,21 @@ print(f'Errors: {len(errors)}, Warnings: {len(warnings)}')
 " || echo "Could not parse violations")
           echo "$VIOLATIONS" >> $GITHUB_STEP_SUMMARY
 
-      - name: SwiftFormat check
+      - name: SwiftFormat auto-fix
         run: |
-          echo "## SwiftFormat Check" >> $GITHUB_STEP_SUMMARY
-          swiftformat --lint --config .swiftformat GrowWisePackage/Sources GrowWise 2>&1 \
-            | tail -3 >> $GITHUB_STEP_SUMMARY || true
+          swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add GrowWisePackage/Sources GrowWise
+            git commit -m "style: auto-fix SwiftFormat issues [skip ci]"
+            git push
+            echo "## SwiftFormat Check" >> $GITHUB_STEP_SUMMARY
+            echo "Auto-fixed formatting issues and pushed to branch." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## SwiftFormat Check" >> $GITHUB_STEP_SUMMARY
+            echo "No formatting issues found." >> $GITHUB_STEP_SUMMARY
+          fi
 
       - name: Architecture pattern check
         run: |

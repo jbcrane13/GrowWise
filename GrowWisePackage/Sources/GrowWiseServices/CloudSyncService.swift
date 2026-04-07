@@ -101,10 +101,10 @@ public final class CloudSyncService {
             guard let publicGarden = PublicGarden(from: savedRecord) else {
                 throw CloudKitError.invalidRecord
             }
-            logger.info("Successfully published garden: \(garden.name ?? "Unnamed")")
+            logger.traced(level: .info, "Published garden: \(garden.name ?? "Unnamed") record=\(savedRecord.recordID.recordName)")
             return publicGarden
         } catch {
-            logger.error("Failed to publish garden: \(error.localizedDescription)")
+            logger.traced(level: .error, "Failed to publish garden: \(error.localizedDescription)")
             throw CloudKitError.publishFailed(error.localizedDescription)
         }
     }
