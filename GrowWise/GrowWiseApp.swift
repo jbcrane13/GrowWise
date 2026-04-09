@@ -16,6 +16,18 @@ struct CultivationApp: App {
     @AppStorage("app_appearance") private var appearance: AppAppearance = .system
 
     init() {
+        // Initialize Sentry error tracking
+        ObservabilityService.shared.configure(
+            dsn: "https://739b91203930c30d55664ca51b99956e@o4510965380808704.ingest.us.sentry.io/4511185284497408",
+            environment: {
+                #if DEBUG
+                return "debug"
+                #else
+                return "production"
+                #endif
+            }()
+        )
+
         // Store Perenual API key securely on first launch
         if !PerenualAPIService.hasAPIKey {
             PerenualAPIService.storeAPIKey("sk-LSIM69d0612798a7616109")

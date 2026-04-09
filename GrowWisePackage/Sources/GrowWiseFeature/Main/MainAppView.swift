@@ -75,11 +75,12 @@ public struct MainAppView: View {
                         await initializeDataService()
                     }
                 }
-            } else if shouldShowOnboarding, let ds = dataService {
+            } else if shouldShowOnboarding, let ds = dataService, let services = featureServices {
                 OnboardingView {
                     cachedOnboardingStatus = true
                 }
                 .environment(ds)
+                .environment(services.plantDatabaseService)
             } else if let ds = dataService, let services = featureServices {
                 mainTabView
                     .environment(ds)
