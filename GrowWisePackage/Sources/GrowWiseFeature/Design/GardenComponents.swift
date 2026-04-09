@@ -307,40 +307,27 @@ struct TaskRow: View {
                 } label: {
                     Text("Done")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                        .foregroundStyle(isUrgent ? .white : quickActionColor)
                         .padding(.horizontal, 14)
                         .padding(.vertical, 7)
                         .background {
                             Capsule()
-                                .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
+                                .fill(
+                                    isUrgent || showCheckmark
+                                        ? AnyShapeStyle(CultivationTheme.Gradients.warmAccent)
+                                        : AnyShapeStyle(quickActionColor.opacity(0.08))
+                                )
                         }
                         .overlay {
-                            Capsule()
-                                .stroke(CultivationTheme.Colors.accentCoral.opacity(0.3), lineWidth: 1)
+                            if !isUrgent, !showCheckmark {
+                                Capsule()
+                                    .stroke(quickActionColor.opacity(0.3), lineWidth: 1)
+                            }
                         }
-                        .foregroundStyle(isUrgent ? .white : quickActionColor)
-                        .transition(.scale.combined(with: .opacity))
-                    }
                 }
-                .padding(.horizontal, 14)
-                .padding(.vertical, 7)
-                .background {
-                    Capsule()
-                        .fill(
-                            isUrgent || showCheckmark
-                                ? AnyShapeStyle(CultivationTheme.Gradients.warmAccent)
-                                : AnyShapeStyle(quickActionColor.opacity(0.08))
-                        )
-                }
-                .overlay {
-                    if !isUrgent, !showCheckmark {
-                        Capsule()
-                            .stroke(quickActionColor.opacity(0.3), lineWidth: 1)
-                    }
-                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("home_button_complete_\(taskID.uuidString)")
         }
         .padding(CultivationTheme.Spacing.cardPadding)
         .glassCard()
