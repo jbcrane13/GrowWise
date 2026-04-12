@@ -87,6 +87,63 @@ public final class LocationService: NSObject {
         locationManager.requestLocation()
     }
 
+    // MARK: - Synchronous Handlers (for testing)
+
+    /// Synchronous handler for location updates. Called by delegate method but exposed for testing.
+    public func handleLocationUpdate(_ location: CLLocation) async {
+        currentLocation = location
+        hardinessZone = determineHardinessZone(for: location)
+        isLoading = false
+        await fetchWeatherData()
+    }
+
+    /// Synchronous handler for location errors. Called by delegate method but exposed for testing.
+    public func handleLocationError(_ error: Error) {
+        isLoading = false
+
+        if let clError = error as? CLError {
+            switch clError.code {
+            case .denied:
+                self.error = .permissionDenied
+
+            case .locationUnknown:
+                self.error = .locationUnavailable
+
+            case .network:
+                self.error = .networkError
+
+            default:
+                self.error = .unknown
+            }
+        } else {
+            self.error = .unknown
+        }
+    }
+
+    /// Synchronous handler for authorization changes. Called by delegate method but exposed for testing.
+    public func handleAuthorizationChange(_ status: CLAuthorizationStatus) {
+        authorizationStatus = status
+
+        switch status {
+        #if os(iOS)
+        case .authorizedWhenInUse, .authorizedAlways:
+            startLocationUpdates()
+        #elseif os(macOS)
+        case .authorizedAlways:
+            startLocationUpdates()
+        #endif
+
+        case .denied, .restricted:
+            self.error = .permissionDenied
+
+        case .notDetermined:
+            break
+
+        @unknown default:
+            self.error = .unknown
+        }
+    }
+
     // MARK: - Hardiness Zone Calculation
 
     // swiftlint:disable:next cyclomatic_complexity
@@ -298,71 +355,19 @@ public final class LocationService: NSObject {
 // MARK: - CLLocationManagerDelegate
 
 extension LocationService: @preconcurrency CLLocationManagerDelegate {
-    // NOTE: CLLocationManagerDelegate methods are called on an arbitrary background
-    // thread. Because LocationService is @MainActor, all property mutations must be
-    // dispatched back to the main actor to avoid concurrent-access crashes.
-
     public func locationManager(_ manager: CLLocationManager, didUpdateLocations locations: [CLLocation]) {
         guard let location = locations.last else { return }
-
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            currentLocation = location
-            hardinessZone = determineHardinessZone(for: location)
-            isLoading = false
-            await fetchWeatherData()
+        Task { [weak self] in
+            await self?.handleLocationUpdate(location)
         }
     }
 
     public func locationManager(_ manager: CLLocationManager, didFailWithError error: Error) {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            isLoading = false
-
-            if let clError = error as? CLError {
-                switch clError.code {
-                case .denied:
-                    self.error = .permissionDenied
-
-                case .locationUnknown:
-                    self.error = .locationUnavailable
-
-                case .network:
-                    self.error = .networkError
-
-                default:
-                    self.error = .unknown
-                }
-            } else {
-                self.error = .unknown
-            }
-        }
+        handleLocationError(error)
     }
 
     public func locationManager(_ manager: CLLocationManager, didChangeAuthorization status: CLAuthorizationStatus) {
-        Task { @MainActor [weak self] in
-            guard let self else { return }
-            authorizationStatus = status
-
-            switch status {
-            #if os(iOS)
-            case .authorizedWhenInUse, .authorizedAlways:
-                startLocationUpdates()
-            #elseif os(macOS)
-            case .authorizedAlways:
-                startLocationUpdates()
-            #endif
-
-            case .denied, .restricted:
-                error = .permissionDenied
-
-            case .notDetermined:
-                break
-
-            @unknown default:
-                error = .unknown
-            }
-        }
+        handleAuthorizationChange(status)
     }
 }
 
