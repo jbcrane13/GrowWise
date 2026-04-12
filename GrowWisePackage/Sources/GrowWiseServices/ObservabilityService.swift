@@ -23,6 +23,15 @@ public final class ObservabilityService {
 
     private init() {}
 
+    #if DEBUG
+    /// Reset the service state for testing purposes.
+    /// Called before each test to ensure clean state.
+    public func reset() {
+        isInitialized = false
+        SentrySDK.close()
+    }
+    #endif
+
     // MARK: - Setup
 
     /// Call once on app launch, before any other service initialization.

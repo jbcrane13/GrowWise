@@ -1,10 +1,25 @@
 import Foundation
 import Security
 
+// MARK: - KeychainOperations Protocol
+
+/// Protocol for Keychain operations, enabling mock injection in tests.
+public protocol KeychainOperations: Sendable {
+    func save(key: String, data: Data) throws
+    func load(key: String) throws -> Data?
+    func delete(key: String) throws
+    func storeBool(_ value: Bool, for key: String) throws
+    func retrieveBool(for key: String) throws -> Bool
+    func storeString(_ string: String, for key: String) throws
+    func retrieveString(for key: String) throws -> String?
+}
+
+// MARK: - KeychainService
+
 /// Thin wrapper around the system Keychain APIs.
 /// Replaces the former KeychainManager + KeychainStorageService with a minimal,
 /// non-singleton struct exposing only the operations the app actually uses.
-public struct KeychainService: Sendable {
+public struct KeychainService: KeychainOperations, Sendable {
     // MARK: - Shared instance
 
     public static let shared = KeychainService()

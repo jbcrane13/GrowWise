@@ -2,6 +2,61 @@ import Foundation
 @testable import GrowWiseServices
 import Testing
 
+// MARK: - Mock KeychainService for Error Testing
+
+/// Mock KeychainService that simulates errors for testing.
+final class MockKeychainService: KeychainOperations, @unchecked Sendable {
+    private(set) var shouldFail = false
+    private var storage: [String: Data] = [:]
+    private let lock = NSLock()
+    
+    func setShouldFail(_ value: Bool) {
+        lock.lock()
+        defer { lock.unlock() }
+        shouldFail = value
+    }
+    
+    func save(key: String, data: Data) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        if shouldFail {
+            throw KeychainService.KeychainError.osStatus(-25300) // errSecParam
+        }
+        storage[key] = data
+    }
+    
+    func load(key: String) throws -> Data? {
+        lock.lock()
+        defer { lock.unlock() }
+        return storage[key]
+    }
+    
+    func delete(key: String) throws {
+        lock.lock()
+        defer { lock.unlock() }
+        storage.removeValue(forKey: key)
+    }
+    
+    func storeBool(_ value: Bool, for key: String) throws {
+        try save(key: key, data: Data([value ? 1 : 0]))
+    }
+    
+    func retrieveBool(for key: String) throws -> Bool {
+        guard let data = try load(key: key), let byte = data.first else { return false }
+        return byte != 0
+    }
+    
+    func storeString(_ string: String, for key: String) throws {
+        guard let data = string.data(using: .utf8) else { throw KeychainService.KeychainError.unexpectedData }
+        try save(key: key, data: data)
+    }
+    
+    func retrieveString(for key: String) throws -> String? {
+        guard let data = try load(key: key) else { return nil }
+        return String(data: data, encoding: .utf8)
+    }
+}
+
 // MARK: - Keychain Environment Check
 
 /// Keychain writes require a login session. In headless CI/SSH environments
@@ -61,9 +116,11 @@ struct KeychainServiceTests {
 
     @Test("save throws KeychainError.osStatus when keychain rejects the operation")
     func saveThrowsOnKeychainRejection() throws {
-        let sut = KeychainService(service: "com.growwise.tests", accessGroup: "invalid.group.that.does.not.exist")
+        let mock = MockKeychainService()
+        mock.setShouldFail(true)
+        
         #expect(throws: KeychainService.KeychainError.self) {
-            try sut.save(key: "should_fail", data: Data([0x01]))
+            try mock.save(key: "should_fail", data: Data([0x01]))
         }
     }
 

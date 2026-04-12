@@ -148,13 +148,13 @@ struct LocationServiceRequestLocationTests {
 @MainActor
 struct LocationServiceDelegateTests {
 
-    @Test("didUpdateLocations updates currentLocation, hardinessZone and clears loading")
-    func testDidUpdateLocations() {
+    @Test("handleLocationUpdate updates currentLocation, hardinessZone and clears loading")
+    func testHandleLocationUpdate() async {
         let service = LocationService()
         service.isLoading = true
         let testLocation = CLLocation(latitude: 40.0, longitude: -74.0)
 
-        service.locationManager(CLLocationManager(), didUpdateLocations: [testLocation])
+        await service.handleLocationUpdate(testLocation)
 
         #expect(service.currentLocation != nil)
         #expect(service.currentLocation?.coordinate.latitude == 40.0)
@@ -162,38 +162,24 @@ struct LocationServiceDelegateTests {
         #expect(service.isLoading == false)
     }
 
-    @Test("didUpdateLocations with multiple locations uses the last one")
-    func testDidUpdateLocationsUsesLast() {
+    @Test("handleLocationUpdate with multiple locations uses the last one (caller passes the last)")
+    func testHandleLocationUpdateUsesLast() async {
         let service = LocationService()
-        let first = CLLocation(latitude: 64.5, longitude: 0.0)
-        let last  = CLLocation(latitude: 33.5, longitude: 0.0)
+        let last = CLLocation(latitude: 33.5, longitude: 0.0)
 
-        service.locationManager(CLLocationManager(), didUpdateLocations: [first, last])
+        await service.handleLocationUpdate(last)
 
         #expect(service.currentLocation?.coordinate.latitude == 33.5)
         #expect(service.hardinessZone == "5a")
     }
 
-    @Test("didUpdateLocations with empty array is a no-op")
-    func testDidUpdateLocationsEmptyArray() {
-        let service = LocationService()
-        service.isLoading = true
-        service.currentLocation = nil
-
-        service.locationManager(CLLocationManager(), didUpdateLocations: [])
-
-        // guard let location = locations.last else { return } — early exit
-        #expect(service.currentLocation == nil)
-        #expect(service.isLoading == true)
-    }
-
-    @Test("didFailWithError with CLError.denied sets permissionDenied and clears loading")
-    func testDidFailDenied() {
+    @Test("handleLocationError with CLError.denied sets permissionDenied and clears loading")
+    func testHandleErrorDenied() {
         let service = LocationService()
         service.isLoading = true
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didFailWithError: CLError(.denied))
+        service.handleLocationError(CLError(.denied))
 
         #expect(service.isLoading == false)
         guard case .permissionDenied = service.error else {
@@ -203,13 +189,13 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didFailWithError with CLError.locationUnknown sets locationUnavailable")
-    func testDidFailLocationUnknown() {
+    @Test("handleLocationError with CLError.locationUnknown sets locationUnavailable")
+    func testHandleErrorLocationUnknown() {
         let service = LocationService()
         service.isLoading = true
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didFailWithError: CLError(.locationUnknown))
+        service.handleLocationError(CLError(.locationUnknown))
 
         #expect(service.isLoading == false)
         guard case .locationUnavailable = service.error else {
@@ -219,13 +205,13 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didFailWithError with CLError.network sets networkError")
-    func testDidFailNetwork() {
+    @Test("handleLocationError with CLError.network sets networkError")
+    func testHandleErrorNetwork() {
         let service = LocationService()
         service.isLoading = true
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didFailWithError: CLError(.network))
+        service.handleLocationError(CLError(.network))
 
         #expect(service.isLoading == false)
         guard case .networkError = service.error else {
@@ -235,13 +221,13 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didFailWithError with unhandled CLError code sets unknown error")
-    func testDidFailOtherCLError() {
+    @Test("handleLocationError with unhandled CLError code sets unknown error")
+    func testHandleErrorOtherCLError() {
         let service = LocationService()
         service.isLoading = true
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didFailWithError: CLError(.headingFailure))
+        service.handleLocationError(CLError(.headingFailure))
 
         #expect(service.isLoading == false)
         guard case .unknown = service.error else {
@@ -251,14 +237,14 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didFailWithError with non-CLError sets unknown error")
-    func testDidFailNonCLError() {
+    @Test("handleLocationError with non-CLError sets unknown error")
+    func testHandleErrorNonCLError() {
         let service = LocationService()
         service.isLoading = true
         service.error = nil
 
         struct ArbitraryError: Error {}
-        service.locationManager(CLLocationManager(), didFailWithError: ArbitraryError())
+        service.handleLocationError(ArbitraryError())
 
         #expect(service.isLoading == false)
         guard case .unknown = service.error else {
@@ -268,12 +254,12 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didChangeAuthorization to denied sets permissionDenied error and authorizationStatus")
+    @Test("handleAuthorizationChange to denied sets permissionDenied error and authorizationStatus")
     func testAuthorizationChangedToDenied() {
         let service = LocationService()
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didChangeAuthorization: .denied)
+        service.handleAuthorizationChange(.denied)
 
         #expect(service.authorizationStatus == .denied)
         guard case .permissionDenied = service.error else {
@@ -283,12 +269,12 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didChangeAuthorization to restricted sets permissionDenied error and authorizationStatus")
+    @Test("handleAuthorizationChange to restricted sets permissionDenied error and authorizationStatus")
     func testAuthorizationChangedToRestricted() {
         let service = LocationService()
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didChangeAuthorization: .restricted)
+        service.handleAuthorizationChange(.restricted)
 
         #expect(service.authorizationStatus == .restricted)
         guard case .permissionDenied = service.error else {
@@ -298,25 +284,25 @@ struct LocationServiceDelegateTests {
         #expect(true)
     }
 
-    @Test("didChangeAuthorization to notDetermined updates status and does not set error")
+    @Test("handleAuthorizationChange to notDetermined updates status and does not set error")
     func testAuthorizationChangedToNotDetermined() {
         let service = LocationService()
         service.authorizationStatus = .denied
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didChangeAuthorization: .notDetermined)
+        service.handleAuthorizationChange(.notDetermined)
 
         #expect(service.authorizationStatus == .notDetermined)
         #expect(service.error == nil)
     }
 
-    @Test("didChangeAuthorization to authorizedAlways sets status and starts loading")
+    @Test("handleAuthorizationChange to authorizedAlways sets status and starts loading")
     func testAuthorizationChangedToAuthorizedAlways() {
         let service = LocationService()
         service.authorizationStatus = .notDetermined
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didChangeAuthorization: .authorizedAlways)
+        service.handleAuthorizationChange(.authorizedAlways)
 
         #expect(service.authorizationStatus == .authorizedAlways)
         #expect(service.isLoading == true)
@@ -324,13 +310,13 @@ struct LocationServiceDelegateTests {
     }
 
 #if os(iOS)
-    @Test("didChangeAuthorization to authorizedWhenInUse sets status and starts loading (iOS only)")
+    @Test("handleAuthorizationChange to authorizedWhenInUse sets status and starts loading (iOS only)")
     func testAuthorizationChangedToAuthorizedWhenInUse() {
         let service = LocationService()
         service.authorizationStatus = .notDetermined
         service.error = nil
 
-        service.locationManager(CLLocationManager(), didChangeAuthorization: .authorizedWhenInUse)
+        service.handleAuthorizationChange(.authorizedWhenInUse)
 
         #expect(service.authorizationStatus == .authorizedWhenInUse)
         #expect(service.isLoading == true)
