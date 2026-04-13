@@ -125,9 +125,11 @@ struct DataServiceHappyPathTests {
         let plant = try ds.createPlant(commonName: "Rose", scientificName: nil, garden: garden)
         let reminder = try ds.createReminder(
             plant: plant,
+            title: "Water Rose",
+            message: "Time to water Rose",
             type: .watering,
             frequency: .daily,
-            nextDueDate: Date()
+            dueDate: Date()
         )
         #expect(reminder.reminderType == .watering)
 
