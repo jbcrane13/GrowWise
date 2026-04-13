@@ -171,11 +171,11 @@ struct DataServiceHappyPathTests {
     func searchPlantsHappyPath() throws {
         let ds = try DataService.makeForTesting()
         let garden = try ds.createGarden(name: "G", type: .raised, isIndoor: false)
-        _ = try ds.createPlant(commonName: "Lavender", scientificName: "Lavandula", garden: garden)
-        _ = try ds.createPlant(commonName: "Basil", scientificName: "Ocimum", garden: garden)
+        _ = try ds.createPlant(name: "Lavender", type: .herb, garden: garden)
+        _ = try ds.createPlant(name: "Basil", type: .herb, garden: garden)
 
         let results = ds.searchPlants(query: "Lav")
         #expect(results.count == 1)
-        #expect(results.first?.commonName == "Lavender")
+        #expect(results.first?.name == "Lavender")
     }
 }
