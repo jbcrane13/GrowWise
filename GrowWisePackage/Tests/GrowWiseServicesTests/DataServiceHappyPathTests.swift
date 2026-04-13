@@ -132,7 +132,7 @@ struct DataServiceHappyPathTests {
         #expect(reminder.reminderType == .watering)
 
         let active = ds.fetchActiveReminders()
-        #expect(active.count >= 1)
+        #expect(active.count == 1)
     }
 
     @Test("completeReminder advances the due date")
