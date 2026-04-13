@@ -51,28 +51,34 @@ struct DataServiceHappyPathTests {
         let ds = try DataService.makeForTesting()
         let garden = try ds.createGarden(name: "Herb Garden", type: .container, isIndoor: true)
         let plant = try ds.createPlant(
-            commonName: "Basil",
-            scientificName: "Ocimum basilicum",
+            name: "Basil",
+            type: .herb,
+            difficultyLevel: .easy,
             garden: garden
         )
-        #expect(plant.commonName == "Basil")
+        #expect(plant.name == "Basil")
         #expect(plant.garden?.name == "Herb Garden")
 
         let fetched = ds.fetchPlants(for: garden)
         #expect(fetched.count == 1)
-        #expect(fetched.first?.commonName == "Basil")
+        #expect(fetched.first?.name == "Basil")
     }
 
     @Test("updatePlant persists changes")
     func updatePlantHappyPath() throws {
         let ds = try DataService.makeForTesting()
         let garden = try ds.createGarden(name: "G", type: .raised, isIndoor: false)
-        let plant = try ds.createPlant(commonName: "Tomato", scientificName: nil, garden: garden)
-        plant.commonName = "Cherry Tomato"
+        let plant = try ds.createPlant(
+            name: "Tomato",
+            type: .vegetable,
+            difficultyLevel: .easy,
+            garden: garden
+        )
+        plant.name = "Cherry Tomato"
         try ds.updatePlant(plant)
 
         let fetched = ds.fetchPlants(for: garden)
-        #expect(fetched.first?.commonName == "Cherry Tomato")
+        #expect(fetched.first?.name == "Cherry Tomato")
     }
 
     @Test("deletePlant removes it from garden")
