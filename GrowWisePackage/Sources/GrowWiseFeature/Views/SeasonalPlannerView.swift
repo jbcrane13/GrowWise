@@ -1,5 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftUI
 
 // MARK: - SeasonalPlannerView
@@ -14,6 +15,7 @@ public struct SeasonalPlannerView: View {
     @State private var seeds: [Seed] = []
     @State private var userZone: String?
     @State private var frostDate: FrostDate?
+    @State private var errorMessage: String?
 
     private let monthNames = Calendar.current.shortMonthSymbols
 
@@ -49,6 +51,15 @@ public struct SeasonalPlannerView: View {
             refreshActivities()
         }
         .accessibilityIdentifier("seasonalplanner_screen")
+        .alert("Data Load Error", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("seasonalplanner_button_error_dismiss")
+        } message: {
+            Text(errorMessage ?? "An unexpected error occurred.")
+        }
     }
 
     // MARK: - Month Strip
@@ -280,11 +291,27 @@ public struct SeasonalPlannerView: View {
         frostDate = service.getFrostDate(for: userZone)
 
         // Gather all plants from all gardens
-        let allPlants = (try? dataService.plants.fetchAll()) ?? []
+        let allPlants: [Plant]
+        do {
+            allPlants = try dataService.plants.fetchAll()
+        } catch {
+            allPlants = []
+            Logger(subsystem: "com.growwise", category: "SeasonalPlannerView")
+                .error("Failed to load plants: \(error.localizedDescription, privacy: .public)")
+            errorMessage = "Failed to load plants: \(error.localizedDescription)"
+        }
         plants = allPlants.filter { $0.garden != nil }
 
         // Load seeds that have indoor start data for the planner
-        let allSeeds = (try? dataService.seeds.fetchAll()) ?? []
+        let allSeeds: [Seed]
+        do {
+            allSeeds = try dataService.seeds.fetchAll()
+        } catch {
+            allSeeds = []
+            Logger(subsystem: "com.growwise", category: "SeasonalPlannerView")
+                .error("Failed to load seeds: \(error.localizedDescription, privacy: .public)")
+            errorMessage = "Failed to load seeds: \(error.localizedDescription)"
+        }
         seeds = allSeeds.filter { ($0.indoorStartWeeks ?? 0) > 0 }
 
         refreshActivities()

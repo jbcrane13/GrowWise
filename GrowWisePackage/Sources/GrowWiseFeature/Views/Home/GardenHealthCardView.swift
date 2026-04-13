@@ -1,5 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
 import SwiftUI
 
 // MARK: - GardenHealthCardView
@@ -10,46 +11,58 @@ struct GardenHealthCardView: View {
 
     @State private var healthScore: GardenHealthScore?
     @State private var showBreakdown = false
+    @State private var errorMessage: String?
 
     var body: some View {
-        if let score = healthScore {
-            Button {
-                showBreakdown = true
-            } label: {
-                HStack(spacing: 14) {
-                    // Circular progress ring
-                    scoreRing(score: score.overallScore)
+        Group {
+            if let score = healthScore {
+                Button {
+                    showBreakdown = true
+                } label: {
+                    HStack(spacing: 14) {
+                        // Circular progress ring
+                        scoreRing(score: score.overallScore)
 
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 6) {
-                            Text("Garden Health")
-                                .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        VStack(alignment: .leading, spacing: 4) {
+                            HStack(spacing: 6) {
+                                Text("Garden Health")
+                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
+                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
-                            trendIndicator(score.trend)
+                                trendIndicator(score.trend)
+                            }
+
+                            Text(scoreLabel(score.overallScore))
+                                .font(.system(.caption, design: .rounded))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         }
 
-                        Text(scoreLabel(score.overallScore))
-                            .font(.system(.caption, design: .rounded))
-                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        Spacer()
+
+                        Image(systemName: "chevron.right")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
                     }
-
-                    Spacer()
-
-                    Image(systemName: "chevron.right")
-                        .font(.system(size: 12, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    .padding(CultivationTheme.Spacing.cardPadding)
+                    .glassCard()
                 }
-                .padding(CultivationTheme.Spacing.cardPadding)
-                .glassCard()
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_button_gardenhealth")
+                .sheet(isPresented: $showBreakdown) {
+                    GardenHealthBreakdownSheet(score: score)
+                        .presentationDetents([.medium])
+                        .presentationDragIndicator(.visible)
+                }
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("home_button_gardenhealth")
-            .sheet(isPresented: $showBreakdown) {
-                GardenHealthBreakdownSheet(score: score)
-                    .presentationDetents([.medium])
-                    .presentationDragIndicator(.visible)
-            }
+        }
+        .alert("Data Load Error", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("gardenhealth_button_error_dismiss")
+        } message: {
+            Text(errorMessage ?? "An unexpected error occurred.")
         }
     }
 
@@ -111,9 +124,24 @@ struct GardenHealthCardView: View {
     // MARK: - Data Loading
 
     func loadHealthScore() {
+        let logger = Logger(subsystem: "com.growwise", category: "GardenHealthCardView")
         let service = GardenHealthService(dataService: dataService)
-        let allPlants = (try? dataService.plants.fetchAll()) ?? []
-        let allReminders = (try? dataService.reminders.fetchAll()) ?? []
+        let allPlants: [Plant]
+        do {
+            allPlants = try dataService.plants.fetchAll()
+        } catch {
+            allPlants = []
+            logger.error("Failed to load plants: \(error.localizedDescription, privacy: .public)")
+            errorMessage = "Failed to load plants: \(error.localizedDescription)"
+        }
+        let allReminders: [PlantReminder]
+        do {
+            allReminders = try dataService.reminders.fetchAll()
+        } catch {
+            allReminders = []
+            logger.error("Failed to load reminders: \(error.localizedDescription, privacy: .public)")
+            errorMessage = "Failed to load reminders: \(error.localizedDescription)"
+        }
         let gardenPlants = allPlants.filter { $0.garden != nil }
 
         guard !gardenPlants.isEmpty else {

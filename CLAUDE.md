@@ -71,10 +71,18 @@ GrowWisePackage/                 # All development happens here
     GrowWiseServices/            # @Observable services, repositories, managers
     GrowWiseFeature/             # SwiftUI views (strict MV)
       Design/                    # CultivationTheme.swift — single source of truth
-      Views/{Garden,Home,Journal,Community,Tutorials}/
+      Views/
+        Garden/                  # GardenView, GardenViewModel, GardenHeroHeader, GardenBedSection, PlantQuickCard
+        Home/                    # HomeView, HomeViewModel, HomeHeroHeader
+        Journal/                 # JournalView
+        Community/               # Community forum views
+        GardenClub/              # Garden club dashboard, chat, events
+        PlantDatabase/           # Plant database browser
+        Settings/                # Settings views
+        Tutorials/               # Tutorial content views
       Components/                # ViewModifiers.swift, GardenComponents.swift, StatCard
       OnboardingFlow/            # 7-step onboarding wizard
-      Main/MainAppView.swift     # Root TabView (Home, Garden, Journal, Profile)
+      Main/MainAppView.swift     # Root 5-tab container
   Tests/
     GrowWiseModelsTests/
     GrowWiseServicesTests/       # 6 test files excluded from compilation (see Package.swift)
@@ -107,9 +115,11 @@ MainAppView (TabView, coral accent tint)
 
 Design language: **Botanical Field Journal** — serif typography, warm earth tones (stone/sage), coral accents, premium glass-morphism. Dark-first adaptive (`#0C0C0C` background).
 
-Key tokens: `CultivationTheme.Colors.*` (incl. `accentCoral`), `Spacing.*`, `Radius.*`, `Animation.*`, `Gradients.ctaGradient`
+Key tokens: `CultivationTheme.Colors.*` (incl. `accentCoral`, `brandLeaf`, `brandForest`, `statusAlert`/`Warning`/`Healthy`), `Spacing.*` (`screenPadding: 20`, `cardPadding: 16`, `sectionGap: 24`), `Radius.*` (`card: 16`, `chip: 20`), `Animation.*` (`spring`, `snappy`), `Gradients.ctaGradient` (`#2d6a4f → #52b788`)
 
-**Shared components in ViewModifiers.swift:** `.glassCard()`, `GlassPill`, `IconBubble`, `StatusDot`, `GradientButtonStyle`, `QuickStatCard`
+**Shared components (ViewModifiers.swift):** `.glassCard()` (glass-morphism card), `GlassPill`, `IconBubble`, `StatusDot`, `GradientButtonStyle`, `QuickStatCard`
+
+**Garden components (GardenComponents.swift):** `PlantRow`, `BedGroupHeader`, `CompanionTipCard`, `TaskRow`
 
 **Anti-patterns:** No system font defaults, no teal/purple gradients, no generic tech aesthetics.
 
@@ -135,7 +145,7 @@ Key tokens: `CultivationTheme.Colors.*` (incl. `accentCoral`), `Spacing.*`, `Rad
 
 ## SwiftData & CloudKit
 
-10 `@Model` classes: Plant, Garden, User, PlantReminder, JournalEntry, GardenBed, SoilLog, GardeningStats, CompostBatch, ShoppingItem. All properties optional with defaults for CloudKit compatibility.
+14 `@Model` classes: Plant, Garden, User, PlantReminder, JournalEntry, GardenBed, SoilLog, GardeningStats, CompostBatch, ShoppingItem, Seed, GardenClub, ClubActivity, ClubEvent, ClubMessage. All properties optional with defaults for CloudKit compatibility.
 
 **CloudKit container:** `iCloud.com.growwise.gardening` — referenced in 3 places that must stay in sync:
 1. `GrowWise/GrowWise.entitlements`
@@ -143,6 +153,8 @@ Key tokens: `CultivationTheme.Colors.*` (incl. `accentCoral`), `Spacing.*`, `Rad
 3. `CloudSyncService.init()`
 
 **BGTaskScheduler:** Info.plist declares `com.apple.coredata.cloudkit.private.push`. Without it, sync produces `BGSystemTaskSchedulerErrorDomain Code=8` on real devices.
+
+**Push notifications:** The `aps-environment` key in `GrowWise.entitlements` is commented out — uncomment (set to `"development"` or `"production"`) once push notifications are enabled in the App ID on the developer portal.
 
 ## Testing
 

@@ -226,6 +226,9 @@ public final class PerenualAPIService {
     private static let baseURL = "https://perenual.com/api/v2"
     private static let keychainKey = "perenual_api_key"
 
+    /// In-memory API key override for testing (bypasses Keychain)
+    static var testAPIKey: String?
+
     private let session: URLSession
 
     public init() {
@@ -237,6 +240,11 @@ public final class PerenualAPIService {
             diskCapacity: 50 * 1024 * 1024
         )
         self.session = URLSession(configuration: config)
+    }
+
+    /// Testable initializer accepting a pre-configured URLSession
+    public init(session: URLSession) {
+        self.session = session
     }
 
     // MARK: - API Key Management
@@ -251,8 +259,9 @@ public final class PerenualAPIService {
         }
     }
 
-    /// Retrieve the API key from Keychain
+    /// Retrieve the API key from Keychain (or test override)
     public static func getAPIKey() -> String? {
+        if let testAPIKey { return testAPIKey }
         do {
             return try KeychainService.shared.retrieveString(for: keychainKey)
         } catch {

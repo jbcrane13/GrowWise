@@ -62,12 +62,23 @@ final class HomeViewModel {
         let urgentIDs = Set((overdueReminders + dueTodayReminders).map(\.id))
         allGoodCount = all.count(where: { !urgentIDs.contains($0.id) })
 
-        totalPlantCount = (try? dataService.plants.fetchAll().count) ?? 0
+        do {
+            totalPlantCount = try dataService.plants.fetchAll().count
+        } catch {
+            totalPlantCount = 0
+            errorMessage = "Failed to load plants: \(error.localizedDescription)"
+        }
 
         // Resolve ready-to-plant seeds
         let user = dataService.getCurrentUser()
         hardinessZone = user?.hardinessZone
-        let allSeeds = (try? dataService.seeds.fetchAll()) ?? []
+        let allSeeds: [Seed]
+        do {
+            allSeeds = try dataService.seeds.fetchAll()
+        } catch {
+            allSeeds = []
+            errorMessage = "Failed to load seeds: \(error.localizedDescription)"
+        }
         let seedService = SeedInventoryService()
         readyToPlantSeeds = seedService.readyToPlant(seeds: allSeeds, zone: hardinessZone ?? "6", currentDate: Date())
 
