@@ -1,5 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
 import StoreKit
 import SwiftUI
 
@@ -22,6 +23,7 @@ public struct AppSettingsView: View {
     @State private var showExportError = false
     @State private var exportErrorMessage = ""
     @State private var isExporting = false
+    @State private var saveErrorMessage: String?
 
     public init() {}
 
@@ -68,6 +70,15 @@ public struct AppSettingsView: View {
             Button("OK", role: .cancel) {}
         } message: {
             Text(exportErrorMessage)
+        }
+        .alert("Save Failed", isPresented: Binding(
+            get: { saveErrorMessage != nil },
+            set: { if !$0 { saveErrorMessage = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("settings_button_save_error_dismiss")
+        } message: {
+            Text(saveErrorMessage ?? "An unexpected error occurred.")
         }
     }
 
@@ -416,7 +427,13 @@ public struct AppSettingsView: View {
         guard let user = currentUser else { return }
         user[keyPath: keyPath] = value
         user.lastModified = Date()
-        try? dataService.updateUser(user)
+        do {
+            try dataService.updateUser(user)
+        } catch {
+            Logger(subsystem: "com.growwise", category: "AppSettingsView")
+                .error("Failed to save user preference: \(error.localizedDescription, privacy: .public)")
+            saveErrorMessage = "Failed to save preference: \(error.localizedDescription)"
+        }
     }
 
     private func exportData() {
