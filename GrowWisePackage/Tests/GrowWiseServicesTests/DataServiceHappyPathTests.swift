@@ -15,10 +15,11 @@ struct DataServiceHappyPathTests {
     @Test("makeForTesting creates a valid DataService with accessible repositories")
     func makeForTestingCreatesValidService() throws {
         let ds = try DataService.makeForTesting()
-        #expect(ds.plants != nil)
-        #expect(ds.gardens != nil)
-        #expect(ds.reminders != nil)
-        #expect(ds.seeds != nil)
+        let plants = ds.plants
+        let gardens = ds.gardens
+        let reminders = ds.reminders
+        let seeds = ds.seeds
+        _ = (plants, gardens, reminders, seeds)
     }
 
     // MARK: - Garden CRUD
