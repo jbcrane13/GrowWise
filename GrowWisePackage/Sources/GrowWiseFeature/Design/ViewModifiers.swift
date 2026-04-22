@@ -1,28 +1,24 @@
 import SwiftUI
 
-// MARK: - Glass Card Modifier
+// MARK: - Paper Card Modifier
 
-/// Applies the glass-morphism card surface treatment.
-/// Dark: translucent surface + blur + fine border
-/// Light: white + soft shadow + fine border
-struct GlassCardModifier: ViewModifier {
-    @Environment(\.colorScheme)
-    private var colorScheme
-
+/// Applies the cream-paper card surface treatment (v2 — replaces GlassCardModifier).
+/// Soft warm shadow on cream, no blur.
+struct PaperCardModifier: ViewModifier {
     func body(content: Content) -> some View {
         content
             .background {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                     .fill(CultivationTheme.Colors.cardSurface)
-                    .background(
-                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                            .fill(.ultraThinMaterial)
-                            .opacity(colorScheme == .dark ? 1 : 0)
+                    .shadow(
+                        color: Color(red: 0.12, green: 0.16, blue: 0.13, opacity: 0.06),
+                        radius: 1,
+                        y: 1
                     )
                     .shadow(
-                        color: colorScheme == .dark ? .clear : Color.black.opacity(0.06),
-                        radius: 8,
-                        y: 2
+                        color: Color(red: 0.12, green: 0.16, blue: 0.13, opacity: 0.18),
+                        radius: 24,
+                        y: 12
                     )
             }
             .overlay {
@@ -34,9 +30,15 @@ struct GlassCardModifier: ViewModifier {
 }
 
 extension View {
-    /// Apply glass card surface treatment.
+    /// Apply paper card surface treatment (replaces glassCard).
+    func paperCard() -> some View {
+        modifier(PaperCardModifier())
+    }
+
+    /// Backwards compatibility — old call sites can keep using glassCard().
+    /// Routes to the new paperCard treatment.
     func glassCard() -> some View {
-        modifier(GlassCardModifier())
+        modifier(PaperCardModifier())
     }
 }
 
@@ -60,29 +62,26 @@ extension View {
 
 // MARK: - Hero Header Background
 
-/// Dark background with dual glow orbs for Home and Garden tab headers.
+/// Cream-paper background with soft coral + sage glow for Home and Garden tab headers.
 struct HeroBackgroundModifier: ViewModifier {
     func body(content: Content) -> some View {
-        content
-            .background {
-                ZStack(alignment: .topTrailing) {
-                    CultivationTheme.Colors.background
-
-                    // Subtle coral glow orb (top-right)
+        content.background {
+            CultivationTheme.Gradients.hero
+                .overlay(alignment: .topTrailing) {
                     Circle()
-                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.05))
-                        .frame(width: 200, height: 200)
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.04))
+                        .frame(width: 220, height: 220)
                         .blur(radius: 60)
-                        .offset(x: 60, y: -40)
-
-                    // Subtle sage glow orb (center-left)
-                    Circle()
-                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.04))
-                        .frame(width: 180, height: 180)
-                        .blur(radius: 50)
-                        .offset(x: -80, y: 60)
+                        .offset(x: 80, y: -40)
                 }
-            }
+                .overlay(alignment: .bottomLeading) {
+                    Circle()
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.05))
+                        .frame(width: 200, height: 200)
+                        .blur(radius: 50)
+                        .offset(x: -60, y: 40)
+                }
+        }
     }
 }
 
@@ -99,24 +98,67 @@ struct GradientButtonStyle: ButtonStyle {
 
     func makeBody(configuration: Configuration) -> some View {
         configuration.label
-            .font(.system(.headline, design: .serif, weight: .regular))
+            .font(CultivationTheme.Fonts.body(16, weight: .bold))
             .foregroundStyle(.white)
-            .frame(maxWidth: .infinity, minHeight: 50)
+            .frame(maxWidth: .infinity, minHeight: 52)
             .background {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
                     .fill(
                         isDisabled
                             ? AnyShapeStyle(CultivationTheme.Colors.textTertiary)
-                            : AnyShapeStyle(CultivationTheme.Gradients.warmAccent)
+                            : AnyShapeStyle(CultivationTheme.Colors.brandForest)
                     )
                     .shadow(
                         color: isDisabled ? .clear : CultivationTheme.Colors.brandForest.opacity(0.30),
-                        radius: 8,
-                        y: 3
+                        radius: 12,
+                        y: 6
                     )
             }
             .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
             .animation(CultivationTheme.Animation.card, value: configuration.isPressed)
+    }
+}
+
+// MARK: - Coral CTA Button Style
+
+/// Share-to-Club primary action button.
+struct CoralButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(CultivationTheme.Fonts.body(16, weight: .bold))
+            .foregroundStyle(.white)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background {
+                RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                    .fill(CultivationTheme.Colors.accentCoral)
+                    .shadow(color: CultivationTheme.Colors.accentCoral.opacity(0.35), radius: 12, y: 6)
+            }
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(CultivationTheme.Animation.card, value: configuration.isPressed)
+    }
+}
+
+// MARK: - Smart Tag
+
+/// Sage '✦' chip marking smart-enrichment surfaces (auto-ID, weather, zone).
+struct SmartTag: View {
+    let label: String
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Text("✦")
+                .font(CultivationTheme.Fonts.body(9, weight: .bold))
+            Text(label.uppercased())
+                .font(CultivationTheme.Fonts.body(9, weight: .bold))
+                .tracking(0.8)
+        }
+        .foregroundStyle(CultivationTheme.Colors.smartTagForeground)
+        .padding(.horizontal, 6)
+        .padding(.vertical, 3)
+        .background(
+            Capsule().fill(CultivationTheme.Colors.smartTagBackground)
+        )
+        .accessibilityLabel("Smart enrichment: \(label)")
     }
 }
 
@@ -172,7 +214,7 @@ enum PlantHealthStatus {
 
 // MARK: - Glass Pill
 
-/// Filter chip / garden switcher pill with glass treatment.
+/// Filter chip / garden switcher pill. Active state uses moss fill.
 struct GlassPill: View {
     let label: String
     var isSelected: Bool = false
@@ -182,30 +224,24 @@ struct GlassPill: View {
     var body: some View {
         Button(action: action) {
             Text(label)
-                .font(.system(size: 13, weight: isSelected ? .semibold : .regular))
-                .foregroundStyle(
-                    isSelected
-                        ? CultivationTheme.Colors.accentCoral
-                        : CultivationTheme.Colors.textSecondary
-                )
+                .font(CultivationTheme.Fonts.body(12, weight: isSelected ? .semibold : .medium))
+                .foregroundStyle(isSelected ? Color.white : CultivationTheme.Colors.textSecondary)
                 .padding(.horizontal, 14)
-                .padding(.vertical, 7)
+                .padding(.vertical, 8)
                 .background {
-                    Capsule()
-                        .fill(
-                            isSelected
-                                ? CultivationTheme.Colors.accentCoral.opacity(0.12)
-                                : CultivationTheme.Colors.cardSurface
-                        )
+                    Capsule().fill(
+                        isSelected
+                            ? CultivationTheme.Colors.brandForest
+                            : CultivationTheme.Colors.cardSurface
+                    )
                 }
                 .overlay {
-                    Capsule()
-                        .stroke(
-                            isSelected
-                                ? CultivationTheme.Colors.accentCoral.opacity(0.3)
-                                : CultivationTheme.Colors.cardBorder,
-                            lineWidth: 1
-                        )
+                    Capsule().stroke(
+                        isSelected
+                            ? Color.clear
+                            : CultivationTheme.Colors.cardBorder,
+                        lineWidth: 1
+                    )
                 }
         }
         .buttonStyle(.plain)
@@ -225,27 +261,22 @@ struct QuickStatCard: View {
     var body: some View {
         VStack(spacing: 4) {
             Text("\(value)")
-                .font(.system(.title2, design: .monospaced, weight: .medium))
+                .font(CultivationTheme.Fonts.display(24, weight: .semibold))
                 .foregroundStyle(color)
 
             Text(label)
-                .font(.system(size: 11, weight: .medium))
-                .foregroundStyle(color.opacity(0.7))
+                .font(CultivationTheme.Fonts.body(11, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 12)
+        .padding(.vertical, 14)
         .background {
             RoundedRectangle(cornerRadius: CultivationTheme.Radius.statCard)
-                .fill(color.opacity(0.07))
-                .background(
-                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.statCard)
-                        .fill(.ultraThinMaterial)
-                )
+                .fill(CultivationTheme.Colors.cardSurface)
         }
         .overlay {
             RoundedRectangle(cornerRadius: CultivationTheme.Radius.statCard)
-                .stroke(color.opacity(0.15), lineWidth: 1)
+                .stroke(color.opacity(0.20), lineWidth: 1)
         }
-        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.statCard))
     }
 }

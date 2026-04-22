@@ -14,7 +14,6 @@ public struct ProfileView: View {
 
     // Navigation state
     @State private var showTutorials = false
-    @State private var showNotifications = false
     @State private var showSubscription = false
     @State private var showCommunity = false
     @State private var showAchievements = false
@@ -82,9 +81,6 @@ public struct ProfileView: View {
             .navigationTitle("Profile")
             .sheet(isPresented: $showTutorials) {
                 TutorialsView()
-            }
-            .navigationDestination(isPresented: $showNotifications) {
-                RemindersListView()
             }
             .navigationDestination(isPresented: $showSubscription) {
                 PaywallView()
@@ -273,15 +269,6 @@ public struct ProfileView: View {
             Text("Settings")
                 .sectionLabelStyle()
                 .padding(.leading, 4)
-
-            menuRow(
-                icon: "bell.fill",
-                color: .orange,
-                title: "Notifications",
-                id: "profile_row_notifications"
-            ) {
-                showNotifications = true
-            }
 
             menuRow(
                 icon: "crown.fill",

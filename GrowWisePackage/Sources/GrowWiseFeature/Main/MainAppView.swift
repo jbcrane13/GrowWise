@@ -121,25 +121,18 @@ public struct MainAppView: View {
                 .tag(TabSelection.garden)
                 .accessibilityIdentifier("tab_garden")
 
-            JournalView()
-                .tabItem {
-                    Label("Journal", systemImage: "book.fill")
-                }
-                .tag(TabSelection.journal)
-                .accessibilityIdentifier("tab_journal")
-
             NavigationStack {
-                RemindersListView()
+                GardenClubFeedView()
             }
             .tabItem {
-                Label("Reminders", systemImage: "bell.fill")
+                Label("Club", systemImage: "sparkles")
             }
-            .tag(TabSelection.reminders)
-            .accessibilityIdentifier("tab_reminders")
+            .tag(TabSelection.club)
+            .accessibilityIdentifier("tab_club")
 
             ProfileView()
                 .tabItem {
-                    Label("Profile", systemImage: "person.fill")
+                    Label("Me", systemImage: "person.fill")
                 }
                 .tag(TabSelection.profile)
                 .accessibilityIdentifier("tab_profile")
@@ -244,8 +237,7 @@ public struct MainAppView: View {
 public enum TabSelection: String, CaseIterable {
     case home
     case garden
-    case journal
-    case reminders
+    case club
     case profile
 }
 

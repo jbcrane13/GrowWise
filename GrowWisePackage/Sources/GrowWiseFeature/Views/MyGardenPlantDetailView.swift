@@ -19,7 +19,6 @@ struct PlantDetailView: View {
     private var perenualEnrichment
     @State private var showingEditPlant = false
     @State private var showingDeleteConfirmation = false
-    @State private var showingJournalEntry = false
     @State private var showingReminderView = false
     @State private var selectedPhoto: String?
     @State private var showingPhotoViewer = false
@@ -70,11 +69,6 @@ struct PlantDetailView: View {
         }
         .sheet(isPresented: $showingEditPlant) {
             Text("Edit Plant View - To be implemented")
-        }
-        .sheet(isPresented: $showingJournalEntry) {
-            NavigationStack {
-                AddJournalEntryView(photoService: photoService)
-            }
         }
         .sheet(isPresented: $showingReminderView) {
             AddReminderView(reminderService: reminderService, dataService: dataService)
@@ -475,7 +469,6 @@ struct PlantDetailView: View {
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible()),
-                GridItem(.flexible()),
             ], spacing: 10) {
                 GlassActionButton(
                     title: "Fertilize",
@@ -485,16 +478,6 @@ struct PlantDetailView: View {
                     accessibilityID: "plantdetail_button_fertilize"
                 ) {
                     performCareAction(.fertilizing)
-                }
-
-                GlassActionButton(
-                    title: "Add Entry",
-                    systemImage: "plus.circle.fill",
-                    color: CultivationTheme.Colors.brandSage,
-                    isLoading: false,
-                    accessibilityID: "plantdetail_button_addentry"
-                ) {
-                    showingJournalEntry = true
                 }
 
                 GlassActionButton(
@@ -552,17 +535,10 @@ struct PlantDetailView: View {
                 .accessibilityIdentifier("plantdetail_button_viewallactivity")
             }
 
-            if let journalEntries = plant.journalEntries?.prefix(5) {
-                if journalEntries.isEmpty {
-                    emptyStateCard(icon: "book.closed", message: "No journal entries yet")
-                } else {
-                    LazyVStack(spacing: CultivationTheme.Spacing.rowGap) {
-                        ForEach(Array(journalEntries), id: \.id) { entry in
-                            JournalEntryRow(entry: entry, photoService: photoService)
-                        }
-                    }
-                }
-            }
+            // Journal entries list is replaced by the Phase 8 photo strip.
+            // Show the empty-state card as a temporary placeholder so the
+            // section still renders consistently until Phase 8 lands.
+            emptyStateCard(icon: "book.closed", message: "Journal entries coming soon")
         }
     }
 
