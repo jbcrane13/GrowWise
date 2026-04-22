@@ -469,7 +469,6 @@ struct PlantDetailView: View {
             LazyVGrid(columns: [
                 GridItem(.flexible()),
                 GridItem(.flexible()),
-                GridItem(.flexible()),
             ], spacing: 10) {
                 GlassActionButton(
                     title: "Fertilize",
