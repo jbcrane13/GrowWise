@@ -121,64 +121,21 @@ public enum CultivationTheme {
 
     // MARK: - Fonts
 
-    /// Custom font helpers with system fallbacks. Fraunces is the display serif,
-    /// Manrope is the humanist sans for UI/body. If the custom fonts fail to
-    /// register, the helpers fall back to SF Pro Rounded / SF Pro respectively.
+    /// System-font helpers. `display` uses `.serif` (New York) for headlines
+    /// and plant names; `body` uses `.rounded` (SF Pro Rounded) for UI/body.
+    /// Custom Fraunces/Manrope registration was scoped out of the v2 redesign;
+    /// this helper is a single-file hook for adding them later if desired.
     public enum Fonts {
-        /// Returns true if Fraunces is registered and ready to use.
-        public static var displayAvailable: Bool {
-            #if canImport(UIKit)
-            UIFont(name: "Fraunces-Regular", size: 14) != nil
-                || UIFont(name: "Fraunces", size: 14) != nil
-            #else
-            false
-            #endif
-        }
-
-        /// Returns true if Manrope is registered and ready to use.
-        public static var bodyAvailable: Bool {
-            #if canImport(UIKit)
-            UIFont(name: "Manrope-Regular", size: 14) != nil
-                || UIFont(name: "Manrope", size: 14) != nil
-            #else
-            false
-            #endif
-        }
-
-        /// Display serif (Fraunces). Falls back to SF Pro Rounded.
         public static func display(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-            if displayAvailable {
-                let name = switch weight {
-                case .bold, .heavy, .black: "Fraunces-Bold"
-                case .semibold: "Fraunces-SemiBold"
-                case .medium: "Fraunces-Medium"
-                default: "Fraunces-Regular"
-                }
-                return .custom(name, size: size)
-            }
-            return .system(size: size, weight: weight, design: .serif)
+            .system(size: size, weight: weight, design: .serif)
         }
 
-        /// Italic display (Fraunces italic). Used for accent words in headlines.
         public static func displayItalic(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-            if displayAvailable {
-                return .custom("Fraunces-Italic", size: size)
-            }
-            return .system(size: size, weight: weight, design: .serif).italic()
+            .system(size: size, weight: weight, design: .serif).italic()
         }
 
-        /// UI / body font (Manrope). Falls back to SF Pro.
         public static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-            if bodyAvailable {
-                let name = switch weight {
-                case .bold, .heavy, .black: "Manrope-Bold"
-                case .semibold: "Manrope-SemiBold"
-                case .medium: "Manrope-Medium"
-                default: "Manrope-Regular"
-                }
-                return .custom(name, size: size)
-            }
-            return .system(size: size, weight: weight, design: .default)
+            .system(size: size, weight: weight, design: .rounded)
         }
     }
 

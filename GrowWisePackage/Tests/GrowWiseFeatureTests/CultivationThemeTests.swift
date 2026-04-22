@@ -40,4 +40,28 @@ struct CultivationThemeTests {
     func statCardRadiusDefined() {
         #expect(CultivationTheme.Radius.statCard == 14)
     }
+
+    @Test("Fonts.display returns a serif system font")
+    func displayFontIsSerifSystem() {
+        // System fonts don't expose design as a readable property, so the
+        // check is structural: we construct and compare to the spec. The
+        // ultimate validation is visual (ui-verify in Phase 10).
+        let font = CultivationTheme.Fonts.display(17, weight: .medium)
+        let expected = Font.system(size: 17, weight: .medium, design: .serif)
+        #expect(String(describing: font) == String(describing: expected))
+    }
+
+    @Test("Fonts.body returns a rounded system font")
+    func bodyFontIsRoundedSystem() {
+        let font = CultivationTheme.Fonts.body(14)
+        let expected = Font.system(size: 14, weight: .regular, design: .rounded)
+        #expect(String(describing: font) == String(describing: expected))
+    }
+
+    @Test("Fonts.displayItalic returns a serif italic system font")
+    func displayItalicIsSerifSystemItalic() {
+        let font = CultivationTheme.Fonts.displayItalic(22)
+        let expected = Font.system(size: 22, weight: .regular, design: .serif).italic()
+        #expect(String(describing: font) == String(describing: expected))
+    }
 }
