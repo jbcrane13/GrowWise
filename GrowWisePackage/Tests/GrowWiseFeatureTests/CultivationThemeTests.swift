@@ -12,9 +12,13 @@ struct CultivationThemeTests {
 
     @Test("Coral accent matches spec hex D9694B")
     func coralAccentMatchesSpec() {
-        let expected = Color(hex: "D9694B")
-        #expect(CultivationTheme.Colors.accentCoral != Color.clear)
-        #expect(expected != Color.clear)
+        // accentCoral is a plain Color(hex:), not wrapped in Color(light:dark:),
+        // so direct equality is reliable.
+        #expect(CultivationTheme.Colors.accentCoral == Color(hex: "D9694B"))
+        #expect(CultivationTheme.Colors.accentCoralDeep == Color(hex: "B14F33"))
+        #expect(CultivationTheme.Colors.accentAmber == Color(hex: "C99327"))
+        #expect(CultivationTheme.Colors.brandForest == Color(hex: "2E4631"))
+        #expect(CultivationTheme.Colors.brandLeaf == Color(hex: "7B9069"))
     }
 
     @Test("Card radius is 16")
