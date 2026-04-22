@@ -247,9 +247,9 @@ A running log of significant architecture and design decisions. Both Daneel (Ope
 ---
 
 ## ADR-019: Simplified UI v2 — cream paper, 4 tabs, Club as a pillar
-**Date:** 2026-04-20
-**Status:** Active
-**Decision:** Pivot the app's visual direction from dark glass-morphism to a cream paper "field journal" treatment, consolidate the tab bar from 5 tabs to 4, and promote Garden Club to a top-level tab with sharing as a first-class action on every screen. See `docs/superpowers/specs/2026-04-20-simplified-ui-v2-design.md` and `docs/mockups/cultivation-simplified-wireflow.html`.
+**Date:** 2026-04-20  
+**Status:** Active  
+**Decision:** Pivot the app's visual direction from dark glass-morphism to a cream paper "field journal" treatment, consolidate the tab bar from 5 tabs to 4, and promote Garden Club to a top-level tab with sharing as a first-class action on every screen. See `docs/superpowers/specs/2026-04-20-simplified-ui-v2-design.md` and `docs/mockups/cultivation-simplified-wireflow.html`.  
 **Context:** ADR-017 established the Botanical Field Journal direction and we shipped it as dark glass-morphism (per the 2026-03-09 redesign spec). The dark treatment photographs well but is harder on the audience the PRD targets — 50+ enthusiast gardeners — due to lower contrast and the need for larger comfortable type sizes. The tab bar at 5 entries was also dense; Reminders duplicated work that Home's urgency-grouped task list already does, and Journal was competing for primary nav despite lower usage. Sharing (Garden Club) was buried behind the Community forum rather than being a primary pillar, which undercuts the social-first product direction.
 **Consequences:**
 - `CultivationTheme` replaced: cream paper (`#F6F0E4`) + ink (`#1F2A22`) + sage (`#7B9069`) + coral (`#D9694B`) + honey (`#C99327`). Old dark tokens removed, not kept for fallback.
@@ -264,9 +264,9 @@ A running log of significant architecture and design decisions. Both Daneel (Ope
 ---
 
 ## ADR-020: Rename scope — user-facing only (Cultivation)
-**Date:** 2026-04-22
-**Status:** Active
-**Decision:** "Complete the Cultivation rename" means user-facing only. All code-level identifiers stay on `GrowWise` / `com.growwiser.app` / `com.growwise.*` / `iCloud.com.growwise.gardening`.
+**Date:** 2026-04-22  
+**Status:** Active  
+**Decision:** "Complete the Cultivation rename" means user-facing only. All code-level identifiers stay on `GrowWise` / `com.growwiser.app` / `com.growwise.*` / `iCloud.com.growwise.gardening`.  
 **Context:** Existing app may have TestFlight installs. Changing bundle ID, CloudKit container, StoreKit product IDs, keychain service, or app group would require a data migration and would invalidate subscriptions. The user-facing display name (`CFBundleDisplayName`, UI copy, docs) is reversible and safe to change today. The identifier-level rebrand is a separate, larger project that needs its own migration design.
 **Consequences:**
 - `CFBundleDisplayName` becomes "Cultivation" in both build configs.
