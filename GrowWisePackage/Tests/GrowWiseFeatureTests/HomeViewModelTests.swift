@@ -279,4 +279,33 @@ struct HomeViewModelTests {
         #expect(vm.completedIDs.contains(reminder.id)) // optimistic id retained after reload
         #expect(vm.allTasksDone) // completedIDs hides the stale row
     }
+
+    // MARK: - latestClubPost
+
+    @Test("load populates latestClubPost when a club activity exists")
+    func loadPopulatesLatestClubPost() async throws {
+        let service = try await DataService.makeForTesting()
+        // Create a minimal club + activity via mainContext directly.
+        let clubID = UUID()
+        let club = GardenClub(name: "Test Club", ownerID: "user-1", inviteCode: "TEST01")
+        club.id = clubID
+        service.mainContext.insert(club)
+
+        let activity = ClubActivity(
+            clubID: clubID,
+            memberName: "Alice",
+            memberID: "user-2",
+            activityType: "journaled",
+            description: "My tomato bloomed!"
+        )
+        activity.timestamp = Date()
+        service.mainContext.insert(activity)
+        try service.mainContext.save()
+
+        let vm = HomeViewModel()
+        await vm.load(dataService: service)
+
+        #expect(vm.latestClubPost != nil)
+        #expect(vm.latestClubPost?.activityDescription == "My tomato bloomed!")
+    }
 }

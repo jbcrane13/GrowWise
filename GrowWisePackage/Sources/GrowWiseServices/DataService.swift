@@ -483,7 +483,9 @@ public final class DataService {
         do {
             result = try journals.fetchForPlant(plant, offset: offset, limit: limit)
         } catch {
-            logger.error("[DataService] Failed to fetch journal entries for plant: \(error.localizedDescription, privacy: .public)")
+            logger.error(
+                "[DataService] Failed to fetch journal entries for plant: \(error.localizedDescription, privacy: .public)"
+            )
             result = []
         }
         cache.set(cacheKey, value: result, policy: .medium)
@@ -874,6 +876,18 @@ public extension DataService {
         } catch {
             throw DataServiceError.criticalInitializationFailure("Cannot create test DataService: \(error)")
         }
+    }
+}
+
+// MARK: - Club Queries
+
+public extension DataService {
+    /// Returns the most recently created GardenClub, or nil if none exist.
+    func fetchPrimaryClub() -> GardenClub? {
+        let fetch = FetchDescriptor<GardenClub>(
+            sortBy: [SortDescriptor(\GardenClub.createdDate, order: .reverse)]
+        )
+        return try? mainContext.fetch(fetch).first
     }
 }
 

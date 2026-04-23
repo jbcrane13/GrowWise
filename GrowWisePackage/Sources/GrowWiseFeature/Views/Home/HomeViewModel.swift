@@ -1,5 +1,7 @@
 import GrowWiseModels
 import GrowWiseServices
+import os
+import SwiftData
 import SwiftUI
 
 // SeedInventoryService is in GrowWiseServices (imported above)
@@ -22,6 +24,9 @@ final class HomeViewModel {
     var readyToPlantSeeds: [Seed] = []
     /// User's hardiness zone, resolved on load.
     var hardinessZone: String?
+
+    /// Most-recent ClubActivity across all clubs. Displayed in the Home "Your Club" card.
+    var latestClubPost: ClubActivity?
 
     /// IDs of reminders the user has tapped "Done" on — used to filter them
     /// from the list with a slide-away animation before the next data reload.
@@ -82,6 +87,20 @@ final class HomeViewModel {
         let seedService = SeedInventoryService()
         readyToPlantSeeds = seedService.readyToPlant(seeds: allSeeds, zone: hardinessZone ?? "6", currentDate: Date())
 
+        // Latest club post for the Home "Your Club" card (SwiftData fetch via mainContext)
+        do {
+            var descriptor = FetchDescriptor<ClubActivity>(
+                sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+            )
+            descriptor.fetchLimit = 1
+            let posts = try dataService.mainContext.fetch(descriptor)
+            latestClubPost = posts.first
+        } catch {
+            Logger(subsystem: "com.growwise", category: "HomeViewModel")
+                .error("latestClubPost fetch failed: \(error.localizedDescription, privacy: .public)")
+            latestClubPost = nil
+        }
+
         isLoading = false
     }
 
@@ -104,10 +123,13 @@ final class HomeViewModel {
                 switch reminder.reminderType {
                 case .watering:
                     plant.lastWatered = Date()
+
                 case .fertilizing:
                     plant.lastFertilized = Date()
+
                 case .pruning:
                     plant.lastPruned = Date()
+
                 default:
                     break
                 }

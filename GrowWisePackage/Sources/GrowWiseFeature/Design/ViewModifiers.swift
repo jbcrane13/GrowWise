@@ -138,6 +138,28 @@ struct CoralButtonStyle: ButtonStyle {
     }
 }
 
+// MARK: - Secondary Button Style
+
+/// Outlined secondary action button — cream surface with border.
+struct SecondaryButtonStyle: ButtonStyle {
+    func makeBody(configuration: Configuration) -> some View {
+        configuration.label
+            .font(CultivationTheme.Fonts.body(16, weight: .semibold))
+            .foregroundStyle(CultivationTheme.Colors.textPrimary)
+            .frame(maxWidth: .infinity, minHeight: 52)
+            .background(
+                RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                    .fill(CultivationTheme.Colors.cardSurface)
+            )
+            .overlay(
+                RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                    .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
+            )
+            .scaleEffect(configuration.isPressed ? 0.97 : 1.0)
+            .animation(CultivationTheme.Animation.card, value: configuration.isPressed)
+    }
+}
+
 // MARK: - Smart Tag
 
 /// Sage '✦' chip marking smart-enrichment surfaces (auto-ID, weather, zone).
