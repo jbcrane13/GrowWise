@@ -387,7 +387,7 @@ public struct GardenView: View {
                 .multilineTextAlignment(.center)
 
             Button("Show All") {
-                withAnimation(CultivationTheme.Animation.snappy) {
+                withAnimation(CultivationTheme.Animation.selection) {
                     selectedFilter = .all
                 }
             }
