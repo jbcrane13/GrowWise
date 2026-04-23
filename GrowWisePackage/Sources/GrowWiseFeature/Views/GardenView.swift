@@ -223,7 +223,7 @@ public struct GardenView: View {
                 .padding(.horizontal, 12)
                 .padding(.vertical, 8)
                 .background {
-                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.chip)
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.pill)
                         .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
                 }
             }

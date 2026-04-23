@@ -110,7 +110,7 @@ public final class GardenViewModel {
 
     /// Returns `groupedPlants` filtered by the given `GardenFilter`.
     /// Empty groups are dropped.
-    public func filtered(by filter: GardenView.GardenFilter) -> [PlantGroup] {
+    public func filtered(by filter: GardenFilter) -> [PlantGroup] {
         let base = groupedPlants
         switch filter {
         case .all:
