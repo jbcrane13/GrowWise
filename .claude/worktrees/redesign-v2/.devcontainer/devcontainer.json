@@ -1,0 +1,36 @@
+{
+  "name": "GrowWise Development",
+  "image": "swift:6.0",
+  "features": {
+    "ghcr.io/devcontainers/features/github-cli:1": {},
+    "ghcr.io/devcontainers/features/node:1": {
+      "version": "20"
+    }
+  },
+  "postCreateCommand": "bash .devcontainer/setup.sh",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "sswg.swift-lang",
+        "vadimcn.vscode-lldb",
+        "github.copilot",
+        "github.copilot-chat",
+        "ms-azuretools.vscode-docker"
+      ],
+      "settings": {
+        "swift.path": "/usr/bin/swift",
+        "editor.formatOnSave": true,
+        "editor.tabSize": 4,
+        "editor.insertSpaces": true,
+        "[swift]": {
+          "editor.defaultFormatter": "sswg.swift-lang"
+        }
+      }
+    }
+  },
+  "remoteEnv": {
+    "SWIFT_DETERMINISTIC_HASHING": "1"
+  },
+  "mounts": [],
+  "forwardPorts": []
+}

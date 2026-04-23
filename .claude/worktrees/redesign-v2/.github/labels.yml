@@ -1,0 +1,99 @@
+# GitHub Labels configuration for GrowWise
+# Apply with: gh label create or use a labels sync action
+
+# Priority labels
+- name: "P0: Critical"
+  color: "B60205"
+  description: "Production-breaking or security issue. Fix immediately."
+
+- name: "P1: High"
+  color: "D93F0B"
+  description: "Significant impact on users. Fix in current sprint."
+
+- name: "P2: Medium"
+  color: "E4E669"
+  description: "Notable issue, fix when capacity allows."
+
+- name: "P3: Low"
+  color: "0E8A16"
+  description: "Minor issue or nice-to-have. Backlog candidate."
+
+# Type labels
+- name: "bug"
+  color: "D73A4A"
+  description: "Something isn't working as expected."
+
+- name: "enhancement"
+  color: "A2EEEF"
+  description: "New feature or improvement request."
+
+- name: "chore"
+  color: "FEF2C0"
+  description: "Maintenance, refactoring, or build tooling."
+
+- name: "security"
+  color: "E11D48"
+  description: "Security-sensitive change (Keychain, encryption, auth)."
+
+- name: "performance"
+  color: "F9A825"
+  description: "Performance-related issue or improvement."
+
+- name: "documentation"
+  color: "0075CA"
+  description: "Documentation additions or updates."
+
+# Area labels
+- name: "area: models"
+  color: "BFD4F2"
+  description: "SwiftData models and data persistence."
+
+- name: "area: services"
+  color: "D4C5F9"
+  description: "Business logic and service layer."
+
+- name: "area: ui"
+  color: "C2E0C6"
+  description: "SwiftUI views and components."
+
+- name: "area: security"
+  color: "F9D0C4"
+  description: "Keychain, encryption, biometric auth."
+
+- name: "area: sync"
+  color: "B4D0E7"
+  description: "CloudKit sync and data consistency."
+
+- name: "area: ci"
+  color: "E8E8E8"
+  description: "CI/CD workflows and build infrastructure."
+
+# Status labels
+- name: "needs-triage"
+  color: "EDEDED"
+  description: "Newly filed, needs priority and area assignment."
+
+- name: "needs-investigation"
+  color: "F7C6C7"
+  description: "Root cause is unclear, investigation needed."
+
+- name: "blocked"
+  color: "CC317C"
+  description: "Cannot proceed due to external dependency."
+
+- name: "ready"
+  color: "0052CC"
+  description: "Ready for implementation."
+
+# Dependency labels
+- name: "dependencies"
+  color: "0366D6"
+  description: "Dependency version updates."
+
+- name: "swift"
+  color: "FA7343"
+  description: "Swift package or language update."
+
+- name: "github-actions"
+  color: "2088FF"
+  description: "GitHub Actions workflow update."

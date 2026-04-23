@@ -1,0 +1,37 @@
+# Pre-commit hook configuration for GrowWise iOS project
+# Install: pip install pre-commit && pre-commit install
+# Or use the managed hooks: ./scripts/install-hooks.sh
+#
+# Note: SwiftLint and SwiftFormat must be installed via Homebrew:
+#   brew install swiftlint swiftformat
+
+repos:
+  - repo: local
+    hooks:
+      - id: swiftlint
+        name: SwiftLint
+        language: system
+        entry: swiftlint
+        args: [lint, --strict, --config, .swiftlint.yml]
+        types: [swift]
+        pass_filenames: false
+
+      - id: swiftformat-check
+        name: SwiftFormat (check)
+        language: system
+        entry: swiftformat
+        args: [--lint, --config, .swiftformat, GrowWisePackage/Sources, GrowWise]
+        types: [swift]
+        pass_filenames: false
+
+  - repo: https://github.com/pre-commit/pre-commit-hooks
+    rev: v4.6.0
+    hooks:
+      - id: trailing-whitespace
+        exclude: '\.(md)$'
+      - id: end-of-file-fixer
+        exclude: '\.(xcodeproj|xcworkspace|pbxproj|json)$'
+      - id: check-merge-conflict
+      - id: check-yaml
+      - id: check-json
+        exclude: 'project\.pbxproj'

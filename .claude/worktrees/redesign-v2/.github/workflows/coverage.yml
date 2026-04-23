@@ -1,0 +1,83 @@
+name: Code Coverage
+
+on:
+  push:
+    branches: [master, main, "feature/**", "fix/**"]
+  pull_request:
+    branches: [master, main]
+
+jobs:
+  coverage:
+    name: Enforce Coverage Threshold
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Run tests with coverage
+        run: |
+          cd GrowWisePackage
+          swift test --enable-code-coverage 2>&1 | tee test-output.txt
+
+      - name: Extract and enforce coverage threshold
+        run: |
+          cd GrowWisePackage
+
+          # Find the .coverage directory produced by swift test
+          PROFDATA=$(find .build -name "*.profdata" 2>/dev/null | head -1)
+          BINARIES=$(find .build -name "*.xctest" -o -name "GrowWiseServices" -o -name "GrowWiseModels" 2>/dev/null | head -5)
+
+          if [ -z "$PROFDATA" ]; then
+            echo "No profdata found — skipping coverage check"
+            exit 0
+          fi
+
+          # Use llvm-cov to get coverage report
+          XCTEST=$(find .build -name "*.xctest" | head -1)
+          if [ -n "$XCTEST" ]; then
+            COVERAGE_PCT=$(xcrun llvm-cov report \
+              "$XCTEST" \
+              --instr-profile "$PROFDATA" \
+              --ignore-filename-regex=".*Tests.*|.*\.build.*" \
+              2>/dev/null \
+              | grep "TOTAL" \
+              | awk '{print $NF}' \
+              | tr -d '%' || echo "0")
+          else
+            COVERAGE_PCT="0"
+          fi
+
+          echo "Overall coverage: ${COVERAGE_PCT}%"
+
+          # Minimum coverage threshold
+          THRESHOLD=60
+
+          echo "## Code Coverage" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Metric | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|--------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Coverage | ${COVERAGE_PCT}% |" >> $GITHUB_STEP_SUMMARY
+          echo "| Threshold | ${THRESHOLD}% |" >> $GITHUB_STEP_SUMMARY
+
+          # Enforce threshold using integer comparison
+          PCT_INT=$(echo "$COVERAGE_PCT" | cut -d. -f1)
+          if [ "$PCT_INT" -lt "$THRESHOLD" ] 2>/dev/null; then
+            echo "| Status | FAIL |" >> $GITHUB_STEP_SUMMARY
+            echo ""
+            echo "ERROR: Coverage ${COVERAGE_PCT}% is below the ${THRESHOLD}% threshold."
+            echo "Add tests or raise coverage before merging."
+            exit 1
+          else
+            echo "| Status | PASS |" >> $GITHUB_STEP_SUMMARY
+            echo "Coverage ${COVERAGE_PCT}% meets the ${THRESHOLD}% threshold."
+          fi
+
+      - name: Upload coverage report
+        uses: actions/upload-artifact@v4
+        if: always()
+        with:
+          name: coverage-report
+          path: GrowWisePackage/test-output.txt
+          retention-days: 30

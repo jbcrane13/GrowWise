@@ -1,0 +1,93 @@
+/* English (US) - Base localization for GrowWise */
+
+/* Navigation & Tabs */
+"tab.home" = "Home";
+"tab.garden" = "Garden";
+"tab.journal" = "Journal";
+"tab.profile" = "Profile";
+
+/* Home Screen - Greetings */
+"home.greeting.morning" = "Good morning";
+"home.greeting.afternoon" = "Good afternoon";
+"home.greeting.evening" = "Good evening";
+
+/* Home Screen - Tasks */
+"home.todaysTasks" = "Today's Tasks";
+"home.overdue" = "Overdue";
+"home.dueToday" = "Due Today";
+"home.allCaughtUp" = "All caught up!";
+"home.seasonalTips" = "Seasonal Tips";
+
+/* Home Screen - Actions */
+"home.action.water" = "Water";
+"home.action.fertilize" = "Fertilize";
+"home.action.prune" = "Prune";
+
+/* Garden */
+"garden.title" = "My Garden";
+"garden.addPlant" = "Add Plant";
+"garden.noPlantsYet" = "No plants yet";
+"garden.searchPlants" = "Search plants";
+"garden.allPlants" = "All Plants";
+"garden.filter" = "Filter";
+"garden.sortBy" = "Sort by";
+
+/* Journal */
+"journal.title" = "Garden Journal";
+"journal.newEntry" = "New Entry";
+"journal.noEntriesYet" = "No entries yet";
+
+/* Profile */
+"profile.title" = "Profile";
+"profile.plants" = "Plants";
+"profile.dayStreak" = "Day Streak";
+"profile.entries" = "Entries";
+
+/* Profile - Sections */
+"profile.learning" = "Learning";
+"profile.tutorials" = "Tutorials";
+"profile.achievements" = "Achievements";
+"profile.settings" = "Settings";
+"profile.notifications" = "Notifications";
+"profile.subscription" = "Subscription";
+"profile.appSettings" = "App Settings";
+
+/* Common Actions */
+"common.save" = "Save";
+"common.cancel" = "Cancel";
+"common.delete" = "Delete";
+"common.edit" = "Edit";
+"common.done" = "Done";
+"common.ok" = "OK";
+"common.error" = "Error";
+"common.loading" = "Loading...";
+"common.comingSoon" = "Coming Soon";
+"common.retry" = "Retry";
+
+/* Onboarding */
+"onboarding.welcome" = "Welcome to GrowWise";
+"onboarding.experienceQuestion" = "What's your experience level?";
+"onboarding.level.beginner" = "Beginner";
+"onboarding.level.intermediate" = "Intermediate";
+"onboarding.level.advanced" = "Advanced";
+"onboarding.level.expert" = "Expert";
+"onboarding.timeQuestion" = "How much time can you dedicate?";
+"onboarding.getStarted" = "Get Started";
+
+/* Plant Care */
+"plantCare.waterNow" = "Water Now";
+"plantCare.fertilize" = "Fertilize";
+"plantCare.prune" = "Prune";
+"plantCare.status.healthy" = "Healthy";
+"plantCare.status.needsAttention" = "Needs Attention";
+"plantCare.status.sick" = "Sick";
+"plantCare.lastWatered" = "Last Watered";
+"plantCare.lastFertilized" = "Last Fertilized";
+
+/* Subscription */
+"subscription.unlock" = "Unlock GrowWise Premium";
+"subscription.tier.free" = "Free";
+"subscription.tier.premium" = "Premium";
+"subscription.tier.pro" = "Pro";
+"subscription.subscribe" = "Subscribe";
+"subscription.restorePurchases" = "Restore Purchases";

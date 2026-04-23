@@ -1,0 +1,1529 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>Cultivation — Simplified UI Wireflow & Mockup</title>
+<link rel="preconnect" href="https://fonts.googleapis.com" />
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+<link href="https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,400;0,9..144,500;0,9..144,600;0,9..144,700;1,9..144,500&family=Manrope:wght@400;500;600;700&display=swap" rel="stylesheet" />
+<style>
+  :root {
+    --paper: #F6F0E4;
+    --paper-deep: #EFE6D3;
+    --ink: #1F2A22;
+    --ink-soft: #3F4A40;
+    --ink-quiet: #6E7368;
+    --line: #D9CFB8;
+    --line-soft: rgba(31,42,34,0.08);
+    --sage: #7B9069;
+    --sage-deep: #4F6B49;
+    --moss: #2E4631;
+    --coral: #D9694B;
+    --coral-deep: #B14F33;
+    --honey: #C99327;
+    --sky: #6F94A6;
+    --card: #FFFDF7;
+    --shadow: 0 1px 0 rgba(31,42,34,0.04), 0 8px 24px -12px rgba(31,42,34,0.18);
+    --shadow-lift: 0 2px 0 rgba(31,42,34,0.04), 0 18px 40px -18px rgba(31,42,34,0.28);
+  }
+
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; padding: 0;
+    background: var(--paper);
+    color: var(--ink);
+    font-family: "Manrope", system-ui, sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  /* paper grain overlay */
+  body::before {
+    content: "";
+    position: fixed; inset: 0;
+    pointer-events: none;
+    z-index: 1;
+    background-image:
+      radial-gradient(ellipse at 15% 8%, rgba(217,105,75,0.06), transparent 45%),
+      radial-gradient(ellipse at 85% 92%, rgba(123,144,105,0.08), transparent 50%),
+      url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='200' height='200'><filter id='n'><feTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='2' stitchTiles='stitch'/><feColorMatrix values='0 0 0 0 0.12  0 0 0 0 0.16  0 0 0 0 0.13  0 0 0 0.08 0'/></filter><rect width='100%25' height='100%25' filter='url(%23n)'/></svg>");
+    background-size: cover, cover, 200px 200px;
+    mix-blend-mode: multiply;
+    opacity: 0.7;
+  }
+
+  .wrap {
+    max-width: 1280px;
+    margin: 0 auto;
+    padding: 56px 40px 96px;
+    position: relative;
+    z-index: 2;
+  }
+
+  /* ---- masthead ---- */
+  .masthead {
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 28px;
+    margin-bottom: 48px;
+    display: grid;
+    grid-template-columns: 1fr auto;
+    align-items: end;
+    gap: 24px;
+  }
+  .eyebrow {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 600;
+  }
+  .masthead h1 {
+    font-family: "Fraunces", serif;
+    font-weight: 500;
+    font-size: clamp(40px, 6vw, 68px);
+    line-height: 0.95;
+    margin: 12px 0 0;
+    letter-spacing: -0.02em;
+  }
+  .masthead h1 em { font-style: italic; color: var(--coral); font-weight: 400; }
+  .masthead .meta {
+    text-align: right;
+    font-size: 13px;
+    color: var(--ink-soft);
+    line-height: 1.6;
+  }
+  .masthead .meta strong {
+    font-family: "Fraunces", serif; font-weight: 600; font-size: 18px;
+    color: var(--ink); display: block; letter-spacing: -0.01em;
+  }
+
+  /* ---- intro block ---- */
+  .intro {
+    display: grid;
+    grid-template-columns: 1.25fr 1fr;
+    gap: 56px;
+    margin-bottom: 64px;
+  }
+  .intro p {
+    font-size: 19px; line-height: 1.55;
+    color: var(--ink-soft);
+    margin: 0 0 16px;
+  }
+  .intro p:first-child {
+    font-family: "Fraunces", serif; font-weight: 400;
+    font-size: 24px; line-height: 1.45;
+    color: var(--ink);
+  }
+  .principles { display: grid; gap: 14px; }
+  .principle {
+    display: grid;
+    grid-template-columns: 32px 1fr;
+    gap: 14px;
+    align-items: start;
+    padding: 14px 16px;
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    box-shadow: var(--shadow);
+  }
+  .principle .num {
+    font-family: "Fraunces", serif; font-weight: 600;
+    color: var(--coral); font-size: 22px; line-height: 1;
+  }
+  .principle .h {
+    font-weight: 700; font-size: 14px; color: var(--ink);
+    margin-bottom: 2px; letter-spacing: -0.005em;
+  }
+  .principle .d { font-size: 14px; color: var(--ink-soft); line-height: 1.5; }
+
+  /* ---- section heading ---- */
+  .section-head {
+    display: flex; align-items: baseline; gap: 16px;
+    margin: 64px 0 28px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 18px;
+  }
+  .section-head h2 {
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 36px; margin: 0; letter-spacing: -0.015em;
+  }
+  .section-head h2 em { font-style: italic; color: var(--sage-deep); font-weight: 400; }
+  .section-head .tag {
+    font-size: 11px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 600;
+    padding: 6px 10px; border: 1px solid var(--line);
+    border-radius: 4px;
+  }
+
+  /* ---- wireflow canvas ---- */
+  .flow {
+    position: relative;
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 18px;
+    padding: 36px 28px 28px;
+    box-shadow: var(--shadow-lift);
+    overflow: hidden;
+  }
+  .flow::before {
+    content: "";
+    position: absolute; inset: 0;
+    background-image:
+      linear-gradient(var(--line-soft) 1px, transparent 1px),
+      linear-gradient(90deg, var(--line-soft) 1px, transparent 1px);
+    background-size: 24px 24px;
+    opacity: 0.5;
+    pointer-events: none;
+  }
+  .flow-grid {
+    position: relative;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+    z-index: 1;
+  }
+  .node {
+    background: var(--paper);
+    border: 1.5px solid var(--ink);
+    border-radius: 14px;
+    padding: 18px 18px 16px;
+    position: relative;
+    cursor: pointer;
+    transition: transform 200ms cubic-bezier(.2,.8,.2,1), box-shadow 200ms;
+  }
+  .node:hover, .node.active {
+    transform: translateY(-3px);
+    box-shadow: 0 12px 28px -14px rgba(31,42,34,0.4);
+  }
+  .node.active {
+    background: var(--moss); color: var(--paper); border-color: var(--moss);
+  }
+  .node.active .node-tag { color: rgba(246,240,228,0.6); }
+  .node.active .node-h { color: var(--paper); }
+  .node.active .node-sub { color: rgba(246,240,228,0.7); }
+  .node.active .node-list li::before { background: var(--coral); }
+  .node-tag {
+    font-size: 10px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+  }
+  .node-h {
+    font-family: "Fraunces", serif; font-weight: 600;
+    font-size: 22px; margin: 6px 0 4px; letter-spacing: -0.01em;
+  }
+  .node-sub { font-size: 12px; color: var(--ink-soft); line-height: 1.45; margin-bottom: 10px; }
+  .node-list { list-style: none; padding: 0; margin: 0; font-size: 12px; }
+  .node-list li {
+    padding-left: 14px; position: relative; line-height: 1.7; color: var(--ink-soft);
+  }
+  .node-list li::before {
+    content: ""; position: absolute; left: 0; top: 10px;
+    width: 6px; height: 1px; background: var(--coral);
+  }
+
+  /* ---- flow legend ---- */
+  .flow-legend {
+    display: flex; gap: 24px; flex-wrap: wrap;
+    margin-top: 24px;
+    padding-top: 20px;
+    border-top: 1px dashed var(--line);
+    font-size: 12px; color: var(--ink-soft);
+    position: relative; z-index: 1;
+  }
+  .flow-legend span { display: inline-flex; align-items: center; gap: 8px; }
+  .swatch { width: 14px; height: 14px; border-radius: 3px; }
+  .auto-marker {
+    display: inline-flex; gap: 6px; align-items: center;
+    background: rgba(123,144,105,0.18);
+    color: var(--sage-deep);
+    font-weight: 700;
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 10px; letter-spacing: 0.1em; text-transform: uppercase;
+  }
+  .auto-marker::before { content: "✦"; font-size: 11px; }
+
+  /* ---- arrows row ---- */
+  .arrows-row {
+    position: relative;
+    height: 80px;
+    margin: 28px 0 40px;
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 20px;
+  }
+  .arrow-cell {
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 11px; color: var(--ink-quiet);
+    letter-spacing: 0.12em; text-transform: uppercase;
+    text-align: center;
+  }
+  .arrow-cell .label {
+    background: var(--paper); padding: 0 10px; z-index: 2;
+    font-weight: 600;
+  }
+  .arrow-cell::before {
+    content: ""; position: absolute;
+    left: 18%; right: 18%;
+    top: 50%; height: 1.5px;
+    background: var(--ink); border-top: 1px dashed var(--ink); background: none;
+    border-image: repeating-linear-gradient(90deg, var(--ink) 0 6px, transparent 6px 12px) 1;
+  }
+  .arrow-cell::after {
+    content: ""; position: absolute;
+    right: 16%; top: calc(50% - 5px);
+    border: 5px solid transparent; border-left-color: var(--ink);
+  }
+  .arrow-cell.bidir::after {
+    content: ""; right: auto; left: 16%; top: calc(50% - 5px);
+    border: 5px solid transparent; border-right-color: var(--ink);
+    box-shadow: none;
+  }
+  .arrow-cell.bidir .end-arrow {
+    position: absolute; right: 16%; top: calc(50% - 5px);
+    border: 5px solid transparent; border-left-color: var(--ink);
+  }
+  .arrow-cell.skip::before, .arrow-cell.skip::after { display: none; }
+
+  /* ---- mockup gallery ---- */
+  .gallery {
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    gap: 28px;
+    align-items: start;
+  }
+  .phone-col { display: flex; flex-direction: column; align-items: center; }
+  .phone-label {
+    font-size: 11px; letter-spacing: 0.2em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+    margin-bottom: 12px;
+  }
+  .phone-label strong {
+    display: block;
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 22px; color: var(--ink);
+    letter-spacing: -0.01em; text-transform: none;
+    margin-top: 4px;
+  }
+  .phone {
+    width: 100%; max-width: 280px;
+    aspect-ratio: 9 / 19.5;
+    background: var(--ink);
+    border-radius: 38px;
+    padding: 8px;
+    box-shadow: 0 30px 60px -28px rgba(31,42,34,0.5), 0 8px 14px -8px rgba(31,42,34,0.3);
+    position: relative;
+  }
+  .screen {
+    width: 100%; height: 100%;
+    background: var(--paper);
+    border-radius: 30px;
+    overflow: hidden;
+    position: relative;
+    display: flex; flex-direction: column;
+    font-size: 11px;
+  }
+  .notch {
+    position: absolute; top: 8px; left: 50%;
+    transform: translateX(-50%);
+    width: 76px; height: 22px;
+    background: var(--ink);
+    border-radius: 14px; z-index: 5;
+  }
+  .status-bar {
+    height: 38px; padding: 14px 20px 0;
+    display: flex; justify-content: space-between; align-items: center;
+    font-size: 10px; font-weight: 700; color: var(--ink); flex-shrink: 0;
+  }
+  .status-bar .right { display: flex; gap: 4px; align-items: center; }
+  .battery {
+    width: 18px; height: 9px; border: 1px solid var(--ink);
+    border-radius: 2px; position: relative;
+  }
+  .battery::before {
+    content: ""; position: absolute; top: 1px; left: 1px;
+    width: 10px; height: 5px; background: var(--ink); border-radius: 1px;
+  }
+  .battery::after {
+    content: ""; position: absolute; right: -3px; top: 2px;
+    width: 1.5px; height: 3px; background: var(--ink); border-radius: 1px;
+  }
+
+  .scrollarea {
+    flex: 1; overflow-y: auto;
+    padding: 6px 14px 80px;
+    scrollbar-width: none;
+  }
+  .scrollarea::-webkit-scrollbar { display: none; }
+
+  /* tab bar */
+  .tabbar {
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 64px;
+    background: rgba(255,253,247,0.85);
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(4, 1fr);
+    align-items: center;
+    padding: 0 6px 14px;
+  }
+  .tab {
+    display: flex; flex-direction: column; align-items: center;
+    gap: 3px; padding: 8px 0;
+    font-size: 9px; font-weight: 600;
+    color: var(--ink-quiet);
+  }
+  .tab.active { color: var(--coral-deep); }
+  .tab .ic {
+    width: 22px; height: 22px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px; line-height: 1;
+  }
+
+  /* ---- HOME screen elements ---- */
+  .greet {
+    padding: 14px 4px 12px;
+  }
+  .greet .small {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+  }
+  .greet .big {
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 28px; line-height: 1.05; margin-top: 4px;
+    letter-spacing: -0.015em;
+  }
+  .greet .big em { font-style: italic; color: var(--coral); }
+  .weather-pill {
+    display: inline-flex; align-items: center; gap: 8px;
+    padding: 6px 12px 6px 8px;
+    background: var(--card);
+    border: 1px solid var(--line);
+    border-radius: 999px;
+    font-size: 11px; color: var(--ink-soft);
+    margin-top: 10px;
+    box-shadow: var(--shadow);
+  }
+  .weather-pill .sun {
+    width: 18px; height: 18px; border-radius: 50%;
+    background: linear-gradient(135deg, #F4C46A, #E89B3F);
+    box-shadow: 0 0 0 2px rgba(244,196,106,0.25);
+  }
+  .weather-pill strong { color: var(--ink); font-weight: 700; }
+
+  .auto-tag {
+    display: inline-flex; align-items: center; gap: 4px;
+    background: rgba(123,144,105,0.18);
+    color: var(--sage-deep);
+    font-weight: 700;
+    padding: 2px 6px; border-radius: 4px;
+    font-size: 8px; letter-spacing: 0.08em; text-transform: uppercase;
+    margin-left: 6px;
+  }
+  .auto-tag::before { content: "✦"; font-size: 9px; }
+
+  .today-card {
+    margin-top: 16px;
+    background: var(--card);
+    border-radius: 18px;
+    border: 1px solid var(--line-soft);
+    box-shadow: var(--shadow-lift);
+    overflow: hidden;
+  }
+  .today-card .top {
+    padding: 14px 16px 8px;
+    display: flex; justify-content: space-between; align-items: baseline;
+  }
+  .today-card .top h3 {
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 16px; margin: 0; letter-spacing: -0.005em;
+  }
+  .today-card .top .count {
+    font-size: 10px; color: var(--coral-deep); font-weight: 700;
+    letter-spacing: 0.08em; text-transform: uppercase;
+  }
+  .task-row {
+    display: grid;
+    grid-template-columns: 32px 1fr auto;
+    gap: 10px;
+    align-items: center;
+    padding: 10px 16px;
+    border-top: 1px solid var(--line-soft);
+  }
+  .task-row .ic-bub {
+    width: 32px; height: 32px;
+    border-radius: 10px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px;
+  }
+  .ic-bub.water { background: rgba(111,148,166,0.16); color: var(--sky); }
+  .ic-bub.prune { background: rgba(123,144,105,0.18); color: var(--sage-deep); }
+  .ic-bub.feed { background: rgba(201,147,39,0.16); color: var(--honey); }
+  .ic-bub.club { background: rgba(217,105,75,0.16); color: var(--coral-deep); }
+  .task-row .label {
+    font-size: 12px; color: var(--ink); font-weight: 600;
+  }
+  .task-row .label .where {
+    display: block; font-size: 10px; color: var(--ink-quiet); font-weight: 500; margin-top: 1px;
+  }
+  .task-row .check {
+    width: 26px; height: 26px; border-radius: 50%;
+    border: 1.5px solid var(--line);
+    background: var(--paper);
+  }
+  .task-row.priority { background: rgba(217,105,75,0.06); }
+  .task-row.priority .check {
+    background: var(--coral); border-color: var(--coral);
+    color: white; font-weight: 800;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px;
+  }
+  .task-row.priority .check::after { content: "✓"; }
+
+  .do-all-btn {
+    margin: 12px 16px 14px;
+    background: var(--moss); color: var(--paper);
+    border-radius: 14px;
+    padding: 14px 16px;
+    text-align: center;
+    font-weight: 700; font-size: 13px;
+    letter-spacing: -0.005em;
+    box-shadow: 0 6px 14px -6px rgba(46,70,49,0.5);
+  }
+
+  .club-card {
+    margin-top: 18px;
+    background: var(--card);
+    border-radius: 18px;
+    border: 1px solid var(--line-soft);
+    overflow: hidden;
+    box-shadow: var(--shadow);
+  }
+  .club-banner {
+    height: 70px;
+    background:
+      linear-gradient(135deg, rgba(217,105,75,0.85), rgba(201,147,39,0.7)),
+      radial-gradient(circle at 30% 60%, rgba(255,255,255,0.4), transparent 50%);
+    position: relative;
+    padding: 10px 14px;
+  }
+  .club-banner .tag {
+    background: rgba(255,253,247,0.9); color: var(--coral-deep);
+    font-size: 9px; font-weight: 700; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 3px 7px; border-radius: 4px;
+    display: inline-block;
+  }
+  .club-banner .name {
+    font-family: "Fraunces", serif; font-weight: 600;
+    color: white; font-size: 18px;
+    margin-top: 6px; letter-spacing: -0.005em;
+  }
+  .club-body { padding: 12px 14px 14px; }
+  .club-post {
+    display: grid;
+    grid-template-columns: 30px 1fr;
+    gap: 10px;
+    align-items: start;
+  }
+  .avatar {
+    width: 30px; height: 30px;
+    border-radius: 50%;
+    background: linear-gradient(135deg, #B7C9A4, #7B9069);
+    display: flex; align-items: center; justify-content: center;
+    color: white; font-weight: 700; font-size: 12px;
+    font-family: "Fraunces", serif;
+  }
+  .avatar.b2 { background: linear-gradient(135deg, #E8B383, #D9694B); }
+  .avatar.b3 { background: linear-gradient(135deg, #E5CB7A, #C99327); }
+  .club-post .who { font-size: 11px; font-weight: 700; color: var(--ink); }
+  .club-post .when { font-size: 9px; color: var(--ink-quiet); margin-left: 4px; font-weight: 500; }
+  .club-post .text { font-size: 11px; color: var(--ink-soft); line-height: 1.45; margin-top: 2px; }
+  .club-post .photo {
+    margin-top: 8px;
+    height: 80px; border-radius: 10px;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(255,200,140,0.6), transparent 40%),
+      linear-gradient(160deg, #7B9069, #4F6B49 70%, #2E4631);
+    position: relative;
+  }
+  .club-post .photo::after {
+    content: "🌻"; position: absolute; top: 14px; left: 60px; font-size: 38px;
+  }
+  .club-actions {
+    display: flex; gap: 14px; margin-top: 10px;
+    font-size: 10px; color: var(--ink-quiet); font-weight: 600;
+  }
+  .club-actions span { display: inline-flex; align-items: center; gap: 4px; }
+
+  .seasonal-card {
+    margin-top: 18px;
+    padding: 14px;
+    background: var(--paper-deep);
+    border: 1px dashed var(--sage);
+    border-radius: 14px;
+  }
+  .seasonal-card .h {
+    font-size: 9px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--sage-deep); font-weight: 700;
+  }
+  .seasonal-card .body {
+    font-family: "Fraunces", serif; font-style: italic;
+    font-weight: 400; font-size: 14px;
+    color: var(--ink); margin-top: 4px; line-height: 1.4;
+  }
+
+  /* ---- GARDEN screen ---- */
+  .gh-title {
+    padding: 8px 4px 0;
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+  }
+  .gh-title-big {
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 30px; padding: 4px 4px 6px;
+    letter-spacing: -0.015em;
+  }
+  .gh-summary {
+    display: flex; gap: 12px; padding: 4px;
+    font-size: 11px; color: var(--ink-soft);
+  }
+  .gh-summary strong {
+    font-family: "Fraunces", serif; font-size: 14px; color: var(--ink); margin-right: 3px;
+  }
+  .filter-chips {
+    display: flex; gap: 6px; padding: 12px 4px 6px;
+    overflow-x: auto;
+  }
+  .chip {
+    padding: 6px 12px; border-radius: 999px;
+    border: 1px solid var(--line);
+    font-size: 10px; font-weight: 600; color: var(--ink-soft);
+    background: var(--card); white-space: nowrap;
+  }
+  .chip.on {
+    background: var(--moss); color: var(--paper); border-color: var(--moss);
+  }
+  .chip .dot {
+    display: inline-block; width: 5px; height: 5px;
+    border-radius: 50%; margin-right: 4px; vertical-align: middle;
+  }
+  .chip .dot.r { background: var(--coral); }
+
+  .bed-head {
+    display: flex; align-items: center; gap: 8px;
+    padding: 16px 4px 8px;
+  }
+  .bed-head .ic-bub {
+    width: 28px; height: 28px; font-size: 14px; border-radius: 8px;
+  }
+  .bed-head .name {
+    font-family: "Fraunces", serif; font-weight: 600;
+    font-size: 15px; letter-spacing: -0.005em;
+  }
+  .bed-head .meta {
+    margin-left: auto; font-size: 10px; color: var(--ink-quiet);
+  }
+
+  .plant-card {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 14px;
+    padding: 12px;
+    box-shadow: var(--shadow);
+    margin-bottom: 10px;
+    display: grid;
+    grid-template-columns: 56px 1fr;
+    gap: 12px;
+    align-items: center;
+  }
+  .plant-thumb {
+    width: 56px; height: 56px; border-radius: 12px;
+    background: linear-gradient(135deg, #B7C9A4, #4F6B49);
+    position: relative;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 26px;
+  }
+  .plant-thumb.tomato { background: linear-gradient(135deg, #F0B58A, #D9694B); }
+  .plant-thumb.basil { background: linear-gradient(135deg, #B7C9A4, #4F6B49); }
+  .plant-thumb.pepper { background: linear-gradient(135deg, #E89B3F, #B14F33); }
+  .plant-thumb.lav { background: linear-gradient(135deg, #C7B3E0, #7E6BA8); }
+  .plant-thumb.rose { background: linear-gradient(135deg, #E8A3A3, #B5536F); }
+
+  .plant-info .name {
+    font-family: "Fraunces", serif; font-weight: 600;
+    font-size: 15px; letter-spacing: -0.005em;
+    line-height: 1.1;
+  }
+  .plant-info .latin {
+    font-size: 9px; color: var(--ink-quiet); font-style: italic;
+    margin-top: 1px;
+  }
+  .status-line {
+    display: flex; align-items: center; gap: 6px;
+    margin-top: 6px; font-size: 10px; color: var(--ink-soft);
+  }
+  .status-dot {
+    width: 7px; height: 7px; border-radius: 50%;
+  }
+  .status-dot.g { background: var(--sage); }
+  .status-dot.y { background: var(--honey); }
+  .status-dot.r { background: var(--coral); }
+  .next-care {
+    margin-top: 6px; font-size: 10px;
+    color: var(--ink-quiet);
+  }
+  .next-care strong { color: var(--ink); font-weight: 700; }
+
+  .add-bed {
+    margin: 14px 4px;
+    padding: 14px;
+    text-align: center;
+    border: 1.5px dashed var(--line);
+    border-radius: 14px;
+    color: var(--ink-quiet);
+    font-size: 11px; font-weight: 600;
+  }
+
+  /* ---- PLANT DETAIL screen ---- */
+  .pd-hero {
+    margin: 8px 0 0;
+    height: 180px;
+    border-radius: 18px;
+    background:
+      radial-gradient(circle at 70% 30%, rgba(255,220,160,0.5), transparent 50%),
+      linear-gradient(160deg, #7B9069, #2E4631);
+    position: relative;
+    overflow: hidden;
+    display: flex; align-items: flex-end;
+    padding: 14px;
+  }
+  .pd-hero::after {
+    content: "🍅"; position: absolute;
+    top: 14px; right: 18px; font-size: 80px; opacity: 0.95;
+    filter: drop-shadow(0 4px 12px rgba(0,0,0,0.25));
+  }
+  .pd-hero .badge {
+    background: rgba(255,253,247,0.92);
+    color: var(--ink); font-weight: 700;
+    font-size: 9px; letter-spacing: 0.12em; text-transform: uppercase;
+    padding: 4px 8px; border-radius: 4px;
+    z-index: 2;
+  }
+  .pd-hero .badge.healthy {
+    color: var(--sage-deep);
+  }
+  .pd-hero .badge.healthy::before {
+    content: "●"; color: var(--sage); margin-right: 4px;
+  }
+
+  .pd-title {
+    margin-top: 14px;
+  }
+  .pd-title .name {
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 28px; letter-spacing: -0.015em; line-height: 1;
+  }
+  .pd-title .latin {
+    font-size: 11px; color: var(--ink-quiet);
+    font-style: italic; margin-top: 4px;
+  }
+
+  .pd-3col {
+    display: grid; grid-template-columns: repeat(3, 1fr);
+    gap: 8px; margin-top: 14px;
+  }
+  .pd-stat {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 12px;
+    padding: 10px 8px;
+    text-align: center;
+  }
+  .pd-stat .lbl {
+    font-size: 8px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+  }
+  .pd-stat .val {
+    font-family: "Fraunces", serif; font-weight: 600;
+    font-size: 14px; margin-top: 4px; color: var(--ink);
+    letter-spacing: -0.005em;
+  }
+  .pd-stat .ic { font-size: 16px; margin-bottom: 2px; }
+
+  .pd-actions {
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px; margin-top: 14px;
+  }
+  .pd-action {
+    padding: 12px;
+    border-radius: 14px;
+    text-align: center;
+    font-weight: 700; font-size: 12px;
+  }
+  .pd-action.primary {
+    background: var(--moss); color: var(--paper);
+  }
+  .pd-action.secondary {
+    background: var(--card); color: var(--ink);
+    border: 1px solid var(--line);
+  }
+  .pd-share {
+    margin-top: 8px;
+    background: var(--coral); color: white;
+    padding: 12px; border-radius: 14px;
+    text-align: center; font-weight: 700; font-size: 12px;
+  }
+  .pd-share::before { content: "✦ "; }
+
+  .pd-section-h {
+    font-size: 10px; letter-spacing: 0.18em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+    margin: 18px 4px 8px;
+  }
+  .advice-card {
+    background: var(--paper-deep);
+    border: 1px solid var(--line);
+    border-radius: 14px;
+    padding: 12px;
+    font-size: 11px; line-height: 1.5; color: var(--ink-soft);
+  }
+  .advice-card .smart {
+    font-size: 8px; letter-spacing: 0.12em; text-transform: uppercase;
+    font-weight: 700; color: var(--sage-deep);
+    margin-bottom: 4px;
+    display: flex; align-items: center; gap: 4px;
+  }
+  .advice-card .smart::before { content: "✦"; }
+  .advice-card em {
+    font-family: "Fraunces", serif; font-style: italic;
+    color: var(--ink); font-weight: 500;
+  }
+
+  .journal-strip {
+    display: flex; gap: 6px;
+    margin-top: 8px; overflow-x: auto;
+  }
+  .journal-strip .j {
+    width: 60px; height: 60px; border-radius: 10px; flex-shrink: 0;
+    background: linear-gradient(135deg, #B7C9A4, #4F6B49);
+    position: relative;
+  }
+  .journal-strip .j.j2 { background: linear-gradient(135deg, #F0B58A, #D9694B); }
+  .journal-strip .j.j3 { background: linear-gradient(135deg, #E5CB7A, #C99327); }
+  .journal-strip .j.j4 { background: linear-gradient(135deg, #C7B3E0, #7E6BA8); }
+  .journal-strip .j .date {
+    position: absolute; bottom: 4px; left: 4px;
+    font-size: 8px; color: white; font-weight: 700;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.4);
+  }
+  .journal-strip .add {
+    background: var(--paper-deep); border: 1.5px dashed var(--line);
+    display: flex; align-items: center; justify-content: center;
+    color: var(--ink-quiet); font-size: 22px; font-weight: 300;
+  }
+
+  /* ---- CLUB screen ---- */
+  .club-head {
+    padding: 8px 4px 12px;
+    display: flex; justify-content: space-between; align-items: end;
+  }
+  .club-head .small {
+    font-size: 10px; letter-spacing: 0.16em; text-transform: uppercase;
+    color: var(--ink-quiet); font-weight: 700;
+  }
+  .club-head .big {
+    font-family: "Fraunces", serif; font-weight: 500;
+    font-size: 26px; letter-spacing: -0.015em; line-height: 1;
+    margin-top: 4px;
+  }
+  .club-head .big em { font-style: italic; color: var(--coral); }
+  .club-head .members {
+    text-align: right; font-size: 10px; color: var(--ink-quiet);
+  }
+  .club-head .members strong {
+    font-family: "Fraunces", serif; font-size: 16px; color: var(--ink); display: block;
+  }
+
+  .share-prompt {
+    background: var(--coral);
+    color: white;
+    border-radius: 16px;
+    padding: 14px;
+    display: grid;
+    grid-template-columns: 36px 1fr auto;
+    gap: 12px;
+    align-items: center;
+    box-shadow: 0 8px 18px -8px rgba(217,105,75,0.5);
+  }
+  .share-prompt .av-me {
+    width: 36px; height: 36px; border-radius: 50%;
+    background: rgba(255,255,255,0.25);
+    display: flex; align-items: center; justify-content: center;
+    font-family: "Fraunces", serif; font-weight: 600; font-size: 14px;
+    color: white;
+  }
+  .share-prompt .ask {
+    font-size: 12px; line-height: 1.3;
+  }
+  .share-prompt .ask em {
+    font-family: "Fraunces", serif; font-style: italic;
+    font-weight: 500;
+  }
+  .share-prompt .cam {
+    width: 32px; height: 32px; border-radius: 50%;
+    background: white; color: var(--coral);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 16px; font-weight: 700;
+  }
+
+  .feed-tab-bar {
+    display: flex; gap: 16px; margin-top: 16px;
+    border-bottom: 1px solid var(--line);
+    padding-bottom: 8px;
+    font-size: 11px; font-weight: 600;
+  }
+  .feed-tab-bar .ft {
+    color: var(--ink-quiet); padding-bottom: 6px;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -9px;
+  }
+  .feed-tab-bar .ft.on {
+    color: var(--ink); border-color: var(--coral);
+  }
+
+  .post {
+    background: var(--card);
+    border: 1px solid var(--line-soft);
+    border-radius: 16px;
+    padding: 12px;
+    margin-top: 12px;
+    box-shadow: var(--shadow);
+  }
+  .post-head {
+    display: flex; align-items: center; gap: 10px;
+    margin-bottom: 8px;
+  }
+  .post-head .who {
+    font-size: 11px; font-weight: 700;
+  }
+  .post-head .who .meta {
+    display: block; font-size: 9px; color: var(--ink-quiet);
+    font-weight: 500; margin-top: 1px;
+  }
+  .post-head .who .meta em { font-style: normal; color: var(--sage-deep); font-weight: 700; }
+  .post-text {
+    font-size: 11px; color: var(--ink-soft); line-height: 1.45;
+  }
+  .post-text strong { color: var(--ink); font-family: "Fraunces", serif; font-weight: 600; font-style: italic; }
+  .post-photo {
+    margin-top: 8px;
+    height: 110px; border-radius: 12px;
+    background:
+      radial-gradient(circle at 30% 40%, rgba(255,200,140,0.5), transparent 45%),
+      linear-gradient(160deg, #7B9069, #2E4631);
+    position: relative;
+    overflow: hidden;
+  }
+  .post-photo::after {
+    content: "🍅"; position: absolute;
+    top: 18px; left: 50%; transform: translateX(-50%);
+    font-size: 60px;
+  }
+  .post-photo.flowers::after { content: "🌸"; }
+  .post-photo.flowers { background:
+      radial-gradient(circle at 60% 30%, rgba(255,200,200,0.5), transparent 45%),
+      linear-gradient(160deg, #B5536F, #7E6BA8); }
+  .post-photo .meta-pill {
+    position: absolute; top: 8px; left: 8px;
+    background: rgba(255,253,247,0.92);
+    padding: 3px 8px; border-radius: 4px;
+    font-size: 9px; font-weight: 700; color: var(--ink);
+    letter-spacing: 0.06em;
+  }
+  .post-actions {
+    display: flex; gap: 16px; margin-top: 10px;
+    font-size: 10px; color: var(--ink-quiet); font-weight: 600;
+  }
+  .post-actions span.liked { color: var(--coral); }
+
+  .nearby-card {
+    margin-top: 14px;
+    padding: 12px;
+    background: var(--paper-deep);
+    border-radius: 14px;
+    border: 1px dashed var(--sage);
+  }
+  .nearby-card .h {
+    font-size: 9px; letter-spacing: 0.14em; text-transform: uppercase;
+    color: var(--sage-deep); font-weight: 700;
+    margin-bottom: 6px;
+    display: flex; align-items: center; gap: 5px;
+  }
+  .nearby-card .h::before { content: "✦"; }
+  .nearby-card .body {
+    font-family: "Fraunces", serif; font-style: italic; font-weight: 400;
+    font-size: 13px; color: var(--ink); line-height: 1.35;
+  }
+  .nearby-card .body strong { font-style: normal; color: var(--coral-deep); font-weight: 700; }
+
+  /* ---- footnotes ---- */
+  .footnotes {
+    margin-top: 80px;
+    padding-top: 32px;
+    border-top: 1px solid var(--line);
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 32px;
+  }
+  .footnote .n {
+    font-family: "Fraunces", serif;
+    font-size: 32px; font-weight: 600;
+    color: var(--coral); line-height: 1;
+    letter-spacing: -0.01em;
+  }
+  .footnote .h {
+    font-family: "Fraunces", serif;
+    font-size: 18px; font-weight: 600;
+    margin: 8px 0 6px;
+    letter-spacing: -0.005em;
+  }
+  .footnote .b {
+    font-size: 13px; color: var(--ink-soft); line-height: 1.55;
+  }
+
+  .colophon {
+    margin-top: 48px; padding-top: 18px;
+    border-top: 1px solid var(--line);
+    display: flex; justify-content: space-between;
+    font-size: 11px; color: var(--ink-quiet);
+    letter-spacing: 0.04em;
+  }
+  .colophon strong { font-family: "Fraunces", serif; font-weight: 600; color: var(--ink); }
+
+  /* responsive: stack screens on narrow */
+  @media (max-width: 1100px) {
+    .gallery { grid-template-columns: repeat(2, 1fr); gap: 36px; }
+    .arrows-row, .flow-grid { grid-template-columns: repeat(2, 1fr); }
+    .footnotes { grid-template-columns: 1fr; gap: 24px; }
+    .intro { grid-template-columns: 1fr; gap: 32px; }
+  }
+  @media (max-width: 600px) {
+    .gallery { grid-template-columns: 1fr; }
+    .flow-grid, .arrows-row { grid-template-columns: 1fr; }
+    .arrows-row { display: none; }
+    .wrap { padding: 32px 20px; }
+  }
+</style>
+</head>
+<body>
+
+<div class="wrap">
+
+  <!-- ============== MASTHEAD ============== -->
+  <header class="masthead">
+    <div>
+      <div class="eyebrow">Cultivation · UI Redesign · Wireflow + Mockup</div>
+      <h1>A simpler<br><em>field journal.</em></h1>
+    </div>
+    <div class="meta">
+      <strong>v0.1 — for review</strong>
+      Audience: 50+ enthusiast gardeners<br>
+      Scope: Home, Garden, Plant Detail, Garden Club<br>
+      Date: April 18, 2026
+    </div>
+  </header>
+
+  <!-- ============== INTRO ============== -->
+  <section class="intro">
+    <div>
+      <p>The current app does too much asking. It asks the user to identify the plant, set up reminders, configure the weather widget, choose a hardiness zone, decide what counts as urgent. Each ask is a chance to drop off.</p>
+      <p>The redesign reverses that. The app does the work in the background — identification, weather, scheduling, zone-aware tips — and surfaces the result as plain language. The user only has to look, tap, or share. The Garden Club becomes the second pillar: every screen has one obvious way to share what they're growing with people they actually know.</p>
+    </div>
+    <div class="principles">
+      <div class="principle">
+        <div class="num">1</div>
+        <div>
+          <div class="h">Smart enrichment is invisible</div>
+          <div class="d">Weather, plant ID, hardiness zone, and care schedules just appear. No setup screens, no settings to find. Marked with ✦ where the user might wonder where the info came from.</div>
+        </div>
+      </div>
+      <div class="principle">
+        <div class="num">2</div>
+        <div>
+          <div class="h">One screen, one job</div>
+          <div class="d">Each screen answers exactly one question: <em>What needs doing? Where is everything? How is this plant? What's the club up to?</em> Detail is reachable, not in the way.</div>
+        </div>
+      </div>
+      <div class="principle">
+        <div class="num">3</div>
+        <div>
+          <div class="h">Sharing is built in, not bolted on</div>
+          <div class="d">Every plant has a "Share to Club" button. The Home screen surfaces club activity. The Club tab opens straight into the feed with a one-tap photo prompt.</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <!-- ============== WIREFLOW ============== -->
+  <div class="section-head">
+    <h2>The <em>wireflow.</em></h2>
+    <span class="tag">Four screens · click any node</span>
+  </div>
+
+  <div class="flow">
+    <div class="flow-grid">
+      <div class="node" data-target="home">
+        <div class="node-tag">01 · Tab</div>
+        <div class="node-h">Home</div>
+        <div class="node-sub">"What needs doing today?"</div>
+        <ul class="node-list">
+          <li>Today's care tasks (max 3 visible)</li>
+          <li>One "Do all" button</li>
+          <li>Latest from your club</li>
+          <li>Auto: weather, season tip</li>
+        </ul>
+      </div>
+      <div class="node active" data-target="garden">
+        <div class="node-tag">02 · Tab</div>
+        <div class="node-h">Garden</div>
+        <div class="node-sub">"Where is everything?"</div>
+        <ul class="node-list">
+          <li>Plants grouped by bed</li>
+          <li>Smart filters (auto-tagged)</li>
+          <li>Status dot at a glance</li>
+          <li>Tap → Plant Detail</li>
+        </ul>
+      </div>
+      <div class="node" data-target="detail">
+        <div class="node-tag">03 · Push</div>
+        <div class="node-h">Plant Detail</div>
+        <div class="node-sub">"How is this plant?"</div>
+        <ul class="node-list">
+          <li>Hero photo + auto species ID</li>
+          <li>3 stats: sun · water · soil</li>
+          <li>Log care · Get advice · Share</li>
+          <li>Photo journal strip</li>
+        </ul>
+      </div>
+      <div class="node" data-target="club">
+        <div class="node-tag">04 · Tab</div>
+        <div class="node-h">Garden Club</div>
+        <div class="node-sub">"What's the club up to?"</div>
+        <ul class="node-list">
+          <li>One-tap photo share at top</li>
+          <li>Feed of club + nearby growers</li>
+          <li>Posts auto-tagged with zone</li>
+          <li>Smart "people near you" prompts</li>
+        </ul>
+      </div>
+    </div>
+
+    <div class="arrows-row">
+      <div class="arrow-cell"><span class="label">tap card</span></div>
+      <div class="arrow-cell"><span class="label">tap plant</span></div>
+      <div class="arrow-cell"><span class="label">tap "Share"</span></div>
+      <div class="arrow-cell skip"></div>
+    </div>
+
+    <div class="flow-legend">
+      <span><span class="swatch" style="background:var(--moss)"></span> Tab destination</span>
+      <span><span class="swatch" style="background:var(--coral)"></span> Primary action</span>
+      <span><span class="swatch" style="background:var(--paper-deep);border:1px dashed var(--sage)"></span> Auto-generated content</span>
+      <span class="auto-marker">Smart enrichment</span>
+    </div>
+  </div>
+
+  <!-- ============== MOCKUPS ============== -->
+  <div class="section-head">
+    <h2>The <em>screens.</em></h2>
+    <span class="tag">iPhone · light theme · botanical journal</span>
+  </div>
+
+  <div class="gallery">
+
+    <!-- ===== HOME ===== -->
+    <div class="phone-col">
+      <div class="phone-label">01 · Tab<strong>Home</strong></div>
+      <div class="phone" id="home">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span class="right">●●●● <span class="battery"></span></span>
+          </div>
+          <div class="scrollarea">
+            <div class="greet">
+              <div class="small">Saturday · April 18</div>
+              <div class="big">Good morning,<br><em>Blake.</em></div>
+              <div class="weather-pill">
+                <span class="sun"></span>
+                <span><strong>72°</strong> · Good day to water</span>
+              </div>
+            </div>
+
+            <div class="today-card">
+              <div class="top">
+                <h3>Today's care</h3>
+                <span class="count">3 things</span>
+              </div>
+              <div class="task-row priority">
+                <div class="ic-bub water">💧</div>
+                <div class="label">Water tomatoes <span class="where">Raised bed · west</span></div>
+                <div class="check"></div>
+              </div>
+              <div class="task-row">
+                <div class="ic-bub prune">🌿</div>
+                <div class="label">Pinch basil tops <span class="where">Herb bed</span></div>
+                <div class="check"></div>
+              </div>
+              <div class="task-row">
+                <div class="ic-bub feed">✦</div>
+                <div class="label">Feed peppers <span class="where">Raised bed · east</span></div>
+                <div class="check"></div>
+              </div>
+              <div class="do-all-btn">Mark all done</div>
+            </div>
+
+            <div class="club-card">
+              <div class="club-banner">
+                <span class="tag">Your Club</span>
+                <div class="name">Bayou Growers</div>
+              </div>
+              <div class="club-body">
+                <div class="club-post">
+                  <div class="avatar">M</div>
+                  <div>
+                    <div><span class="who">Margaret L.</span><span class="when">2h</span></div>
+                    <div class="text">First sunflower of the season opened up this morning 🌻</div>
+                    <div class="photo"></div>
+                    <div class="club-actions">
+                      <span>♡ 12</span>
+                      <span>💬 4</span>
+                      <span>↗ Share</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <div class="seasonal-card">
+              <div class="h">✦ Seasonal tip · Zone 9b</div>
+              <div class="body">"Last week to direct-sow sunflowers if you want late-summer blooms."</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab active"><div class="ic">⌂</div>Home</div>
+            <div class="tab"><div class="ic">❀</div>Garden</div>
+            <div class="tab"><div class="ic">✦</div>Club</div>
+            <div class="tab"><div class="ic">☉</div>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== GARDEN ===== -->
+    <div class="phone-col">
+      <div class="phone-label">02 · Tab<strong>Garden</strong></div>
+      <div class="phone" id="garden">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span class="right">●●●● <span class="battery"></span></span>
+          </div>
+          <div class="scrollarea">
+            <div class="gh-title">My Garden</div>
+            <div class="gh-title-big">Backyard</div>
+            <div class="gh-summary">
+              <span><strong>14</strong>plants</span>
+              <span><strong>3</strong>need care</span>
+              <span><strong>2</strong>blooming</span>
+            </div>
+
+            <div class="filter-chips">
+              <div class="chip on">All</div>
+              <div class="chip"><span class="dot r"></span>Needs care</div>
+              <div class="chip">Blooming</div>
+              <div class="chip">Edible</div>
+              <div class="chip">Herbs</div>
+            </div>
+
+            <div class="bed-head">
+              <div class="ic-bub feed">⬛</div>
+              <div class="name">Raised bed</div>
+              <div class="meta">5 plants</div>
+            </div>
+
+            <div class="plant-card">
+              <div class="plant-thumb tomato">🍅</div>
+              <div class="plant-info">
+                <div class="name">Cherokee Purple</div>
+                <div class="latin">Solanum lycopersicum</div>
+                <div class="status-line"><span class="status-dot r"></span>Thirsty · 2 days overdue</div>
+                <div class="next-care"><strong>Water</strong> · 1 cup per plant</div>
+              </div>
+            </div>
+
+            <div class="plant-card">
+              <div class="plant-thumb pepper">🌶</div>
+              <div class="plant-info">
+                <div class="name">Shishito</div>
+                <div class="latin">Capsicum annuum</div>
+                <div class="status-line"><span class="status-dot y"></span>Due to feed soon</div>
+                <div class="next-care"><strong>Feed</strong> · in 2 days</div>
+              </div>
+            </div>
+
+            <div class="bed-head">
+              <div class="ic-bub prune">▢</div>
+              <div class="name">Herb bed</div>
+              <div class="meta">6 plants</div>
+            </div>
+
+            <div class="plant-card">
+              <div class="plant-thumb basil">🌿</div>
+              <div class="plant-info">
+                <div class="name">Genovese Basil</div>
+                <div class="latin">Ocimum basilicum</div>
+                <div class="status-line"><span class="status-dot g"></span>Healthy · ready to pinch</div>
+                <div class="next-care"><strong>Pinch</strong> · top sets</div>
+              </div>
+            </div>
+
+            <div class="plant-card">
+              <div class="plant-thumb lav">💜</div>
+              <div class="plant-info">
+                <div class="name">English Lavender</div>
+                <div class="latin">Lavandula angustifolia</div>
+                <div class="status-line"><span class="status-dot g"></span>Healthy</div>
+                <div class="next-care">No care needed</div>
+              </div>
+            </div>
+
+            <div class="add-bed">+ Add a bed or area</div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><div class="ic">⌂</div>Home</div>
+            <div class="tab active"><div class="ic">❀</div>Garden</div>
+            <div class="tab"><div class="ic">✦</div>Club</div>
+            <div class="tab"><div class="ic">☉</div>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== PLANT DETAIL ===== -->
+    <div class="phone-col">
+      <div class="phone-label">03 · Push<strong>Plant Detail</strong></div>
+      <div class="phone" id="detail">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span class="right">●●●● <span class="battery"></span></span>
+          </div>
+          <div class="scrollarea">
+            <div style="display:flex;justify-content:space-between;align-items:center;padding:6px 4px 0;font-size:18px;color:var(--ink-quiet);">
+              <span>‹ Garden</span>
+              <span>···</span>
+            </div>
+
+            <div class="pd-hero">
+              <span class="badge healthy">Healthy</span>
+            </div>
+
+            <div class="pd-title">
+              <div class="name">Cherokee Purple</div>
+              <div class="latin">Solanum lycopersicum <span class="auto-tag">Auto-identified</span></div>
+            </div>
+
+            <div class="pd-3col">
+              <div class="pd-stat">
+                <div class="ic">☼</div>
+                <div class="lbl">Sun</div>
+                <div class="val">Full</div>
+              </div>
+              <div class="pd-stat">
+                <div class="ic">💧</div>
+                <div class="lbl">Water</div>
+                <div class="val">2× wk</div>
+              </div>
+              <div class="pd-stat">
+                <div class="ic">🌱</div>
+                <div class="lbl">Soil</div>
+                <div class="val">Loamy</div>
+              </div>
+            </div>
+
+            <div class="pd-actions">
+              <div class="pd-action primary">Log care</div>
+              <div class="pd-action secondary">Get advice</div>
+            </div>
+            <div class="pd-share">Share to Bayou Growers</div>
+
+            <div class="pd-section-h">Care advice for today</div>
+            <div class="advice-card">
+              <div class="smart">Smart suggestion · based on weather + soil</div>
+              <em>"It hit 88° here yesterday and rain isn't expected for 4 days."</em>
+              Give Cherokee Purple a deep watering this morning at the base — avoid the leaves.
+            </div>
+
+            <div class="pd-section-h">Photo journal</div>
+            <div class="journal-strip">
+              <div class="j"><div class="date">Apr 18</div></div>
+              <div class="j j2"><div class="date">Apr 11</div></div>
+              <div class="j j3"><div class="date">Apr 04</div></div>
+              <div class="j j4"><div class="date">Mar 28</div></div>
+              <div class="j add">+</div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><div class="ic">⌂</div>Home</div>
+            <div class="tab active"><div class="ic">❀</div>Garden</div>
+            <div class="tab"><div class="ic">✦</div>Club</div>
+            <div class="tab"><div class="ic">☉</div>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ===== CLUB ===== -->
+    <div class="phone-col">
+      <div class="phone-label">04 · Tab<strong>Garden Club</strong></div>
+      <div class="phone" id="club">
+        <div class="screen">
+          <div class="notch"></div>
+          <div class="status-bar">
+            <span>9:41</span>
+            <span class="right">●●●● <span class="battery"></span></span>
+          </div>
+          <div class="scrollarea">
+            <div class="club-head">
+              <div>
+                <div class="small">Your club</div>
+                <div class="big">Bayou<br><em>Growers</em></div>
+              </div>
+              <div class="members">
+                <strong>47</strong>
+                members
+              </div>
+            </div>
+
+            <div class="share-prompt">
+              <div class="av-me">B</div>
+              <div class="ask">Share what's growing,<br><em>Blake.</em></div>
+              <div class="cam">📷</div>
+            </div>
+
+            <div class="feed-tab-bar">
+              <div class="ft on">Club feed</div>
+              <div class="ft">Nearby</div>
+              <div class="ft">Following</div>
+            </div>
+
+            <div class="post">
+              <div class="post-head">
+                <div class="avatar">M</div>
+                <div class="who">Margaret L.<span class="meta"><em>Zone 9b · 2 mi away</em> · 2h</span></div>
+              </div>
+              <div class="post-text">First sunflower opened up! Started these from seed in <strong>March</strong> — worth the wait.</div>
+              <div class="post-photo flowers">
+                <div class="meta-pill">🌻 Sunflower · 4 ft tall</div>
+              </div>
+              <div class="post-actions">
+                <span class="liked">♥ 12</span>
+                <span>💬 4</span>
+                <span>↗</span>
+              </div>
+            </div>
+
+            <div class="nearby-card">
+              <div class="h">Smart match · 3 nearby growers</div>
+              <div class="body">3 people in <strong>your zone</strong> are growing Cherokee Purple too. Want to see their tips?</div>
+            </div>
+
+            <div class="post">
+              <div class="post-head">
+                <div class="avatar b2">D</div>
+                <div class="who">Daniel R.<span class="meta"><em>Zone 9b</em> · 5h</span></div>
+              </div>
+              <div class="post-text">Anyone else getting <strong>blossom end rot</strong> this year? Two of my Cherokees have it.</div>
+              <div class="post-photo">
+                <div class="meta-pill">🍅 Cherokee Purple</div>
+              </div>
+              <div class="post-actions">
+                <span>♡ 6</span>
+                <span>💬 11</span>
+                <span>↗</span>
+              </div>
+            </div>
+          </div>
+          <div class="tabbar">
+            <div class="tab"><div class="ic">⌂</div>Home</div>
+            <div class="tab"><div class="ic">❀</div>Garden</div>
+            <div class="tab active"><div class="ic">✦</div>Club</div>
+            <div class="tab"><div class="ic">☉</div>Me</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ============== FOOTNOTES ============== -->
+  <div class="section-head">
+    <h2>What <em>changed.</em></h2>
+    <span class="tag">vs. current build</span>
+  </div>
+  <div class="footnotes">
+    <div class="footnote">
+      <div class="n">5 → 4</div>
+      <div class="h">Tabs collapsed</div>
+      <div class="b">Reminders folded into Home (where they're already most useful). Journal moves into Plant Detail as a photo strip — it's still there, just stops competing for primary nav.</div>
+    </div>
+    <div class="footnote">
+      <div class="n">3 → 1</div>
+      <div class="h">Setup screens removed</div>
+      <div class="b">Hardiness zone, weather opt-in, and reminder configuration are now derived from location and plant choice. The user never sees a settings flow on first run — just lands on Home with their first task.</div>
+    </div>
+    <div class="footnote">
+      <div class="n">+1</div>
+      <div class="h">Club is a pillar, not a corner</div>
+      <div class="b">Club activity surfaces on Home. Every plant has a Share button. The Club tab opens with a "share what's growing" prompt at the top — sharing takes one tap, not a flow.</div>
+    </div>
+  </div>
+
+  <div class="colophon">
+    <div><strong>Cultivation</strong> · Botanical Field Journal · v0.1 wireflow</div>
+    <div>Fraunces + Manrope · sage / coral on cream</div>
+  </div>
+
+</div>
+
+<script>
+  // light interaction: clicking a wireflow node highlights the matching screen
+  const nodes = document.querySelectorAll('.node');
+  const phones = {
+    home: document.getElementById('home'),
+    garden: document.getElementById('garden'),
+    detail: document.getElementById('detail'),
+    club: document.getElementById('club'),
+  };
+  nodes.forEach(n => {
+    n.addEventListener('click', () => {
+      nodes.forEach(x => x.classList.remove('active'));
+      n.classList.add('active');
+      const target = phones[n.dataset.target];
+      if (target) {
+        Object.values(phones).forEach(p => p.style.outline = '');
+        target.style.outline = '3px solid var(--coral)';
+        target.style.outlineOffset = '6px';
+        target.scrollIntoView({behavior: 'smooth', block: 'center'});
+        setTimeout(() => target.style.outline = '', 1800);
+      }
+    });
+  });
+</script>
+
+</body>
+</html>

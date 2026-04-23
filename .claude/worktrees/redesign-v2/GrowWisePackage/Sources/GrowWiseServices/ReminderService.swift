@@ -1,0 +1,1172 @@
+import CoreLocation
+import Foundation
+import GrowWiseModels
+import os
+import SwiftData
+import WeatherKit
+
+private let logger = Logger(subsystem: "com.growwise", category: "ReminderService")
+
+public struct WeatherAdjustmentSnapshot: Sendable, Equatable {
+    public let maxTemperatureF: Double
+    public let maxPrecipitationChance: Double
+    public let totalPrecipitationInches: Double
+
+    public init(maxTemperatureF: Double, maxPrecipitationChance: Double, totalPrecipitationInches: Double) {
+        self.maxTemperatureF = maxTemperatureF
+        self.maxPrecipitationChance = maxPrecipitationChance
+        self.totalPrecipitationInches = totalPrecipitationInches
+    }
+}
+
+public protocol WeatherAdjustmentProviding: Sendable {
+    func snapshot(for location: CLLocation) async throws -> WeatherAdjustmentSnapshot
+}
+
+public struct WeatherKitAdjustmentProvider: WeatherAdjustmentProviding {
+    private let weatherService = WeatherService.shared
+
+    public init() {}
+
+    public func snapshot(for location: CLLocation) async throws -> WeatherAdjustmentSnapshot {
+        let weather = try await weatherService.weather(for: location)
+        let next24h = Array(weather.hourlyForecast.prefix(24))
+
+        let maxTempF = next24h
+            .map { $0.temperature.converted(to: .fahrenheit).value }
+            .max() ?? weather.currentWeather.temperature.converted(to: .fahrenheit).value
+
+        let maxChance = next24h.map(\.precipitationChance).max() ?? 0
+        let totalPrecipInches = next24h
+            .map { $0.precipitationAmount.converted(to: .inches).value }
+            .reduce(0, +)
+
+        return WeatherAdjustmentSnapshot(
+            maxTemperatureF: maxTempF,
+            maxPrecipitationChance: maxChance,
+            totalPrecipitationInches: totalPrecipInches
+        )
+    }
+}
+
+@MainActor
+@Observable
+public final class ReminderService {
+    public let dataService: DataService
+    public let notificationService: NotificationService
+    private let weatherProvider: any WeatherAdjustmentProviding
+    private let shouldScheduleNotifications: Bool
+
+    public init(
+        dataService: DataService,
+        notificationService: NotificationService,
+        weatherProvider: any WeatherAdjustmentProviding = WeatherKitAdjustmentProvider(),
+        shouldScheduleNotifications: Bool = true
+    ) {
+        self.dataService = dataService
+        self.notificationService = notificationService
+        self.weatherProvider = weatherProvider
+        self.shouldScheduleNotifications = shouldScheduleNotifications
+    }
+
+    // MARK: - Smart Reminder Scheduling
+
+    public func createSmartReminder(
+        for plant: Plant,
+        type: ReminderType,
+        baseFrequencyDays: Int,
+        enableWeatherAdjustment: Bool = true,
+        priority: ReminderPriority = .medium,
+        preferredTime: Date? = nil
+    ) async throws -> PlantReminder {
+        let nextDueDate = await calculateNextDueDate(
+            baseFrequencyDays: baseFrequencyDays,
+            reminderType: type,
+            plant: plant,
+            enableWeatherAdjustment: enableWeatherAdjustment,
+            preferredTime: preferredTime
+        )
+
+        let reminder = try dataService.createReminder(
+            title: generateReminderTitle(type: type, plant: plant),
+            message: generateReminderMessage(type: type, plant: plant),
+            type: type,
+            frequency: .custom,
+            dueDate: nextDueDate,
+            plant: plant
+        )
+
+        // Set smart reminder properties
+        reminder.priority = priority
+        reminder.enableWeatherAdjustment = enableWeatherAdjustment
+        reminder.baseFrequencyDays = baseFrequencyDays
+
+        // Set preferred notification time if provided
+        if let preferredTime {
+            reminder.preferredNotificationTime = preferredTime
+        }
+
+        if shouldScheduleNotifications {
+            try await notificationService.scheduleReminderNotification(for: reminder)
+        }
+
+        return reminder
+    }
+
+    // MARK: - Watering Reminder Specific Features
+
+    public func createWateringReminder(
+        for plant: Plant,
+        frequency: ReminderFrequency,
+        preferredTime: Date? = nil,
+        enableSmartAdjustment: Bool = true
+    ) async throws -> PlantReminder {
+        let baseFrequencyDays = frequency.days
+
+        return try await createSmartReminder(
+            for: plant,
+            type: .watering,
+            baseFrequencyDays: baseFrequencyDays,
+            enableWeatherAdjustment: enableSmartAdjustment,
+            priority: .high,
+            preferredTime: preferredTime
+        )
+    }
+
+    public func updateWateringSchedule(
+        for reminder: PlantReminder,
+        newFrequency: ReminderFrequency,
+        preferredTime: Date? = nil
+    ) async throws {
+        guard reminder.reminderType == .watering else {
+            throw ReminderError.invalidReminderType
+        }
+
+        reminder.frequency = newFrequency
+        reminder.baseFrequencyDays = newFrequency.days
+
+        if let preferredTime {
+            reminder.preferredNotificationTime = preferredTime
+        }
+
+        // Recalculate next due date with new frequency
+        if let plant = reminder.plant {
+            reminder.nextDueDate = await calculateNextDueDate(
+                baseFrequencyDays: newFrequency.days,
+                reminderType: .watering,
+                plant: plant,
+                enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+                preferredTime: preferredTime
+            )
+        }
+
+        // Update notification
+        if shouldScheduleNotifications {
+            try await notificationService.scheduleReminderNotification(for: reminder)
+        }
+    }
+
+    public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
+        let allReminders = dataService.fetchActiveReminders()
+        let wateringReminders = allReminders.filter { $0.reminderType == .watering }
+
+        if let plant {
+            return wateringReminders.filter { $0.plant?.id == plant.id }
+        }
+
+        return wateringReminders
+    }
+
+    public func getOverdueWateringReminders() -> [PlantReminder] {
+        let wateringReminders = getWateringReminders()
+        return wateringReminders.filter { $0.nextDueDate < Date() && $0.isEnabled }
+    }
+
+    public func getTodaysWateringReminders() -> [PlantReminder] {
+        let wateringReminders = getWateringReminders()
+        let calendar = Calendar.current
+
+        return wateringReminders.filter { reminder in
+            calendar.isDate(reminder.nextDueDate, inSameDayAs: Date()) && reminder.isEnabled
+        }
+    }
+
+    public func synchronizePendingNotifications() async {
+        guard shouldScheduleNotifications else { return }
+        let reminders = dataService.fetchActiveReminders()
+        for reminder in reminders where reminder.isEnabled {
+            try? await notificationService.scheduleReminderNotification(for: reminder)
+        }
+    }
+
+    private func calculateNextDueDate(
+        baseFrequencyDays: Int,
+        reminderType: ReminderType,
+        plant: Plant,
+        enableWeatherAdjustment: Bool,
+        preferredTime: Date? = nil
+    ) async -> Date {
+        let baseDate = Calendar.current.date(byAdding: .day, value: baseFrequencyDays, to: Date()) ?? Date()
+
+        var adjustedDate = baseDate
+
+        if enableWeatherAdjustment {
+            adjustedDate = await adjustDateForWeather(baseDate: baseDate, reminderType: reminderType, plant: plant)
+        }
+
+        // Apply preferred time if specified
+        if let preferredTime {
+            adjustedDate = applyPreferredTime(to: adjustedDate, preferredTime: preferredTime)
+        }
+
+        // Respect quiet hours
+        adjustedDate = adjustForQuietHours(date: adjustedDate)
+
+        return adjustedDate
+    }
+
+    private func applyPreferredTime(to date: Date, preferredTime: Date) -> Date {
+        let calendar = Calendar.current
+        let timeComponents = calendar.dateComponents([.hour, .minute], from: preferredTime)
+        return calendar.date(
+            bySettingHour: timeComponents.hour ?? 9,
+            minute: timeComponents.minute ?? 0,
+            second: 0,
+            of: date
+        ) ?? date
+    }
+
+    private func adjustForQuietHours(date: Date) -> Date {
+        if notificationService.isInQuietHours() {
+            // If the scheduled time is in quiet hours, move to next available time
+            let calendar = Calendar.current
+            var adjustedDate = date
+
+            // Move to 8 AM the next day if in quiet hours
+            if let nextMorning = calendar.date(byAdding: .day, value: 1, to: date) {
+                adjustedDate = calendar.date(bySettingHour: 8, minute: 0, second: 0, of: nextMorning) ?? date
+            }
+
+            return adjustedDate
+        }
+
+        return date
+    }
+
+    private func adjustDateForWeather(
+        baseDate: Date,
+        reminderType: ReminderType,
+        plant: Plant
+    ) async -> Date {
+        // For demo purposes, we'll simulate weather adjustment
+        // In a real app, you'd integrate with WeatherKit or similar service
+
+        switch reminderType {
+        case .watering:
+            await adjustWateringForWeather(baseDate: baseDate)
+
+        case .fertilizing:
+            adjustFertilizingForWeather(baseDate: baseDate)
+
+        case .pruning:
+            adjustPruningForWeather(baseDate: baseDate)
+
+        case .pestControl:
+            adjustPestCheckForWeather(baseDate: baseDate)
+
+        case .harvest:
+            baseDate // Harvest timing usually doesn't adjust for weather
+
+        case .repotting, .planting, .inspection, .soilTest, .mulching:
+            baseDate // These tasks don't typically adjust for weather
+
+        case .custom:
+            baseDate
+        }
+    }
+
+    private func adjustWateringForWeather(baseDate: Date) async -> Date {
+        guard
+            let user = dataService.getCurrentUser(),
+            let latitude = user.latitude,
+            let longitude = user.longitude
+        else {
+            return baseDate
+        }
+
+        do {
+            let location = CLLocation(latitude: latitude, longitude: longitude)
+            let snapshot = try await weatherProvider.snapshot(for: location)
+            return Self.adjustedWateringDate(baseDate: baseDate, snapshot: snapshot)
+        } catch {
+            return baseDate
+        }
+    }
+
+    public static func adjustedWateringDate(baseDate: Date, snapshot: WeatherAdjustmentSnapshot) -> Date {
+        if snapshot.maxPrecipitationChance >= 0.6 || snapshot.totalPrecipitationInches >= 0.5 {
+            return Calendar.current.date(byAdding: .day, value: 1, to: baseDate) ?? baseDate
+        }
+
+        if snapshot.maxTemperatureF >= 90 {
+            return Calendar.current.date(byAdding: .day, value: -1, to: baseDate) ?? baseDate
+        }
+
+        return baseDate
+    }
+
+    private func adjustFertilizingForWeather(baseDate: Date) -> Date {
+        // Avoid fertilizing during extreme weather
+        let calendar = Calendar.current
+        let weekday = calendar.component(.weekday, from: baseDate)
+
+        // Prefer mid-week fertilizing (Tuesday-Thursday)
+        if weekday == 1 || weekday == 7 { // Weekend
+            return calendar.date(byAdding: .day, value: 2, to: baseDate) ?? baseDate
+        }
+
+        return baseDate
+    }
+
+    private func adjustPruningForWeather(baseDate: Date) -> Date {
+        // Prefer dry days for pruning to prevent disease
+        // This is a simplified implementation
+        baseDate
+    }
+
+    private func adjustPestCheckForWeather(baseDate: Date) -> Date {
+        // Increase frequency during warm, humid conditions
+        // This is a simplified implementation
+        baseDate
+    }
+
+    // MARK: - Watering Schedule Suggestion
+
+    /// Suggests a watering schedule for a plant in a given garden,
+    /// adjusting frequency based on sun exposure, container type, season, and soil.
+    public func suggestWateringSchedule(for plant: Plant, in garden: Garden?) -> WateringSchedule {
+        let baseDays = plant.wateringFrequency?.days ?? 3
+        var adjustedDays = Double(baseDays)
+        var reasons: [String] = []
+
+        // Sun exposure adjustment
+        if let sun = garden?.sunExposure {
+            switch sun {
+            case .fullSun:
+                adjustedDays *= 0.75
+                reasons.append("Full sun increases evaporation")
+            case .fullShade:
+                adjustedDays *= 1.25
+                reasons.append("Shade retains moisture longer")
+            case .partialSun, .partialShade, .artificial:
+                break
+            }
+        }
+
+        // Container type adjustment
+        if let container = plant.containerType {
+            switch container {
+            case .container, .hangingBasket, .windowBox:
+                adjustedDays *= 0.8
+                reasons.append("Containers dry out faster than ground soil")
+            case .inGround, .raisedBed, .greenhouse, .indoor:
+                break
+            }
+        }
+
+        // Seasonal adjustment
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 6 ... 8: // Summer
+            adjustedDays *= 0.75
+            reasons.append("Summer heat requires more frequent watering")
+        case 12, 1, 2: // Winter
+            adjustedDays *= 1.5
+            reasons.append("Winter dormancy reduces water needs")
+        default:
+            break
+        }
+
+        // Soil type adjustment
+        if let soil = garden?.soilType {
+            switch soil {
+            case .clay:
+                adjustedDays *= 1.3
+                reasons.append("Clay soil retains water longer")
+            case .sand:
+                adjustedDays *= 0.7
+                reasons.append("Sandy soil drains quickly")
+            default:
+                break
+            }
+        }
+
+        let finalDays = max(1, Int(adjustedDays.rounded()))
+        let frequency = closestReminderFrequency(days: finalDays)
+        let nextDate = Calendar.current.date(byAdding: .day, value: finalDays, to: Date()) ?? Date()
+
+        return WateringSchedule(
+            frequencyDays: finalDays,
+            frequency: frequency,
+            adjustedReason: reasons.isEmpty ? "Based on plant defaults" : reasons.joined(separator: ". "),
+            nextDate: nextDate
+        )
+    }
+
+    private func closestReminderFrequency(days: Int) -> ReminderFrequency {
+        switch days {
+        case 1: .daily
+        case 2: .everyOtherDay
+        case 3: .twiceWeekly
+        case 4 ... 7: .weekly
+        case 8 ... 14: .biweekly
+        default: .monthly
+        }
+    }
+
+    // MARK: - Seasonal Care Automation
+
+    public func createSeasonalCareSchedule(for plant: Plant) async throws {
+        let seasonalTasks = generateSeasonalTasks(for: plant)
+
+        for task in seasonalTasks {
+            _ = try await createSmartReminder(
+                for: plant,
+                type: task.type,
+                baseFrequencyDays: task.frequencyDays,
+                enableWeatherAdjustment: task.weatherSensitive,
+                priority: task.priority
+            )
+
+            // Note: Seasonal context could be stored in reminder.message if needed
+            // For now, we'll track this through the reminder title and type
+        }
+    }
+
+    private func generateSeasonalTasks(for plant: Plant) -> [SeasonalTask] {
+        var tasks: [SeasonalTask] = []
+
+        // Spring tasks
+        tasks.append(contentsOf: [
+            SeasonalTask(
+                type: .fertilizing,
+                season: .spring,
+                frequencyDays: 21,
+                priority: .high,
+                weatherSensitive: true
+            ),
+            SeasonalTask(
+                type: .pruning,
+                season: .spring,
+                frequencyDays: 30,
+                priority: .medium,
+                weatherSensitive: true
+            ),
+            SeasonalTask(
+                type: .pestControl,
+                season: .spring,
+                frequencyDays: 7,
+                priority: .medium,
+                weatherSensitive: false
+            ),
+        ])
+
+        // Summer tasks
+        tasks.append(contentsOf: [
+            SeasonalTask(
+                type: .watering,
+                season: .summer,
+                frequencyDays: 2,
+                priority: .high,
+                weatherSensitive: true
+            ),
+            SeasonalTask(
+                type: .pestControl,
+                season: .summer,
+                frequencyDays: 5,
+                priority: .high,
+                weatherSensitive: false
+            ),
+        ])
+
+        // Fall tasks
+        tasks.append(contentsOf: [
+            SeasonalTask(
+                type: .harvest,
+                season: .fall,
+                frequencyDays: 14,
+                priority: .high,
+                weatherSensitive: false
+            ),
+            SeasonalTask(
+                type: .pruning,
+                season: .fall,
+                frequencyDays: 45,
+                priority: .medium,
+                weatherSensitive: true
+            ),
+        ])
+
+        // Winter tasks
+        tasks.append(contentsOf: [
+            SeasonalTask(
+                type: .watering,
+                season: .winter,
+                frequencyDays: 7,
+                priority: .low,
+                weatherSensitive: true
+            ),
+        ])
+
+        // Filter tasks based on plant type and characteristics
+        return tasks.filter { task in
+            isTaskRelevant(task, for: plant)
+        }
+    }
+
+    private func isTaskRelevant(_ task: SeasonalTask, for plant: Plant) -> Bool {
+        // Customize tasks based on plant characteristics
+        switch plant.plantType {
+        case .none:
+            return true
+
+        case .houseplant:
+            // Indoor plants don't need seasonal pruning or pest checks as frequently
+            return task.type != .pruning || task.season != .fall
+
+        case .succulent:
+            // Succulents need less frequent watering
+            if task.type == .watering {
+                return task.season != .winter
+            }
+            return true
+
+        case .herb, .vegetable:
+            // Most tasks are relevant for edible plants
+            return true
+
+        case .flower:
+            // Flowers benefit from deadheading (pruning) during growing season
+            return true
+
+        case .fruit:
+            // Fruit plants need all seasonal care
+            return true
+
+        case .tree, .shrub:
+            // Trees and shrubs need all seasonal care
+            return true
+
+        @unknown default:
+            // Handle any future PlantType cases
+            return true
+        }
+    }
+
+    // MARK: - Batch Operations
+
+    public func createBatchReminders(
+        for plants: [Plant],
+        type: ReminderType,
+        frequencyDays: Int,
+        enableWeatherAdjustment: Bool = true
+    ) async throws -> [PlantReminder] {
+        var reminders: [PlantReminder] = []
+
+        for plant in plants {
+            do {
+                let reminder = try await createSmartReminder(
+                    for: plant,
+                    type: type,
+                    baseFrequencyDays: frequencyDays,
+                    enableWeatherAdjustment: enableWeatherAdjustment
+                )
+                reminders.append(reminder)
+            } catch {
+                let name = displayName(for: plant)
+                let errorDesc = error.localizedDescription
+                logger.error("Failed to create reminder for plant \(name, privacy: .public): \(errorDesc, privacy: .public)")
+            }
+        }
+
+        return reminders
+    }
+
+    public func updateBatchReminders(
+        _ reminders: [PlantReminder],
+        newFrequencyDays: Int? = nil,
+        enableWeatherAdjustment: Bool? = nil
+    ) async throws {
+        for reminder in reminders {
+            if let newFrequency = newFrequencyDays {
+                reminder.baseFrequencyDays = newFrequency
+                reminder.frequency = .custom
+            }
+
+            if let weatherAdjustment = enableWeatherAdjustment {
+                reminder.enableWeatherAdjustment = weatherAdjustment
+            }
+
+            // Recalculate next due date
+            if let plant = reminder.plant {
+                reminder.nextDueDate = await calculateNextDueDate(
+                    baseFrequencyDays: reminder.baseFrequencyDays,
+                    reminderType: reminder.reminderType,
+                    plant: plant,
+                    enableWeatherAdjustment: reminder.enableWeatherAdjustment
+                )
+            }
+
+            // Update notification
+            try await notificationService.scheduleReminderNotification(for: reminder)
+        }
+    }
+
+    public func completeBatchReminders(_ reminders: [PlantReminder]) async throws {
+        for reminder in reminders {
+            try dataService.completeReminder(reminder)
+
+            // Reschedule if it's a recurring reminder
+            if reminder.isRecurring {
+                if let plant = reminder.plant {
+                    reminder.nextDueDate = await calculateNextDueDate(
+                        baseFrequencyDays: reminder.baseFrequencyDays,
+                        reminderType: reminder.reminderType,
+                        plant: plant,
+                        enableWeatherAdjustment: reminder.enableWeatherAdjustment
+                    )
+
+                    try await notificationService.scheduleReminderNotification(for: reminder)
+                }
+            }
+        }
+    }
+
+    // MARK: - Smart Suggestions
+
+    public func suggestReminders(for plant: Plant) async -> [ReminderSuggestion] {
+        var suggestions: [ReminderSuggestion] = []
+
+        // Analyze existing reminders
+        let existingReminders = dataService.fetchActiveReminders().filter { $0.plant?.id == plant.id }
+        let existingTypes = Set(existingReminders.map(\.reminderType))
+
+        // Suggest missing essential reminders
+        let essentialTypes: [ReminderType] = [.watering, .fertilizing, .pestControl]
+
+        for type in essentialTypes where !existingTypes.contains(type) {
+            let suggestion = ReminderSuggestion(
+                type: type,
+                plant: plant,
+                suggestedFrequencyDays: getRecommendedFrequency(for: type, plant: plant),
+                reason: generateSuggestionReason(for: type, plant: plant),
+                priority: getPriorityForType(type, plant: plant)
+            )
+            suggestions.append(suggestion)
+        }
+
+        // Add seasonal suggestions based on current date
+        let seasonalSuggestions = await generateSeasonalSuggestions(for: plant)
+        suggestions.append(contentsOf: seasonalSuggestions)
+
+        return suggestions.sorted { $0.priority.rawValue > $1.priority.rawValue }
+    }
+
+    private func generateSeasonalSuggestions(for plant: Plant) async -> [ReminderSuggestion] {
+        let currentSeason = getCurrentSeason()
+        var suggestions: [ReminderSuggestion] = []
+
+        switch currentSeason {
+        case .spring:
+            suggestions.append(ReminderSuggestion(
+                type: .fertilizing,
+                plant: plant,
+                suggestedFrequencyDays: 21,
+                reason: "Spring is the ideal time to start fertilizing for healthy growth",
+                priority: .high
+            ))
+
+        case .summer:
+            suggestions.append(ReminderSuggestion(
+                type: .watering,
+                plant: plant,
+                suggestedFrequencyDays: 2,
+                reason: "Summer heat requires more frequent watering",
+                priority: .high
+            ))
+
+        case .fall:
+            if plant.plantType == .vegetable || plant.plantType == .herb {
+                suggestions.append(ReminderSuggestion(
+                    type: .harvest,
+                    plant: plant,
+                    suggestedFrequencyDays: 7,
+                    reason: "Fall harvest season for many edible plants",
+                    priority: .high
+                ))
+            }
+
+        case .winter:
+            suggestions.append(ReminderSuggestion(
+                type: .watering,
+                plant: plant,
+                suggestedFrequencyDays: 10,
+                reason: "Reduce watering frequency during winter dormancy",
+                priority: .medium
+            ))
+        }
+
+        return suggestions
+    }
+
+    // MARK: - Helper Methods
+
+    private func generateReminderTitle(type: ReminderType, plant: Plant) -> String {
+        let plantName = displayName(for: plant)
+
+        switch type {
+        case .watering:
+            return "Water \(plantName)"
+
+        case .fertilizing:
+            return "Fertilize \(plantName)"
+
+        case .pruning:
+            return "Prune \(plantName)"
+
+        case .pestControl:
+            return "Check \(plantName) for pests"
+
+        case .harvest:
+            return "Harvest \(plantName)"
+
+        case .repotting:
+            return "Repot \(plantName)"
+
+        case .planting:
+            return "Plant \(plantName)"
+
+        case .inspection:
+            return "Inspect \(plantName)"
+
+        case .soilTest:
+            return "Test soil for \(plantName)"
+
+        case .mulching:
+            return "Mulch around \(plantName)"
+
+        case .custom:
+            return "Care for \(plantName)"
+        }
+    }
+
+    private func generateReminderMessage(type: ReminderType, plant: Plant) -> String {
+        let plantName = displayName(for: plant)
+
+        switch type {
+        case .watering:
+            return "Check soil moisture and water \(plantName) if needed. Water slowly at soil level."
+
+        case .fertilizing:
+            return "Apply appropriate fertilizer to \(plantName) according to plant needs."
+
+        case .pruning:
+            return "Inspect \(plantName) and prune dead, damaged, or overgrown parts."
+
+        case .pestControl:
+            return "Examine \(plantName) leaves and stems for signs of pests or disease."
+
+        case .harvest:
+            return "Check \(plantName) for ripe fruits, vegetables, or herbs ready to harvest."
+
+        case .repotting:
+            return "Check if \(plantName) needs repotting - look for roots growing through drainage holes."
+
+        case .planting:
+            return "Plant \(plantName) in prepared soil with proper spacing."
+
+        case .inspection:
+            return "Perform general health inspection of \(plantName) for any issues."
+
+        case .soilTest:
+            return "Test soil pH and nutrients for \(plantName)'s growing area."
+
+        case .mulching:
+            return "Apply or refresh mulch around \(plantName) to retain moisture."
+
+        case .custom:
+            return "Perform scheduled care task for \(plantName)."
+        }
+    }
+
+    private func displayName(for plant: Plant) -> String {
+        plant.name ?? "your plant"
+    }
+
+    private func getRecommendedFrequency(for type: ReminderType, plant: Plant) -> Int {
+        switch type {
+        case .watering:
+            if plant.plantType == .succulent {
+                7
+            } else if plant.plantType == .houseplant {
+                5
+            } else {
+                3
+            }
+
+        case .fertilizing:
+            28
+
+        case .pruning:
+            60
+
+        case .pestControl:
+            7
+
+        case .harvest:
+            14
+
+        case .repotting:
+            365 // Once per year
+
+        case .planting:
+            180 // Seasonal
+
+        case .inspection:
+            7 // Weekly
+
+        case .soilTest:
+            365 // Annual
+
+        case .mulching:
+            120 // 3-4 times per year
+
+        case .custom:
+            7
+        }
+    }
+
+    private func generateSuggestionReason(for type: ReminderType, plant: Plant) -> String {
+        switch type {
+        case .watering:
+            "Regular watering schedule helps maintain consistent soil moisture"
+
+        case .fertilizing:
+            "Monthly fertilizing supports healthy growth and flowering"
+
+        case .pruning:
+            "Regular pruning promotes bushier growth and removes dead material"
+
+        case .pestControl:
+            "Weekly pest checks allow for early detection and treatment"
+
+        case .harvest:
+            "Regular harvest encourages continued production"
+
+        case .repotting:
+            "Annual repotting ensures adequate root space and fresh soil"
+
+        case .planting:
+            "Proper timing ensures successful plant establishment"
+
+        case .inspection:
+            "Regular inspection allows early detection of problems"
+
+        case .soilTest:
+            "Annual soil testing helps maintain optimal growing conditions"
+
+        case .mulching:
+            "Mulching conserves moisture and suppresses weeds"
+
+        case .custom:
+            "Custom care routine for optimal plant health"
+        }
+    }
+
+    private func getPriorityForType(_ type: ReminderType, plant: Plant) -> ReminderPriority {
+        switch type {
+        case .watering:
+            .high
+
+        case .fertilizing:
+            .medium
+
+        case .pruning:
+            .low
+
+        case .pestControl:
+            .medium
+
+        case .harvest:
+            .high
+
+        case .repotting:
+            .low
+
+        case .planting:
+            .high
+
+        case .inspection:
+            .medium
+
+        case .soilTest:
+            .low
+
+        case .mulching:
+            .low
+
+        case .custom:
+            .medium
+        }
+    }
+
+    private func getCurrentSeason() -> Season {
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 3 ... 5:
+            return .spring
+
+        case 6 ... 8:
+            return .summer
+
+        case 9 ... 11:
+            return .fall
+
+        default:
+            return .winter
+        }
+    }
+}
+
+// MARK: - Supporting Types
+
+public struct SeasonalTask {
+    let type: ReminderType
+    let season: Season
+    let frequencyDays: Int
+    let priority: ReminderPriority
+    let weatherSensitive: Bool
+
+    public init(type: ReminderType, season: Season, frequencyDays: Int, priority: ReminderPriority, weatherSensitive: Bool) {
+        self.type = type
+        self.season = season
+        self.frequencyDays = frequencyDays
+        self.priority = priority
+        self.weatherSensitive = weatherSensitive
+    }
+}
+
+public struct ReminderSuggestion: Identifiable {
+    public let id = UUID()
+    public let type: ReminderType
+    public let plant: Plant
+    public let suggestedFrequencyDays: Int
+    public let reason: String
+    public let priority: ReminderPriority
+
+    public init(type: ReminderType, plant: Plant, suggestedFrequencyDays: Int, reason: String, priority: ReminderPriority) {
+        self.type = type
+        self.plant = plant
+        self.suggestedFrequencyDays = suggestedFrequencyDays
+        self.reason = reason
+        self.priority = priority
+    }
+}
+
+public enum Season: String, CaseIterable, Codable {
+    case spring
+    case summer
+    case fall
+    case winter
+
+    public var displayName: String {
+        switch self {
+        case .spring: "Spring"
+        case .summer: "Summer"
+        case .fall: "Fall"
+        case .winter: "Winter"
+        }
+    }
+}
+
+// MARK: - Watering Schedule
+
+public struct WateringSchedule: Sendable {
+    public let frequencyDays: Int
+    public let frequency: ReminderFrequency
+    public let adjustedReason: String
+    public let nextDate: Date
+
+    public init(frequencyDays: Int, frequency: ReminderFrequency, adjustedReason: String, nextDate: Date) {
+        self.frequencyDays = frequencyDays
+        self.frequency = frequency
+        self.adjustedReason = adjustedReason
+        self.nextDate = nextDate
+    }
+}
+
+// MARK: - Supporting Types
+
+public enum ReminderError: Error, LocalizedError {
+    case invalidReminderType
+    case plantNotFound
+    case notificationPermissionDenied
+    case invalidFrequency
+    case invalidTime
+
+    public var errorDescription: String? {
+        switch self {
+        case .invalidReminderType:
+            "Invalid reminder type specified"
+
+        case .plantNotFound:
+            "Plant not found for reminder"
+
+        case .notificationPermissionDenied:
+            "Notification permission denied"
+
+        case .invalidFrequency:
+            "Invalid reminder frequency"
+
+        case .invalidTime:
+            "Invalid notification time"
+        }
+    }
+}
+
+public struct ReminderSettings {
+    public var enableWateringReminders: Bool
+    public var enableFertilizingReminders: Bool
+    public var enablePestControlReminders: Bool
+    public var enableWeatherBasedAdjustments: Bool
+    public var quietHoursStart: Date?
+    public var quietHoursEnd: Date?
+    public var defaultNotificationTime: Date?
+
+    public init(
+        enableWateringReminders: Bool = true,
+        enableFertilizingReminders: Bool = true,
+        enablePestControlReminders: Bool = true,
+        enableWeatherBasedAdjustments: Bool = true,
+        quietHoursStart: Date? = nil,
+        quietHoursEnd: Date? = nil,
+        defaultNotificationTime: Date? = nil
+    ) {
+        self.enableWateringReminders = enableWateringReminders
+        self.enableFertilizingReminders = enableFertilizingReminders
+        self.enablePestControlReminders = enablePestControlReminders
+        self.enableWeatherBasedAdjustments = enableWeatherBasedAdjustments
+        self.quietHoursStart = quietHoursStart
+        self.quietHoursEnd = quietHoursEnd
+        self.defaultNotificationTime = defaultNotificationTime
+    }
+}
+
+public extension ReminderService {
+    // MARK: - Notification Settings Management
+
+    func updateNotificationSettings(
+        reminderTypes: [ReminderType],
+        enabled: Bool
+    ) {
+        for type in reminderTypes {
+            UserDefaults.standard.set(enabled, forKey: "notification_\(type.rawValue)_enabled")
+        }
+    }
+
+    func isNotificationEnabled(for type: ReminderType) -> Bool {
+        UserDefaults.standard.bool(forKey: "notification_\(type.rawValue)_enabled")
+    }
+
+    func setDefaultNotificationTime(_ time: Date) {
+        if let timeData = try? JSONEncoder().encode(time) {
+            UserDefaults.standard.set(timeData, forKey: "default_notification_time")
+        }
+    }
+
+    func getDefaultNotificationTime() -> Date {
+        if let timeData = UserDefaults.standard.data(forKey: "default_notification_time"),
+           let time = try? JSONDecoder().decode(Date.self, from: timeData)
+        {
+            return time
+        }
+
+        // Default to 9:00 AM
+        let calendar = Calendar.current
+        return calendar.date(bySettingHour: 9, minute: 0, second: 0, of: Date()) ?? Date()
+    }
+
+    // MARK: - Reminder Settings
+
+    func updateReminderSettings(_ settings: ReminderSettings) {
+        UserDefaults.standard.set(settings.enableWateringReminders, forKey: "enable_watering_reminders")
+        UserDefaults.standard.set(settings.enableFertilizingReminders, forKey: "enable_fertilizing_reminders")
+        UserDefaults.standard.set(settings.enablePestControlReminders, forKey: "enable_pest_control_reminders")
+        UserDefaults.standard.set(settings.enableWeatherBasedAdjustments, forKey: "enable_weather_adjustments")
+
+        if let quietStart = settings.quietHoursStart,
+           let startData = try? JSONEncoder().encode(quietStart)
+        {
+            UserDefaults.standard.set(startData, forKey: "quiet_hours_start")
+        }
+
+        if let quietEnd = settings.quietHoursEnd,
+           let endData = try? JSONEncoder().encode(quietEnd)
+        {
+            UserDefaults.standard.set(endData, forKey: "quiet_hours_end")
+        }
+
+        if let defaultTime = settings.defaultNotificationTime {
+            setDefaultNotificationTime(defaultTime)
+        }
+    }
+
+    func getReminderSettings() -> ReminderSettings {
+        let quietStart: Date? = {
+            if let data = UserDefaults.standard.data(forKey: "quiet_hours_start") {
+                return try? JSONDecoder().decode(Date.self, from: data)
+            }
+            return nil
+        }()
+        let quietEnd: Date? = {
+            if let data = UserDefaults.standard.data(forKey: "quiet_hours_end") {
+                return try? JSONDecoder().decode(Date.self, from: data)
+            }
+            return nil
+        }()
+        let defaultTime: Date? = {
+            if let data = UserDefaults.standard.data(forKey: "default_notification_time") {
+                return try? JSONDecoder().decode(Date.self, from: data)
+            }
+            return nil
+        }()
+
+        return ReminderSettings(
+            enableWateringReminders: UserDefaults.standard.bool(forKey: "enable_watering_reminders"),
+            enableFertilizingReminders: UserDefaults.standard.bool(forKey: "enable_fertilizing_reminders"),
+            enablePestControlReminders: UserDefaults.standard.bool(forKey: "enable_pest_control_reminders"),
+            enableWeatherBasedAdjustments: UserDefaults.standard.bool(forKey: "enable_weather_adjustments"),
+            quietHoursStart: quietStart,
+            quietHoursEnd: quietEnd,
+            defaultNotificationTime: defaultTime ?? getDefaultNotificationTime()
+        )
+    }
+
+    // MARK: - Public Notification Methods
+
+    /// Schedule notification for a reminder
+    func scheduleNotification(for reminder: PlantReminder) async throws {
+        try await notificationService.scheduleReminderNotification(for: reminder)
+    }
+
+    /// Cancel notification for a reminder.
+    /// Kept synchronous because all call sites (toggleReminder, deleteReminder) are
+    /// non-async functions; the fire-and-forget Task is intentional here.
+    func cancelNotification(for reminder: PlantReminder) {
+        Task {
+            await notificationService.cancelReminderNotification(for: reminder.id)
+        }
+    }
+}
+
+// MARK: - Supporting Types

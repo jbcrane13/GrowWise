@@ -1,0 +1,84 @@
+name: Error to Insight Pipeline
+
+on:
+  # Triggered by Sentry webhook — configure in Sentry project settings:
+  # Settings → Integrations → Webhooks → add this workflow's dispatch URL
+  # Or trigger manually to test
+  workflow_dispatch:
+    inputs:
+      sentry_issue_url:
+        description: "Sentry issue URL"
+        required: false
+      error_title:
+        description: "Error title"
+        required: false
+      error_count:
+        description: "Number of occurrences"
+        required: false
+        default: "1"
+      environment:
+        description: "Environment (production/development)"
+        required: false
+        default: "production"
+
+  # Also runs on a schedule to pull high-volume Sentry issues weekly
+  schedule:
+    - cron: "0 9 * * 1"
+
+jobs:
+  sentry-to-issues:
+    name: Sync Sentry Errors to GitHub Issues
+    runs-on: ubuntu-latest
+    permissions:
+      issues: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Create GitHub issue from Sentry error
+        if: github.event_name == 'workflow_dispatch' && inputs.error_title != ''
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const title = `[Sentry] ${{ inputs.error_title }}`;
+            const body = [
+              '## Sentry Error Report',
+              '',
+              `**Source:** ${{ inputs.sentry_issue_url || 'Manual trigger' }}`,
+              `**Environment:** ${{ inputs.environment }}`,
+              `**Occurrences:** ${{ inputs.error_count }}`,
+              '',
+              '## Investigation',
+              '',
+              '- [ ] Reproduce locally',
+              '- [ ] Identify root cause',
+              '- [ ] Check `docs/runbooks/` for relevant playbook',
+              '- [ ] File fix in beads: `bd add "Fix: [description]" --label "bug,P1: High"`',
+              '',
+              '## References',
+              '',
+              `- Sentry: ${{ inputs.sentry_issue_url || 'N/A' }}`,
+              '- Xcode Organizer: Window → Organizer → Crashes',
+              '- CloudKit Console: https://icloud.developer.apple.com/dashboard',
+            ].join('\n');
+
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title,
+              body,
+              labels: ['bug', 'P1: High', 'area: services'],
+            });
+
+            console.log(`Issue created: ${issue.data.html_url}`);
+
+      - name: Weekly Sentry digest (placeholder)
+        if: github.event_name == 'schedule'
+        run: |
+          echo "## Weekly Error Digest" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Configure Sentry webhook integration to auto-file issues:" >> $GITHUB_STEP_SUMMARY
+          echo "1. Go to your Sentry project → Settings → Integrations → GitHub" >> $GITHUB_STEP_SUMMARY
+          echo "2. Link the jbcrane13/GrowWise repository" >> $GITHUB_STEP_SUMMARY
+          echo "3. Enable 'Create GitHub issues for new Sentry issues'" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "Or trigger this workflow manually with Sentry issue details." >> $GITHUB_STEP_SUMMARY

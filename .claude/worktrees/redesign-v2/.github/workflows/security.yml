@@ -1,0 +1,137 @@
+name: Security Review
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+  schedule:
+    # Weekly security scan every Monday at 08:00 UTC
+    - cron: "0 8 * * 1"
+
+jobs:
+  codeql:
+    name: CodeQL Analysis
+    runs-on: macos-15
+    permissions:
+      security-events: write
+      actions: read
+      contents: read
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Initialize CodeQL
+        uses: github/codeql-action/init@v3
+        with:
+          languages: swift
+          queries: security-extended,security-and-quality
+
+      - name: Build for CodeQL
+        run: |
+          xcodebuild \
+            -resolvePackageDependencies \
+            -workspace GrowWise.xcworkspace \
+            -scheme GrowWise \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/SourcePackages"
+
+          xcodebuild \
+            -workspace GrowWise.xcworkspace \
+            -scheme GrowWise \
+            -sdk iphonesimulator \
+            -destination 'platform=iOS Simulator,name=iPhone 16' \
+            -clonedSourcePackagesDirPath "$RUNNER_TEMP/SourcePackages" \
+            CODE_SIGNING_ALLOWED=NO \
+            CODE_SIGNING_REQUIRED=NO \
+            build
+      - name: Perform CodeQL Analysis
+        uses: github/codeql-action/analyze@v3
+        with:
+          category: "/language:swift"
+
+  secret-scan:
+    name: Secret Scanning
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Run Gitleaks secret scan
+        uses: gitleaks/gitleaks-action@v2
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+        continue-on-error: true
+
+  swift-security-checks:
+    name: Swift Security Pattern Checks
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for insecure patterns
+        run: |
+          echo "## Swift Security Scan" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          ISSUES=0
+
+          # UserDefaults for sensitive data
+          UD_SENSITIVE=$(grep -rn "UserDefaults.*password\|UserDefaults.*token\|UserDefaults.*secret\|UserDefaults.*key" \
+            --include="*.swift" GrowWisePackage/Sources GrowWise \
+            --ignore-case | grep -v "//.*UserDefaults" || true)
+          if [ -n "$UD_SENSITIVE" ]; then
+            echo "### UserDefaults Sensitive Data Risk" >> $GITHUB_STEP_SUMMARY
+            echo "Potentially sensitive data stored in UserDefaults (use KeychainStorageService instead):" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$UD_SENSITIVE" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          # Hardcoded URLs that are HTTP (not HTTPS)
+          HTTP_URLS=$(grep -rn 'http://' \
+            --include="*.swift" GrowWisePackage/Sources GrowWise \
+            | grep -v "//\s*http://" \
+            | grep -v "localhost\|127.0.0.1" || true)
+          if [ -n "$HTTP_URLS" ]; then
+            echo "### Insecure HTTP URLs" >> $GITHUB_STEP_SUMMARY
+            echo "Non-HTTPS URLs detected (use HTTPS for all network calls):" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$HTTP_URLS" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          # NSLog usage (bypasses OSLog privacy)
+          NSLOG=$(grep -rn "\bNSLog\b" \
+            --include="*.swift" GrowWisePackage/Sources GrowWise || true)
+          if [ -n "$NSLOG" ]; then
+            echo "### NSLog Usage" >> $GITHUB_STEP_SUMMARY
+            echo "NSLog bypasses OSLog privacy annotations — use Logger instead:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$NSLOG" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          # MD5/SHA1 usage (weak crypto)
+          WEAK_CRYPTO=$(grep -rn "MD5\|SHA1\b\|CC_MD5\|CC_SHA1" \
+            --include="*.swift" GrowWisePackage/Sources GrowWise || true)
+          if [ -n "$WEAK_CRYPTO" ]; then
+            echo "### Weak Cryptography" >> $GITHUB_STEP_SUMMARY
+            echo "MD5/SHA1 are weak — use SHA-256 or better:" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            echo "$WEAK_CRYPTO" >> $GITHUB_STEP_SUMMARY
+            echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+            ISSUES=$((ISSUES + 1))
+          fi
+
+          if [ "$ISSUES" -eq 0 ]; then
+            echo "No security pattern issues detected." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "" >> $GITHUB_STEP_SUMMARY
+            echo "**$ISSUES security concern(s) detected. Review before merging.**" >> $GITHUB_STEP_SUMMARY
+          fi

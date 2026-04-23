@@ -1,0 +1,30 @@
+# Lizard cyclomatic complexity configuration for GrowWise
+# https://github.com/terryyin/lizard
+#
+# Thresholds align with SwiftLint's cyclomatic_complexity rule:
+#   SwiftLint warning=10, error=20 → lizard CCN threshold=20
+#
+# Run locally:
+#   lizard GrowWisePackage/Sources GrowWise -l swift --CCN 20 -w
+#
+# Generate HTML report:
+#   lizard GrowWisePackage/Sources GrowWise -l swift -o build/complexity-report.html
+
+languages:
+  - swift
+
+paths:
+  - GrowWisePackage/Sources
+  - GrowWise
+
+exclude:
+  - "*/build/*"
+  - "*/.build/*"
+  - "*/Pods/*"
+  - "*/GrowWiseUITests/*"
+
+thresholds:
+  cyclomatic_complexity: 20
+  length: 500
+  nloc: 200
+  parameter_count: 8

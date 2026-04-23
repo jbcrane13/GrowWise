@@ -1,0 +1,102 @@
+name: DocC Documentation
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "GrowWisePackage/Sources/**"
+      - ".github/workflows/docc.yml"
+  workflow_dispatch:
+
+jobs:
+  build-docs:
+    name: Build DocC Documentation
+    runs-on: macos-14
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build DocC for GrowWiseServices
+        run: |
+          cd GrowWisePackage
+          swift package generate-documentation \
+            --target GrowWiseServices \
+            --output-path .build/docs/services \
+            --transform-for-static-hosting \
+            --hosting-base-path GrowWise/services \
+            2>&1 || echo "DocC generation completed with warnings"
+
+      - name: Build DocC for GrowWiseModels
+        run: |
+          cd GrowWisePackage
+          swift package generate-documentation \
+            --target GrowWiseModels \
+            --output-path .build/docs/models \
+            --transform-for-static-hosting \
+            --hosting-base-path GrowWise/models \
+            2>&1 || echo "DocC generation completed with warnings"
+
+      - name: Upload documentation artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: docc-documentation
+          path: GrowWisePackage/.build/docs/
+          retention-days: 14
+
+  publish-docs:
+    name: Publish to GitHub Pages
+    runs-on: macos-14
+    needs: build-docs
+    if: github.ref == 'refs/heads/master' || github.ref == 'refs/heads/main'
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode.app
+
+      - name: Build all DocC targets
+        run: |
+          cd GrowWisePackage
+
+          mkdir -p .build/docs
+
+          for TARGET in GrowWiseServices GrowWiseModels; do
+            echo "Building docs for $TARGET..."
+            swift package generate-documentation \
+              --target $TARGET \
+              --output-path .build/docs/$TARGET \
+              --transform-for-static-hosting \
+              --hosting-base-path GrowWise/$TARGET \
+              2>&1 || echo "Warning: $TARGET docs generation had issues"
+          done
+
+          # Create an index page linking to each module
+          cat > .build/docs/index.html << 'HTML'
+          <!DOCTYPE html>
+          <html>
+          <head><title>GrowWise API Documentation</title></head>
+          <body>
+            <h1>GrowWise API Documentation</h1>
+            <ul>
+              <li><a href="GrowWiseServices/documentation/growwiseservices/">GrowWiseServices</a></li>
+              <li><a href="GrowWiseModels/documentation/growwisemodels/">GrowWiseModels</a></li>
+            </ul>
+          </body>
+          </html>
+          HTML
+
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: GrowWisePackage/.build/docs
+          destination_dir: docs
+          commit_message: "docs: update API documentation [skip ci]"

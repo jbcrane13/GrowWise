@@ -1,0 +1,19 @@
+# Claude Code Supervisor Configuration
+# Used by hooks to triage + notify OpenClaw
+
+triage:
+  command: "claude -p --no-session-persistence"
+  model: "claude-haiku-4-20250414"
+  max_tokens: 150
+
+notify:
+  command: "openclaw gateway wake --text"
+
+idle:
+  timeout_seconds: 120
+  nudge_message: "continue with the task — you appear to be idle"
+
+environment_hints:
+  - "This is a macOS Apple Silicon development environment"
+  - "Use xcodebuild for builds and tests"
+  - "Use 'bd' CLI for issue tracking (beads)"

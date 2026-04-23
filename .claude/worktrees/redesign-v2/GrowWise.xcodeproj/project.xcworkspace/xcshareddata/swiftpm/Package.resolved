@@ -1,0 +1,42 @@
+{
+  "originHash" : "98ac9ae3622b95870568fcbc541d77a0f88fd03b31ef81a00d2ef651f704d4fa",
+  "pins" : [
+    {
+      "identity" : "amplitude-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/amplitude/Amplitude-Swift",
+      "state" : {
+        "revision" : "65925b0371e6d40a465eba547b157084ff3c1450",
+        "version" : "1.17.4"
+      }
+    },
+    {
+      "identity" : "amplitudecore-swift",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/amplitude/AmplitudeCore-Swift.git",
+      "state" : {
+        "revision" : "1be727864d2e7ead7198f975ffc30cf5a7ba6fd3",
+        "version" : "1.4.3"
+      }
+    },
+    {
+      "identity" : "analytics-connector-ios",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/amplitude/analytics-connector-ios.git",
+      "state" : {
+        "revision" : "4adbfe85486e6dcdcdca5fa9362097ffe5ec712b",
+        "version" : "1.3.1"
+      }
+    },
+    {
+      "identity" : "sentry-cocoa",
+      "kind" : "remoteSourceControl",
+      "location" : "https://github.com/getsentry/sentry-cocoa",
+      "state" : {
+        "revision" : "05d3ce8332097ff0b2347231ac66476fd7d2f4d8",
+        "version" : "9.8.0"
+      }
+    }
+  ],
+  "version" : 3
+}

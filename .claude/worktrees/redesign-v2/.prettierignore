@@ -1,0 +1,41 @@
+# Swift files — formatted by SwiftFormat (.swiftformat)
+*.swift
+
+# Build artifacts
+build/
+.build/
+*.xcodeproj/
+*.xcworkspace/
+
+# Dependencies
+Pods/
+node_modules/
+
+# Generated
+*.generated.*
+GrowWisePackage/.build/
+
+# Binary assets
+*.png
+*.jpg
+*.jpeg
+*.gif
+*.ico
+*.svg
+*.pdf
+
+# Data files
+*.sqlite
+*.db
+*.json.bak
+
+# Claude Flow / tooling
+claude-flow
+.claude/
+.swarm/
+.hive-mind/
+memory/
+coordination/
+
+# Beads
+.beads/

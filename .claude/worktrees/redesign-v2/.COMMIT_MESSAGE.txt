@@ -1,0 +1,23 @@
+docs: Simplified UI v2 — cream paper field journal + 4-tab layout
+
+Captures the v2 redesign pivot from dark glass-morphism to a cream-paper
+field-journal aesthetic aimed at the 50+ enthusiast audience. Consolidates
+tabs from 5 -> 4, promotes Garden Club to a top-level pillar, and makes all
+smart enrichment (plant ID, weather, zone, advice) ambient with a sage
+marker rather than a setup step.
+
+Deliverables on this branch:
+- docs/architecture/ADR.md — appends ADR-019 (pivot rationale, scope)
+- docs/superpowers/specs/2026-04-20-simplified-ui-v2-design.md — design spec
+  (palette, typography, per-screen layouts, open questions)
+- docs/superpowers/plans/2026-04-20-simplified-ui-v2-implementation.md —
+  10-phase guide with drop-in code for CultivationTheme, ViewModifiers,
+  MainAppView's mainTabView, GardenClubFeedView, font registration, plus
+  deletion list and verification checklist
+- docs/mockups/cultivation-simplified-wireflow.html — interactive wireflow
+  + 4 phone mockups (Home / Garden / Plant Detail / Garden Club)
+
+No Swift source changes in this commit — implementation lands in
+subsequent commits on this branch per the phased plan.
+
+Co-Authored-By: Claude Opus 4.7 <noreply@anthropic.com>
