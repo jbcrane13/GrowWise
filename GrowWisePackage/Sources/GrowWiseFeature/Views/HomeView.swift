@@ -43,6 +43,12 @@ public struct HomeView: View {
         NavigationStack {
             ScrollView {
                 LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+                    if let post = viewModel.latestClubPost {
+                        YourClubCard(post: post)
+                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                            .padding(.top, CultivationTheme.Spacing.sectionGap)
+                    }
+
                     if viewModel.allTasksDone {
                         emptyStateView
                     } else {
