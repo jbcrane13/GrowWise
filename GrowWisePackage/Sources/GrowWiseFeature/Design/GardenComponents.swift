@@ -168,7 +168,7 @@ struct BedGroupHeader: View {
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text(subtitle)
-                    .font(.system(.caption))
+                    .font(CultivationTheme.Fonts.body(12))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -303,6 +303,11 @@ struct TaskRow: View {
                 // Outline complete button for normal tasks
                 Button {
                     onComplete?()
+                    showCheckmark = true
+                    Task<Void, Never> {
+                        try? await Task.sleep(for: .seconds(1.5))
+                        showCheckmark = false
+                    }
                 } label: {
                     Text("Done")
                         .font(.system(size: 13, weight: .semibold))

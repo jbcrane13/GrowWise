@@ -23,8 +23,6 @@ public enum GardenFilter: String, CaseIterable, Identifiable {
 public struct GardenView: View {
     @Environment(DataService.self)
     private var dataService
-    @Environment(\.modelContext)
-    private var modelContext
 
     @State private var viewModel = GardenViewModel()
     @State private var selectedFilter: GardenFilter = .all
@@ -36,7 +34,6 @@ public struct GardenView: View {
     @State private var gardenToDelete: Garden?
     @State private var showDeleteConfirmation = false
     @State private var showPlantDatabase = false
-    @State private var showPlantScanner = false
 
     public init() {}
 
@@ -70,7 +67,7 @@ public struct GardenView: View {
                                                 do {
                                                     try dataService.plants.delete(plant)
                                                 } catch {
-                                                    // Error logged by repository
+                                                    viewModel.error = error
                                                 }
                                                 await viewModel.load(dataService: dataService)
                                             }
@@ -161,9 +158,6 @@ public struct GardenView: View {
             .sheet(isPresented: $showPlantDatabase) {
                 PlantDatabaseView()
             }
-            .sheet(isPresented: $showPlantScanner) {
-                PlantScannerView()
-            }
             .alert("Delete Garden?", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
                     gardenToDelete = nil
@@ -183,6 +177,17 @@ public struct GardenView: View {
                     let suffix = plantCount == 1 ? "" : "s"
                     Text("This will permanently delete \"\(gardenName)\" and its \(plantCount) plant\(suffix).")
                 }
+            }
+            .alert(
+                "Couldn't delete plant",
+                isPresented: Binding(
+                    get: { viewModel.error != nil },
+                    set: { if !$0 { viewModel.error = nil } }
+                )
+            ) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(viewModel.error?.localizedDescription ?? "")
             }
         }
         .accessibilityIdentifier("screen_garden")
@@ -431,30 +436,5 @@ public struct GardenView: View {
         .buttonStyle(.plain)
         .padding(.top, 8)
         .accessibilityIdentifier("garden_button_add_bed")
-    }
-}
-
-// MARK: - QuickStartChip (kept for potential reuse)
-
-private struct QuickStartChip: View {
-    let icon: String
-    let label: String
-    let onTap: () -> Void
-
-    var body: some View {
-        Button(action: onTap) {
-            VStack(spacing: 6) {
-                Image(systemName: icon)
-                    .font(.system(size: 18, weight: .medium))
-                    .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                Text(label)
-                    .font(CultivationTheme.Fonts.body(12, weight: .medium))
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-            }
-            .frame(maxWidth: .infinity)
-            .padding(.vertical, 14)
-            .paperCard()
-        }
-        .buttonStyle(.plain)
     }
 }
