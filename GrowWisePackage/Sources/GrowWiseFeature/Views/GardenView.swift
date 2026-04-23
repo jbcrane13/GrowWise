@@ -37,6 +37,10 @@ public struct GardenView: View {
 
     public init() {}
 
+    private var filteredGroups: [PlantGroup] {
+        viewModel.filtered(by: selectedFilter)
+    }
+
     public var body: some View {
         NavigationStack {
             ZStack {
@@ -53,11 +57,10 @@ public struct GardenView: View {
                         } else if viewModel.groupedPlants.isEmpty {
                             emptyState
                         } else {
-                            let groups = viewModel.filtered(by: selectedFilter)
-                            if groups.isEmpty {
+                            if filteredGroups.isEmpty {
                                 filterEmptyState
                             } else {
-                                ForEach(groups) { group in
+                                ForEach(filteredGroups) { group in
                                     GardenBedSection(
                                         group: group,
                                         onPlantTap: { plant in selectedPlant = plant },
@@ -304,7 +307,7 @@ public struct GardenView: View {
                 ForEach(GardenFilter.allCases) { filter in
                     let isActive = selectedFilter == filter
                     Button {
-                        withAnimation(CultivationTheme.Animation.snappy) {
+                        withAnimation(CultivationTheme.Animation.selection) {
                             selectedFilter = filter
                         }
                     } label: {
