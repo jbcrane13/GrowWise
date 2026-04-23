@@ -21,9 +21,3 @@ public enum GardenClubTabRoute: Equatable {
         }
     }
 }
-
-extension GardenClub: @retroactive Equatable {
-    public static func == (lhs: GardenClub, rhs: GardenClub) -> Bool {
-        lhs.id == rhs.id
-    }
-}
