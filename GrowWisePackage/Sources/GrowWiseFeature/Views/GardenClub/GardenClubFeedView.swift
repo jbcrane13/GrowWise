@@ -12,8 +12,10 @@ private let logger = Logger(subsystem: "com.growwise", category: "GardenClubFeed
 ///
 /// See ADR-019 and the v2 mockup at docs/mockups/cultivation-simplified-wireflow.html.
 public struct GardenClubFeedView: View {
-    @Environment(DataService.self) private var dataService
-    @Environment(LocationService.self) private var locationService
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(LocationService.self)
+    private var locationService
 
     @State private var selectedSegment: FeedSegment = .club
     @State private var posts: [ClubActivityViewData] = []
@@ -189,8 +191,7 @@ public struct GardenClubFeedView: View {
 
     // MARK: - Feed body
 
-    @ViewBuilder
-    private var feed: some View {
+    @ViewBuilder private var feed: some View {
         switch selectedSegment {
         case .club:
             if posts.isEmpty {
@@ -198,9 +199,11 @@ public struct GardenClubFeedView: View {
             } else {
                 clubFeed
             }
+
         case .nearby:
             // Per spec Open questions resolution: empty-state copy, not sample data.
             emptyState(message: "No posts in your zone yet.")
+
         case .following:
             // Per spec Open questions resolution: empty-state copy, not sample data.
             emptyState(message: "Follow someone to see their posts.")
@@ -353,7 +356,8 @@ private struct PostCard: View {
                 Circle()
                     .fill(LinearGradient(
                         colors: [CultivationTheme.Colors.brandMint, CultivationTheme.Colors.brandLeaf],
-                        startPoint: .topLeading, endPoint: .bottomTrailing
+                        startPoint: .topLeading,
+                        endPoint: .bottomTrailing
                     ))
                     .frame(width: 32, height: 32)
                     .overlay(
@@ -392,7 +396,8 @@ private struct PostCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(LinearGradient(
                     colors: [CultivationTheme.Colors.brandLeaf, CultivationTheme.Colors.brandForest],
-                    startPoint: .topLeading, endPoint: .bottomTrailing
+                    startPoint: .topLeading,
+                    endPoint: .bottomTrailing
                 ))
                 .frame(height: 120)
 

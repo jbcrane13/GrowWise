@@ -12,8 +12,10 @@ public enum GardenClubTabRoute: Equatable {
         switch clubs.count {
         case 0:
             .joinOrCreate
+
         case 1:
             .feed(clubs[0])
+
         default:
             // Most-recently-created club is the natural default; sort newest first
             // so the list shows the freshest at the top.

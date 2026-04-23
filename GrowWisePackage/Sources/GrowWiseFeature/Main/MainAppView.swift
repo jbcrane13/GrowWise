@@ -246,7 +246,8 @@ public enum TabSelection: String, CaseIterable {
 /// Routes the Club tab to the right surface based on the user's club membership.
 /// Zero clubs -> join/create prompt, one -> feed, many -> list. See ADR-019.
 private struct GardenClubTabContainer: View {
-    @Environment(DataService.self) private var dataService
+    @Environment(DataService.self)
+    private var dataService
     @State private var clubs: [GardenClub] = []
 
     var body: some View {
@@ -254,8 +255,10 @@ private struct GardenClubTabContainer: View {
             switch GardenClubTabRoute.resolve(clubs: clubs) {
             case .joinOrCreate:
                 GardenClubJoinOrCreatePrompt()
+
             case .feed(let club):
                 GardenClubFeedView(club: club)
+
             case .list:
                 ClubListView()
             }

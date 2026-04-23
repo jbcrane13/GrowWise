@@ -275,7 +275,9 @@ public struct GardenView: View {
                             }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityIdentifier("garden_picker_\(garden.name?.lowercased().replacingOccurrences(of: " ", with: "_") ?? "unknown")")
+                    .accessibilityIdentifier(
+                        "garden_picker_\(garden.name?.lowercased().replacingOccurrences(of: " ", with: "_") ?? "unknown")"
+                    )
                 }
 
                 Button {
@@ -326,7 +328,9 @@ public struct GardenView: View {
                             }
                     }
                     .buttonStyle(.plain)
-                    .accessibilityIdentifier("garden_filter_\(filter.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                    .accessibilityIdentifier(
+                        "garden_filter_\(filter.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))"
+                    )
                 }
             }
             .padding(.horizontal, 1)

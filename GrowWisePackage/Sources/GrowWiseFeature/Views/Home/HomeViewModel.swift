@@ -123,10 +123,13 @@ final class HomeViewModel {
                 switch reminder.reminderType {
                 case .watering:
                     plant.lastWatered = Date()
+
                 case .fertilizing:
                     plant.lastFertilized = Date()
+
                 case .pruning:
                     plant.lastPruned = Date()
+
                 default:
                     break
                 }

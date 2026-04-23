@@ -357,12 +357,15 @@ extension TaskRow {
         case .watering:
             self.quickActionIcon = "drop.fill"
             self.quickActionColor = .blue
+
         case .fertilizing:
             self.quickActionIcon = "leaf.fill"
             self.quickActionColor = CultivationTheme.Colors.brandLeaf
+
         case .pruning:
             self.quickActionIcon = "scissors"
             self.quickActionColor = .orange
+
         default:
             self.quickActionIcon = "checkmark.circle.fill"
             self.quickActionColor = CultivationTheme.Colors.textTertiary

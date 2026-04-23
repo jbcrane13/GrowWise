@@ -115,6 +115,7 @@ public final class GardenViewModel {
         switch filter {
         case .all:
             return base
+
         case .needsCare:
             let now = Date()
             return base.compactMap { group in
@@ -123,16 +124,19 @@ public final class GardenViewModel {
                 }
                 return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
             }
+
         case .blooming:
             return base.compactMap { group in
                 let matching = group.plants.filter { ($0.growthStage ?? .seedling) == .flowering }
                 return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
             }
+
         case .edible:
             return base.compactMap { group in
                 let matching = group.plants.filter { $0.plantType == .vegetable || $0.plantType == .fruit }
                 return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
             }
+
         case .herbs:
             return base.compactMap { group in
                 let matching = group.plants.filter { $0.plantType == .herb }

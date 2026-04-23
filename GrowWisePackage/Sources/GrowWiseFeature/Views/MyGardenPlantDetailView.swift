@@ -29,7 +29,7 @@ struct PlantDetailView: View {
     @State private var careTips: [CareTip] = []
     @State private var isAdviceExpanded: Bool = false
     @State private var journalEntries: [JournalEntry] = []
-    @State private var primaryClub: GardenClub? = nil
+    @State private var primaryClub: GardenClub?
     @State private var showingShareToClub: Bool = false
     @State private var deleteError: Error?
 

@@ -483,7 +483,9 @@ public final class DataService {
         do {
             result = try journals.fetchForPlant(plant, offset: offset, limit: limit)
         } catch {
-            logger.error("[DataService] Failed to fetch journal entries for plant: \(error.localizedDescription, privacy: .public)")
+            logger.error(
+                "[DataService] Failed to fetch journal entries for plant: \(error.localizedDescription, privacy: .public)"
+            )
             result = []
         }
         cache.set(cacheKey, value: result, policy: .medium)
