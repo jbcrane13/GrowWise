@@ -122,7 +122,7 @@ public struct MainAppView: View {
                 .accessibilityIdentifier("tab_garden")
 
             NavigationStack {
-                GardenClubFeedView()
+                GardenClubTabContainer()
             }
             .tabItem {
                 Label("Club", systemImage: "sparkles")
@@ -239,6 +239,68 @@ public enum TabSelection: String, CaseIterable {
     case garden
     case club
     case profile
+}
+
+// MARK: - Club tab routing
+
+/// Routes the Club tab to the right surface based on the user's club membership.
+/// Zero clubs -> join/create prompt, one -> feed, many -> list. See ADR-019.
+private struct GardenClubTabContainer: View {
+    @Environment(DataService.self) private var dataService
+    @State private var clubs: [GardenClub] = []
+
+    var body: some View {
+        Group {
+            switch GardenClubTabRoute.resolve(clubs: clubs) {
+            case .joinOrCreate:
+                GardenClubJoinOrCreatePrompt()
+            case .feed(let club):
+                GardenClubFeedView(club: club)
+            case .list:
+                ClubListView()
+            }
+        }
+        .task {
+            do {
+                clubs = try dataService.fetchClubs()
+            } catch {
+                logger.error("Failed to fetch clubs for tab routing: \(error.localizedDescription, privacy: .public)")
+                clubs = []
+            }
+        }
+        .accessibilityIdentifier("club_tab_container")
+    }
+}
+
+/// Zero-club landing state. Offers join-by-invite-code or create-a-club
+/// entry points via the existing sheets.
+private struct GardenClubJoinOrCreatePrompt: View {
+    @State private var isJoining = false
+    @State private var isCreating = false
+
+    var body: some View {
+        VStack(spacing: 16) {
+            Text("Join a club or start one")
+                .font(CultivationTheme.Fonts.display(22, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                .multilineTextAlignment(.center)
+            Text("Share what's growing with people nearby.")
+                .font(CultivationTheme.Fonts.body(14))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+            Button("Join a club") { isJoining = true }
+                .buttonStyle(GradientButtonStyle())
+                .accessibilityIdentifier("club_button_join")
+            Button("Create a club") { isCreating = true }
+                .buttonStyle(CoralButtonStyle())
+                .accessibilityIdentifier("club_button_create")
+        }
+        .padding(CultivationTheme.Spacing.screenPadding)
+        .frame(maxWidth: .infinity, maxHeight: .infinity)
+        .background(CultivationTheme.Colors.background.ignoresSafeArea())
+        .sheet(isPresented: $isJoining) { JoinClubSheet() }
+        .sheet(isPresented: $isCreating) { CreateClubSheet() }
+    }
 }
 
 #Preview {
