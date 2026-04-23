@@ -13,21 +13,21 @@ struct CompletionView: View {
             VStack(spacing: 20) {
                 ZStack {
                     Circle()
-                        .fill(Color.botanicalLeaf.opacity(0.08))
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.08))
                         .frame(width: 140, height: 140)
                     Circle()
-                        .fill(Color.botanicalLeaf.opacity(0.14))
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.14))
                         .frame(width: 104, height: 104)
                     Circle()
                         .fill(
                             LinearGradient(
-                                colors: [Color.botanicalForest, Color.botanicalLeaf],
+                                colors: [CultivationTheme.Colors.brandForest, CultivationTheme.Colors.brandLeaf],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                         )
                         .frame(width: 72, height: 72)
-                        .shadow(color: Color.botanicalForest.opacity(0.45), radius: 20, y: 6)
+                        .shadow(color: CultivationTheme.Colors.brandForest.opacity(0.45), radius: 20, y: 6)
                     Image(systemName: "checkmark")
                         .font(.system(size: 30, weight: .bold))
                         .foregroundStyle(.white)
@@ -43,7 +43,7 @@ struct CompletionView: View {
 
                     Text("Everything's set up. Let's grow.")
                         .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(0.50))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
                 .opacity(heroVisible ? 1 : 0)
                 .offset(y: heroVisible ? 0 : 12)
@@ -55,43 +55,43 @@ struct CompletionView: View {
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Image(systemName: "person.crop.circle.fill")
-                        .foregroundStyle(Color.botanicalLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                     Text("Your Profile")
                         .font(.system(size: 13, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.70))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     Spacer()
                 }
                 .padding(.horizontal, 16)
                 .padding(.vertical, 12)
 
-                Divider().overlay(Color.white.opacity(0.07))
+                Divider()
 
                 CompletionSummaryRow(
                     icon: "graduationcap.fill",
-                    iconColor: Color.botanicalLeaf,
+                    iconColor: CultivationTheme.Colors.brandLeaf,
                     label: "Experience",
                     value: userProfile.skillLevel.displayName
                 )
 
                 if let firstGoal = userProfile.goals.first {
-                    Divider().padding(.leading, 48).overlay(Color.white.opacity(0.06))
+                    Divider().padding(.leading, 48)
                     CompletionSummaryRow(
                         icon: "scope",
-                        iconColor: Color.botanicalLeaf.opacity(0.80),
+                        iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.80),
                         label: "Goal",
                         value: firstGoal.displayName
                     )
                 }
 
-                Divider().padding(.leading, 48).overlay(Color.white.opacity(0.06))
+                Divider().padding(.leading, 48)
                 CompletionSummaryRow(
                     icon: "leaf.fill",
-                    iconColor: Color.botanicalLeaf.opacity(0.70),
+                    iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.70),
                     label: "Garden",
                     value: userProfile.gardenType.displayName
                 )
 
-                Divider().padding(.leading, 48).overlay(Color.white.opacity(0.06))
+                Divider().padding(.leading, 48)
                 CompletionSummaryRow(
                     icon: "square.grid.2x2.fill",
                     iconColor: .white.opacity(0.45),
@@ -99,15 +99,7 @@ struct CompletionView: View {
                     value: userProfile.spaceSize.displayName
                 )
             }
-            .background(
-                RoundedRectangle(cornerRadius: 20)
-                    .fill(Color.white.opacity(0.05))
-                    .overlay(
-                        RoundedRectangle(cornerRadius: 20)
-                            .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                    )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 20))
+            .paperCard()
             .padding(.horizontal, 24)
             .opacity(summaryVisible ? 1 : 0)
             .offset(y: summaryVisible ? 0 : 20)
@@ -141,11 +133,11 @@ private struct CompletionSummaryRow: View {
             }
             Text(label)
                 .font(.system(size: 14))
-                .foregroundStyle(.white.opacity(0.45))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
             Spacer()
             Text(value)
                 .font(.system(size: 14, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.85))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
         }
         .padding(.horizontal, 16)
         .padding(.vertical, 12)
@@ -154,7 +146,7 @@ private struct CompletionSummaryRow: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         VStack {
             CompletionView(userProfile: .constant(UserProfile()))
             Spacer().frame(height: 80)

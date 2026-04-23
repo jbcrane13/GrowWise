@@ -46,7 +46,6 @@ struct OnboardingNavigationView: View {
         VStack(spacing: 0) {
             // Separator line
             Divider()
-                .overlay(Color.white.opacity(0.08))
 
             HStack(spacing: 12) {
                 // Back button
@@ -58,13 +57,13 @@ struct OnboardingNavigationView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(.white.opacity(0.85))
+                            .foregroundColor(CultivationTheme.Colors.textPrimary)
                             .frame(width: 50, height: 50)
                             .background(
                                 Circle()
-                                    .fill(Color.white.opacity(0.10))
+                                    .fill(CultivationTheme.Colors.cardSurface)
                                     .shadow(
-                                        color: Color.black.opacity(0.08),
+                                        color: Color(red: 0.12, green: 0.16, blue: 0.13, opacity: 0.06),
                                         radius: 6,
                                         y: 2
                                     )
@@ -72,7 +71,7 @@ struct OnboardingNavigationView: View {
                             .overlay(
                                 Circle()
                                     .stroke(
-                                        Color.white.opacity(0.18),
+                                        CultivationTheme.Colors.cardBorder,
                                         lineWidth: 1
                                     )
                             )
@@ -114,7 +113,7 @@ struct OnboardingNavigationView: View {
                                 canProceed
                                     ? CultivationTheme.Gradients.warmAccent
                                     : LinearGradient(
-                                        colors: [Color.botanicalSage.opacity(0.4), Color.botanicalSage.opacity(0.3)],
+                                        colors: [CultivationTheme.Colors.textTertiary, CultivationTheme.Colors.textTertiary.opacity(0.7)],
                                         startPoint: .leading,
                                         endPoint: .trailing
                                     )

@@ -20,7 +20,7 @@ public struct OnboardingView: View {
     public var body: some View {
         NavigationStack {
             ZStack {
-                Color.black.ignoresSafeArea()
+                CultivationTheme.Colors.background.ignoresSafeArea()
 
                 VStack(spacing: 0) {
                     // Progress indicator (hidden on welcome)
@@ -78,43 +78,6 @@ public struct OnboardingView: View {
                 dismiss()
             }
         }
-    }
-
-    private var welcomeBackground: some View {
-        ZStack {
-            // Base gradient
-            LinearGradient(
-                colors: [
-                    Color.botanicalForest,
-                    Color(red: 0.118, green: 0.306, blue: 0.235),
-                    Color(red: 0.094, green: 0.235, blue: 0.188),
-                ],
-                startPoint: .topLeading,
-                endPoint: .bottomTrailing
-            )
-
-            // Organic decorative orbs
-            GeometryReader { geo in
-                Circle()
-                    .fill(Color.botanicalLeaf.opacity(0.25))
-                    .frame(width: 320, height: 320)
-                    .blur(radius: 80)
-                    .offset(x: -60, y: -80)
-
-                Circle()
-                    .fill(Color.botanicalMint.opacity(0.15))
-                    .frame(width: 240, height: 240)
-                    .blur(radius: 60)
-                    .offset(x: geo.size.width - 100, y: 120)
-
-                Circle()
-                    .fill(Color.botanicalGold.opacity(0.12))
-                    .frame(width: 180, height: 180)
-                    .blur(radius: 50)
-                    .offset(x: 60, y: geo.size.height - 200)
-            }
-        }
-        .ignoresSafeArea()
     }
 }
 
@@ -214,8 +177,8 @@ public enum GardeningGoal: String, CaseIterable, Identifiable {
         case .growFood: Color(red: 0.922, green: 0.596, blue: 0.200)
         case .beautifySpace: Color(red: 0.780, green: 0.420, blue: 0.820)
         case .learnSkills: Color(red: 0.275, green: 0.565, blue: 0.898)
-        case .relaxation: Color.botanicalForest
-        case .sustainability: Color.botanicalLeaf
+        case .relaxation: CultivationTheme.Colors.brandForest
+        case .sustainability: CultivationTheme.Colors.brandLeaf
         case .healingGarden: Color(red: 0.882, green: 0.380, blue: 0.459)
         }
     }

@@ -124,21 +124,43 @@ public enum CultivationTheme {
 
     // MARK: - Fonts
 
-    /// System-font helpers. `display` uses `.serif` (New York) for headlines
-    /// and plant names; `body` uses `.rounded` (SF Pro Rounded) for UI/body.
-    /// Custom Fraunces/Manrope registration was scoped out of the v2 redesign;
-    /// this helper is a single-file hook for adding them later if desired.
+    /// Fraunces (display/headlines) + Manrope (body/UI) with system fallbacks.
+    /// Fonts are registered via FontRegistration.registerIfNeeded() at app launch.
     public enum Fonts {
+        #if canImport(UIKit)
+        private static var frauncesReady: Bool {
+            UIFont.familyNames.contains("Fraunces")
+        }
+
+        private static var manropeReady: Bool {
+            UIFont.familyNames.contains("Manrope")
+        }
+        #else
+        private static var frauncesReady: Bool {
+            false
+        }
+
+        private static var manropeReady: Bool {
+            false
+        }
+        #endif
+
         public static func display(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-            .system(size: size, weight: weight, design: .serif)
+            frauncesReady
+                ? .custom("Fraunces", size: size).weight(weight)
+                : .system(size: size, weight: weight, design: .serif)
         }
 
         public static func displayItalic(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-            .system(size: size, weight: weight, design: .serif).italic()
+            frauncesReady
+                ? .custom("Fraunces", size: size).weight(weight).italic()
+                : .system(size: size, weight: weight, design: .serif).italic()
         }
 
         public static func body(_ size: CGFloat, weight: Font.Weight = .regular) -> Font {
-            .system(size: size, weight: weight, design: .rounded)
+            manropeReady
+                ? .custom("Manrope", size: size).weight(weight)
+                : .system(size: size, weight: weight, design: .rounded)
         }
     }
 

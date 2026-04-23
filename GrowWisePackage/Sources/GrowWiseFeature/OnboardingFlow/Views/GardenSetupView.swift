@@ -8,7 +8,7 @@ struct GardenSetupView: View {
         VStack(spacing: 20) {
             OnboardingStepHeader(
                 icon: "square.split.2x1.fill",
-                iconColor: Color.botanicalLeaf,
+                iconColor: CultivationTheme.Colors.brandLeaf,
                 title: "Tell us about\nyour garden",
                 subtitle: "Helps us give you the right plant advice."
             )
@@ -18,7 +18,7 @@ struct GardenSetupView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("GARDEN TYPE")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.35))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         .tracking(1.0)
                         .padding(.horizontal, 20)
 
@@ -44,7 +44,7 @@ struct GardenSetupView: View {
                 VStack(alignment: .leading, spacing: 10) {
                     Text("YOUR SPACE")
                         .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(.white.opacity(0.35))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         .tracking(1.0)
                         .padding(.horizontal, 20)
 
@@ -85,10 +85,10 @@ private struct GardenTypeChip: View {
             HStack(spacing: 6) {
                 Image(systemName: type.iconName)
                     .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(isSelected ? .white : Color.botanicalLeaf)
+                    .foregroundStyle(isSelected ? .white : CultivationTheme.Colors.brandLeaf)
                 Text(type.displayName)
                     .font(.system(size: 14, weight: .medium))
-                    .foregroundStyle(isSelected ? .white : .white.opacity(0.75))
+                    .foregroundStyle(isSelected ? .white : CultivationTheme.Colors.textPrimary)
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)
@@ -97,19 +97,19 @@ private struct GardenTypeChip: View {
                     .fill(
                         isSelected
                             ? LinearGradient(
-                                colors: [Color.botanicalForest, Color.botanicalLeaf],
+                                colors: [CultivationTheme.Colors.brandForest, CultivationTheme.Colors.brandLeaf],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                             : LinearGradient(
-                                colors: [Color.white.opacity(0.07), Color.white.opacity(0.05)],
+                                colors: [CultivationTheme.Colors.cardSurface, CultivationTheme.Colors.cardSurface],
                                 startPoint: .leading,
                                 endPoint: .trailing
                             )
                     )
                     .overlay(
                         Capsule().stroke(
-                            isSelected ? Color.clear : Color.white.opacity(0.12),
+                            isSelected ? Color.clear : CultivationTheme.Colors.cardBorder,
                             lineWidth: 1
                         )
                     )
@@ -132,11 +132,11 @@ private struct SpaceSizeRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(isSelected ? Color.botanicalLeaf.opacity(0.20) : Color.white.opacity(0.08))
+                        .fill(isSelected ? CultivationTheme.Colors.brandLeaf.opacity(0.20) : CultivationTheme.Colors.backgroundSecondary)
                         .frame(width: 40, height: 40)
                     Image(systemName: size.icon)
                         .font(.system(size: 16, weight: .medium))
-                        .foregroundStyle(isSelected ? Color.botanicalLeaf : .white.opacity(0.65))
+                        .foregroundStyle(isSelected ? CultivationTheme.Colors.brandLeaf : CultivationTheme.Colors.textSecondary)
                 }
 
                 VStack(alignment: .leading, spacing: 2) {
@@ -145,10 +145,10 @@ private struct SpaceSizeRow: View {
                             .font(.system(size: 15, weight: .semibold))
                             .foregroundStyle(.white)
                         Text("·")
-                            .foregroundStyle(.white.opacity(0.30))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         Text(size.subtitle)
                             .font(.system(size: 13))
-                            .foregroundStyle(.white.opacity(0.45))
+                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     }
                 }
 
@@ -157,10 +157,10 @@ private struct SpaceSizeRow: View {
                 if isSelected {
                     Image(systemName: "checkmark.circle.fill")
                         .font(.system(size: 20))
-                        .foregroundStyle(Color.botanicalLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                 } else {
                     Circle()
-                        .stroke(Color.white.opacity(0.20), lineWidth: 1.5)
+                        .stroke(CultivationTheme.Colors.divider, lineWidth: 1.5)
                         .frame(width: 20, height: 20)
                 }
             }
@@ -171,13 +171,13 @@ private struct SpaceSizeRow: View {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(
                         isSelected
-                            ? Color.botanicalLeaf.opacity(0.10)
-                            : Color.white.opacity(0.04)
+                            ? CultivationTheme.Colors.brandLeaf.opacity(0.10)
+                            : CultivationTheme.Colors.cardSurface
                     )
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(
-                                isSelected ? Color.botanicalLeaf.opacity(0.35) : Color.white.opacity(0.07),
+                                isSelected ? CultivationTheme.Colors.brandLeaf.opacity(0.35) : Color.white.opacity(0.07),
                                 lineWidth: 1
                             )
                     )
@@ -192,7 +192,7 @@ private struct SpaceSizeRow: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         VStack {
             GardenSetupView(userProfile: .constant(UserProfile()))
             Spacer().frame(height: 80)
