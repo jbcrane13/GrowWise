@@ -84,11 +84,11 @@ struct PlantRow: View {
             // Name + care subtitle
             VStack(alignment: .leading, spacing: 2) {
                 Text(plant.name ?? "Unnamed Plant")
-                    .font(.system(.body, weight: .semibold))
+                    .font(CultivationTheme.Fonts.display(17, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text(careSubtitle)
-                    .font(.system(.caption))
+                    .font(CultivationTheme.Fonts.body(13).italic())
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
@@ -138,7 +138,7 @@ struct PlantRow: View {
                     .fill(CultivationTheme.Colors.statusAlert.opacity(0.04))
             }
         }
-        .glassCard()
+        .paperCard()
         .accessibilityIdentifier("garden_row_plant_\(plantID)")
     }
 }
@@ -164,7 +164,7 @@ struct BedGroupHeader: View {
 
             VStack(alignment: .leading, spacing: 1) {
                 Text(name)
-                    .font(.system(.subheadline, weight: .semibold))
+                    .font(CultivationTheme.Fonts.display(15, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text(subtitle)
@@ -222,7 +222,7 @@ struct CompanionTipCard: View {
             )
 
             Text(tip)
-                .font(.system(.caption))
+                .font(CultivationTheme.Fonts.body(13).italic())
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .frame(maxWidth: .infinity, alignment: .leading)
                 .fixedSize(horizontal: false, vertical: true)
@@ -230,15 +230,14 @@ struct CompanionTipCard: View {
         .padding(CultivationTheme.Spacing.cardPadding)
         .background {
             RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                .fill(CultivationTheme.Colors.brandLeaf.opacity(0.06))
-                .background(
-                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                        .fill(.ultraThinMaterial)
-                )
+                .fill(CultivationTheme.Colors.backgroundSecondary)
         }
         .overlay {
             RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
-                .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.15), lineWidth: 1)
+                .stroke(
+                    CultivationTheme.Colors.brandLeaf.opacity(0.4),
+                    style: StrokeStyle(lineWidth: 1, dash: [4, 3])
+                )
         }
         .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
     }
@@ -272,12 +271,12 @@ struct TaskRow: View {
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(description)
-                    .font(.system(.subheadline, weight: .semibold))
+                    .font(CultivationTheme.Fonts.body(14, weight: .semibold))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 if let locationLabel {
                     Text(locationLabel)
-                        .font(.system(.caption))
+                        .font(CultivationTheme.Fonts.body(12))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 }
             }
@@ -330,7 +329,7 @@ struct TaskRow: View {
             }
         }
         .padding(CultivationTheme.Spacing.cardPadding)
-        .glassCard()
+        .paperCard()
         .accessibilityIdentifier("home_row_task_\(taskID.uuidString)")
     }
 }

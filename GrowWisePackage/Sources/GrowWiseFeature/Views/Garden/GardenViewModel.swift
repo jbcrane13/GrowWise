@@ -108,6 +108,39 @@ public final class GardenViewModel {
             })
     }
 
+    /// Returns `groupedPlants` filtered by the given `GardenFilter`.
+    /// Empty groups are dropped.
+    public func filtered(by filter: GardenView.GardenFilter) -> [PlantGroup] {
+        let base = groupedPlants
+        switch filter {
+        case .all:
+            return base
+        case .needsCare:
+            let now = Date()
+            return base.compactMap { group in
+                let matching = group.plants.filter { plant in
+                    (plant.reminders ?? []).contains { $0.isEnabled && $0.nextDueDate < now }
+                }
+                return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
+            }
+        case .blooming:
+            return base.compactMap { group in
+                let matching = group.plants.filter { ($0.growthStage ?? .seedling) == .flowering }
+                return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
+            }
+        case .edible:
+            return base.compactMap { group in
+                let matching = group.plants.filter { $0.plantType == .vegetable || $0.plantType == .fruit }
+                return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
+            }
+        case .herbs:
+            return base.compactMap { group in
+                let matching = group.plants.filter { $0.plantType == .herb }
+                return matching.isEmpty ? nil : PlantGroup(id: group.id, bed: group.bed, plants: matching)
+            }
+        }
+    }
+
     /// Total plants across all gardens.
     public var totalPlantsAllGardens: Int {
         gardenSummaries.reduce(0) { $0 + $1.plantCount }
