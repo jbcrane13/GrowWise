@@ -231,6 +231,7 @@ public struct PlantDatabaseView: View {
         switch selectedSortOption {
         case .name:
             plants.sorted { ($0.name ?? "") < ($1.name ?? "") }
+
         case .difficulty:
             plants.sorted {
                 if $0.difficultyLevel != $1.difficultyLevel {
@@ -238,6 +239,7 @@ public struct PlantDatabaseView: View {
                 }
                 return ($0.name ?? "") < ($1.name ?? "")
             }
+
         case .plantType:
             plants.sorted {
                 if $0.plantType != $1.plantType {
@@ -245,6 +247,7 @@ public struct PlantDatabaseView: View {
                 }
                 return ($0.name ?? "") < ($1.name ?? "")
             }
+
         case .sunlightRequirement:
             plants.sorted {
                 if $0.sunlightRequirement != $1.sunlightRequirement {

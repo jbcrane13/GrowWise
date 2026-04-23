@@ -216,6 +216,7 @@ extension Color {
         switch hex.count {
         case 6:
             (r, g, b) = (int >> 16, int >> 8 & 0xFF, int & 0xFF)
+
         default:
             (r, g, b) = (0, 0, 0)
         }

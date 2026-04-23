@@ -327,18 +327,25 @@ public enum ClubCloudKitError: LocalizedError, Sendable {
         switch self {
         case .accountNotAvailable:
             "iCloud account is not available. Please sign in to iCloud to use Garden Clubs."
+
         case .missingIdentifier:
             "The club record is missing a required identifier."
+
         case .invalidData(let msg):
             "Invalid data: \(msg)"
+
         case .zoneFailed(let msg):
             "Failed to create CloudKit zone: \(msg)"
+
         case .saveFailed(let msg):
             "Failed to save record: \(msg)"
+
         case .shareFailed(let msg):
             "Failed to create share: \(msg)"
+
         case .acceptFailed(let msg):
             "Failed to accept invite: \(msg)"
+
         case .fetchFailed(let msg):
             "Failed to fetch clubs: \(msg)"
         }

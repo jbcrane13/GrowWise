@@ -444,6 +444,7 @@ public enum ForumError: LocalizedError, Sendable {
         switch self {
         case .notAvailable:
             "Forum is not available. Please check your iCloud connection."
+
         case .invalidQuestion:
             "The question could not be found."
         }

@@ -373,10 +373,13 @@ public final class PerenualAPIService {
             switch httpResponse.statusCode {
             case 200:
                 break
+
             case 401:
                 throw PerenualError.unauthorized
+
             case 429:
                 throw PerenualError.rateLimited
+
             default:
                 throw PerenualError.httpError(httpResponse.statusCode)
             }

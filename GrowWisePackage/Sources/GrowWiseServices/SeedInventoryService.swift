@@ -131,27 +131,35 @@ public final class SeedInventoryService {
         case 1 ... 3:
             month = 6
             day = 1
+
         case 4:
             month = 5
             day = 15
+
         case 5:
             month = 5
             day = 1
+
         case 6:
             month = 4
             day = 15
+
         case 7:
             month = 4
             day = 1
+
         case 8:
             month = 3
             day = 15
+
         case 9:
             month = 2
             day = 15
+
         case 10 ... 13:
             month = 1
             day = 31
+
         default:
             return nil
         }

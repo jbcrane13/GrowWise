@@ -289,6 +289,7 @@ public enum SeedScannerError: Error, LocalizedError {
         switch self {
         case .invalidImage:
             "Could not process the image. Please try a different photo."
+
         case .recognitionFailed:
             "Text recognition failed. Please try again with a clearer image."
         }

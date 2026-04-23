@@ -552,8 +552,10 @@ struct EventDetailSheet: View {
             switch response {
             case .accepted:
                 updated.rsvpAccepted = (updated.rsvpAccepted ?? []) + [currentUserID]
+
             case .declined:
                 updated.rsvpDeclined = (updated.rsvpDeclined ?? []) + [currentUserID]
+
             case .maybe:
                 updated.rsvpMaybe = (updated.rsvpMaybe ?? []) + [currentUserID]
             }

@@ -112,14 +112,19 @@ public enum GardenClubError: Error, LocalizedError {
         switch self {
         case .invalidInviteCode:
             "The invite code is invalid or has expired."
+
         case .clubInactive:
             "This garden club is no longer active."
+
         case .alreadyMember:
             "You are already a member of this club."
+
         case .notMember:
             "The specified user is not a member of this club."
+
         case .notOwner:
             "Only the club owner can perform this action."
+
         case .clubNotFound:
             "The garden club could not be found."
         }

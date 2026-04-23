@@ -292,15 +292,19 @@ public final class AchievementService {
         case "spring_planter":
             // Spring: March-May
             return (3 ... 5).contains(month) && user.plantsGrown >= 1 ? 1 : 0
+
         case "summer_grower":
             // Summer: June-August
             return (6 ... 8).contains(month) && user.plantsGrown >= 1 ? 1 : 0
+
         case "fall_harvester":
             // Fall: September-November
             return (9 ... 11).contains(month) && user.plantsHarvested >= 1 ? 1 : 0
+
         case "winter_planner":
             // Winter: December-February
             return ([12, 1, 2].contains(month) && (user.gardens?.count ?? 0) >= 1) ? 1 : 0
+
         default:
             return 0
         }
