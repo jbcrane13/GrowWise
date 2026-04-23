@@ -138,6 +138,7 @@ public struct MainAppView: View {
                 .accessibilityIdentifier("tab_profile")
         }
         .tint(CultivationTheme.Colors.accentCoral)
+        .paperGrain()
     }
 
     private var shouldShowOnboarding: Bool {
