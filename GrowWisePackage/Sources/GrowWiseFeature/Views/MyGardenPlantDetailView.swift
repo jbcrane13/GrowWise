@@ -131,6 +131,8 @@ struct PlantDetailView: View {
                 Text(sci)
                     .font(CultivationTheme.Fonts.displayItalic(15))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                SmartTag(label: "Auto-identified")
+                    .accessibilityIdentifier("plantdetail_tag_auto_identified")
             }
         }
         .accessibilityIdentifier("plantdetail_title_block")
@@ -185,10 +187,29 @@ struct PlantDetailView: View {
                 .accessibilityIdentifier("plantdetail_button_get_advice")
             }
             if let club = primaryClub {
-                Button("Share to \(club.name ?? "Club")") {
+                Button {
                     showingShareToClub = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("✦")
+                            .font(CultivationTheme.Fonts.body(13, weight: .bold))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                        Text("Share to \(club.name ?? "your club")")
+                            .font(CultivationTheme.Fonts.body(15, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoralDeep)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background {
+                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                            .fill(CultivationTheme.Colors.accentCoral.opacity(0.06))
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                            .stroke(CultivationTheme.Colors.accentCoral, lineWidth: 1.5)
+                    }
                 }
-                .buttonStyle(CoralButtonStyle())
+                .buttonStyle(.plain)
                 .accessibilityIdentifier("plantdetail_button_share_to_club")
             }
         }
@@ -198,11 +219,16 @@ struct PlantDetailView: View {
 
     private var adviceCard: some View {
         VStack(alignment: .leading, spacing: 10) {
-            Text("Growing Tips")
-                .font(CultivationTheme.Fonts.body(11, weight: .bold))
-                .tracking(1.4)
-                .textCase(.uppercase)
-                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            HStack {
+                Text("Growing Tips")
+                    .font(CultivationTheme.Fonts.body(11, weight: .bold))
+                    .tracking(1.4)
+                    .textCase(.uppercase)
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                Spacer()
+                SmartTag(label: "Personalised")
+                    .accessibilityIdentifier("plantdetail_tag_advice_smart")
+            }
             if careTips.isEmpty {
                 Text("No specific tips available for this plant.")
                     .font(CultivationTheme.Fonts.body(14))

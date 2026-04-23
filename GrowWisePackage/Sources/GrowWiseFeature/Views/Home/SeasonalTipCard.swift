@@ -13,20 +13,18 @@ struct SeasonalTipCard: View {
             )
 
             VStack(alignment: .leading, spacing: 3) {
-                Text("Seasonal Tip")
-                    .font(.system(size: 13, design: .serif))
-                    .foregroundStyle(CultivationTheme.Colors.accentAmber)
+                SmartTag(label: "Seasonal tip")
                     .accessibilityIdentifier("home_label_seasonal_tip_header")
 
                 Text(seasonalTip)
-                    .font(.system(size: 13))
+                    .font(CultivationTheme.Fonts.body(13))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     .lineLimit(3)
                     .accessibilityIdentifier("home_label_seasonal_tip_body")
             }
         }
         .padding(CultivationTheme.Spacing.cardPadding)
-        .glassCard()
+        .paperCard()
         .accessibilityIdentifier("home_card_seasonal_tip")
     }
 
