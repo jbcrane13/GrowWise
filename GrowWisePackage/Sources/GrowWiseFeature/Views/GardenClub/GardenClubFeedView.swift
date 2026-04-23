@@ -1,3 +1,4 @@
+import CloudKit
 import GrowWiseModels
 import GrowWiseServices
 import os
@@ -16,6 +17,8 @@ public struct GardenClubFeedView: View {
     private var dataService
     @Environment(LocationService.self)
     private var locationService
+    @Environment(ClubCloudKitService.self)
+    private var clubCloudKitService
 
     @State private var selectedSegment: FeedSegment = .club
     @State private var posts: [ClubActivityViewData] = []
@@ -298,17 +301,41 @@ public struct GardenClubFeedView: View {
         if let activeClub = resolved {
             clubName = activeClub.name ?? "Garden Club"
             memberCount = activeClub.memberIDs?.count ?? 0
-            if let clubID = activeClub.id {
-                do {
-                    let activities = try dataService.fetchClubActivities(for: clubID)
-                    posts = activities.map(Self.viewData(from:))
-                } catch {
-                    logger.error("Failed to fetch club activities: \(error.localizedDescription, privacy: .public)")
-                    posts = []
-                }
-            } else {
+            guard let clubID = activeClub.id else {
                 posts = []
+                return
             }
+
+            // Fetch from SwiftData as the baseline.
+            var localActivities: [ClubActivity] = []
+            do {
+                localActivities = try dataService.fetchClubActivities(for: clubID)
+            } catch {
+                logger.error("Failed to fetch local club activities: \(error.localizedDescription, privacy: .public)")
+            }
+
+            // Attempt a CloudKit fetch. On any error (no iCloud account, network
+            // outage, etc.) log a warning and fall through to the SwiftData results.
+            var merged: [ClubActivityViewData] = localActivities.map(Self.viewData(from:))
+            do {
+                let ckRecords = try await clubCloudKitService.fetchRecentActivities(
+                    for: clubID.uuidString,
+                    limit: 50
+                )
+                let ckViewData = ckRecords.map(Self.viewData(from:))
+
+                // Merge: start with CloudKit records (source of truth), then append
+                // any local records whose IDs are not already represented in CloudKit.
+                let ckIDs = Set(ckViewData.map(\.id))
+                let localOnly = merged.filter { !ckIDs.contains($0.id) }
+                merged = ckViewData + localOnly
+            } catch {
+                logger.warning(
+                    "CloudKit fetch unavailable, using SwiftData-only feed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
+
+            posts = merged
         } else {
             clubName = "Garden Club"
             memberCount = 0
@@ -338,6 +365,34 @@ public struct GardenClubFeedView: View {
             authorDisplayName: author,
             caption: caption,
             zoneTag: nil, // not yet captured on ClubActivity
+            relativeTimeLabel: label,
+            likeCount: 0, // future feature
+            commentCount: 0 // future feature
+        )
+    }
+
+    /// Maps a raw `CKRecord` for a `ClubActivity` CloudKit record onto the
+    /// presentation type. Field names must match those written by
+    /// `ClubCloudKitService.publishActivity(_:)`.
+    private static func viewData(from record: CKRecord) -> ClubActivityViewData {
+        // The record name is the activity UUID stored as a string by publishActivity.
+        let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
+        let author = record["memberName"] as? String ?? "Member"
+        let caption = record["activityDescription"] as? String
+        let timestamp = record["timestamp"] as? Date
+        let label: String?
+        if let timestamp {
+            let formatter = RelativeDateTimeFormatter()
+            formatter.unitsStyle = .abbreviated
+            label = formatter.localizedString(for: timestamp, relativeTo: .now)
+        } else {
+            label = nil
+        }
+        return ClubActivityViewData(
+            id: id,
+            authorDisplayName: author,
+            caption: caption,
+            zoneTag: nil, // not yet captured in CK record
             relativeTimeLabel: label,
             likeCount: 0, // future feature
             commentCount: 0 // future feature

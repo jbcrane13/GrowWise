@@ -50,6 +50,7 @@ public struct MainAppView: View {
         let subscriptionService: SubscriptionService
         let companionPlantingService: CompanionPlantingService
         let plantCareAdviceService: PlantCareAdviceService
+        let clubCloudKitService: ClubCloudKitService
     }
 
     public var body: some View {
@@ -91,6 +92,7 @@ public struct MainAppView: View {
                     .environment(services.subscriptionService)
                     .environment(services.companionPlantingService)
                     .environment(services.plantCareAdviceService)
+                    .environment(services.clubCloudKitService)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -161,7 +163,8 @@ public struct MainAppView: View {
                 tutorialService: TutorialService(dataService: service),
                 subscriptionService: SubscriptionService(),
                 companionPlantingService: CompanionPlantingService(),
-                plantCareAdviceService: PlantCareAdviceService()
+                plantCareAdviceService: PlantCareAdviceService(),
+                clubCloudKitService: ClubCloudKitService()
             )
             isInitializing = false
             return
@@ -179,7 +182,8 @@ public struct MainAppView: View {
             tutorialService: TutorialService(dataService: service),
             subscriptionService: SubscriptionService(),
             companionPlantingService: CompanionPlantingService(),
-            plantCareAdviceService: PlantCareAdviceService()
+            plantCareAdviceService: PlantCareAdviceService(),
+            clubCloudKitService: ClubCloudKitService()
         )
         cloudSyncService.attach(dataService: service)
 
