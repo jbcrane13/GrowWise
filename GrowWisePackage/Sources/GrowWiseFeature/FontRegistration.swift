@@ -36,22 +36,4 @@ public enum FontRegistration {
             registered = true
         }
     }
-
-    #if canImport(UIKit)
-    public static var frauncesAvailable: Bool {
-        UIFont.familyNames.contains("Fraunces")
-    }
-
-    public static var manropeAvailable: Bool {
-        UIFont.familyNames.contains("Manrope")
-    }
-    #else
-    public static var frauncesAvailable: Bool {
-        false
-    }
-
-    public static var manropeAvailable: Bool {
-        false
-    }
-    #endif
 }
