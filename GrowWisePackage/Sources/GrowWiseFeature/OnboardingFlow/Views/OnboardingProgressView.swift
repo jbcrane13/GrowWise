@@ -19,7 +19,7 @@ struct OnboardingProgressView: View {
                         .fill(
                             step.stepNumber < currentStep.stepNumber
                                 ? CultivationTheme.Colors.brandLeaf
-                                : Color.white.opacity(0.20)
+                                : CultivationTheme.Colors.divider
                         )
                         .frame(height: 2)
                         .frame(maxWidth: .infinity)
