@@ -1,8 +1,8 @@
-# GrowWise Core Data Architecture
+# Cultivation Core Data Architecture
 
 ## Overview
 
-The GrowWise iOS app uses a comprehensive Core Data model with CloudKit synchronization to provide a robust gardening management system. This architecture supports user profiles, plant databases, garden management, smart reminders, and plant journaling.
+The Cultivation iOS app uses a comprehensive Core Data model with CloudKit synchronization to provide a robust gardening management system. This architecture supports user profiles, plant databases, garden management, smart reminders, and plant journaling.
 
 ## Entity Relationship Diagram
 
@@ -171,4 +171,4 @@ The Core Data model is designed with future extensibility in mind:
 - Local Core Data encryption via iOS data protection
 - User consent required for CloudKit features
 
-This architecture provides a solid foundation for the GrowWise gardening app, supporting both offline usage and seamless cloud synchronization across devices.
+This architecture provides a solid foundation for the Cultivation gardening app, supporting both offline usage and seamless cloud synchronization across devices.

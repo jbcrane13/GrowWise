@@ -398,8 +398,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrowWise/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = GrowWise;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GrowWise uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
+				INFOPLIST_KEY_CFBundleDisplayName = Cultivation;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Cultivation uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
@@ -431,8 +431,8 @@
 				ENABLE_PREVIEWS = YES;
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrowWise/Info.plist;
-				INFOPLIST_KEY_CFBundleDisplayName = GrowWise;
-				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "GrowWise uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
+				INFOPLIST_KEY_CFBundleDisplayName = Cultivation;
+				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Cultivation uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
 				INFOPLIST_KEY_UILaunchScreen_Generation = YES;
