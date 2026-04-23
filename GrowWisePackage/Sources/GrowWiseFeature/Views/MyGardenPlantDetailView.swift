@@ -31,6 +31,7 @@ struct PlantDetailView: View {
     @State private var journalEntries: [JournalEntry] = []
     @State private var primaryClub: GardenClub? = nil
     @State private var showingShareToClub: Bool = false
+    @State private var deleteError: Error?
 
     // MARK: - Body
 
@@ -85,6 +86,14 @@ struct PlantDetailView: View {
             Button("Delete", role: .destructive) { deletePlant() }
         } message: {
             Text("Are you sure you want to delete \(plant.name ?? "this plant")? This action cannot be undone.")
+        }
+        .alert("Couldn't delete plant", isPresented: Binding(
+            get: { deleteError != nil },
+            set: { if !$0 { deleteError = nil } }
+        )) {
+            Button("OK", role: .cancel) {}
+        } message: {
+            Text(deleteError?.localizedDescription ?? "")
         }
         .accessibilityIdentifier("screen_plantDetail")
     }

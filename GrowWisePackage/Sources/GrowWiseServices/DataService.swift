@@ -879,12 +879,14 @@ public extension DataService {
 
 // MARK: - Club Queries
 
-/// Returns the most recently created GardenClub, or nil if none exist.
-public func fetchPrimaryClub() -> GardenClub? {
-    let fetch = FetchDescriptor<GardenClub>(
-        sortBy: [SortDescriptor(\GardenClub.createdDate, order: .reverse)]
-    )
-    return try? mainContext.fetch(fetch).first
+public extension DataService {
+    /// Returns the most recently created GardenClub, or nil if none exist.
+    func fetchPrimaryClub() -> GardenClub? {
+        let fetch = FetchDescriptor<GardenClub>(
+            sortBy: [SortDescriptor(\GardenClub.createdDate, order: .reverse)]
+        )
+        return try? mainContext.fetch(fetch).first
+    }
 }
 
 // MARK: - Supporting Types
