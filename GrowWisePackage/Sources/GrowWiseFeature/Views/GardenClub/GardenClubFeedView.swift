@@ -397,8 +397,12 @@ private struct PostCard: View {
                 .frame(height: 120)
 
             HStack(spacing: 16) {
-                Label("\(post.likeCount)", systemImage: "heart")
-                Label("\(post.commentCount)", systemImage: "bubble.right")
+                if post.likeCount > 0 {
+                    Label("\(post.likeCount)", systemImage: "heart")
+                }
+                if post.commentCount > 0 {
+                    Label("\(post.commentCount)", systemImage: "bubble.right")
+                }
                 Label("Share", systemImage: "arrow.up.right")
             }
             .font(CultivationTheme.Fonts.body(11, weight: .semibold))
