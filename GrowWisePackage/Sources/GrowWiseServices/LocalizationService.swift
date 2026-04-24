@@ -50,6 +50,7 @@ import Foundation
         case .imperial:
             let measurement = Measurement(value: fahrenheit, unit: UnitTemperature.fahrenheit)
             return Self.temperatureFormatter.string(from: measurement)
+
         case .metric:
             let measurement = Measurement(value: fahrenheit, unit: UnitTemperature.fahrenheit)
             let celsius = measurement.converted(to: .celsius)
@@ -65,6 +66,7 @@ import Foundation
         case .imperial:
             let measurement = Measurement(value: inches, unit: UnitLength.inches)
             return Self.lengthFormatter.string(from: measurement)
+
         case .metric:
             let measurement = Measurement(value: inches, unit: UnitLength.inches)
             let cm = measurement.converted(to: .centimeters)
@@ -80,6 +82,7 @@ import Foundation
         case .imperial:
             let measurement = Measurement(value: gallons, unit: UnitVolume.gallons)
             return Self.volumeFormatter.string(from: measurement)
+
         case .metric:
             let measurement = Measurement(value: gallons, unit: UnitVolume.gallons)
             let liters = measurement.converted(to: .liters)

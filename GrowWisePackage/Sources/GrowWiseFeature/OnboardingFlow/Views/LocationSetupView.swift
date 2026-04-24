@@ -53,7 +53,7 @@ struct LocationSetupView: View {
                                     .foregroundStyle(CultivationTheme.Colors.accentCoral)
                                 Text("Hardiness Zone: \(zone)")
                                     .font(.system(size: 15, weight: .semibold))
-                                    .foregroundStyle(.white)
+                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
                             }
                         }
                     }
@@ -88,7 +88,7 @@ struct LocationSetupView: View {
                             userProfile.hasLocationPermission = false
                         }
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.40))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         .accessibilityIdentifier("onboarding_location_skip")
                     }
                     .padding(.horizontal, 24)
@@ -126,7 +126,7 @@ struct LocationSetupView: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         LocationSetupView(userProfile: .constant(UserProfile()))
     }
 }

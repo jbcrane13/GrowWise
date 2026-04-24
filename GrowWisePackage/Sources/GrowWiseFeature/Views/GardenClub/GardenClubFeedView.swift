@@ -244,14 +244,8 @@ public struct GardenClubFeedView: View {
 
     private func smartMatchCard(_ match: SmartMatchSuggestion) -> some View {
         VStack(alignment: .leading, spacing: 6) {
-            HStack(spacing: 5) {
-                Text("\u{2726}")
-                Text("Smart match \u{00B7} \(match.count) nearby growers")
-            }
-            .font(CultivationTheme.Fonts.body(10, weight: .bold))
-            .tracking(1.4)
-            .textCase(.uppercase)
-            .foregroundStyle(CultivationTheme.Colors.smartTagForeground)
+            SmartTag(label: "Smart match · \(match.count) nearby growers")
+                .accessibilityIdentifier("club_smart_match_tag")
 
             (
                 Text("\(match.count) people in ")

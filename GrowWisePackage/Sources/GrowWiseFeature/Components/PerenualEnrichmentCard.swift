@@ -73,8 +73,10 @@ public struct PerenualEnrichmentCard: View {
                             .frame(maxWidth: .infinity)
                             .frame(height: 180)
                             .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+
                     case .failure:
                         EmptyView()
+
                     default:
                         RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                             .fill(CultivationTheme.Colors.backgroundSecondary)
@@ -283,6 +285,7 @@ public struct PerenualEnrichmentThumbnail: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+
                     default:
                         plantPlaceholder
                     }

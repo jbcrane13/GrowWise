@@ -242,10 +242,12 @@ struct PerenualSpeciesCard: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+
                     case .failure:
                         Image(systemName: "leaf.fill")
                             .font(.title2)
                             .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+
                     default:
                         ProgressView()
                             .controlSize(.small)
@@ -376,6 +378,7 @@ struct PerenualDetailView: View {
                     .aspectRatio(contentMode: .fill)
                     .frame(height: 220)
                     .clipped()
+
             case .failure:
                 ZStack {
                     CultivationTheme.Colors.backgroundSecondary
@@ -384,6 +387,7 @@ struct PerenualDetailView: View {
                         .foregroundStyle(CultivationTheme.Colors.brandLeaf.opacity(0.3))
                 }
                 .frame(height: 160)
+
             default:
                 ZStack {
                     CultivationTheme.Colors.backgroundSecondary

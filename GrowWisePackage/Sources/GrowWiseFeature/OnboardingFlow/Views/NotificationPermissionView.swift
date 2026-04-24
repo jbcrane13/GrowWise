@@ -15,26 +15,26 @@ struct NotificationPermissionView: View {
                 // Hero icon
                 ZStack {
                     Circle()
-                        .fill(Color.botanicalGold.opacity(0.10))
+                        .fill(CultivationTheme.Colors.accentAmber.opacity(0.10))
                         .frame(width: 110, height: 110)
-                        .overlay(Circle().stroke(Color.botanicalGold.opacity(0.18), lineWidth: 1))
+                        .overlay(Circle().stroke(CultivationTheme.Colors.accentAmber.opacity(0.18), lineWidth: 1))
                     Circle()
-                        .fill(Color.botanicalGold.opacity(0.15))
+                        .fill(CultivationTheme.Colors.accentAmber.opacity(0.15))
                         .frame(width: 80, height: 80)
                     Image(systemName: "bell.badge.fill")
                         .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Color.botanicalGold)
+                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
                 }
 
                 VStack(spacing: 10) {
                     Text("Never miss a care moment")
                         .font(.system(size: 28, weight: .regular, design: .serif))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
 
                     Text("Smart reminders keep your plants\nthriving and on schedule.")
                         .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(0.55))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                 }
@@ -47,7 +47,7 @@ struct NotificationPermissionView: View {
                         VStack(spacing: 8) {
                             Text("Best time for reminders?")
                                 .font(.system(size: 14, weight: .semibold))
-                                .foregroundStyle(.white.opacity(0.75))
+                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
 
                             DatePicker(
                                 "Time",
@@ -56,18 +56,10 @@ struct NotificationPermissionView: View {
                             )
                             .gwWheelDatePickerStyle()
                             .labelsHidden()
-                            .colorScheme(.dark)
                             .frame(maxHeight: 120)
                         }
                         .padding(16)
-                        .background(
-                            RoundedRectangle(cornerRadius: 16)
-                                .fill(Color.white.opacity(0.05))
-                                .overlay(
-                                    RoundedRectangle(cornerRadius: 16)
-                                        .stroke(Color.white.opacity(0.08), lineWidth: 1)
-                                )
-                        )
+                        .paperCard()
                     }
                     .padding(.horizontal, 24)
                 } else {
@@ -98,7 +90,7 @@ struct NotificationPermissionView: View {
                             userProfile.hasNotificationPermission = false
                         }
                         .font(.system(size: 14, weight: .medium))
-                        .foregroundStyle(.white.opacity(0.40))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         .accessibilityIdentifier("onboarding_notifications_skip")
                     }
                     .padding(.horizontal, 24)
@@ -136,7 +128,7 @@ struct NotificationPermissionView: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         NotificationPermissionView(userProfile: .constant(UserProfile()))
     }
 }

@@ -10,7 +10,7 @@ struct GardeningGoalsView: View {
         VStack(spacing: 20) {
             OnboardingStepHeader(
                 icon: "scope",
-                iconColor: Color.botanicalLeaf,
+                iconColor: CultivationTheme.Colors.brandLeaf,
                 title: "What brings you\nto gardening?",
                 subtitle: "Pick everything that resonates."
             )
@@ -53,7 +53,7 @@ private struct GoalCard: View {
             VStack(spacing: 10) {
                 ZStack {
                     Circle()
-                        .fill(isSelected ? Color.white.opacity(0.18) : goal.accentColor.opacity(0.15))
+                        .fill(isSelected ? goal.accentColor.opacity(0.20) : goal.accentColor.opacity(0.10))
                         .frame(width: 48, height: 48)
                     Image(systemName: goal.icon)
                         .font(.system(size: 20, weight: .medium))
@@ -62,7 +62,7 @@ private struct GoalCard: View {
 
                 Text(goal.displayName)
                     .font(.system(size: 13, weight: .semibold))
-                    .foregroundStyle(.white)
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     .multilineTextAlignment(.center)
                     .lineLimit(2)
                     .fixedSize(horizontal: false, vertical: true)
@@ -79,7 +79,7 @@ private struct GoalCard: View {
                                 endPoint: .bottomTrailing
                             )
                             : LinearGradient(
-                                colors: [Color.white.opacity(0.06), Color.white.opacity(0.04)],
+                                colors: [CultivationTheme.Colors.cardSurface, CultivationTheme.Colors.cardSurface],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -106,7 +106,7 @@ private struct GoalCard: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         VStack {
             GardeningGoalsView(userProfile: .constant(UserProfile()))
             Spacer().frame(height: 80)

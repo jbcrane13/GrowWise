@@ -13,7 +13,7 @@ struct WelcomeStepView: View {
             // Subtle "swipe to begin" hint
             Image(systemName: "chevron.down")
                 .font(.system(size: 16, weight: .semibold))
-                .foregroundStyle(.white.opacity(0.40))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 .padding(.bottom, 100)
         }
         .onAppear {
@@ -31,12 +31,12 @@ struct WelcomeStepView: View {
             ZStack {
                 // Outer glow ring
                 Circle()
-                    .fill(Color.white.opacity(0.08))
+                    .fill(CultivationTheme.Colors.accentCoral.opacity(0.04))
                     .frame(width: 130, height: 130)
 
                 // Mid ring
                 Circle()
-                    .fill(Color.white.opacity(0.12))
+                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.06))
                     .frame(width: 108, height: 108)
 
                 // Core circle
@@ -44,8 +44,8 @@ struct WelcomeStepView: View {
                     .fill(
                         LinearGradient(
                             colors: [
-                                Color.white.opacity(0.25),
-                                Color.white.opacity(0.10),
+                                CultivationTheme.Colors.brandMint,
+                                CultivationTheme.Colors.brandLeaf.opacity(0.30),
                             ],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
@@ -54,7 +54,7 @@ struct WelcomeStepView: View {
                     .frame(width: 88, height: 88)
                     .overlay(
                         Circle()
-                            .stroke(Color.white.opacity(0.35), lineWidth: 1)
+                            .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
                     )
 
                 // Leaf icon
@@ -62,7 +62,7 @@ struct WelcomeStepView: View {
                     .font(.system(size: 40, weight: .medium))
                     .foregroundStyle(
                         LinearGradient(
-                            colors: [.white, Color.botanicalMint],
+                            colors: [CultivationTheme.Colors.brandForest, CultivationTheme.Colors.brandLeaf],
                             startPoint: .top,
                             endPoint: .bottom
                         )
@@ -73,12 +73,12 @@ struct WelcomeStepView: View {
             VStack(spacing: 10) {
                 Text("Cultivation")
                     .font(.system(size: 40, weight: .bold, design: .serif))
-                    .foregroundColor(.white)
+                    .foregroundColor(CultivationTheme.Colors.textPrimary)
                     .tracking(-0.5)
 
                 Text("Your garden, beautifully managed")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(.white.opacity(0.75))
+                    .foregroundColor(CultivationTheme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
         }
@@ -88,7 +88,7 @@ struct WelcomeStepView: View {
 #Preview {
     ZStack {
         LinearGradient(
-            colors: [Color.botanicalForest, Color(red: 0.094, green: 0.235, blue: 0.188)],
+            colors: [CultivationTheme.Colors.brandForest, Color(red: 0.094, green: 0.235, blue: 0.188)],
             startPoint: .topLeading,
             endPoint: .bottomTrailing
         )

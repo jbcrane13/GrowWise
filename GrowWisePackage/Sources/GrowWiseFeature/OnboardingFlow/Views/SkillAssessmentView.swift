@@ -8,7 +8,7 @@ struct SkillAssessmentView: View {
         VStack(spacing: 20) {
             OnboardingStepHeader(
                 icon: "graduationcap.fill",
-                iconColor: Color.botanicalLeaf,
+                iconColor: CultivationTheme.Colors.brandLeaf,
                 title: "Your experience level?",
                 subtitle: "We'll tailor guides to match your skill."
             )
@@ -48,7 +48,7 @@ private struct SkillLevelCard: View {
                 // Icon bubble
                 ZStack {
                     RoundedRectangle(cornerRadius: 14)
-                        .fill(isSelected ? Color.white.opacity(0.18) : CultivationTheme.Colors.accentCoral.opacity(0.12))
+                        .fill(isSelected ? CultivationTheme.Colors.brandForest.opacity(0.15) : CultivationTheme.Colors.accentCoral.opacity(0.12))
                         .frame(width: 52, height: 52)
 
                     Image(systemName: level.iconName)
@@ -59,11 +59,11 @@ private struct SkillLevelCard: View {
                 VStack(alignment: .leading, spacing: 4) {
                     Text(level.displayName)
                         .font(.system(size: 16, weight: .semibold))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                     Text(level.description)
                         .font(.system(size: 13))
-                        .foregroundStyle(.white.opacity(isSelected ? 0.80 : 0.45))
+                        .foregroundStyle(isSelected ? CultivationTheme.Colors.textSecondary : CultivationTheme.Colors.textTertiary)
                         .lineLimit(2)
                         .fixedSize(horizontal: false, vertical: true)
                 }
@@ -74,13 +74,13 @@ private struct SkillLevelCard: View {
                 ZStack {
                     Circle()
                         .stroke(
-                            isSelected ? Color.botanicalLeaf : Color.white.opacity(0.25),
+                            isSelected ? CultivationTheme.Colors.brandLeaf : CultivationTheme.Colors.divider,
                             lineWidth: 1.5
                         )
                         .frame(width: 22, height: 22)
                     if isSelected {
                         Circle()
-                            .fill(Color.botanicalLeaf)
+                            .fill(CultivationTheme.Colors.brandLeaf)
                             .frame(width: 12, height: 12)
                     }
                 }
@@ -92,12 +92,12 @@ private struct SkillLevelCard: View {
                     .fill(
                         isSelected
                             ? LinearGradient(
-                                colors: [Color.botanicalForest, Color.botanicalLeaf.opacity(0.85)],
+                                colors: [CultivationTheme.Colors.brandForest, CultivationTheme.Colors.brandLeaf.opacity(0.85)],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
                             : LinearGradient(
-                                colors: [Color.white.opacity(0.06), Color.white.opacity(0.04)],
+                                colors: [CultivationTheme.Colors.cardSurface, CultivationTheme.Colors.cardSurface],
                                 startPoint: .topLeading,
                                 endPoint: .bottomTrailing
                             )
@@ -105,12 +105,12 @@ private struct SkillLevelCard: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(
-                                isSelected ? Color.white.opacity(0.15) : Color.white.opacity(0.08),
+                                isSelected ? CultivationTheme.Colors.brandLeaf.opacity(0.20) : CultivationTheme.Colors.cardBorder,
                                 lineWidth: 1
                             )
                     )
                     .shadow(
-                        color: isSelected ? Color.botanicalForest.opacity(0.4) : .clear,
+                        color: isSelected ? CultivationTheme.Colors.brandForest.opacity(0.4) : .clear,
                         radius: 12,
                         y: 4
                     )
@@ -135,7 +135,7 @@ extension GardeningSkillLevel {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         VStack {
             SkillAssessmentView(userProfile: .constant(UserProfile()))
             Spacer().frame(height: 80)

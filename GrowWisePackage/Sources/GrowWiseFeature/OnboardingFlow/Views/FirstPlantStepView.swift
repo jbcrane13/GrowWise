@@ -26,28 +26,28 @@ struct FirstPlantStepView: View {
                 // Hero icon
                 ZStack {
                     Circle()
-                        .fill(Color.botanicalLeaf.opacity(0.10))
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.10))
                         .frame(width: 110, height: 110)
-                        .overlay(Circle().stroke(Color.botanicalLeaf.opacity(0.18), lineWidth: 1))
+                        .overlay(Circle().stroke(CultivationTheme.Colors.brandLeaf.opacity(0.18), lineWidth: 1))
                     Circle()
-                        .fill(Color.botanicalLeaf.opacity(0.15))
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.15))
                         .frame(width: 80, height: 80)
                     Image(systemName: "leaf.fill")
                         .font(.system(size: 34, weight: .medium))
-                        .foregroundStyle(Color.botanicalLeaf)
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                 }
                 .accessibilityHidden(true)
 
                 VStack(spacing: 10) {
                     Text("Pick your first plant")
                         .font(.system(size: 28, weight: .bold, design: .rounded))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
                         .accessibilityIdentifier("onboarding_firstplant_title")
 
                     Text("Choose a beginner-friendly plant\nto get started with.")
                         .font(.system(size: 16, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.55))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                 }
@@ -83,7 +83,7 @@ struct FirstPlantStepView: View {
                 } label: {
                     Text("Skip — I'll add plants later")
                         .font(.system(size: 14, design: .rounded))
-                        .foregroundStyle(.white.opacity(0.45))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
                 .accessibilityIdentifier("onboarding_firstplant_skip")
             }
@@ -132,8 +132,8 @@ private struct PlantPickerCard: View {
                     Circle()
                         .fill(
                             isSelected
-                                ? Color.botanicalLeaf.opacity(0.25)
-                                : Color.white.opacity(0.06)
+                                ? CultivationTheme.Colors.brandLeaf.opacity(0.25)
+                                : CultivationTheme.Colors.backgroundSecondary
                         )
                         .frame(width: 48, height: 48)
 
@@ -141,19 +141,19 @@ private struct PlantPickerCard: View {
                         .font(.system(size: 20, weight: .medium))
                         .foregroundStyle(
                             isSelected
-                                ? Color.botanicalLeaf
-                                : .white.opacity(0.6)
+                                ? CultivationTheme.Colors.brandLeaf
+                                : CultivationTheme.Colors.textSecondary
                         )
                 }
 
                 Text(plant.name ?? "Plant")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(isSelected ? .white : .white.opacity(0.75))
+                    .foregroundStyle(isSelected ? .white : CultivationTheme.Colors.textPrimary)
                     .lineLimit(1)
 
                 Text(plant.difficultyLevel?.displayName ?? "Easy")
                     .font(.system(size: 11, design: .rounded))
-                    .foregroundStyle(.white.opacity(0.35))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
             .padding(.vertical, 14)
             .padding(.horizontal, 8)
@@ -162,16 +162,16 @@ private struct PlantPickerCard: View {
                 RoundedRectangle(cornerRadius: 14)
                     .fill(
                         isSelected
-                            ? Color.botanicalLeaf.opacity(0.12)
-                            : Color.white.opacity(0.04)
+                            ? CultivationTheme.Colors.brandLeaf.opacity(0.12)
+                            : CultivationTheme.Colors.cardSurface
                     )
             )
             .overlay(
                 RoundedRectangle(cornerRadius: 14)
                     .stroke(
                         isSelected
-                            ? Color.botanicalLeaf.opacity(0.4)
-                            : Color.white.opacity(0.08),
+                            ? CultivationTheme.Colors.brandLeaf.opacity(0.4)
+                            : CultivationTheme.Colors.cardBorder,
                         lineWidth: 1
                     )
             )
@@ -183,7 +183,7 @@ private struct PlantPickerCard: View {
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         FirstPlantStepView(userProfile: .constant(UserProfile()))
     }
 }

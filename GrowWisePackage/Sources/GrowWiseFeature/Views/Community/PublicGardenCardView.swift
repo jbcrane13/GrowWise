@@ -31,6 +31,7 @@ struct PublicGardenCardView: View {
                         image
                             .resizable()
                             .aspectRatio(contentMode: .fill)
+
                     default:
                         imagePlaceholder
                     }

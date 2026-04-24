@@ -18,8 +18,8 @@ struct OnboardingProgressView: View {
                     Capsule()
                         .fill(
                             step.stepNumber < currentStep.stepNumber
-                                ? Color.botanicalLeaf
-                                : Color.white.opacity(0.20)
+                                ? CultivationTheme.Colors.brandLeaf
+                                : CultivationTheme.Colors.divider
                         )
                         .frame(height: 2)
                         .frame(maxWidth: .infinity)
@@ -58,7 +58,7 @@ private struct StepDot: View {
                     .foregroundStyle(.white)
             } else if state == .active {
                 Circle()
-                    .fill(Color.botanicalForest)
+                    .fill(.white)
                     .frame(width: 8, height: 8)
             }
         }
@@ -68,24 +68,24 @@ private struct StepDot: View {
 
     private var fill: Color {
         switch state {
-        case .completed: Color.botanicalLeaf
-        case .active: .white
+        case .completed: CultivationTheme.Colors.brandLeaf
+        case .active: CultivationTheme.Colors.accentCoral
         case .upcoming: .clear
         }
     }
 
     private var border: Color {
         switch state {
-        case .completed: Color.botanicalLeaf
-        case .active: .white
-        case .upcoming: Color.white.opacity(0.30)
+        case .completed: CultivationTheme.Colors.brandLeaf
+        case .active: CultivationTheme.Colors.accentCoral
+        case .upcoming: CultivationTheme.Colors.divider
         }
     }
 }
 
 #Preview {
     ZStack {
-        Color.black.ignoresSafeArea()
+        CultivationTheme.Colors.background.ignoresSafeArea()
         VStack(spacing: 24) {
             ForEach([OnboardingStep.skillAssessment, .goals, .gardenSetup, .location], id: \.self) { step in
                 OnboardingProgressView(currentStep: step)

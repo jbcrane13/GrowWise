@@ -142,9 +142,11 @@ public final class PlantCareAdviceService {
         case (.fullSun, .fullShade), (.fullSun, .partialShade):
             isMismatch = true
             detail = "This plant needs full sun but your garden has \(gardenSun.displayName.lowercased()). Consider moving it to a sunnier spot."
+
         case (.fullShade, .fullSun), (.partialShade, .fullSun):
             isMismatch = true
             detail = "This plant prefers shade but your garden gets full sun. Add shade cloth or relocate."
+
         default:
             isMismatch = false
             detail = ""
@@ -174,6 +176,7 @@ public final class PlantCareAdviceService {
                 urgency: .suggestion,
                 icon: "sparkle"
             )]
+
         case .seedling:
             return [CareTip(
                 title: "Seedling Care",
@@ -181,6 +184,7 @@ public final class PlantCareAdviceService {
                 urgency: .suggestion,
                 icon: "arrow.up.forward"
             )]
+
         case .flowering:
             return [CareTip(
                 title: "Flowering Support",
@@ -188,6 +192,7 @@ public final class PlantCareAdviceService {
                 urgency: .info,
                 icon: "camera.macro"
             )]
+
         case .fruiting:
             return [CareTip(
                 title: "Fruiting Support",
@@ -195,6 +200,7 @@ public final class PlantCareAdviceService {
                 urgency: .suggestion,
                 icon: "leaf.circle"
             )]
+
         case .vegetative, .mature, .dormant:
             return []
         }

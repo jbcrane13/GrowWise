@@ -433,10 +433,12 @@ public struct PaywallView: View {
             Image(systemName: "checkmark.circle.fill")
                 .font(.system(size: 14))
                 .foregroundStyle(CultivationTheme.Colors.statusHealthy)
+
         case .cross:
             Image(systemName: "minus")
                 .font(.system(size: 12, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
+
         case .text(let label):
             Text(label)
                 .font(.system(.caption2))

@@ -71,8 +71,10 @@ public extension DataService {
         switch response {
         case .accepted:
             event.rsvpAccepted = (event.rsvpAccepted ?? []) + [memberID]
+
         case .declined:
             event.rsvpDeclined = (event.rsvpDeclined ?? []) + [memberID]
+
         case .maybe:
             event.rsvpMaybe = (event.rsvpMaybe ?? []) + [memberID]
         }

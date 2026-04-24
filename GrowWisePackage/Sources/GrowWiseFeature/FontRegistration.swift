@@ -1,0 +1,39 @@
+import CoreText
+import Foundation
+import os
+#if canImport(UIKit)
+import UIKit
+#endif
+
+@MainActor
+public enum FontRegistration {
+    private static let logger = Logger(subsystem: "com.growwise", category: "FontRegistration")
+    private static var registered = false
+
+    public static func registerIfNeeded() {
+        guard !registered else { return }
+        let names = [
+            "Fraunces[SOFT,WONK,opsz,wght]",
+            "Fraunces-Italic[SOFT,WONK,opsz,wght]",
+            "Manrope[wght]",
+        ]
+        var didRegisterAllFonts = true
+
+        for name in names {
+            guard let url = Bundle.module.url(forResource: name, withExtension: "ttf") else {
+                logger.error("Font missing from bundle: \(name, privacy: .public)")
+                didRegisterAllFonts = false
+                continue
+            }
+            var error: Unmanaged<CFError>?
+            if !CTFontManagerRegisterFontsForURL(url as CFURL, .process, &error) {
+                logger.error("Font register failed: \(name, privacy: .public) — \(String(describing: error), privacy: .public)")
+                didRegisterAllFonts = false
+            }
+        }
+
+        if didRegisterAllFonts {
+            registered = true
+        }
+    }
+}

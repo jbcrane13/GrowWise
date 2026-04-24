@@ -77,11 +77,14 @@ struct SeedDetailView: View {
                         .aspectRatio(contentMode: .fit)
                         .frame(maxHeight: 220)
                         .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+
                 case .failure:
                     photoPlaceholder
+
                 case .empty:
                     ProgressView()
                         .frame(maxWidth: .infinity, minHeight: 120)
+
                 @unknown default:
                     photoPlaceholder
                 }

@@ -355,9 +355,11 @@ public final class ReminderService {
             case .fullSun:
                 adjustedDays *= 0.75
                 reasons.append("Full sun increases evaporation")
+
             case .fullShade:
                 adjustedDays *= 1.25
                 reasons.append("Shade retains moisture longer")
+
             case .partialSun, .partialShade, .artificial:
                 break
             }
@@ -369,6 +371,7 @@ public final class ReminderService {
             case .container, .hangingBasket, .windowBox:
                 adjustedDays *= 0.8
                 reasons.append("Containers dry out faster than ground soil")
+
             case .inGround, .raisedBed, .greenhouse, .indoor:
                 break
             }
@@ -380,9 +383,11 @@ public final class ReminderService {
         case 6 ... 8: // Summer
             adjustedDays *= 0.75
             reasons.append("Summer heat requires more frequent watering")
+
         case 12, 1, 2: // Winter
             adjustedDays *= 1.5
             reasons.append("Winter dormancy reduces water needs")
+
         default:
             break
         }
@@ -393,9 +398,11 @@ public final class ReminderService {
             case .clay:
                 adjustedDays *= 1.3
                 reasons.append("Clay soil retains water longer")
+
             case .sand:
                 adjustedDays *= 0.7
                 reasons.append("Sandy soil drains quickly")
+
             default:
                 break
             }

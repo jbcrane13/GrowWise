@@ -25,7 +25,7 @@ struct OnboardingStepHeader: View {
             VStack(spacing: 8) {
                 Text(title)
                     .font(.system(size: 24, weight: .regular, design: .serif))
-                    .foregroundColor(Color.botanicalForest)
+                    .foregroundColor(CultivationTheme.Colors.textPrimary)
                     .multilineTextAlignment(.center)
 
                 Text(subtitle)
@@ -50,27 +50,27 @@ struct PermissionGrantedBadge: View {
         HStack(spacing: 10) {
             ZStack {
                 Circle()
-                    .fill(Color.botanicalLeaf.opacity(0.2))
+                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.2))
                     .frame(width: 34, height: 34)
 
                 Image(systemName: "checkmark")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(Color.botanicalForest)
+                    .foregroundColor(CultivationTheme.Colors.brandForest)
             }
 
             Text(message)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(Color.botanicalForest)
+                .foregroundColor(CultivationTheme.Colors.brandForest)
 
             Spacer()
         }
         .padding(16)
         .background(
             RoundedRectangle(cornerRadius: 16)
-                .fill(Color.botanicalMint.opacity(0.35))
+                .fill(CultivationTheme.Colors.brandMint.opacity(0.35))
                 .overlay(
                     RoundedRectangle(cornerRadius: 16)
-                        .stroke(Color.botanicalLeaf.opacity(0.4), lineWidth: 1)
+                        .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.4), lineWidth: 1)
                 )
         )
     }
@@ -100,7 +100,7 @@ struct BenefitRow: View {
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(Color.botanicalForest)
+                    .foregroundColor(CultivationTheme.Colors.textPrimary)
 
                 Text(description)
                     .font(.system(size: 13))
@@ -123,7 +123,7 @@ struct PrivacyNote: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(Color.botanicalLeaf)
+                .foregroundColor(CultivationTheme.Colors.brandLeaf)
 
             Text(text)
                 .font(.system(size: 12))
@@ -134,7 +134,7 @@ struct PrivacyNote: View {
         .padding(.vertical, 10)
         .background(
             RoundedRectangle(cornerRadius: 10)
-                .fill(Color.botanicalMint.opacity(0.20))
+                .fill(CultivationTheme.Colors.brandMint.opacity(0.20))
         )
     }
 }
