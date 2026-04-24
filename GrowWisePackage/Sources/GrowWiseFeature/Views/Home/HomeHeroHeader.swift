@@ -1,12 +1,10 @@
 import SwiftUI
 
 /// Hero header for the Home tab — cream-paper hero background,
-/// time-based greeting, seasonal note, and three quick-stat cards.
+/// time-based greeting and auto-derived weather pill.
 struct HomeHeroHeader: View {
     let userName: String
-    let overdueCount: Int
-    let dueTodayCount: Int
-    let totalPlantCount: Int
+    let weatherPillText: String
 
     private var greeting: String {
         let hour = Calendar.current.component(.hour, from: Date())
@@ -17,68 +15,45 @@ struct HomeHeroHeader: View {
         }
     }
 
-    private var seasonalNote: String {
-        let month = Calendar.current.component(.month, from: Date())
-        let taskCount = overdueCount + dueTodayCount
-        let taskPrefix: String = if taskCount == 0 {
-            "Everything is on track."
-        } else {
-            taskCount == 1 ? "1 task needs attention." : "\(taskCount) tasks need attention."
-        }
-        switch month {
-        case 3 ... 5: return "\(taskPrefix) Your spring garden is waking up."
-        case 6 ... 8: return "\(taskPrefix) Peak growing season is here."
-        case 9 ... 11: return "\(taskPrefix) Time to prepare for the harvest."
-        default: return "\(taskPrefix) Plan ahead for next season."
-        }
+    private var displayName: String {
+        userName.isEmpty ? "Gardener" : userName
+    }
+
+    private var dateLabel: String {
+        Date().formatted(.dateTime.weekday(.wide).month(.wide).day())
     }
 
     var body: some View {
-        VStack(alignment: .leading, spacing: 16) {
+        VStack(alignment: .leading, spacing: 10) {
             VStack(alignment: .leading, spacing: 4) {
-                Text(greeting + ", " + (userName.isEmpty ? "Gardener" : userName))
-                    .font(.system(size: 13, weight: .medium))
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    .accessibilityIdentifier("home_label_greeting")
+                Text(dateLabel)
+                    .sectionLabelStyle()
+                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+                    .accessibilityIdentifier("home_label_date")
 
                 (
-                    Text("Your garden is ")
-                        .font(.system(.title, design: .serif)) +
-                        Text("thriving")
-                        .font(.system(.title, design: .serif))
-                        .italic()
-                        .foregroundColor(CultivationTheme.Colors.accentAmber)
+                    Text("\(greeting),\n")
+                        .font(CultivationTheme.Fonts.display(30, weight: .medium)) +
+                        Text("\(displayName).")
+                        .font(CultivationTheme.Fonts.displayItalic(30, weight: .medium))
+                        .foregroundColor(CultivationTheme.Colors.accentCoralDeep)
                 )
-                .accessibilityIdentifier("home_label_headline")
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                .accessibilityIdentifier("home_label_greeting")
 
-                Text(seasonalNote)
-                    .font(.system(size: 14))
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    .padding(.top, 2)
-                    .accessibilityIdentifier("home_label_seasonal_note")
-            }
-
-            HStack(spacing: 10) {
-                QuickStatCard(
-                    value: overdueCount,
-                    label: "Overdue",
-                    color: CultivationTheme.Colors.statusAlert
-                )
-                .accessibilityIdentifier("home_stat_overdue")
-
-                QuickStatCard(
-                    value: dueTodayCount,
-                    label: "Due Today",
-                    color: CultivationTheme.Colors.statusWarning
-                )
-                .accessibilityIdentifier("home_stat_duetoday")
-
-                QuickStatCard(
-                    value: totalPlantCount,
-                    label: "Plants",
-                    color: CultivationTheme.Colors.brandLeaf
-                )
-                .accessibilityIdentifier("home_stat_plants")
+                Text(weatherPillText)
+                    .font(CultivationTheme.Fonts.body(12, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.brandSage)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.75)
+                    .padding(.horizontal, 12)
+                    .padding(.vertical, 7)
+                    .background {
+                        Capsule()
+                            .fill(CultivationTheme.Colors.brandLeaf.opacity(0.14))
+                    }
+                    .padding(.top, 4)
+                    .accessibilityIdentifier("home_label_weather_pill")
             }
         }
         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -91,8 +66,6 @@ struct HomeHeroHeader: View {
 #Preview {
     HomeHeroHeader(
         userName: "Blake",
-        overdueCount: 2,
-        dueTodayCount: 4,
-        totalPlantCount: 12
+        weatherPillText: "☀ 72° · Good day to water"
     )
 }

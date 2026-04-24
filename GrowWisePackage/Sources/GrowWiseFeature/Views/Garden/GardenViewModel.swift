@@ -108,6 +108,14 @@ public final class GardenViewModel {
             })
     }
 
+    /// Plants currently in the flowering stage.
+    /// Used by the v2 Garden summary strip.
+    public var bloomingCount: Int {
+        groupedPlants
+            .flatMap(\.plants)
+            .count(where: { ($0.growthStage ?? .seedling) == .flowering })
+    }
+
     /// Returns `groupedPlants` filtered by the given `GardenFilter`.
     /// Empty groups are dropped.
     public func filtered(by filter: GardenFilter) -> [PlantGroup] {

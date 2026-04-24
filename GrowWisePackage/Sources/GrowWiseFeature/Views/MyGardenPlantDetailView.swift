@@ -27,7 +27,6 @@ struct PlantDetailView: View {
     @State private var showMovePlant = false
     @State private var showingDiagnostic = false
     @State private var careTips: [CareTip] = []
-    @State private var isAdviceExpanded: Bool = false
     @State private var journalEntries: [JournalEntry] = []
     @State private var primaryClub: GardenClub?
     @State private var showingShareToClub: Bool = false
@@ -44,9 +43,7 @@ struct PlantDetailView: View {
                     titleBlock
                     statRow
                     actionButtons
-                    if isAdviceExpanded {
-                        adviceCard
-                    }
+                    adviceCard
                     photoJournalStrip
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -101,7 +98,7 @@ struct PlantDetailView: View {
     // MARK: - Hero Photo
 
     private var heroPhoto: some View {
-        ZStack(alignment: .bottomLeading) {
+        ZStack(alignment: .topTrailing) {
             RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
                 .fill(LinearGradient(
                     colors: [CultivationTheme.Colors.brandLeaf, CultivationTheme.Colors.brandForest],
@@ -109,13 +106,37 @@ struct PlantDetailView: View {
                     endPoint: .bottomTrailing
                 ))
                 .frame(height: 220)
-            VStack(alignment: .leading, spacing: 4) {
-                if let zone = plant.garden?.hardinessZone, !zone.isEmpty {
-                    SmartTag(label: zone)
-                        .accessibilityIdentifier("plantdetail_tag_zone")
+
+            HStack(spacing: 5) {
+                Circle()
+                    .fill(CultivationTheme.Colors.statusHealthy)
+                    .frame(width: 6, height: 6)
+                Text((plant.healthStatus ?? .healthy).displayName)
+                    .font(CultivationTheme.Fonts.body(10, weight: .bold))
+                    .tracking(0.8)
+                    .textCase(.uppercase)
+            }
+            .foregroundStyle(CultivationTheme.Colors.brandSage)
+            .padding(.horizontal, 10)
+            .padding(.vertical, 6)
+            .background {
+                Capsule()
+                    .fill(CultivationTheme.Colors.cardSurface.opacity(0.92))
+            }
+            .padding(12)
+            .accessibilityIdentifier("plantdetail_badge_health")
+
+            if let zone = plant.garden?.hardinessZone, !zone.isEmpty {
+                VStack {
+                    Spacer()
+                    HStack {
+                        SmartTag(label: zone)
+                            .accessibilityIdentifier("plantdetail_tag_zone")
+                        Spacer()
+                    }
+                    .padding(14)
                 }
             }
-            .padding(14)
         }
         .accessibilityIdentifier("plantdetail_hero_photo")
     }
@@ -143,28 +164,28 @@ struct PlantDetailView: View {
     private var statRow: some View {
         HStack(spacing: 10) {
             PlantStatCard(
-                title: "Health",
-                value: (plant.healthStatus ?? .healthy).displayName,
-                icon: "heart.fill",
-                tint: (plant.healthStatus ?? .healthy).accentColor
+                title: "Sun",
+                value: plant.detailSunStatLabel,
+                icon: "sun.max.fill",
+                tint: CultivationTheme.Colors.accentAmber
             )
-            .accessibilityIdentifier("plantdetail_stat_health")
+            .accessibilityIdentifier("plantdetail_stat_sun")
 
             PlantStatCard(
-                title: "Watering",
-                value: plant.wateringFrequency?.displayName ?? "—",
+                title: "Water",
+                value: plant.detailWaterStatLabel,
                 icon: "drop.fill",
                 tint: CultivationTheme.Colors.accentSky
             )
-            .accessibilityIdentifier("plantdetail_stat_watering")
+            .accessibilityIdentifier("plantdetail_stat_water")
 
             PlantStatCard(
-                title: "Stage",
-                value: plant.growthStage?.displayName ?? "—",
-                icon: "leaf.fill",
+                title: "Soil",
+                value: plant.detailSoilStatLabel,
+                icon: "circle.lefthalf.filled",
                 tint: CultivationTheme.Colors.brandLeaf
             )
-            .accessibilityIdentifier("plantdetail_stat_stage")
+            .accessibilityIdentifier("plantdetail_stat_soil")
         }
         .accessibilityIdentifier("plantdetail_stat_row")
     }
@@ -181,37 +202,35 @@ struct PlantDetailView: View {
                 .accessibilityIdentifier("plantdetail_button_log_care")
 
                 Button("Get advice") {
-                    isAdviceExpanded.toggle()
+                    showingDiagnostic = true
                 }
                 .buttonStyle(SecondaryButtonStyle())
                 .accessibilityIdentifier("plantdetail_button_get_advice")
             }
-            if let club = primaryClub {
-                Button {
-                    showingShareToClub = true
-                } label: {
-                    HStack(spacing: 8) {
-                        Text("✦")
-                            .font(CultivationTheme.Fonts.body(13, weight: .bold))
-                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                        Text("Share to \(club.name ?? "your club")")
-                            .font(CultivationTheme.Fonts.body(15, weight: .semibold))
-                            .foregroundStyle(CultivationTheme.Colors.accentCoralDeep)
-                    }
-                    .frame(maxWidth: .infinity)
-                    .padding(.vertical, 12)
-                    .background {
-                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
-                            .fill(CultivationTheme.Colors.accentCoral.opacity(0.06))
-                    }
-                    .overlay {
-                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
-                            .stroke(CultivationTheme.Colors.accentCoral, lineWidth: 1.5)
-                    }
+            Button {
+                showingShareToClub = true
+            } label: {
+                HStack(spacing: 8) {
+                    Text("✦")
+                        .font(CultivationTheme.Fonts.body(13, weight: .bold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                    Text("Share to \(primaryClub?.name ?? "your club")")
+                        .font(CultivationTheme.Fonts.body(15, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoralDeep)
                 }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("plantdetail_button_share_to_club")
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background {
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.06))
+                }
+                .overlay {
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .stroke(CultivationTheme.Colors.accentCoral, lineWidth: 1.5)
+                }
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("plantdetail_button_share_to_club")
         }
     }
 
@@ -220,13 +239,13 @@ struct PlantDetailView: View {
     private var adviceCard: some View {
         VStack(alignment: .leading, spacing: 10) {
             HStack {
-                Text("Growing Tips")
+                Text("Care advice for today")
                     .font(CultivationTheme.Fonts.body(11, weight: .bold))
                     .tracking(1.4)
                     .textCase(.uppercase)
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 Spacer()
-                SmartTag(label: "Personalised")
+                SmartTag(label: "Smart suggestion")
                     .accessibilityIdentifier("plantdetail_tag_advice_smart")
             }
             if careTips.isEmpty {
@@ -289,10 +308,10 @@ struct PlantDetailView: View {
         }
         .accessibilityIdentifier("plantdetail_photo_strip")
     }
+}
 
-    // MARK: - Toolbar
-
-    private var toolbarContent: some ToolbarContent {
+private extension PlantDetailView {
+    var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
                 Button("Edit Plant") {
@@ -320,9 +339,7 @@ struct PlantDetailView: View {
         }
     }
 
-    // MARK: - Delete
-
-    private func deletePlant() {
+    func deletePlant() {
         Task {
             do {
                 try dataService.plants.delete(plant)
@@ -391,5 +408,40 @@ enum SortOption: CaseIterable {
         case .healthStatus: "Health Status"
         case .wateringSchedule: "Watering Schedule"
         }
+    }
+}
+
+private extension Plant {
+    var detailSunStatLabel: String {
+        guard let sun = sunlightRequirement else { return "—" }
+        return switch sun {
+        case .fullSun: "Full sun"
+        case .partialSun: "Part sun"
+        case .partialShade: "Part shade"
+        case .fullShade: "Full shade"
+        }
+    }
+
+    var detailWaterStatLabel: String {
+        guard let frequency = wateringFrequency else { return "—" }
+        return switch frequency {
+        case .daily: "1x/day"
+        case .everyOtherDay: "Every 2d"
+        case .twiceWeekly: "2x/week"
+        case .weekly: "1x/week"
+        case .biweekly: "Every 2w"
+        case .monthly: "Monthly"
+        case .asNeeded: "As needed"
+        }
+    }
+
+    var detailSoilStatLabel: String {
+        let latestLog = soilLogs?
+            .compactMap { log -> SoilLog? in log.logDate == nil ? nil : log }
+            .max { ($0.logDate ?? .distantPast) < ($1.logDate ?? .distantPast) }
+        if let status = latestLog?.phStatus {
+            return status
+        }
+        return "Loam"
     }
 }

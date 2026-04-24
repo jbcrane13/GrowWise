@@ -14,7 +14,8 @@ struct HomeViewModelTests {
     func loadSeparatesOverdueReminders() async throws {
         let dataService = try DataService.makeForTesting()
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable)
-        let pastDate = Date(timeIntervalSinceNow: -86400) // 24 h ago
+        let oneDay: TimeInterval = 24 * 60 * 60
+        let pastDate = Date(timeIntervalSinceNow: -oneDay)
         _ = try dataService.createReminder(
             title: "Water",
             message: "Water the tomato",
@@ -60,7 +61,8 @@ struct HomeViewModelTests {
         let dataService = try DataService.makeForTesting()
         let plant = try dataService.createPlant(name: "Mint", type: .herb)
 
-        let futureDate = Date(timeIntervalSinceNow: 2 * 86400) // 2 days from now
+        let oneDay: TimeInterval = 24 * 60 * 60
+        let futureDate = Date(timeIntervalSinceNow: 2 * oneDay)
         _ = try dataService.createReminder(
             title: "Fertilize",
             message: "Add fertilizer",
@@ -100,7 +102,7 @@ struct HomeViewModelTests {
         let vm = HomeViewModel()
         await vm.load(dataService: dataService)
 
-        #expect(vm.userName == "")
+        #expect(vm.userName.isEmpty)
     }
 
     // MARK: - allTasksDone
@@ -167,6 +169,58 @@ struct HomeViewModelTests {
         await vm.load(dataService: dataService)
 
         #expect(vm.allTasksDone)
+    }
+
+    @Test("visibleCareReminders shows at most three pending tasks with overdue first")
+    func visibleCareRemindersLimitsPendingTasksWithOverdueFirst() async throws {
+        let dataService = try DataService.makeForTesting()
+        let plant = try dataService.createPlant(name: "Tomato", type: .vegetable)
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
+        let twoDaysAgo = calendar.date(byAdding: .day, value: -2, to: startOfToday) ?? Date()
+        let yesterday = calendar.date(byAdding: .day, value: -1, to: startOfToday) ?? Date()
+        let laterToday = calendar.date(byAdding: .hour, value: 10, to: startOfToday) ?? Date()
+        let tonight = calendar.date(byAdding: .hour, value: 20, to: startOfToday) ?? Date()
+
+        let oldestOverdue = try dataService.createReminder(
+            title: "Water tomatoes",
+            message: "Water the tomato bed",
+            type: .watering,
+            frequency: .daily,
+            dueDate: twoDaysAgo,
+            plant: plant
+        )
+        let completedOverdue = try dataService.createReminder(
+            title: "Feed roses",
+            message: "Feed the roses",
+            type: .fertilizing,
+            frequency: .weekly,
+            dueDate: yesterday,
+            plant: plant
+        )
+        let dueToday = try dataService.createReminder(
+            title: "Prune basil",
+            message: "Prune the basil",
+            type: .pruning,
+            frequency: .weekly,
+            dueDate: laterToday,
+            plant: plant
+        )
+        let laterDueToday = try dataService.createReminder(
+            title: "Inspect peppers",
+            message: "Check the pepper leaves",
+            type: .inspection,
+            frequency: .weekly,
+            dueDate: tonight,
+            plant: plant
+        )
+
+        let vm = HomeViewModel()
+        await vm.load(dataService: dataService)
+        vm.completedIDs.insert(completedOverdue.id)
+
+        #expect(vm.visibleCareReminders.map(\.title) == [oldestOverdue.title, dueToday.title, laterDueToday.title])
+        #expect(vm.visibleCareReminders.count == 3)
     }
 
     // MARK: - complete()

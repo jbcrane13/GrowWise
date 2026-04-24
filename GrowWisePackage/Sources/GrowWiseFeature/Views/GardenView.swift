@@ -7,7 +7,7 @@ import SwiftUI
 /// Filter chips shown in the Garden tab plant list.
 public enum GardenFilter: String, CaseIterable, Identifiable {
     case all = "All"
-    case needsCare = "Needs Care"
+    case needsCare = "Needs care"
     case blooming = "Blooming"
     case edible = "Edible"
     case herbs = "Herbs"
@@ -20,7 +20,7 @@ public enum GardenFilter: String, CaseIterable, Identifiable {
 
 /// Garden tab — shows plants grouped by bed for the selected garden.
 /// Multi-garden users get a horizontal garden picker at the top.
-public struct GardenView: View {
+public struct GardenView: View { // swiftlint:disable:this type_body_length
     @Environment(DataService.self)
     private var dataService
 
@@ -51,6 +51,7 @@ public struct GardenView: View {
                         if viewModel.gardens.count > 1 {
                             gardenPicker
                         }
+                        gardenSummaryStrip
                         filterChipBar
                         if viewModel.isLoading {
                             loadingState
@@ -202,34 +203,15 @@ public struct GardenView: View {
         HStack(alignment: .top, spacing: 12) {
             VStack(alignment: .leading, spacing: 4) {
                 Text("GARDEN")
-                    .font(.system(size: 10, weight: .medium, design: .monospaced))
-                    .tracking(2)
-                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                    .sectionLabelStyle()
+                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
 
                 Text(viewModel.selectedGarden?.name ?? "My Garden")
-                    .font(CultivationTheme.Fonts.display(28, weight: .medium))
+                    .font(CultivationTheme.Fonts.display(30, weight: .medium))
                     .foregroundStyle(CultivationTheme.Colors.textPrimary)
             }
 
             Spacer()
-
-            // Plant count badge
-            if viewModel.totalPlantCount > 0 {
-                VStack(spacing: 2) {
-                    Text("\(viewModel.totalPlantCount)")
-                        .font(CultivationTheme.Fonts.display(20, weight: .medium))
-                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                    Text("plants")
-                        .font(CultivationTheme.Fonts.body(11))
-                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                }
-                .padding(.horizontal, 12)
-                .padding(.vertical, 8)
-                .background {
-                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.pill)
-                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.08))
-                }
-            }
 
             Button {
                 showPlantDatabase = true
@@ -246,6 +228,55 @@ public struct GardenView: View {
         }
         .padding(.top, 16)
         .accessibilityIdentifier("garden_header")
+    }
+
+    // MARK: - Garden Summary Strip
+
+    private var gardenSummaryStrip: some View {
+        HStack(spacing: 8) {
+            gardenSummaryStat(
+                value: viewModel.totalPlantCount,
+                label: "Plants",
+                color: CultivationTheme.Colors.textPrimary
+            )
+            gardenSummaryStat(
+                value: viewModel.alertCount,
+                label: "Needs care",
+                color: CultivationTheme.Colors.accentCoralDeep
+            )
+            gardenSummaryStat(
+                value: viewModel.bloomingCount,
+                label: "Blooming",
+                color: CultivationTheme.Colors.brandSage
+            )
+        }
+        .accessibilityIdentifier("garden_summary_strip")
+    }
+
+    private func gardenSummaryStat(value: Int, label: String, color: Color) -> some View {
+        VStack(spacing: 2) {
+            Text("\(value)")
+                .font(CultivationTheme.Fonts.display(22, weight: .semibold))
+                .foregroundStyle(color)
+
+            Text(label)
+                .font(CultivationTheme.Fonts.body(9, weight: .semibold))
+                .tracking(0.7)
+                .textCase(.uppercase)
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                .lineLimit(1)
+                .minimumScaleFactor(0.8)
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.vertical, 10)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(CultivationTheme.Colors.cardSurface)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: 10)
+                .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
+        )
     }
 
     // MARK: - Garden Picker (multi-garden)
@@ -313,19 +344,26 @@ public struct GardenView: View {
                             selectedFilter = filter
                         }
                     } label: {
-                        Text(filter.rawValue)
-                            .font(CultivationTheme.Fonts.body(13, weight: isActive ? .semibold : .medium))
-                            .foregroundStyle(isActive ? Color.white : CultivationTheme.Colors.textTertiary)
-                            .padding(.horizontal, 14)
-                            .padding(.vertical, 7)
-                            .background {
-                                Capsule()
-                                    .fill(
-                                        isActive
-                                            ? AnyShapeStyle(Color(CultivationTheme.Colors.brandForest))
-                                            : AnyShapeStyle(CultivationTheme.Colors.cardSurface)
-                                    )
+                        HStack(spacing: 5) {
+                            if filter == .needsCare {
+                                Circle()
+                                    .fill(CultivationTheme.Colors.accentCoral)
+                                    .frame(width: 5, height: 5)
                             }
+                            Text(filter.rawValue)
+                        }
+                        .font(CultivationTheme.Fonts.body(13, weight: isActive ? .semibold : .medium))
+                        .foregroundStyle(isActive ? Color.white : CultivationTheme.Colors.textTertiary)
+                        .padding(.horizontal, 14)
+                        .padding(.vertical, 7)
+                        .background {
+                            Capsule()
+                                .fill(
+                                    isActive
+                                        ? AnyShapeStyle(Color(CultivationTheme.Colors.brandForest))
+                                        : AnyShapeStyle(CultivationTheme.Colors.cardSurface)
+                                )
+                        }
                     }
                     .buttonStyle(.plain)
                     .accessibilityIdentifier(
@@ -429,7 +467,7 @@ public struct GardenView: View {
             HStack(spacing: 8) {
                 Image(systemName: "plus")
                     .font(.system(size: 13, weight: .semibold))
-                Text("Add a bed")
+                Text("Add a bed or area")
                     .font(CultivationTheme.Fonts.body(14, weight: .medium))
             }
             .foregroundStyle(CultivationTheme.Colors.brandLeaf)

@@ -1,8 +1,8 @@
-import Testing
 import Foundation
 @testable import GrowWiseFeature
 @testable import GrowWiseModels
 import GrowWiseServices
+import Testing
 
 // MARK: - PlantGroupTests
 
@@ -40,7 +40,6 @@ struct PlantGroupTests {
 @Suite("GardenViewModel Tests")
 @MainActor
 struct GardenViewModelTests {
-
     // MARK: - filteredGroups
 
     @Test("filteredGroups returns all groups when searchText is empty")
@@ -185,7 +184,8 @@ struct GardenViewModelTests {
         dataService.mainContext.insert(bedA)
         plant.bed = bedA
 
-        let pastDate = Date(timeIntervalSinceNow: -86_400)
+        let oneDay: TimeInterval = 24 * 60 * 60
+        let pastDate = Date(timeIntervalSinceNow: -oneDay)
         _ = try dataService.createReminder(
             title: "Water",
             message: "Water the tomato",
@@ -210,7 +210,8 @@ struct GardenViewModelTests {
         dataService.mainContext.insert(bedA)
         plant.bed = bedA
 
-        let futureDate = Date(timeIntervalSinceNow: 86_400)
+        let oneDay: TimeInterval = 24 * 60 * 60
+        let futureDate = Date(timeIntervalSinceNow: oneDay)
         _ = try dataService.createReminder(
             title: "Fertilize",
             message: "Add fertilizer",
@@ -235,7 +236,8 @@ struct GardenViewModelTests {
         dataService.mainContext.insert(bedA)
         plant.bed = bedA
 
-        let pastDate = Date(timeIntervalSinceNow: -86_400)
+        let oneDay: TimeInterval = 24 * 60 * 60
+        let pastDate = Date(timeIntervalSinceNow: -oneDay)
         let reminder = try dataService.createReminder(
             title: "Water",
             message: "Water the plant",
@@ -250,6 +252,21 @@ struct GardenViewModelTests {
         await vm.load(dataService: dataService)
 
         #expect(vm.alertCount == 0)
+    }
+
+    @Test("bloomingCount counts plants in flowering stage")
+    func bloomingCountCountsFloweringPlants() async throws {
+        let dataService = try DataService.makeForTesting()
+        let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
+        let flowering = try dataService.createPlant(name: "Rose", type: .flower, garden: garden)
+        flowering.growthStage = .flowering
+        let seedling = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
+        seedling.growthStage = .seedling
+
+        let vm = GardenViewModel()
+        await vm.load(dataService: dataService)
+
+        #expect(vm.bloomingCount == 1)
     }
 
     // MARK: - load()

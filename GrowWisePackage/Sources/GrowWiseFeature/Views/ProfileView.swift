@@ -78,7 +78,7 @@ public struct ProfileView: View {
                 .padding(.vertical, CultivationTheme.Spacing.sectionGap)
             }
             .background(CultivationTheme.Colors.background)
-            .navigationTitle("Profile")
+            .navigationTitle("Me")
             .sheet(isPresented: $showTutorials) {
                 TutorialsView()
             }

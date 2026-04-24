@@ -38,9 +38,31 @@ final class HomeViewModel {
     // MARK: - Derived
 
     var allTasksDone: Bool {
-        let overdueVisible = overdueReminders.filter { !completedIDs.contains($0.id) }
-        let todayVisible = dueTodayReminders.filter { !completedIDs.contains($0.id) }
-        return overdueVisible.isEmpty && todayVisible.isEmpty
+        pendingOverdueReminders.isEmpty && pendingTodayReminders.isEmpty
+    }
+
+    var visibleCareReminders: [PlantReminder] {
+        Array((pendingOverdueReminders + pendingTodayReminders).prefix(3))
+    }
+
+    var visibleCareTaskCount: Int {
+        pendingOverdueReminders.count + pendingTodayReminders.count
+    }
+
+    var visibleOverdueCount: Int {
+        pendingOverdueReminders.count
+    }
+
+    private var pendingOverdueReminders: [PlantReminder] {
+        overdueReminders
+            .filter { !completedIDs.contains($0.id) }
+            .sorted { $0.nextDueDate < $1.nextDueDate }
+    }
+
+    private var pendingTodayReminders: [PlantReminder] {
+        dueTodayReminders
+            .filter { !completedIDs.contains($0.id) }
+            .sorted { $0.nextDueDate < $1.nextDueDate }
     }
 
     // MARK: - Load
@@ -109,7 +131,7 @@ final class HomeViewModel {
     @MainActor
     func complete(reminder: PlantReminder, dataService: DataService) async {
         // Optimistic: slide the row away immediately
-        withAnimation(CultivationTheme.Animation.card) {
+        _ = withAnimation(CultivationTheme.Animation.card) {
             completedIDs.insert(reminder.id)
         }
 

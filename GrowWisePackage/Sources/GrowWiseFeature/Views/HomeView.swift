@@ -8,236 +8,41 @@ import SwiftUI
 public struct HomeView: View {
     @Environment(DataService.self)
     private var dataService
-    @Environment(TutorialService.self)
-    private var tutorialService
     @Environment(LocationService.self)
     private var locationService
 
     @State private var viewModel = HomeViewModel()
-    @State private var showPlantDatabase = false
-    @State private var showTutorials = false
-    @State private var tutorials: [TutorialTopic] = []
 
     public init() {}
-
-    // MARK: - Derived visible lists (filter out optimistically-completed rows)
-
-    //
-    // These computed properties re-filter on every render, but the cost is
-    // negligible: both source arrays are small (typically <20 reminders) and
-    // the predicate is a Set<UUID>.contains() lookup — O(1) per element.
-    // Caching in @State would add complexity (manual invalidation when
-    // completedIDs or the source arrays change) with no measurable benefit.
-
-    private var overdueVisible: [PlantReminder] {
-        viewModel.overdueReminders.filter { !viewModel.completedIDs.contains($0.id) }
-    }
-
-    private var dueTodayVisible: [PlantReminder] {
-        viewModel.dueTodayReminders.filter { !viewModel.completedIDs.contains($0.id) }
-    }
 
     // MARK: - Body
 
     public var body: some View {
         NavigationStack {
             ScrollView {
-                LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
-                    if let post = viewModel.latestClubPost {
-                        YourClubCard(post: post)
-                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                            .padding(.top, CultivationTheme.Spacing.sectionGap)
-                    }
-
-                    if viewModel.allTasksDone {
-                        emptyStateView
-                    } else {
-                        // OVERDUE section
-                        if !overdueVisible.isEmpty {
-                            Text("Overdue")
-                                .sectionLabelStyle()
-                                .foregroundStyle(CultivationTheme.Colors.statusAlert)
-                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                                .padding(.top, CultivationTheme.Spacing.sectionGap)
-                                .accessibilityIdentifier("home_label_section_overdue")
-
-                            ForEach(overdueVisible) { reminder in
-                                TaskRow(
-                                    reminder: reminder,
-                                    isUrgent: true,
-                                    onComplete: {
-                                        Task {
-                                            await viewModel.complete(
-                                                reminder: reminder,
-                                                dataService: dataService
-                                            )
-                                        }
-                                    }
-                                )
-                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                                .transition(.move(edge: .trailing).combined(with: .opacity))
-                                .accessibilityIdentifier("home_row_task_\(reminder.id.uuidString)")
-                            }
-                        }
-
-                        // DUE TODAY section
-                        if !dueTodayVisible.isEmpty {
-                            Text("Due Today")
-                                .sectionLabelStyle()
-                                .foregroundStyle(CultivationTheme.Colors.statusWarning)
-                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                                .padding(
-                                    .top,
-                                    overdueVisible.isEmpty
-                                        ? CultivationTheme.Spacing.sectionGap
-                                        : CultivationTheme.Spacing.rowGap
-                                )
-                                .accessibilityIdentifier("home_label_section_duetoday")
-
-                            ForEach(dueTodayVisible) { reminder in
-                                TaskRow(
-                                    reminder: reminder,
-                                    isUrgent: false,
-                                    onComplete: {
-                                        Task {
-                                            await viewModel.complete(
-                                                reminder: reminder,
-                                                dataService: dataService
-                                            )
-                                        }
-                                    }
-                                )
-                                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                                .transition(.move(edge: .trailing).combined(with: .opacity))
-                                .accessibilityIdentifier("home_row_task_\(reminder.id.uuidString)")
-                            }
-                        }
-                    }
-
-                    // Seasonal tip — always shown
-                    SeasonalTipCard()
+                LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
+                    todayCareCard
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
 
-                    // Ready to Plant — seeds in their indoor start window
-                    if !viewModel.readyToPlantSeeds.isEmpty {
-                        ReadyToPlantCard(seeds: viewModel.readyToPlantSeeds)
-                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                    }
-
-                    // Browse Plant Guide
-                    Button {
-                        showPlantDatabase = true
-                    } label: {
-                        HStack(spacing: 12) {
-                            Image(systemName: "leaf.circle.fill")
-                                .font(.system(size: 28))
-                                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
-
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Browse Plant Guide")
-                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                                Text("Explore 50+ plants with care instructions")
-                                    .font(.system(.caption))
-                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                            }
-
-                            Spacer()
-
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 13, weight: .semibold))
-                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                        }
-                        .padding(CultivationTheme.Spacing.cardPadding)
-                        .glassCard()
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                    .accessibilityIdentifier("home_button_plantguide")
-
-                    // Garden health score
-                    GardenHealthCardView()
-                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-
-                    // Seasonal planner link
                     NavigationLink {
-                        SeasonalPlannerView()
+                        GardenClubFeedView()
                     } label: {
-                        HStack(spacing: 10) {
-                            IconBubble(
-                                systemName: "calendar.badge.clock",
-                                color: CultivationTheme.Colors.brandSage,
-                                size: CultivationTheme.Spacing.iconSizeSmall,
-                                iconSize: 14
-                            )
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Seasonal Planner")
-                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                                Text("See what to plant this month")
-                                    .font(.system(.caption, design: .rounded))
-                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                        }
-                        .padding(CultivationTheme.Spacing.cardPadding)
-                        .glassCard()
+                        clubCard
                     }
                     .buttonStyle(.plain)
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                    .accessibilityIdentifier("home_button_seasonalplanner")
+                    .accessibilityIdentifier("home_button_your_club")
 
-                    // Weather card
-                    weatherCard
+                    SeasonalTipCard()
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-
-                    // Learning section
-                    learningSection
-                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-
-                    // Community card
-                    NavigationLink {
-                        CommunityFeedView()
-                    } label: {
-                        HStack(spacing: 10) {
-                            IconBubble(
-                                systemName: "person.2.fill",
-                                color: CultivationTheme.Colors.accentCoral,
-                                size: CultivationTheme.Spacing.iconSizeSmall,
-                                iconSize: 14
-                            )
-                            VStack(alignment: .leading, spacing: 2) {
-                                Text("Community")
-                                    .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                                Text("See what other gardeners are growing")
-                                    .font(.system(.caption, design: .rounded))
-                                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                            }
-                            Spacer()
-                            Image(systemName: "chevron.right")
-                                .font(.system(size: 12, weight: .semibold))
-                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                        }
-                        .padding(CultivationTheme.Spacing.cardPadding)
-                        .glassCard()
-                    }
-                    .buttonStyle(.plain)
-                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                    .padding(.bottom, CultivationTheme.Spacing.sectionGap)
-                    .accessibilityIdentifier("home_button_community")
+                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                 }
             }
             .safeAreaInset(edge: .top, spacing: 0) {
                 HomeHeroHeader(
                     userName: viewModel.userName,
-                    overdueCount: overdueVisible.count,
-                    dueTodayCount: dueTodayVisible.count,
-                    totalPlantCount: viewModel.totalPlantCount
+                    weatherPillText: weatherPillText
                 )
             }
             .toolbarBackground(.hidden)
@@ -260,81 +65,193 @@ public struct HomeView: View {
             } message: {
                 Text(viewModel.errorMessage ?? "")
             }
-            .sheet(isPresented: $showPlantDatabase) {
-                PlantDatabaseView()
-            }
-            .sheet(isPresented: $showTutorials) {
-                TutorialsView()
-            }
-            .task {
-                tutorials = Array(tutorialService.getAllTutorials().prefix(3))
-            }
             .accessibilityIdentifier("home_screen")
         }
     }
 
-    // MARK: - Weather Card
+    // MARK: - Today's Care
 
-    private var weatherCard: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            Text("GARDEN WEATHER")
-                .sectionLabelStyle()
-                .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+    private var todayCareCard: some View {
+        VStack(alignment: .leading, spacing: 0) {
+            HStack(alignment: .firstTextBaseline) {
+                Text("Today's care · \(viewModel.visibleCareTaskCount) \(taskCountLabel)")
+                    .sectionLabelStyle()
+                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
 
-            if let weatherData = locationService.weatherData {
-                HStack(spacing: 14) {
-                    VStack(alignment: .leading, spacing: 4) {
-                        HStack(spacing: 6) {
-                            Image(systemName: weatherConditionIcon(for: weatherData))
-                                .font(.system(size: 22))
-                                .foregroundStyle(CultivationTheme.Colors.accentAmber)
+                Spacer()
 
-                            Text(temperatureString(for: weatherData))
-                                .font(.system(.title2, design: .monospaced, weight: .medium))
-                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                        }
-
-                        Text(weatherConditionLabel(for: weatherData))
-                            .font(.system(.caption))
-                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    }
-
-                    Spacer()
-
-                    VStack(alignment: .trailing, spacing: 4) {
-                        Text(gardenWeatherTip(for: weatherData))
-                            .font(.system(.caption))
-                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                            .multilineTextAlignment(.trailing)
-                            .lineLimit(2)
-                    }
+                if viewModel.visibleOverdueCount > 0 {
+                    Text("\(viewModel.visibleOverdueCount) overdue")
+                        .font(CultivationTheme.Fonts.body(11, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoralDeep)
                 }
-                .padding(CultivationTheme.Spacing.cardPadding)
-                .glassCard()
-                .accessibilityIdentifier("home_card_weather")
+            }
+            .padding(.bottom, 2)
+
+            if viewModel.visibleCareReminders.isEmpty {
+                emptyStateView
             } else {
-                HStack(spacing: 12) {
-                    Image(systemName: seasonalWeatherIcon)
-                        .font(.system(size: 22))
-                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
-
-                    VStack(alignment: .leading, spacing: 2) {
-                        Text(seasonalContextTitle)
-                            .font(.system(.subheadline, design: .serif, weight: .semibold))
-                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                        Text(seasonalContextSubtitle)
-                            .font(.system(.caption))
-                            .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    }
-
-                    Spacer()
+                ForEach(viewModel.visibleCareReminders) { reminder in
+                    careTaskRow(reminder)
                 }
-                .padding(CultivationTheme.Spacing.cardPadding)
-                .glassCard()
-                .accessibilityIdentifier("home_card_weather_seasonal")
+
+                Button {
+                    Task {
+                        await completeVisibleCareTasks()
+                    }
+                } label: {
+                    Text("Mark all done")
+                        .font(CultivationTheme.Fonts.body(14, weight: .semibold))
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 12)
+                        .foregroundStyle(Color.white)
+                        .background(
+                            RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                                .fill(CultivationTheme.Colors.brandForest)
+                        )
+                }
+                .buttonStyle(.plain)
+                .padding(.top, 10)
+                .accessibilityIdentifier("home_button_mark_all_done")
+            }
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+        .accessibilityIdentifier("home_card_today_care")
+    }
+
+    private func careTaskRow(_ reminder: PlantReminder) -> some View {
+        let isUrgent = isTopPriorityOverdue(reminder)
+
+        return HStack(spacing: 10) {
+            Button {
+                Task {
+                    await viewModel.complete(reminder: reminder, dataService: dataService)
+                }
+            } label: {
+                RoundedRectangle(cornerRadius: 6)
+                    .fill(isUrgent ? CultivationTheme.Colors.accentCoral : Color.clear)
+                    .frame(width: 20, height: 20)
+                    .overlay {
+                        RoundedRectangle(cornerRadius: 6)
+                            .stroke(
+                                isUrgent ? CultivationTheme.Colors.accentCoral : CultivationTheme.Colors.divider,
+                                lineWidth: 1.5
+                            )
+                    }
+                    .overlay {
+                        if isUrgent {
+                            Image(systemName: "checkmark")
+                                .font(.system(size: 10, weight: .bold))
+                                .foregroundStyle(Color.white)
+                        }
+                    }
+            }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("home_button_complete_\(reminder.id.uuidString)")
+            .accessibilityLabel("Complete \(reminder.title)")
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text(reminder.title.isEmpty ? reminder.reminderType.displayName : reminder.title)
+                    .font(CultivationTheme.Fonts.display(14, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    .lineLimit(1)
+                    .minimumScaleFactor(0.85)
+
+                Text(careTaskMeta(for: reminder))
+                    .font(CultivationTheme.Fonts.body(11))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    .lineLimit(1)
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+
+            Image(systemName: reminder.reminderType.iconName)
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(careActionColor(for: reminder))
+                .frame(width: 28, height: 28)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(CultivationTheme.Colors.backgroundSecondary)
+                )
+                .accessibilityHidden(true)
+        }
+        .padding(.vertical, 10)
+        .overlay(alignment: .bottom) {
+            if reminder.id != viewModel.visibleCareReminders.last?.id {
+                Divider()
+                    .background(CultivationTheme.Colors.divider)
+            }
+        }
+        .accessibilityIdentifier("home_row_task_\(reminder.id.uuidString)")
+    }
+
+    private var taskCountLabel: String {
+        viewModel.visibleCareTaskCount == 1 ? "task" : "tasks"
+    }
+
+    @MainActor
+    private func completeVisibleCareTasks() async {
+        let reminders = viewModel.visibleCareReminders
+        for reminder in reminders {
+            await viewModel.complete(reminder: reminder, dataService: dataService)
+        }
+    }
+
+    private func isTopPriorityOverdue(_ reminder: PlantReminder) -> Bool {
+        guard let firstOverdue = viewModel.visibleCareReminders.first(where: { isOverdue($0) }) else {
+            return false
+        }
+        return firstOverdue.id == reminder.id
+    }
+
+    private func isOverdue(_ reminder: PlantReminder) -> Bool {
+        reminder.nextDueDate < Calendar.current.startOfDay(for: Date())
+    }
+
+    private func careTaskMeta(for reminder: PlantReminder) -> String {
+        let location = reminder.plant?.bed?.name ?? reminder.plant?.name ?? "Garden"
+        return "\(location) · \(dueLabel(for: reminder))"
+    }
+
+    private func dueLabel(for reminder: PlantReminder) -> String {
+        let calendar = Calendar.current
+        let startOfToday = calendar.startOfDay(for: Date())
+        if reminder.nextDueDate < startOfToday {
+            let dayCount = abs(calendar.dateComponents([.day], from: reminder.nextDueDate, to: startOfToday).day ?? 1)
+            return "\(dayCount) \(dayCount == 1 ? "day" : "days") overdue"
+        }
+        return "due today"
+    }
+
+    private func careActionColor(for reminder: PlantReminder) -> Color {
+        switch reminder.reminderType {
+        case .watering:
+            CultivationTheme.Colors.accentSky
+
+        case .fertilizing:
+            CultivationTheme.Colors.brandLeaf
+
+        case .pruning:
+            CultivationTheme.Colors.accentAmber
+
+        default:
+            CultivationTheme.Colors.textTertiary
+        }
+    }
+
+    // MARK: - Club
+
+    private var clubCard: some View {
+        Group {
+            if let post = viewModel.latestClubPost {
+                YourClubCard(post: post)
+            } else {
+                HomeClubPlaceholderCard()
             }
         }
     }
+
+    // MARK: - Weather
 
     private func weatherConditionIcon(for data: WeatherData) -> String {
         let temp = data.current.temperature.converted(to: .fahrenheit).value
@@ -349,15 +266,6 @@ public struct HomeView: View {
         return "sun.max.fill"
     }
 
-    private func temperatureString(for data: WeatherData) -> String {
-        let temp = data.current.temperature.converted(to: .fahrenheit).value
-        return "\(Int(temp))°F"
-    }
-
-    private func weatherConditionLabel(for data: WeatherData) -> String {
-        data.current.condition.description
-    }
-
     private func gardenWeatherTip(for data: WeatherData) -> String {
         let temp = data.current.temperature.converted(to: .fahrenheit).value
         if temp <= 32 { return "Frost risk — protect tender plants" }
@@ -367,6 +275,35 @@ public struct HomeView: View {
         }
         if temp >= 75 { return "Great growing weather — check moisture" }
         return "Mild conditions — ideal for garden work"
+    }
+
+    private var weatherPillText: String {
+        guard let weatherData = locationService.weatherData else {
+            return "\(seasonalWeatherSymbol) \(seasonalContextTitle)"
+        }
+        let temperature = Int(weatherData.current.temperature.converted(to: .fahrenheit).value)
+        return "\(weatherConditionSymbol(for: weatherData)) \(temperature)° · \(gardenWeatherTip(for: weatherData))"
+    }
+
+    private func weatherConditionSymbol(for data: WeatherData) -> String {
+        switch weatherConditionIcon(for: data) {
+        case "cloud.rain.fill": "☔"
+
+        case "cloud.fill": "☁"
+
+        case "snowflake": "❄"
+
+        default: "☀"
+        }
+    }
+
+    private var seasonalWeatherSymbol: String {
+        switch seasonalWeatherIcon {
+        case "snowflake": "❄"
+        case "wind": "🍂"
+        case "sun.max.fill": "☀"
+        default: "🌿"
+        }
     }
 
     private var seasonalWeatherIcon: String {
@@ -389,112 +326,60 @@ public struct HomeView: View {
         }
     }
 
-    private var seasonalContextSubtitle: String {
-        let month = Calendar.current.component(.month, from: Date())
-        switch month {
-        case 3 ... 5: return "Warm days ahead — great time to plant cool-season crops"
-        case 6 ... 8: return "Water deeply and mulch to retain moisture"
-        case 9 ... 11: return "Harvest regularly and prepare beds for winter"
-        default: return "Plan your spring garden and order seeds"
-        }
-    }
-
-    // MARK: - Learning Section
-
-    private var learningSection: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack {
-                Text("LEARNING")
-                    .sectionLabelStyle()
-                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
-
-                Spacer()
-
-                Button {
-                    showTutorials = true
-                } label: {
-                    Text("See All")
-                        .font(.system(.caption, design: .rounded))
-                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                }
-                .accessibilityIdentifier("home_button_seeall_tutorials")
-            }
-
-            ForEach(tutorials) { tutorial in
-                Button {
-                    showTutorials = true
-                } label: {
-                    HStack(spacing: 12) {
-                        IconBubble(
-                            systemName: tutorialIcon(for: tutorial.category),
-                            color: CultivationTheme.Colors.brandLeaf,
-                            size: 40,
-                            iconSize: 17
-                        )
-
-                        VStack(alignment: .leading, spacing: 2) {
-                            Text(tutorial.title)
-                                .font(.system(.subheadline, design: .serif, weight: .semibold))
-                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                                .lineLimit(1)
-
-                            Text("\(tutorial.estimatedDuration) min · \(tutorial.difficultyLevel.displayName)")
-                                .font(.system(.caption))
-                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                        }
-
-                        Spacer()
-
-                        Image(systemName: "chevron.right")
-                            .font(.system(size: 12, weight: .semibold))
-                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                    }
-                    .padding(CultivationTheme.Spacing.cardPadding)
-                    .glassCard()
-                }
-                .buttonStyle(.plain)
-                .accessibilityIdentifier("home_card_tutorial_\(tutorial.id)")
-            }
-        }
-    }
-
-    private func tutorialIcon(for category: TutorialCategory) -> String {
-        switch category {
-        case .planning: "map.fill"
-        case .preparation: "shovel.fill"
-        case .care: "drop.fill"
-        case .environment: "sun.max.fill"
-        case .problemSolving: "ant.fill"
-        }
-    }
-
     // MARK: - Empty State
 
     private var emptyStateView: some View {
-        VStack(spacing: 16) {
-            IconBubble(
-                systemName: "checkmark.seal.fill",
-                color: CultivationTheme.Colors.statusHealthy,
-                size: 64,
-                iconSize: 28
-            )
-            .accessibilityHidden(true)
+        VStack(alignment: .leading, spacing: 4) {
+            Text("Your garden is thriving")
+                .font(CultivationTheme.Fonts.display(16, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
-            VStack(spacing: 6) {
-                Text("Your garden is thriving")
-                    .font(.system(.headline, design: .serif))
-                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
-
-                Text("No overdue or pending tasks — great work!")
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    .multilineTextAlignment(.center)
-            }
+            Text("No overdue or pending tasks today.")
+                .font(CultivationTheme.Fonts.body(13))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
         }
         .frame(maxWidth: .infinity)
-        .padding(.vertical, 48)
-        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+        .padding(.top, 12)
         .accessibilityIdentifier("home_empty_state")
+    }
+}
+
+private struct HomeClubPlaceholderCard: View {
+    var body: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("Your Club")
+                .font(CultivationTheme.Fonts.body(10, weight: .bold))
+                .tracking(1.4)
+                .textCase(.uppercase)
+                .foregroundStyle(Color.white.opacity(0.85))
+
+            Text("Share what's growing with nearby gardeners.")
+                .font(CultivationTheme.Fonts.display(17, weight: .medium))
+                .foregroundStyle(Color.white)
+
+            HStack(spacing: 10) {
+                Circle()
+                    .fill(Color.white.opacity(0.20))
+                    .frame(width: 28, height: 28)
+                    .overlay {
+                        Image(systemName: "camera.fill")
+                            .font(.system(size: 12, weight: .semibold))
+                            .foregroundStyle(Color.white)
+                    }
+
+                Text("Tap to open Garden Club")
+                    .font(CultivationTheme.Fonts.body(11, weight: .semibold))
+                    .foregroundStyle(Color.white.opacity(0.9))
+            }
+        }
+        .padding(14)
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .background(
+            RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                .fill(CultivationTheme.Gradients.warmAccent)
+                .shadow(color: CultivationTheme.Colors.accentCoral.opacity(0.25), radius: 12, y: 6)
+        )
+        .accessibilityIdentifier("home_card_your_club_placeholder")
     }
 }
 
