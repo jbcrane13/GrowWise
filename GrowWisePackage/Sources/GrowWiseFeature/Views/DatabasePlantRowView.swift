@@ -69,7 +69,20 @@ struct DatabasePlantRowView: View {
             .shadow(color: CultivationTheme.Colors.brandForest.opacity(0.06), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("database_plant_row_\(plant.id?.uuidString ?? "")")
+        .accessibilityIdentifier(accessibilityIdentifier)
+    }
+
+    private var accessibilityIdentifier: String {
+        "database_plant_row_\(plant.id?.uuidString ?? accessibilityFallbackSuffix)"
+    }
+
+    private var accessibilityFallbackSuffix: String {
+        let components = [plant.name, plant.scientificName]
+            .compactMap { $0?.trimmingCharacters(in: .whitespacesAndNewlines) }
+            .filter { !$0.isEmpty }
+            .map { $0.lowercased().components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: "_") }
+        let fallback = components.joined(separator: "_")
+        return fallback.isEmpty ? "unknown" : fallback
     }
 
     private var plantTypeIcon: String {
