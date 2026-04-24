@@ -12,11 +12,11 @@ struct CultivationApp: App {
     @State private var perenualAPIService = PerenualAPIService()
     @State private var perenualEnrichmentService: PerenualEnrichmentService?
 
-    /// Appearance preference persisted via AppStorage
-    @AppStorage("app_appearance") private var appearance: AppAppearance = .system
-
     init() {
         FontRegistration.registerIfNeeded()
+
+        // One-shot cleanup of the removed Appearance preference (v2 forces light).
+        UserDefaults.standard.removeObject(forKey: "app_appearance")
 
         // Initialize Sentry error tracking
         ObservabilityService.shared.configure(
@@ -62,14 +62,6 @@ struct CultivationApp: App {
         }
     }
 
-    private var colorScheme: ColorScheme? {
-        switch appearance {
-        case .system: nil
-        case .light: .light
-        case .dark: .dark
-        }
-    }
-
     var body: some Scene {
         WindowGroup {
             MainAppView()
@@ -78,7 +70,7 @@ struct CultivationApp: App {
                 .environment(cloudSyncService)
                 .environment(perenualAPIService)
                 .environment(perenualEnrichmentService ?? PerenualEnrichmentService(api: perenualAPIService))
-                .preferredColorScheme(colorScheme)
+                .preferredColorScheme(.light)
                 .onAppear {
                     if perenualEnrichmentService == nil {
                         perenualEnrichmentService = PerenualEnrichmentService(api: perenualAPIService)

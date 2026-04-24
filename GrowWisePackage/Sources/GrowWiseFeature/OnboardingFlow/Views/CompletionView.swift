@@ -94,7 +94,7 @@ struct CompletionView: View {
                 Divider().padding(.leading, 48)
                 CompletionSummaryRow(
                     icon: "square.grid.2x2.fill",
-                    iconColor: .white.opacity(0.45),
+                    iconColor: CultivationTheme.Colors.textTertiary,
                     label: "Space",
                     value: userProfile.spaceSize.displayName
                 )

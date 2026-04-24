@@ -74,13 +74,13 @@ struct PlantQuickCard: View {
                 icon: "drop.fill",
                 label: "Water",
                 value: waterCountdown,
-                color: .blue
+                color: CultivationTheme.Colors.accentSky
             )
             quickStatItem(
                 icon: "sun.max.fill",
                 label: "Sun",
                 value: sunLabel,
-                color: .yellow
+                color: CultivationTheme.Colors.accentAmber
             )
             quickStatItem(
                 icon: "heart.fill",

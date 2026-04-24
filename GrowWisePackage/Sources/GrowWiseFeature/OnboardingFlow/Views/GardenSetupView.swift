@@ -132,7 +132,11 @@ private struct SpaceSizeRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(isSelected ? CultivationTheme.Colors.brandLeaf.opacity(0.20) : CultivationTheme.Colors.backgroundSecondary)
+                        .fill(
+                            isSelected
+                                ? CultivationTheme.Colors.brandLeaf.opacity(0.20)
+                                : CultivationTheme.Colors.backgroundSecondary
+                        )
                         .frame(width: 40, height: 40)
                     Image(systemName: size.icon)
                         .font(.system(size: 16, weight: .medium))
@@ -177,7 +181,7 @@ private struct SpaceSizeRow: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 14)
                             .stroke(
-                                isSelected ? CultivationTheme.Colors.brandLeaf.opacity(0.35) : Color.white.opacity(0.07),
+                                isSelected ? CultivationTheme.Colors.brandLeaf.opacity(0.35) : CultivationTheme.Colors.cardBorder,
                                 lineWidth: 1
                             )
                     )

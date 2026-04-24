@@ -61,7 +61,9 @@ The field journal *character* is preserved (serif headlines, warm earth tones, c
 | `honey` | `#C99327` | Warning / due-soon states |
 | `sky` | `#6F94A6` | Watering icon tint |
 
-**Dark mode** (system-driven only, no in-app setting): `paper → #181816`, `card → #232220`, `ink → #EAE2D2`. Coral, sage, honey, sky retain saturation. Dark mode is a courtesy, not the primary direction.
+**No dark mode.** The app is cream paper regardless of system appearance. `MainAppView` applies `.preferredColorScheme(.light)` at the root. There is no in-app Appearance toggle, and Settings should not expose one.
+
+*Rationale.* The target audience (50+ enthusiast gardeners) reads better on cream than on dark, and the field-journal metaphor only lands on paper. Allowing dark mode as a courtesy led to persistent spec drift — the dark palette ended up masking unconverted views and making gaps harder to spot. Forcing light is cheaper to maintain and matches the mockup one-to-one. If a user is in system dark mode, the app is an exception — same as a Kindle or a long-form reader.
 
 ### Typography
 
@@ -162,3 +164,4 @@ A reusable `SmartTag` view: rounded sage chip with `✦` prefix and an uppercase
 
 **Decided:**
 - **Custom font registration.** Yes — Fraunces + Manrope ship inside the SPM resources bundle and register with CoreText at launch. System `.serif` / `.rounded` remain wired as fallbacks.
+- **Dark mode.** No — the app is cream paper always. `MainAppView` forces `.preferredColorScheme(.light)` and the in-app Appearance toggle is removed from Settings.
