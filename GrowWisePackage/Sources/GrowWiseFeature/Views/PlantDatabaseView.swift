@@ -666,14 +666,9 @@ struct PlantDatabaseDetailView: View {
         Button("Add to My Garden") {
             showingAddToGarden = true
         }
-        .font(.headline)
-        .foregroundColor(.white)
-        .frame(maxWidth: .infinity)
+        .buttonStyle(GradientButtonStyle())
         .padding()
-        .background(Color.blue)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding()
-        .background(Color(.systemBackground))
+        .background(CultivationTheme.Colors.background)
         .accessibilityIdentifier("plant_detail_button_add_to_garden")
     }
 

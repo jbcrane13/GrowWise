@@ -32,12 +32,12 @@ struct LocationSetupView: View {
                 VStack(spacing: 10) {
                     Text("Know your climate")
                         .font(.system(size: 28, weight: .regular, design: .serif))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
 
                     Text("Get weather-aware care tips and\nseasonal planting guidance.")
                         .font(.system(size: 16))
-                        .foregroundStyle(.white.opacity(0.55))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .multilineTextAlignment(.center)
                         .lineSpacing(3)
                 }

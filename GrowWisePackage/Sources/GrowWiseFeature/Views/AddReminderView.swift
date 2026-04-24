@@ -76,7 +76,7 @@ public struct AddReminderView: View {
                 // Creating overlay
                 if isCreating {
                     ZStack {
-                        Color.black.opacity(0.3)
+                        CultivationTheme.Colors.textPrimary.opacity(0.25)
                             .ignoresSafeArea()
 
                         VStack(spacing: 16) {
@@ -88,7 +88,7 @@ public struct AddReminderView: View {
                                 .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         }
                         .padding(32)
-                        .glassCard()
+                        .paperCard()
                     }
                 }
             }

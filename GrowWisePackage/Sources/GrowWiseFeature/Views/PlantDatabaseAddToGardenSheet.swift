@@ -164,12 +164,12 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             .disabled(isLoading)
             .overlay {
                 if isLoading {
-                    Color.black.opacity(0.3)
+                    CultivationTheme.Colors.textPrimary.opacity(0.25)
                         .ignoresSafeArea()
                     ProgressView("Adding to garden...")
                         .padding()
-                        .background(Color(.systemBackground))
-                        .clipShape(RoundedRectangle(cornerRadius: 10))
+                        .background(CultivationTheme.Colors.cardSurface)
+                        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
                         .shadow(radius: 5)
                 }
             }

@@ -13,8 +13,7 @@ public struct AppSettingsView: View {
     @State private var skillLevel: GardeningSkillLevel = .beginner
     @State private var hardinessZone: String = ""
 
-    // App preferences (UserDefaults-backed)
-    @AppStorage("app_appearance") private var appearance: AppAppearance = .system
+    /// App preferences (UserDefaults-backed)
     @AppStorage("app_haptics_enabled") private var hapticsEnabled = true
 
     // Alerts
@@ -166,24 +165,6 @@ public struct AppSettingsView: View {
                 .padding(.leading, 4)
 
             VStack(spacing: 0) {
-                // Appearance
-                settingsPickerRow(
-                    icon: "circle.lefthalf.filled",
-                    color: .purple,
-                    title: "Appearance",
-                    id: "settings_appearance"
-                ) {
-                    Picker("", selection: $appearance) {
-                        ForEach(AppAppearance.allCases, id: \.self) { mode in
-                            Text(mode.displayName).tag(mode)
-                        }
-                    }
-                    .pickerStyle(.menu)
-                    .tint(CultivationTheme.Colors.textSecondary)
-                }
-
-                settingsDivider
-
                 // Haptics
                 settingsToggleRow(
                     icon: "hand.tap",
@@ -501,22 +482,6 @@ public struct AppSettingsView: View {
         #if canImport(UIKit) && !os(macOS)
         UIApplication.shared.open(url)
         #endif
-    }
-}
-
-// MARK: - Supporting Types
-
-public enum AppAppearance: String, CaseIterable {
-    case system
-    case light
-    case dark
-
-    public var displayName: String {
-        switch self {
-        case .system: "System"
-        case .light: "Light"
-        case .dark: "Dark"
-        }
     }
 }
 

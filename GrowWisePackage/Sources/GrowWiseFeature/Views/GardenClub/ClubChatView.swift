@@ -195,7 +195,12 @@ public struct ClubChatView: View {
         }
         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
         .padding(.vertical, 8)
-        .background(.ultraThinMaterial)
+        .background(CultivationTheme.Colors.cardSurface)
+        .overlay(alignment: .top) {
+            Rectangle()
+                .fill(CultivationTheme.Colors.cardBorder)
+                .frame(height: 1)
+        }
     }
 
     // MARK: - Toolbar

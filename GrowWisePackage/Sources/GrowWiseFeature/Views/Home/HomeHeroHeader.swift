@@ -1,6 +1,6 @@
 import SwiftUI
 
-/// Hero header for the Home tab — dark background with green glow orb,
+/// Hero header for the Home tab — cream-paper hero background,
 /// time-based greeting, seasonal note, and three quick-stat cards.
 struct HomeHeroHeader: View {
     let userName: String

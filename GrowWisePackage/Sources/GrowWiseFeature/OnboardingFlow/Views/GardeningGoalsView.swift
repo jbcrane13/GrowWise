@@ -87,7 +87,7 @@ private struct GoalCard: View {
                     .overlay(
                         RoundedRectangle(cornerRadius: 16)
                             .stroke(
-                                isSelected ? goal.accentColor.opacity(0.50) : Color.white.opacity(0.08),
+                                isSelected ? goal.accentColor.opacity(0.50) : CultivationTheme.Colors.cardBorder,
                                 lineWidth: 1
                             )
                     )
