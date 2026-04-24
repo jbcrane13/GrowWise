@@ -143,7 +143,7 @@ private struct SpaceSizeRow: View {
                     HStack(spacing: 5) {
                         Text(size.displayName)
                             .font(.system(size: 15, weight: .semibold))
-                            .foregroundStyle(.white)
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         Text("·")
                             .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         Text(size.subtitle)

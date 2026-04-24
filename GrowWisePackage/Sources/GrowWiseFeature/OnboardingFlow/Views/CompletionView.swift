@@ -38,7 +38,7 @@ struct CompletionView: View {
                 VStack(spacing: 8) {
                     Text("Your garden awaits!")
                         .font(.system(size: 30, weight: .regular, design: .serif))
-                        .foregroundStyle(.white)
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         .multilineTextAlignment(.center)
 
                     Text("Everything's set up. Let's grow.")

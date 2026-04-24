@@ -302,7 +302,7 @@ private struct BedCard: View {
                             .font(.system(size: 14, weight: .medium))
                             .foregroundStyle(.secondary)
                             .frame(width: 32, height: 32)
-                            .background(Color(.systemGray5), in: Circle())
+                            .background(CultivationTheme.Colors.backgroundSecondary, in: Circle())
                     }
                     .accessibilityLabel("Edit \(bed.name)")
                     .accessibilityIdentifier("editBed_\(bed.name)")
@@ -326,9 +326,9 @@ private struct BedCard: View {
             BedGridView(bed: bed, onSlotTap: onSlotTap)
                 .padding(12)
         }
-        .background(Color(.systemBackground))
-        .clipShape(RoundedRectangle(cornerRadius: 16, style: .continuous))
-        .shadow(color: .black.opacity(0.06), radius: 8, x: 0, y: 2)
+        .background(CultivationTheme.Colors.cardSurface)
+        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card, style: .continuous))
+        .shadow(color: CultivationTheme.Colors.brandForest.opacity(0.06), radius: 8, x: 0, y: 2)
         .padding(.horizontal)
     }
 }
@@ -393,7 +393,7 @@ private struct SlotCell: View {
                 }
 
                 RoundedRectangle(cornerRadius: 6, style: .continuous)
-                    .strokeBorder(Color(.systemGray4), lineWidth: 0.5)
+                    .strokeBorder(CultivationTheme.Colors.cardBorder, lineWidth: 0.5)
             }
             .frame(width: size, height: size)
         }
@@ -584,7 +584,7 @@ private struct BedPreviewMini: View {
                             .fill(Color(red: 0.96, green: 0.94, blue: 0.90))
                             .overlay(
                                 RoundedRectangle(cornerRadius: 2, style: .continuous)
-                                    .strokeBorder(Color(.systemGray4), lineWidth: 0.5)
+                                    .strokeBorder(CultivationTheme.Colors.cardBorder, lineWidth: 0.5)
                             )
                             .frame(width: cellSize, height: cellSize)
                     }
@@ -598,7 +598,7 @@ private struct BedPreviewMini: View {
             }
         }
         .padding(8)
-        .background(Color(.systemGray6), in: RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .background(CultivationTheme.Colors.backgroundSecondary, in: RoundedRectangle(cornerRadius: 10, style: .continuous))
     }
 }
 

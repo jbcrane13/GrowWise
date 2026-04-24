@@ -59,7 +59,7 @@ public struct PlantReminderCard: View {
                             .frame(minWidth: 20, minHeight: 20)
                             .background(
                                 Circle()
-                                    .fill(hasOverdueReminders ? Color.red : Color.blue)
+                                    .fill(hasOverdueReminders ? CultivationTheme.Colors.statusAlert : CultivationTheme.Colors.accentSky)
                             )
                     }
                 }

@@ -15,7 +15,7 @@ struct DatabasePlantRowView: View {
                 ZStack {
                     RoundedRectangle(cornerRadius: 8)
                         .fill(LinearGradient(
-                            colors: [Color.green.opacity(0.3), Color.mint.opacity(0.2)],
+                            colors: [CultivationTheme.Colors.brandLeaf.opacity(0.15), CultivationTheme.Colors.brandMint.opacity(0.15)],
                             startPoint: .topLeading,
                             endPoint: .bottomTrailing
                         ))
@@ -23,7 +23,7 @@ struct DatabasePlantRowView: View {
 
                     Image(systemName: plantTypeIcon)
                         .font(.title3)
-                        .foregroundColor(.green)
+                        .foregroundColor(CultivationTheme.Colors.brandLeaf)
                 }
 
                 // Plant info
@@ -64,11 +64,12 @@ struct DatabasePlantRowView: View {
                     .foregroundColor(.secondary)
             }
             .padding()
-            .background(Color(.systemBackground))
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .shadow(color: .black.opacity(0.05), radius: 2, x: 0, y: 1)
+            .background(CultivationTheme.Colors.cardSurface)
+            .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+            .shadow(color: CultivationTheme.Colors.brandForest.opacity(0.06), radius: 2, x: 0, y: 1)
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("database_plant_row_\(plant.id?.uuidString ?? "")")
     }
 
     private var plantTypeIcon: String {

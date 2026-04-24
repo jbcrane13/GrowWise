@@ -41,7 +41,7 @@ public struct ErrorView: View {
             .accessibilityIdentifier("error_button_retry")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
-        .background(Color(.systemBackground))
+        .background(CultivationTheme.Colors.background)
     }
 }
 
