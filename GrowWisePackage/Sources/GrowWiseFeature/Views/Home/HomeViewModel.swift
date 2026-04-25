@@ -9,7 +9,7 @@ import SwiftUI
 /// Observable view-model for the Home tab care dashboard.
 /// Loads active reminders from DataService and separates them into
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
-@Observable
+@MainActor @Observable
 final class HomeViewModel {
     // MARK: - Published State
 
@@ -67,7 +67,6 @@ final class HomeViewModel {
 
     // MARK: - Load
 
-    @MainActor
     func load(dataService: DataService) async {
         isLoading = true
 
@@ -128,7 +127,6 @@ final class HomeViewModel {
 
     // MARK: - Complete
 
-    @MainActor
     func complete(reminder: PlantReminder, dataService: DataService) async {
         // Optimistic: slide the row away immediately
         _ = withAnimation(CultivationTheme.Animation.card) {

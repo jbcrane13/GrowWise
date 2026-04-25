@@ -83,11 +83,7 @@ public final class SubscriptionService {
             errorMessage = nil
         }
 
-        defer {
-            Task { @MainActor in
-                isLoading = false
-            }
-        }
+        defer { isLoading = false }
 
         do {
             let result = try await product.purchase()
@@ -134,11 +130,7 @@ public final class SubscriptionService {
             errorMessage = nil
         }
 
-        defer {
-            Task { @MainActor in
-                isLoading = false
-            }
-        }
+        defer { isLoading = false }
 
         do {
             try await AppStore.sync()

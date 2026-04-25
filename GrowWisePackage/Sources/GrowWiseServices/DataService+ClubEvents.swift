@@ -9,16 +9,14 @@ public extension DataService {
     /// Fetch all events for a club, sorted by start date.
     @MainActor
     func fetchClubEvents(for clubID: UUID) throws -> [ClubEvent] {
-        let ctx = ModelContext(container)
-        let repo = ClubEventRepository(context: ctx)
+        let repo = ClubEventRepository(context: mainContext)
         return try repo.fetchAll(for: clubID)
     }
 
     /// Fetch only upcoming events for a club.
     @MainActor
     func fetchUpcomingClubEvents(for clubID: UUID) throws -> [ClubEvent] {
-        let ctx = ModelContext(container)
-        let repo = ClubEventRepository(context: ctx)
+        let repo = ClubEventRepository(context: mainContext)
         return try repo.fetchUpcoming(for: clubID)
     }
 
@@ -30,8 +28,7 @@ public extension DataService {
         event.eventDescription = description
         event.location = location
         event.endDate = endDate
-        let ctx = ModelContext(container)
-        let repo = ClubEventRepository(context: ctx)
+        let repo = ClubEventRepository(context: mainContext)
         try repo.save(event)
         return event
     }
@@ -44,16 +41,14 @@ public extension DataService {
         if let location { event.location = location }
         if let startDate { event.startDate = startDate }
         if let endDate { event.endDate = endDate }
-        let ctx = ModelContext(container)
-        let repo = ClubEventRepository(context: ctx)
+        let repo = ClubEventRepository(context: mainContext)
         try repo.save(event)
     }
 
     /// Delete an event.
     @MainActor
     func deleteClubEvent(_ event: ClubEvent) throws {
-        let ctx = ModelContext(container)
-        let repo = ClubEventRepository(context: ctx)
+        let repo = ClubEventRepository(context: mainContext)
         try repo.delete(event)
     }
 
@@ -79,8 +74,7 @@ public extension DataService {
             event.rsvpMaybe = (event.rsvpMaybe ?? []) + [memberID]
         }
 
-        let ctx = ModelContext(container)
-        let repo = ClubEventRepository(context: ctx)
+        let repo = ClubEventRepository(context: mainContext)
         try repo.save(event)
     }
 }
