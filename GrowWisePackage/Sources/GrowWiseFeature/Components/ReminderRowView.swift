@@ -27,7 +27,7 @@ public struct ReminderRowView: View {
             VStack(spacing: 4) {
                 Image(systemName: reminder.reminderType.iconName)
                     .font(.title3)
-                    .foregroundColor(priorityColor)
+                    .foregroundStyle(priorityColor)
                     .frame(width: 32, height: 32)
                     .background(
                         Circle()
@@ -36,7 +36,7 @@ public struct ReminderRowView: View {
 
                 Text(reminder.reminderType.displayName)
                     .font(.caption2)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(1)
             }
 
@@ -49,7 +49,7 @@ public struct ReminderRowView: View {
 
                 Text(reminder.title)
                     .font(.subheadline)
-                    .foregroundColor(.secondary)
+                    .foregroundStyle(.secondary)
                     .lineLimit(2)
 
                 HStack(spacing: 8) {
@@ -74,26 +74,28 @@ public struct ReminderRowView: View {
                     } else {
                         Image(systemName: "checkmark.circle.fill")
                             .font(.title3)
-                            .foregroundColor(.green)
+                            .foregroundStyle(CultivationTheme.Colors.statusHealthy)
                     }
                 }
                 .disabled(isCompleting)
+                .accessibilityIdentifier("reminder_button_complete_\(reminder.id)")
 
                 Button(action: { showingSnoozeOptions = true }, label: {
                     Image(systemName: "clock.arrow.circlepath")
                         .font(.title3)
-                        .foregroundColor(.orange)
+                        .foregroundStyle(CultivationTheme.Colors.statusWarning)
                 })
                 .disabled(isCompleting)
+                .accessibilityIdentifier("reminder_button_snooze_\(reminder.id)")
             }
         }
-        .padding()
+        .padding(CultivationTheme.Spacing.cardPadding)
         .background(
-            RoundedRectangle(cornerRadius: 12)
-                .fill(Color(.tertiarySystemGroupedBackground))
+            RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                .fill(CultivationTheme.Colors.cardSurface)
                 .overlay(
-                    RoundedRectangle(cornerRadius: 12)
-                        .stroke(isOverdue ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                        .stroke(isOverdue ? CultivationTheme.Colors.statusAlert.opacity(0.3) : Color.clear, lineWidth: 1)
                 )
         )
         .confirmationDialog("Snooze Reminder", isPresented: $showingSnoozeOptions) {
@@ -121,21 +123,21 @@ public struct ReminderRowView: View {
 
     private var priorityColor: Color {
         if isOverdue {
-            return .red
+            return CultivationTheme.Colors.statusAlert
         }
 
         switch reminder.priority {
         case .low:
-            return .gray
+            return CultivationTheme.Colors.textTertiary
 
         case .medium:
-            return .blue
+            return CultivationTheme.Colors.statusHealthy
 
         case .high:
-            return .orange
+            return CultivationTheme.Colors.statusWarning
 
         case .critical:
-            return .red
+            return CultivationTheme.Colors.statusAlert
         }
     }
 
@@ -143,18 +145,18 @@ public struct ReminderRowView: View {
         HStack(spacing: 4) {
             Image(systemName: isOverdue ? "exclamationmark.triangle.fill" : "calendar")
                 .font(.caption)
-                .foregroundColor(isOverdue ? .red : .secondary)
+                .foregroundStyle(isOverdue ? CultivationTheme.Colors.statusAlert : CultivationTheme.Colors.textSecondary)
 
             Text(dueDateText)
                 .font(.caption)
                 .fontWeight(isOverdue ? .semibold : .regular)
-                .foregroundColor(isOverdue ? .red : .secondary)
+                .foregroundStyle(isOverdue ? CultivationTheme.Colors.statusAlert : CultivationTheme.Colors.textSecondary)
         }
         .padding(.horizontal, 6)
         .padding(.vertical, 2)
         .background(
             RoundedRectangle(cornerRadius: 6)
-                .fill(isOverdue ? Color.red.opacity(0.1) : Color(.systemGray6))
+                .fill(isOverdue ? CultivationTheme.Colors.statusAlert.opacity(0.1) : CultivationTheme.Colors.cardSurface)
         )
     }
 
@@ -201,7 +203,7 @@ public struct ReminderRowView: View {
     private func completeReminder() {
         isCompleting = true
 
-        Task {
+        Task<Void, Never> {
             do {
                 // Mark reminder as completed
                 reminder.markCompleted()
@@ -215,16 +217,12 @@ public struct ReminderRowView: View {
                     try await reminderService.notificationService.scheduleReminderNotification(for: reminder)
                 }
 
-                await MainActor.run {
-                    isCompleting = false
-                }
+                isCompleting = false
             } catch {
-                await MainActor.run {
-                    isCompleting = false
-                    alertTitle = "Action Failed"
-                    alertMessage = error.localizedDescription
-                    showAlert = true
-                }
+                isCompleting = false
+                alertTitle = "Action Failed"
+                alertMessage = error.localizedDescription
+                showAlert = true
             }
         }
     }
@@ -232,7 +230,7 @@ public struct ReminderRowView: View {
     private func snoozeReminder(for duration: SnoozeDuration) {
         reminder.snooze(for: duration)
 
-        Task {
+        Task<Void, Never> {
             do {
                 // Reschedule notification with new time
                 try await reminderService.notificationService.scheduleReminderNotification(for: reminder)
@@ -241,11 +239,9 @@ public struct ReminderRowView: View {
                 let impact = UIImpactFeedbackGenerator(style: .light)
                 impact.impactOccurred()
             } catch {
-                await MainActor.run {
-                    alertTitle = "Action Failed"
-                    alertMessage = error.localizedDescription
-                    showAlert = true
-                }
+                alertTitle = "Action Failed"
+                alertMessage = error.localizedDescription
+                showAlert = true
             }
         }
     }

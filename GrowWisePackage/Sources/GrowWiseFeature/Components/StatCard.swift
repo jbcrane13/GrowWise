@@ -18,23 +18,22 @@ public struct StatCard: View {
         VStack(spacing: 8) {
             HStack {
                 Image(systemName: icon)
-                    .foregroundColor(color)
+                    .foregroundStyle(color)
                 Spacer()
             }
 
             VStack(alignment: .leading, spacing: 4) {
                 Text(value)
-                    .font(.title2)
-                    .fontWeight(.bold)
+                    .font(CultivationTheme.Fonts.display(22, weight: .semibold))
                 Text(title)
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                    .font(CultivationTheme.Fonts.body(12))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
             }
             .frame(maxWidth: .infinity, alignment: .leading)
         }
-        .padding(12)
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .background(CultivationTheme.Colors.cardSurface)
+        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.statCard))
         .accessibilityElement(children: .combine)
         .accessibilityLabel("\(title): \(value)")
         .accessibilityHint("Displays the number of \(title.lowercased())")
