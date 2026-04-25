@@ -91,7 +91,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                 }
             }
             #if os(iOS)
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             #endif
             .task {
                 await viewModel.load(dataService: dataService)

@@ -81,7 +81,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             }
         }
         #if os(iOS)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         #endif
         .task { await load() }
         .sheet(isPresented: $isPresentingComposer) {
