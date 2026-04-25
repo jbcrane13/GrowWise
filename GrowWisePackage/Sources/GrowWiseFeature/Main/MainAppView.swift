@@ -72,7 +72,7 @@ public struct MainAppView: View {
                 }
             } else if let error = initializationError {
                 ErrorView(error: error) {
-                    Task {
+                    Task<Void, Never> {
                         await initializeDataService()
                     }
                 }
@@ -188,7 +188,7 @@ public struct MainAppView: View {
         cloudSyncService.attach(dataService: service)
 
         if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
-            Task {
+            Task<Void, Never> {
                 await featureServices?.reminderService.synchronizePendingNotifications()
             }
         }

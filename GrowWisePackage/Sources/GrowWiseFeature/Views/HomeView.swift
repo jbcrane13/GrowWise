@@ -96,7 +96,7 @@ public struct HomeView: View {
                 }
 
                 Button {
-                    Task {
+                    Task<Void, Never> {
                         await completeVisibleCareTasks()
                     }
                 } label: {
@@ -125,7 +125,7 @@ public struct HomeView: View {
 
         return HStack(spacing: 10) {
             Button {
-                Task {
+                Task<Void, Never> {
                     await viewModel.complete(reminder: reminder, dataService: dataService)
                 }
             } label: {
