@@ -196,7 +196,6 @@ struct CreateGardenSheet: View {
             )
             garden.sunExposure = selectedSun
             garden.spaceAvailable = selectedSize
-            try dataService.mainContext.save()
             onCreated(garden)
             createdGarden = garden
             showRecommendations = true
