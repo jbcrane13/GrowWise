@@ -242,7 +242,7 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
             break
         }
 
-        Task<Void, Never> {
+        Task<Void, Never> { @MainActor in
             await updateBadgeCount()
         }
 
