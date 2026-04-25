@@ -184,10 +184,10 @@ public struct CommunityFeedView: View {
                         }
                     }
                 }
+                .task {
+                    await cloudSyncService.incrementViewCount(for: garden)
+                }
                 .onAppear {
-                    Task<Void, Never> {
-                        await cloudSyncService.incrementViewCount(for: garden)
-                    }
                     // Load more when near the end
                     if garden.id == gardens.last?.id, hasMorePages, !isLoadingMore {
                         Task<Void, Never> {
