@@ -19,18 +19,18 @@ struct OnboardingStepHeader: View {
 
                 Image(systemName: icon)
                     .font(.system(size: 28, weight: .medium))
-                    .foregroundColor(iconColor)
+                    .foregroundStyle(iconColor)
             }
 
             VStack(spacing: 8) {
                 Text(title)
                     .font(.system(size: 24, weight: .regular, design: .serif))
-                    .foregroundColor(CultivationTheme.Colors.textPrimary)
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     .multilineTextAlignment(.center)
 
                 Text(subtitle)
                     .font(.system(size: 15))
-                    .foregroundColor(Color.secondary)
+                    .foregroundStyle(Color.secondary)
                     .multilineTextAlignment(.center)
                     .lineSpacing(3)
             }
@@ -55,12 +55,12 @@ struct PermissionGrantedBadge: View {
 
                 Image(systemName: "checkmark")
                     .font(.system(size: 13, weight: .bold))
-                    .foregroundColor(CultivationTheme.Colors.brandForest)
+                    .foregroundStyle(CultivationTheme.Colors.brandForest)
             }
 
             Text(message)
                 .font(.system(size: 15, weight: .semibold))
-                .foregroundColor(CultivationTheme.Colors.brandForest)
+                .foregroundStyle(CultivationTheme.Colors.brandForest)
 
             Spacer()
         }
@@ -94,17 +94,17 @@ struct BenefitRow: View {
 
                 Image(systemName: icon)
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(iconColor)
+                    .foregroundStyle(iconColor)
             }
 
             VStack(alignment: .leading, spacing: 3) {
                 Text(title)
                     .font(.system(size: 15, weight: .semibold))
-                    .foregroundColor(CultivationTheme.Colors.textPrimary)
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
                 Text(description)
                     .font(.system(size: 13))
-                    .foregroundColor(Color.secondary)
+                    .foregroundStyle(Color.secondary)
                     .fixedSize(horizontal: false, vertical: true)
             }
 
@@ -123,11 +123,11 @@ struct PrivacyNote: View {
         HStack(spacing: 8) {
             Image(systemName: icon)
                 .font(.system(size: 12, weight: .medium))
-                .foregroundColor(CultivationTheme.Colors.brandLeaf)
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
 
             Text(text)
                 .font(.system(size: 12))
-                .foregroundColor(Color.secondary)
+                .foregroundStyle(Color.secondary)
                 .multilineTextAlignment(.leading)
         }
         .padding(.horizontal, 16)
