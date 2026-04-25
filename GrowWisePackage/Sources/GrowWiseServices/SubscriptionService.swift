@@ -75,9 +75,7 @@ public final class SubscriptionService {
         isLoading = true
         errorMessage = nil
 
-        defer {
-            isLoading = false
-        }
+        defer { isLoading = false }
 
         do {
             let result = try await product.purchase()
@@ -120,9 +118,7 @@ public final class SubscriptionService {
         isLoading = true
         errorMessage = nil
 
-        defer {
-            isLoading = false
-        }
+        defer { isLoading = false }
 
         do {
             try await AppStore.sync()
