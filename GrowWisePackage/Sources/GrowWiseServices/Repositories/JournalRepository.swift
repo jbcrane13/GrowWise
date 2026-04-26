@@ -75,8 +75,8 @@ public final class JournalRepository {
         try context.save()
     }
 
-    public func delete(_ entry: JournalEntry) {
+    public func delete(_ entry: JournalEntry) throws {
         context.delete(entry)
-        try? context.save()
+        try context.save()
     }
 }

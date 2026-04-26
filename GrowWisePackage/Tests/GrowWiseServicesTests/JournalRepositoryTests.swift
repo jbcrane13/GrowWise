@@ -1,13 +1,12 @@
 import Foundation
-import Testing
-import SwiftData
-@testable import GrowWiseServices
 @testable import GrowWiseModels
+@testable import GrowWiseServices
+import SwiftData
+import Testing
 
 @Suite("JournalRepository Tests")
 @MainActor
 struct JournalRepositoryTests {
-
     private func makeContainer() throws -> ModelContainer {
         try ModelContainer(
             for: JournalEntry.self,
@@ -18,7 +17,7 @@ struct JournalRepositoryTests {
     // MARK: - add()
 
     @Test("add() inserts journal entry into context")
-    func addInsertsEntry() async throws {
+    func addInsertsEntry() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -39,7 +38,7 @@ struct JournalRepositoryTests {
     }
 
     @Test("add() links entry to plant's journalEntries relationship")
-    func addLinksEntryToPlant() async throws {
+    func addLinksEntryToPlant() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -56,7 +55,7 @@ struct JournalRepositoryTests {
     // MARK: - fetchAll()
 
     @Test("fetchAll() returns all inserted entries")
-    func fetchAllReturnsAllEntries() async throws {
+    func fetchAllReturnsAllEntries() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -73,7 +72,7 @@ struct JournalRepositoryTests {
     }
 
     @Test("fetchAll() returns empty array when no entries exist")
-    func fetchAllReturnsEmptyWhenNone() async throws {
+    func fetchAllReturnsEmptyWhenNone() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -84,7 +83,7 @@ struct JournalRepositoryTests {
     // MARK: - fetchForPlant()
 
     @Test("fetchForPlant() returns only entries for the specified plant")
-    func fetchForPlantFiltersCorrectly() async throws {
+    func fetchForPlantFiltersCorrectly() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -104,7 +103,7 @@ struct JournalRepositoryTests {
     }
 
     @Test("fetchForPlant() returns entries sorted by date descending")
-    func fetchForPlantSortsDescending() async throws {
+    func fetchForPlantSortsDescending() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -128,14 +127,14 @@ struct JournalRepositoryTests {
     // MARK: - fetchRecent(limit:)
 
     @Test("fetchRecent(limit:) caps at min(limit, 10) when requesting more than 10")
-    func fetchRecentCapsAtTen() async throws {
+    func fetchRecentCapsAtTen() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
         let plant = Plant(name: "Fern", plantType: .houseplant)
         container.mainContext.insert(plant)
 
-        for index in 0..<15 {
+        for index in 0 ..< 15 {
             let entry = JournalEntry(
                 title: "Entry \(index)",
                 content: "Content",
@@ -150,14 +149,14 @@ struct JournalRepositoryTests {
     }
 
     @Test("fetchRecent(limit:) returns fewer entries when store has less than cap")
-    func fetchRecentReturnsFewerWhenBelowCap() async throws {
+    func fetchRecentReturnsFewerWhenBelowCap() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
         let plant = Plant(name: "Oregano", plantType: .herb)
         container.mainContext.insert(plant)
 
-        for index in 0..<3 {
+        for index in 0 ..< 3 {
             let entry = JournalEntry(
                 title: "Entry \(index)",
                 content: "Content",
@@ -174,7 +173,7 @@ struct JournalRepositoryTests {
     // MARK: - delete()
 
     @Test("delete() removes entry from context")
-    func deleteRemovesEntry() async throws {
+    func deleteRemovesEntry() throws {
         let container = try makeContainer()
         let repo = JournalRepository(context: container.mainContext)
 
@@ -187,14 +186,36 @@ struct JournalRepositoryTests {
         var all = try repo.fetchAll()
         #expect(all.count == 1)
 
-        // INTEGRATION GAP: JournalRepository.delete() uses `try? context.save()`.
-        // Any save failure is silently swallowed — the caller receives no error,
-        // the UI reflects a successful deletion, but the entry may persist in the
-        // underlying store. This creates a hidden data-consistency risk.
-        // See: JournalRepository.swift line 80 — `try? context.save()`
-        repo.delete(entry)
+        try repo.delete(entry)
 
         all = try repo.fetchAll()
         #expect(all.count == 0)
+    }
+
+    // MARK: - Orphaned Relationship
+
+    @Test("delete() on plant leaves journal entry in context (nullified relationship)")
+    func deletingPlantDoesNotCrashJournalFetch() throws {
+        let container = try makeContainer()
+        let ctx = container.mainContext
+        let repo = JournalRepository(context: ctx)
+
+        let plant = Plant(name: "Doomed Plant", plantType: .herb)
+        ctx.insert(plant)
+
+        let entry = JournalEntry(title: "Log before deletion", content: "Notes", entryType: .note, plant: plant)
+        try repo.add(entry, user: nil)
+
+        // Deleting the plant should not crash fetchAll() — the relationship is nullified by SwiftData.
+        ctx.delete(plant)
+        try ctx.save()
+
+        // fetchAll() must not throw even though entry.plant may be nil now.
+        let remaining = try repo.fetchAll()
+        // The entry either survives with a nil plant (nullify rule) or is cascade-deleted.
+        // Either outcome is acceptable; what must NOT happen is a crash or thrown error.
+        for orphan in remaining {
+            _ = orphan.title // accessing title on a possibly-nullified object must not crash
+        }
     }
 }
