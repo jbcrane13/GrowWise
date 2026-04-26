@@ -1,8 +1,8 @@
-import Testing
 import Foundation
-import SwiftData
-@testable import GrowWiseServices
 @testable import GrowWiseModels
+@testable import GrowWiseServices
+import SwiftData
+import Testing
 
 // MARK: - DataService Edge Case Tests
 
@@ -18,7 +18,6 @@ import SwiftData
 @Suite("DataService Edge Case Tests")
 @MainActor
 struct DataServiceEdgeCaseTests {
-
     // MARK: - Helpers
 
     /// Returns a fully-featured in-memory DataService with no CloudKit container.
@@ -40,7 +39,7 @@ struct DataServiceEdgeCaseTests {
     // MARK: - makeForTesting
 
     @Test("makeForTesting returns a usable DataService instance")
-    func testMakeForTestingReturnsUsableService() throws {
+    func makeForTestingReturnsUsableService() throws {
         let service = try DataService.makeForTesting()
         let gardens = service.fetchGardens()
         let plants = service.fetchPlants()
@@ -49,7 +48,7 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("makeForTesting service supports write operations without throwing")
-    func testMakeForTestingServiceSupportsWrites() throws {
+    func makeForTestingServiceSupportsWrites() throws {
         let service = try DataService.makeForTesting()
         let user = try service.createUser(
             email: "fallback@test.com",
@@ -62,49 +61,49 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Empty Database
 
     @Test("Empty database returns empty garden list")
-    func testEmptyDatabaseReturnsEmptyGardens() throws {
+    func emptyDatabaseReturnsEmptyGardens() throws {
         let service = try makeService()
         #expect(service.fetchGardens().isEmpty)
     }
 
     @Test("Empty database returns empty plant list")
-    func testEmptyDatabaseReturnsEmptyPlants() throws {
+    func emptyDatabaseReturnsEmptyPlants() throws {
         let service = try makeService()
         #expect(service.fetchPlants().isEmpty)
     }
 
     @Test("Empty database returns zero plant count")
-    func testEmptyDatabaseReturnsZeroPlantCount() throws {
+    func emptyDatabaseReturnsZeroPlantCount() throws {
         let service = try makeService()
         #expect(service.getPlantCount() == 0)
     }
 
     @Test("Empty database returns zero garden count")
-    func testEmptyDatabaseReturnsZeroGardenCount() throws {
+    func emptyDatabaseReturnsZeroGardenCount() throws {
         let service = try makeService()
         #expect(service.getGardenCount() == 0)
     }
 
     @Test("Empty database returns zero journal entry count")
-    func testEmptyDatabaseReturnsZeroJournalEntryCount() throws {
+    func emptyDatabaseReturnsZeroJournalEntryCount() throws {
         let service = try makeService()
         #expect(service.getJournalEntryCount() == 0)
     }
 
     @Test("getCurrentUser returns nil when no user exists")
-    func testGetCurrentUserReturnsNilWhenEmpty() throws {
+    func getCurrentUserReturnsNilWhenEmpty() throws {
         let service = try makeService()
         #expect(service.getCurrentUser() == nil)
     }
 
     @Test("fetchActiveReminders returns empty list when database is empty")
-    func testFetchActiveRemindersReturnsEmptyWhenDatabaseEmpty() throws {
+    func fetchActiveRemindersReturnsEmptyWhenDatabaseEmpty() throws {
         let service = try makeService()
         #expect(service.fetchActiveReminders().isEmpty)
     }
 
     @Test("fetchRecentJournalEntries returns empty list when database is empty")
-    func testFetchRecentJournalEntriesReturnsEmptyWhenDatabaseEmpty() throws {
+    func fetchRecentJournalEntriesReturnsEmptyWhenDatabaseEmpty() throws {
         let service = try makeService()
         #expect(service.fetchRecentJournalEntries().isEmpty)
     }
@@ -112,9 +111,9 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Garden CRUD
 
     @Test("Create garden persists and can be fetched")
-    func testCreateGardenPersistsCorrectly() throws {
+    func createGardenPersistsCorrectly() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let garden = try service.createGarden(name: "Rooftop Garden", type: .raised, isIndoor: false)
 
         let fetched = service.fetchGardens()
@@ -124,32 +123,32 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("Create garden with indoor flag preserves the flag")
-    func testCreateIndoorGardenPreservesFlag() throws {
+    func createIndoorGardenPreservesFlag() throws {
         let service = try makeService()
         let garden = try service.createGarden(name: "Windowsill Herbs", type: .windowsill, isIndoor: true)
         #expect(garden.isIndoor == true)
     }
 
     @Test("Create multiple gardens all appear in fetchGardens")
-    func testMultipleGardensAllAppearInFetch() throws {
+    func multipleGardensAllAppearInFetch() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let g1 = try service.createGarden(name: "Garden Alpha", type: .outdoor, isIndoor: false)
         let g2 = try service.createGarden(name: "Garden Beta", type: .raised, isIndoor: false)
         let g3 = try service.createGarden(name: "Garden Gamma", type: .container, isIndoor: true)
 
         let fetched = service.fetchGardens()
         #expect(fetched.count == 3)
-        let ids = Set(fetched.compactMap { $0.id })
-        #expect(ids.contains(g1.id!))
-        #expect(ids.contains(g2.id!))
-        #expect(ids.contains(g3.id!))
+        let ids = Set(fetched.compactMap(\.id))
+        #expect(try ids.contains(#require(g1.id)))
+        #expect(try ids.contains(#require(g2.id)))
+        #expect(try ids.contains(#require(g3.id)))
     }
 
     @Test("Delete garden removes it from fetch results")
-    func testDeleteGardenRemovesItFromFetch() throws {
+    func deleteGardenRemovesItFromFetch() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let g1 = try service.createGarden(name: "Keep Me", type: .outdoor, isIndoor: false)
         let g2 = try service.createGarden(name: "Delete Me", type: .container, isIndoor: false)
 
@@ -161,9 +160,9 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("Delete specific garden does not affect others")
-    func testDeleteSpecificGardenDoesNotAffectOthers() throws {
+    func deleteSpecificGardenDoesNotAffectOthers() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let survivor1 = try service.createGarden(name: "Survivor One", type: .outdoor, isIndoor: false)
         let survivor2 = try service.createGarden(name: "Survivor Two", type: .raised, isIndoor: false)
         let victim = try service.createGarden(name: "Doomed Garden", type: .container, isIndoor: true)
@@ -171,16 +170,16 @@ struct DataServiceEdgeCaseTests {
         try service.deleteGarden(victim)
 
         let fetched = service.fetchGardens()
-        let ids = fetched.compactMap { $0.id }
-        #expect(ids.contains(survivor1.id!))
-        #expect(ids.contains(survivor2.id!))
-        #expect(!ids.contains(victim.id!))
+        let ids = fetched.compactMap(\.id)
+        #expect(try ids.contains(#require(survivor1.id)))
+        #expect(try ids.contains(#require(survivor2.id)))
+        #expect(try !ids.contains(#require(victim.id)))
     }
 
     // MARK: - Plant CRUD (additional coverage)
 
     @Test("Create plant without a garden succeeds")
-    func testCreatePlantWithoutGardenSucceeds() throws {
+    func createPlantWithoutGardenSucceeds() throws {
         let service = try makeService()
         let plant = try service.createPlant(name: "Basil", type: .herb, garden: nil)
         #expect(plant.name == "Basil")
@@ -189,28 +188,28 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("Delete plant removes it and leaves sibling plants intact")
-    func testDeletePlantLeavesSiblingsIntact() throws {
+    func deletePlantLeavesSiblingsIntact() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let garden = try service.createGarden(name: "Herb Bed", type: .raised, isIndoor: false)
 
-        let _ = try service.createPlant(name: "Basil", type: .herb, garden: garden)
+        _ = try service.createPlant(name: "Basil", type: .herb, garden: garden)
         let oregano = try service.createPlant(name: "Oregano", type: .herb, garden: garden)
-        let _ = try service.createPlant(name: "Parsley", type: .herb, garden: garden)
+        _ = try service.createPlant(name: "Parsley", type: .herb, garden: garden)
 
         try service.deletePlant(oregano)
 
         let remaining = service.fetchPlants(for: garden)
-        let names = remaining.compactMap { $0.name }
+        let names = remaining.compactMap(\.name)
         #expect(names.contains("Basil"))
         #expect(names.contains("Parsley"))
         #expect(!names.contains("Oregano"))
     }
 
     @Test("Update plant persists the change")
-    func testUpdatePlantPersistsChange() throws {
+    func updatePlantPersistsChange() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let garden = try service.createGarden(name: "Update Garden", type: .outdoor, isIndoor: false)
         let plant = try service.createPlant(name: "Mint", type: .herb, garden: garden)
 
@@ -222,15 +221,15 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("getPlantCount for specific garden returns correct count")
-    func testGetPlantCountForGardenReturnsCorrectCount() throws {
+    func getPlantCountForGardenReturnsCorrectCount() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let gardenA = try service.createGarden(name: "Garden A", type: .outdoor, isIndoor: false)
         let gardenB = try service.createGarden(name: "Garden B", type: .raised, isIndoor: false)
 
-        let _ = try service.createPlant(name: "Tomato", type: .vegetable, garden: gardenA)
-        let _ = try service.createPlant(name: "Pepper", type: .vegetable, garden: gardenA)
-        let _ = try service.createPlant(name: "Basil", type: .herb, garden: gardenB)
+        _ = try service.createPlant(name: "Tomato", type: .vegetable, garden: gardenA)
+        _ = try service.createPlant(name: "Pepper", type: .vegetable, garden: gardenA)
+        _ = try service.createPlant(name: "Basil", type: .herb, garden: gardenB)
 
         #expect(service.getPlantCount(for: gardenA) == 2)
         #expect(service.getPlantCount(for: gardenB) == 1)
@@ -239,14 +238,14 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Fetch with Predicate (filterPlants)
 
     @Test("filterPlants by vegetable type returns only vegetables")
-    func testFilterPlantsByVegetableType() throws {
+    func filterPlantsByVegetableType() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let garden = try service.createGarden(name: "Mixed Garden", type: .outdoor, isIndoor: false)
 
         let tomato = try service.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        let _ = try service.createPlant(name: "Basil", type: .herb, garden: garden)
-        let _ = try service.createPlant(name: "Rose", type: .flower, garden: garden)
+        _ = try service.createPlant(name: "Basil", type: .herb, garden: garden)
+        _ = try service.createPlant(name: "Rose", type: .flower, garden: garden)
 
         // Verify the plants were persisted correctly via fetchPlants (unfiltered).
         let allPlants = service.fetchPlants(limit: 50)
@@ -263,14 +262,14 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("filterPlants by difficulty level returns correct subset")
-    func testFilterPlantsByDifficultyLevel() throws {
+    func filterPlantsByDifficultyLevel() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let garden = try service.createGarden(name: "Level Garden", type: .outdoor, isIndoor: false)
 
         let easyPlant = try service.createPlant(name: "Easy Plant", type: .herb, difficultyLevel: .beginner, garden: garden)
         let moderatePlant = try service.createPlant(name: "Moderate Plant", type: .vegetable, difficultyLevel: .intermediate, garden: garden)
-        let _ = try service.createPlant(name: "Hard Plant", type: .flower, difficultyLevel: .advanced, garden: garden)
+        _ = try service.createPlant(name: "Hard Plant", type: .flower, difficultyLevel: .advanced, garden: garden)
 
         // Confirm plants were persisted with the correct difficulty levels (unfiltered fetch).
         let allPlants = service.fetchPlants(limit: 50)
@@ -286,11 +285,11 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("searchPlants returns empty for whitespace-only query")
-    func testSearchPlantsReturnsEmptyForWhitespaceQuery() throws {
+    func searchPlantsReturnsEmptyForWhitespaceQuery() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
         let garden = try service.createGarden(name: "Test Garden", type: .outdoor, isIndoor: false)
-        let _ = try service.createPlant(name: "Tomato", type: .vegetable, garden: garden)
+        _ = try service.createPlant(name: "Tomato", type: .vegetable, garden: garden)
 
         let results = service.searchPlants(query: "   ")
         #expect(results.isEmpty)
@@ -299,7 +298,7 @@ struct DataServiceEdgeCaseTests {
     // MARK: - SoilLog CRUD
 
     @Test("SoilLog can be inserted into in-memory container via ModelContext")
-    func testSoilLogCanBeCreatedDirectly() throws {
+    func soilLogCanBeCreatedDirectly() throws {
         // DataService has no dedicated SoilLog CRUD methods; operate on the ModelContainer directly.
         // We use the container's mainContext to avoid cross-context object assignment issues
         // that occur when mixing objects owned by different ModelContext instances in SwiftData.
@@ -325,19 +324,19 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("SoilLog isPHOptimal is true for pH 6.5")
-    func testSoilLogIsPhOptimalForOptimalValue() {
+    func soilLogIsPhOptimalForOptimalValue() {
         let log = SoilLog(phLevel: 6.5)
         #expect(log.isPHOptimal == true)
     }
 
     @Test("SoilLog isPHOptimal is false for acidic pH")
-    func testSoilLogIsPhOptimalFalseForAcidicValue() {
+    func soilLogIsPhOptimalFalseForAcidicValue() {
         let log = SoilLog(phLevel: 5.0)
         #expect(log.isPHOptimal == false)
     }
 
     @Test("SoilLog npkDisplay formats correctly")
-    func testSoilLogNpkDisplayFormatsCorrectly() {
+    func soilLogNpkDisplayFormatsCorrectly() {
         let log = SoilLog(
             nitrogenLevel: 20.0,
             phosphorusLevel: 10.0,
@@ -347,31 +346,31 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("SoilLog npkDisplay is nil when nutrients are not set")
-    func testSoilLogNpkDisplayIsNilWithoutNutrients() {
+    func soilLogNpkDisplayIsNilWithoutNutrients() {
         let log = SoilLog()
         #expect(log.npkDisplay == nil)
     }
 
     @Test("SoilLog phStatus reports Very Acidic for pH below 5.5")
-    func testSoilLogPhStatusVeryAcidic() {
+    func soilLogPhStatusVeryAcidic() {
         let log = SoilLog(phLevel: 4.0)
         #expect(log.phStatus == "Very Acidic")
     }
 
     @Test("SoilLog phStatus reports Optimal for pH in range 6.0-7.0")
-    func testSoilLogPhStatusOptimal() {
+    func soilLogPhStatusOptimal() {
         let log = SoilLog(phLevel: 6.8)
         #expect(log.phStatus == "Optimal")
     }
 
     @Test("SoilLog phStatus reports Alkaline for pH above 7.5")
-    func testSoilLogPhStatusAlkaline() {
+    func soilLogPhStatusAlkaline() {
         let log = SoilLog(phLevel: 8.0)
         #expect(log.phStatus == "Alkaline")
     }
 
     @Test("Multiple SoilLogs can be inserted and deleted independently")
-    func testMultipleSoilLogsCanBeDeletedIndependently() throws {
+    func multipleSoilLogsCanBeDeletedIndependently() throws {
         let service = try makeService()
         let container = service.container
         let context = ModelContext(container)
@@ -391,14 +390,14 @@ struct DataServiceEdgeCaseTests {
         let descriptor = FetchDescriptor<SoilLog>()
         let remaining = try context.fetch(descriptor)
         #expect(remaining.count == 2)
-        let remainingPH = remaining.compactMap { $0.phLevel }.sorted()
+        let remainingPH = remaining.compactMap(\.phLevel).sorted()
         #expect(remainingPH == [5.5, 6.0])
     }
 
     // MARK: - JournalEntry CRUD
 
     @Test("Create journal entry with createJournalEntry persists correctly")
-    func testCreateJournalEntryPersistsCorrectly() throws {
+    func createJournalEntryPersistsCorrectly() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Rosemary", type: .herb, garden: garden)
@@ -417,15 +416,15 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("Fetch journal entries for specific plant returns correct entries")
-    func testFetchJournalEntriesForSpecificPlant() throws {
+    func fetchJournalEntriesForSpecificPlant() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plantA = try service.createPlant(name: "Thyme", type: .herb, garden: garden)
         let plantB = try service.createPlant(name: "Sage", type: .herb, garden: garden)
 
-        let _ = try service.createJournalEntry(title: "Thyme Note 1", content: "Growing well", type: .observation, plant: plantA)
-        let _ = try service.createJournalEntry(title: "Thyme Note 2", content: "Trimmed today", type: .pruning, plant: plantA)
-        let _ = try service.createJournalEntry(title: "Sage Note", content: "Leaves turning purple", type: .observation, plant: plantB)
+        _ = try service.createJournalEntry(title: "Thyme Note 1", content: "Growing well", type: .observation, plant: plantA)
+        _ = try service.createJournalEntry(title: "Thyme Note 2", content: "Trimmed today", type: .pruning, plant: plantA)
+        _ = try service.createJournalEntry(title: "Sage Note", content: "Leaves turning purple", type: .observation, plant: plantB)
 
         let thymeLogs = service.fetchJournalEntries(for: plantA)
         let sageLogs = service.fetchJournalEntries(for: plantB)
@@ -436,7 +435,7 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("Delete journal entry removes it and leaves siblings intact")
-    func testDeleteJournalEntryLeavesSiblingsIntact() throws {
+    func deleteJournalEntryLeavesSiblingsIntact() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Lavender", type: .flower, garden: garden)
@@ -444,7 +443,7 @@ struct DataServiceEdgeCaseTests {
         let keep = try service.createJournalEntry(title: "Keep", content: "Keeper", type: .observation, plant: plant)
         let remove = try service.createJournalEntry(title: "Delete", content: "Doomed", type: .note, plant: plant)
 
-        service.deleteJournalEntry(remove)
+        try service.deleteJournalEntry(remove)
 
         let remaining = service.fetchJournalEntries(for: plant)
         #expect(remaining.count == 1)
@@ -452,27 +451,27 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("getJournalEntryCount returns correct count for plant")
-    func testGetJournalEntryCountForPlant() throws {
+    func getJournalEntryCountForPlant() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Chives", type: .herb, garden: garden)
 
-        let _ = try service.createJournalEntry(title: "Entry 1", content: "A", type: .observation, plant: plant)
-        let _ = try service.createJournalEntry(title: "Entry 2", content: "B", type: .watering, plant: plant)
-        let _ = try service.createJournalEntry(title: "Entry 3", content: "C", type: .fertilizing, plant: plant)
+        _ = try service.createJournalEntry(title: "Entry 1", content: "A", type: .observation, plant: plant)
+        _ = try service.createJournalEntry(title: "Entry 2", content: "B", type: .watering, plant: plant)
+        _ = try service.createJournalEntry(title: "Entry 3", content: "C", type: .fertilizing, plant: plant)
 
         #expect(service.getJournalEntryCount(for: plant) == 3)
         #expect(service.getJournalEntryCount() == 3)
     }
 
     @Test("fetchRecentJournalEntries respects the limit parameter")
-    func testFetchRecentJournalEntriesRespectsLimit() throws {
+    func fetchRecentJournalEntriesRespectsLimit() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Mint", type: .herb, garden: garden)
 
-        for i in 1...8 {
-            let _ = try service.createJournalEntry(
+        for i in 1 ... 8 {
+            _ = try service.createJournalEntry(
                 title: "Entry \(i)",
                 content: "Content \(i)",
                 type: .observation,
@@ -486,7 +485,7 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("JournalEntry addTag and removeTag work correctly")
-    func testJournalEntryTagManagement() {
+    func journalEntryTagManagement() {
         let entry = JournalEntry(title: "Tagged Entry", content: "Content", entryType: .observation)
 
         entry.addTag("healthy")
@@ -503,7 +502,7 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("saveJournalEntry returns the same entry that was passed in")
-    func testSaveJournalEntryReturnsSameEntry() throws {
+    func saveJournalEntryReturnsSameEntry() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Parsley", type: .herb, garden: garden)
@@ -518,20 +517,20 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Gardening Stats
 
     @Test("getGardeningStats reflects correct total plant count")
-    func testGetGardeningStatsTotalPlantCount() throws {
+    func getGardeningStatsTotalPlantCount() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
 
-        let _ = try service.createPlant(name: "Plant A", type: .vegetable, garden: garden)
-        let _ = try service.createPlant(name: "Plant B", type: .herb, garden: garden)
-        let _ = try service.createPlant(name: "Plant C", type: .flower, garden: garden)
+        _ = try service.createPlant(name: "Plant A", type: .vegetable, garden: garden)
+        _ = try service.createPlant(name: "Plant B", type: .herb, garden: garden)
+        _ = try service.createPlant(name: "Plant C", type: .flower, garden: garden)
 
         let stats = service.getGardeningStats()
         #expect(stats.totalPlants == 3)
     }
 
     @Test("getGardeningStats reflects zero when no plants exist")
-    func testGetGardeningStatsWithNoPlants() throws {
+    func getGardeningStatsWithNoPlants() throws {
         let service = try makeService()
         let stats = service.getGardeningStats()
         #expect(stats.totalPlants == 0)
@@ -541,13 +540,13 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Cache Invalidation
 
     @Test("invalidateAllCaches does not break subsequent fetches")
-    func testInvalidateAllCachesDoesNotBreakFetches() throws {
+    func invalidateAllCachesDoesNotBreakFetches() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
-        let _ = try service.createPlant(name: "Cactus", type: .succulent, garden: garden)
+        _ = try service.createPlant(name: "Cactus", type: .succulent, garden: garden)
 
         // Warm the cache with a fetch, then invalidate
-        let _ = service.fetchPlants(for: garden)
+        _ = service.fetchPlants(for: garden)
         service.invalidateAllCaches()
 
         // Fetch again — should still work correctly
@@ -557,7 +556,7 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("getCacheStats returns non-negative values")
-    func testGetCacheStatsReturnsValidValues() throws {
+    func getCacheStatsReturnsValidValues() throws {
         let service = try makeService()
         let stats = service.getCacheStats()
         #expect(stats.hits >= 0)
@@ -568,7 +567,7 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Data Export
 
     @Test("exportUserData returns valid JSON data")
-    func testExportUserDataReturnsValidJSON() async throws {
+    func exportUserDataReturnsValidJSON() async throws {
         let service = try makeService()
         let data = try await service.exportUserData()
         #expect(!data.isEmpty)
@@ -579,7 +578,7 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Reminder Management (edge cases)
 
     @Test("Delete reminder removes it from active reminders")
-    func testDeleteReminderRemovesFromActiveReminders() throws {
+    func deleteReminderRemovesFromActiveReminders() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Sunflower", type: .flower, garden: garden)
@@ -595,7 +594,7 @@ struct DataServiceEdgeCaseTests {
             plant: plant
         )
 
-        let beforeIds = service.fetchActiveReminders().map { $0.id }
+        let beforeIds = service.fetchActiveReminders().map(\.id)
         #expect(beforeIds.contains(reminder.id))
 
         try service.deleteReminder(reminder)
@@ -604,12 +603,12 @@ struct DataServiceEdgeCaseTests {
         // invalidate it manually before re-fetching to see the post-delete state.
         service.invalidateAllCaches()
 
-        let afterIds = service.fetchActiveReminders().map { $0.id }
+        let afterIds = service.fetchActiveReminders().map(\.id)
         #expect(!afterIds.contains(reminder.id))
     }
 
     @Test("completeReminder records a lastCompletedDate")
-    func testCompleteReminderRecordsLastCompletedDate() throws {
+    func completeReminderRecordsLastCompletedDate() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Fern", type: .houseplant, garden: garden)
@@ -630,7 +629,7 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("fetchUpcomingReminders returns future-due enabled reminders")
-    func testFetchUpcomingRemindersReturnsFutureReminders() throws {
+    func fetchUpcomingRemindersReturnsFutureReminders() throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
         let plant = try service.createPlant(name: "Spider Plant", type: .houseplant, garden: garden)
@@ -639,9 +638,9 @@ struct DataServiceEdgeCaseTests {
         let nextWeek = Date().addingTimeInterval(86400 * 7)
         let wayFuture = Date().addingTimeInterval(86400 * 60)
 
-        let _ = try service.createReminder(title: "Tomorrow", message: "", type: .watering, frequency: .daily, dueDate: tomorrow, plant: plant)
-        let _ = try service.createReminder(title: "Next Week", message: "", type: .watering, frequency: .weekly, dueDate: nextWeek, plant: plant)
-        let _ = try service.createReminder(title: "Way Future", message: "", type: .fertilizing, frequency: .monthly, dueDate: wayFuture, plant: plant)
+        _ = try service.createReminder(title: "Tomorrow", message: "", type: .watering, frequency: .daily, dueDate: tomorrow, plant: plant)
+        _ = try service.createReminder(title: "Next Week", message: "", type: .watering, frequency: .weekly, dueDate: nextWeek, plant: plant)
+        _ = try service.createReminder(title: "Way Future", message: "", type: .fertilizing, frequency: .monthly, dueDate: wayFuture, plant: plant)
 
         // Ask for reminders within the next 8 days — should return 2
         let upcoming = service.fetchUpcomingReminders(days: 8)
@@ -651,22 +650,22 @@ struct DataServiceEdgeCaseTests {
     // MARK: - Pagination
 
     @Test("fetchGardens with limit clamps results correctly")
-    func testFetchGardensWithLimitClampsResults() throws {
+    func fetchGardensWithLimitClampsResults() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
-        for i in 1...5 {
-            let _ = try service.createGarden(name: "Garden \(i)", type: .outdoor, isIndoor: false)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        for i in 1 ... 5 {
+            _ = try service.createGarden(name: "Garden \(i)", type: .outdoor, isIndoor: false)
         }
         let limited = service.fetchGardens(limit: 3)
         #expect(limited.count == 3)
     }
 
     @Test("fetchGardens with offset skips leading records")
-    func testFetchGardensWithOffsetSkipsLeadingRecords() throws {
+    func fetchGardensWithOffsetSkipsLeadingRecords() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
-        for i in 1...4 {
-            let _ = try service.createGarden(name: "Garden \(i)", type: .outdoor, isIndoor: false)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        for i in 1 ... 4 {
+            _ = try service.createGarden(name: "Garden \(i)", type: .outdoor, isIndoor: false)
         }
         let all = service.fetchGardens(limit: 20)
         let offsetPage = service.fetchGardens(offset: 2, limit: 20)
@@ -678,10 +677,10 @@ struct DataServiceEdgeCaseTests {
     }
 
     @Test("fetchGardens with negative offset is treated as zero")
-    func testFetchGardensWithNegativeOffsetTreatedAsZero() throws {
+    func fetchGardensWithNegativeOffsetTreatedAsZero() throws {
         let service = try makeService()
-        let _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
-        let _ = try service.createGarden(name: "Only Garden", type: .outdoor, isIndoor: false)
+        _ = try service.createUser(email: "a@b.com", displayName: "A", skillLevel: .beginner)
+        _ = try service.createGarden(name: "Only Garden", type: .outdoor, isIndoor: false)
         let result = service.fetchGardens(offset: -5, limit: 10)
         #expect(result.count == 1)
     }
@@ -689,13 +688,13 @@ struct DataServiceEdgeCaseTests {
     // MARK: - batchLoadPlantRelationships
 
     @Test("batchLoadPlantRelationships returns plants matching provided IDs")
-    func testBatchLoadPlantRelationshipsReturnsMatchingPlants() async throws {
+    func batchLoadPlantRelationshipsReturnsMatchingPlants() async throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
 
         let plant1 = try service.createPlant(name: "Plant1", type: .herb, garden: garden)
         let plant2 = try service.createPlant(name: "Plant2", type: .vegetable, garden: garden)
-        let _ = try service.createPlant(name: "Plant3", type: .flower, garden: garden)
+        _ = try service.createPlant(name: "Plant3", type: .flower, garden: garden)
 
         guard let id1 = plant1.id, let id2 = plant2.id else {
             Issue.record("Plants should have valid IDs")
@@ -704,18 +703,61 @@ struct DataServiceEdgeCaseTests {
 
         let loaded = await service.batchLoadPlantRelationships(plantIds: [id1, id2])
         #expect(loaded.count == 2)
-        let loadedNames = Set(loaded.compactMap { $0.name })
+        let loadedNames = Set(loaded.compactMap(\.name))
         #expect(loadedNames.contains("Plant1"))
         #expect(loadedNames.contains("Plant2"))
     }
 
     @Test("batchLoadPlantRelationships with empty IDs returns plants")
-    func testBatchLoadPlantRelationshipsWithEmptyIdsReturnsPlants() async throws {
+    func batchLoadPlantRelationshipsWithEmptyIdsReturnsPlants() async throws {
         let service = try makeService()
         let (_, garden) = try seedUserAndGarden(in: service)
-        let _ = try service.createPlant(name: "Solo Plant", type: .herb, garden: garden)
+        _ = try service.createPlant(name: "Solo Plant", type: .herb, garden: garden)
 
         let loaded = await service.batchLoadPlantRelationships(plantIds: [])
         #expect(loaded.count >= 1)
+    }
+
+    // MARK: - Cross-Context Persistence
+
+    @Test("Plant saved in one ModelContext is visible when fetched from a second ModelContext")
+    func crossContextInsertIsVisible() throws {
+        // Validates that SwiftData's in-memory store correctly shares data across
+        // contexts on the same container — the foundational guarantee the entire
+        // repository layer depends on.
+        let container = try ModelContainerFactory.makeForTesting()
+        let writeContext = ModelContext(container)
+        let readContext = ModelContext(container)
+
+        let plant = Plant(name: "Cross-Context Plant", plantType: .vegetable)
+        writeContext.insert(plant)
+        try writeContext.save()
+
+        let descriptor = FetchDescriptor<Plant>()
+        let fetched = try readContext.fetch(descriptor)
+        let names = fetched.compactMap(\.name)
+        #expect(
+            names.contains("Cross-Context Plant"),
+            "A save in one ModelContext must be visible via fetch in a separate ModelContext on the same container"
+        )
+    }
+
+    @Test("Multiple saves across contexts accumulate correctly")
+    func multipleCrossContextSavesAccumulate() throws {
+        let container = try ModelContainerFactory.makeForTesting()
+
+        let ctx1 = ModelContext(container)
+        let plant1 = Plant(name: "Plant A", plantType: .herb)
+        ctx1.insert(plant1)
+        try ctx1.save()
+
+        let ctx2 = ModelContext(container)
+        let plant2 = Plant(name: "Plant B", plantType: .vegetable)
+        ctx2.insert(plant2)
+        try ctx2.save()
+
+        let readCtx = ModelContext(container)
+        let all = try readCtx.fetch(FetchDescriptor<Plant>())
+        #expect(all.count == 2, "Both plants inserted from different contexts must be visible in a fresh fetch context")
     }
 }

@@ -9,8 +9,7 @@ public extension DataService {
     /// Fetch messages for a club, sorted by timestamp ascending.
     @MainActor
     func fetchClubMessages(for clubID: UUID) throws -> [ClubMessage] {
-        let ctx = ModelContext(container)
-        let repo = ClubMessageRepository(context: ctx)
+        let repo = ClubMessageRepository(context: mainContext)
         return try repo.fetchAll(for: clubID)
     }
 
@@ -18,8 +17,7 @@ public extension DataService {
     @MainActor
     func sendClubMessage(clubID: UUID, senderID: String, senderName: String, text: String) throws -> ClubMessage {
         let message = ClubMessage(clubID: clubID, senderName: senderName, senderID: senderID, text: text)
-        let ctx = ModelContext(container)
-        let repo = ClubMessageRepository(context: ctx)
+        let repo = ClubMessageRepository(context: mainContext)
         try repo.save(message)
         return message
     }
@@ -29,8 +27,7 @@ public extension DataService {
     func sendClubPhoto(clubID: UUID, senderID: String, senderName: String, photoData: Data, caption: String? = nil) throws -> ClubMessage {
         let message = ClubMessage(clubID: clubID, senderName: senderName, senderID: senderID, text: caption ?? "")
         message.photoData = photoData
-        let ctx = ModelContext(container)
-        let repo = ClubMessageRepository(context: ctx)
+        let repo = ClubMessageRepository(context: mainContext)
         try repo.save(message)
         return message
     }
@@ -38,8 +35,7 @@ public extension DataService {
     /// Delete a message (sender only).
     @MainActor
     func deleteClubMessage(_ message: ClubMessage) throws {
-        let ctx = ModelContext(container)
-        let repo = ClubMessageRepository(context: ctx)
+        let repo = ClubMessageRepository(context: mainContext)
         try repo.delete(message)
     }
 }

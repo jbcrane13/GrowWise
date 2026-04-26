@@ -236,6 +236,9 @@ public final class DataService {
 
     public func deleteGarden(_ garden: Garden) throws {
         try gardens.delete(garden)
+        cache.invalidateAll(withPrefix: "gardens:")
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
     }
 
     // MARK: - Plant Management
@@ -247,7 +250,10 @@ public final class DataService {
         difficultyLevel: DifficultyLevel = .beginner,
         garden: Garden? = nil
     ) throws -> Plant {
-        try plants.create(name: name, type: type, difficultyLevel: difficultyLevel, garden: garden)
+        let plant = try plants.create(name: name, type: type, difficultyLevel: difficultyLevel, garden: garden)
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
+        return plant
     }
 
     /// Insert a fully-configured database plant (e.g. from an external API).
@@ -352,6 +358,8 @@ public final class DataService {
 
     public func deletePlant(_ plant: Plant) throws {
         try plants.delete(plant)
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
     }
 
     // MARK: - Reminder Management
@@ -466,9 +474,9 @@ public final class DataService {
         return entry
     }
 
-    public func deleteJournalEntry(_ entry: JournalEntry) {
+    public func deleteJournalEntry(_ entry: JournalEntry) throws {
         let plant = entry.plant
-        journals.delete(entry)
+        try journals.delete(entry)
 
         cache.invalidate("journal:recent")
         if let plant, let plantId = plant.id {

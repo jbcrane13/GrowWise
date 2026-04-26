@@ -71,7 +71,6 @@ final class HomeViewModel {
 
     // MARK: - Load
 
-    @MainActor
     func load(dataService: DataService) async {
         isLoading = true
 
@@ -126,7 +125,6 @@ final class HomeViewModel {
 
     // MARK: - Complete
 
-    @MainActor
     func complete(reminder: PlantReminder, dataService: DataService) async {
         // Optimistic: slide the row away immediately
         _ = withAnimation(CultivationTheme.Animation.card) {

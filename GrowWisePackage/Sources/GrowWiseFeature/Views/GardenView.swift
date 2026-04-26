@@ -162,6 +162,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                 Button("Cancel", role: .cancel) {
                     gardenToDelete = nil
                 }
+                .accessibilityIdentifier("garden_alert_button_cancel")
                 Button("Delete", role: .destructive) {
                     if let garden = gardenToDelete {
                         Task<Void, Never> {
@@ -170,6 +171,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                         gardenToDelete = nil
                     }
                 }
+                .accessibilityIdentifier("garden_alert_button_delete")
             } message: {
                 if let garden = gardenToDelete {
                     let plantCount = (garden.plants ?? []).count
@@ -186,6 +188,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                 )
             ) {
                 Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("garden_alert_button_ok")
             } message: {
                 Text(viewModel.error?.localizedDescription ?? "")
             }
