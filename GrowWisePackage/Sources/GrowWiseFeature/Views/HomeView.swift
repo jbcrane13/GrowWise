@@ -96,7 +96,7 @@ public struct HomeView: View {
                 }
 
                 Button {
-                    Task {
+                    Task<Void, Never> {
                         await completeVisibleCareTasks()
                     }
                 } label: {
@@ -125,7 +125,7 @@ public struct HomeView: View {
 
         return HStack(spacing: 10) {
             Button {
-                Task {
+                Task<Void, Never> {
                     await viewModel.complete(reminder: reminder, dataService: dataService)
                 }
             } label: {
@@ -297,33 +297,28 @@ public struct HomeView: View {
         }
     }
 
-    private var seasonalWeatherSymbol: String {
-        switch seasonalWeatherIcon {
-        case "snowflake": "❄"
-        case "wind": "🍂"
-        case "sun.max.fill": "☀"
-        default: "🌿"
+    /// Computes month once and returns all seasonal display values together,
+    /// avoiding redundant Calendar calls across separate computed properties.
+    private var seasonalContext: (icon: String, symbol: String, title: String) {
+        let month = Calendar.current.component(.month, from: Date())
+        switch month {
+        case 3 ... 5: return ("leaf.fill", "🌿", "Spring Growing Season")
+        case 6 ... 8: return ("sun.max.fill", "☀", "Peak Summer Growth")
+        case 9 ... 11: return ("wind", "🍂", "Fall Harvest Season")
+        default: return ("snowflake", "❄", "Winter Planning Season")
         }
+    }
+
+    private var seasonalWeatherSymbol: String {
+        seasonalContext.symbol
     }
 
     private var seasonalWeatherIcon: String {
-        let month = Calendar.current.component(.month, from: Date())
-        switch month {
-        case 3 ... 5: return "leaf.fill"
-        case 6 ... 8: return "sun.max.fill"
-        case 9 ... 11: return "wind"
-        default: return "snowflake"
-        }
+        seasonalContext.icon
     }
 
     private var seasonalContextTitle: String {
-        let month = Calendar.current.component(.month, from: Date())
-        switch month {
-        case 3 ... 5: return "Spring Growing Season"
-        case 6 ... 8: return "Peak Summer Growth"
-        case 9 ... 11: return "Fall Harvest Season"
-        default: return "Winter Planning Season"
-        }
+        seasonalContext.title
     }
 
     // MARK: - Empty State

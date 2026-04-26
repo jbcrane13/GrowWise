@@ -1,7 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
 import os
-import SwiftData
 import SwiftUI
 
 // SeedInventoryService is in GrowWiseServices (imported above)
@@ -9,7 +8,8 @@ import SwiftUI
 /// Observable view-model for the Home tab care dashboard.
 /// Loads active reminders from DataService and separates them into
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
-@MainActor @Observable
+@MainActor
+@Observable
 final class HomeViewModel {
     // MARK: - Published State
 
@@ -31,6 +31,10 @@ final class HomeViewModel {
     /// IDs of reminders the user has tapped "Done" on — used to filter them
     /// from the list with a slide-away animation before the next data reload.
     var completedIDs: Set<UUID> = []
+
+    // MARK: - Private Services
+
+    private let seedService = SeedInventoryService()
 
     /// Error message surfaced to the user when a complete operation fails.
     var errorMessage: String?
@@ -105,17 +109,11 @@ final class HomeViewModel {
             allSeeds = []
             errorMessage = "Failed to load seeds: \(error.localizedDescription)"
         }
-        let seedService = SeedInventoryService()
         readyToPlantSeeds = seedService.readyToPlant(seeds: allSeeds, zone: hardinessZone ?? "6", currentDate: Date())
 
-        // Latest club post for the Home "Your Club" card (SwiftData fetch via mainContext)
+        // Latest club post for the Home "Your Club" card
         do {
-            var descriptor = FetchDescriptor<ClubActivity>(
-                sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
-            )
-            descriptor.fetchLimit = 1
-            let posts = try dataService.mainContext.fetch(descriptor)
-            latestClubPost = posts.first
+            latestClubPost = try dataService.fetchLatestClubActivity()
         } catch {
             Logger(subsystem: "com.growwise", category: "HomeViewModel")
                 .error("latestClubPost fetch failed: \(error.localizedDescription, privacy: .public)")

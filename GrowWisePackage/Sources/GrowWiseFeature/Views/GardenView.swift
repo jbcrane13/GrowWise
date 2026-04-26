@@ -41,6 +41,12 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
         viewModel.filtered(by: selectedFilter)
     }
 
+    /// Reload the view model after a sheet dismisses.
+    /// Extracted to avoid repeating the same Task boilerplate across four onDismiss closures.
+    private func reloadAfterDismiss() {
+        Task<Void, Never> { await viewModel.load(dataService: dataService) }
+    }
+
     public var body: some View {
         NavigationStack {
             ZStack {
@@ -91,7 +97,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                 }
             }
             #if os(iOS)
-            .navigationBarHidden(true)
+            .toolbar(.hidden, for: .navigationBar)
             #endif
             .task {
                 await viewModel.load(dataService: dataService)
@@ -122,9 +128,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
             }
             .sheet(
                 isPresented: $showAddPlantSheet,
-                onDismiss: {
-                    Task<Void, Never> { await viewModel.load(dataService: dataService) }
-                },
+                onDismiss: reloadAfterDismiss,
                 content: {
                     AddPlantSheet()
                         .presentationDetents([.large])
@@ -133,29 +137,21 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
             )
             .sheet(
                 isPresented: $showCreateGarden,
-                onDismiss: {
-                    Task<Void, Never> { await viewModel.load(dataService: dataService) }
-                },
+                onDismiss: reloadAfterDismiss,
                 content: {
-                    CreateGardenSheet { _ in
-                        Task<Void, Never> { await viewModel.load(dataService: dataService) }
-                    }
-                    .presentationDetents([.large])
-                    .presentationDragIndicator(.hidden)
+                    CreateGardenSheet { _ in reloadAfterDismiss() }
+                        .presentationDetents([.large])
+                        .presentationDragIndicator(.hidden)
                 }
             )
             .sheet(
                 isPresented: $showCreateBed,
-                onDismiss: {
-                    Task<Void, Never> { await viewModel.load(dataService: dataService) }
-                },
+                onDismiss: reloadAfterDismiss,
                 content: {
                     if let garden = viewModel.selectedGarden {
-                        CreateBedSheet(garden: garden) { _ in
-                            Task<Void, Never> { await viewModel.load(dataService: dataService) }
-                        }
-                        .presentationDetents([.medium])
-                        .presentationDragIndicator(.hidden)
+                        CreateBedSheet(garden: garden) { _ in reloadAfterDismiss() }
+                            .presentationDetents([.medium])
+                            .presentationDragIndicator(.hidden)
                     }
                 }
             )

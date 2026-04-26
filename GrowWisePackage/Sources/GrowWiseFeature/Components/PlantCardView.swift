@@ -11,7 +11,7 @@ struct PlantTypeBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(Color.blue.opacity(0.2))
-            .foregroundColor(.blue)
+            .foregroundStyle(.blue)
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 }
@@ -26,7 +26,7 @@ struct DifficultyBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(backgroundColor)
-            .foregroundColor(.white)
+            .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 

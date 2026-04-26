@@ -52,24 +52,18 @@ public final class SubscriptionService {
 
     /// Load available products from App Store
     public func loadProducts() async {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        isLoading = true
+        errorMessage = nil
 
         do {
             let products = try await Product.products(for: Set(productIDs))
-            await MainActor.run {
-                self.availableProducts = products.sorted { $0.price < $1.price }
-                self.isLoading = false
-            }
+            availableProducts = products.sorted { $0.price < $1.price }
+            isLoading = false
             logger.info("Loaded \(products.count) products")
         } catch {
             let message = error.localizedDescription
-            await MainActor.run {
-                self.errorMessage = message
-                self.isLoading = false
-            }
+            errorMessage = message
+            isLoading = false
             logger.error("Failed to load products: \(message)")
         }
     }
@@ -78,12 +72,12 @@ public final class SubscriptionService {
 
     /// Purchase a product
     public func purchase(_ product: Product) async throws -> Transaction? {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        isLoading = true
+        errorMessage = nil
 
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+        }
 
         do {
             let result = try await product.purchase()
@@ -115,9 +109,7 @@ public final class SubscriptionService {
             }
         } catch {
             let message = error.localizedDescription
-            await MainActor.run {
-                self.errorMessage = message
-            }
+            errorMessage = message
             logger.error("Purchase failed: \(message)")
             throw SubscriptionError.purchaseFailed(message)
         }
@@ -125,12 +117,12 @@ public final class SubscriptionService {
 
     /// Restore previous purchases
     public func restorePurchases() async throws {
-        await MainActor.run {
-            isLoading = true
-            errorMessage = nil
-        }
+        isLoading = true
+        errorMessage = nil
 
-        defer { isLoading = false }
+        defer {
+            isLoading = false
+        }
 
         do {
             try await AppStore.sync()
@@ -138,9 +130,7 @@ public final class SubscriptionService {
             logger.info("Purchases restored successfully")
         } catch {
             let message = error.localizedDescription
-            await MainActor.run {
-                self.errorMessage = message
-            }
+            errorMessage = message
             logger.error("Failed to restore purchases: \(message)")
             throw SubscriptionError.restoreFailed(message)
         }
@@ -178,20 +168,16 @@ public final class SubscriptionService {
                 }
             }
 
-            await MainActor.run {
-                if hasActiveSubscription {
-                    self.subscriptionStatus = .active(tier: tier, expiryDate: expiryDate)
-                } else {
-                    self.subscriptionStatus = .notSubscribed
-                }
+            if hasActiveSubscription {
+                subscriptionStatus = .active(tier: tier, expiryDate: expiryDate)
+            } else {
+                subscriptionStatus = .notSubscribed
             }
 
             logger.info("Subscription status updated: \(hasActiveSubscription ? "active" : "not subscribed")")
         } catch {
             let message = error.localizedDescription
-            await MainActor.run {
-                self.errorMessage = "Unable to verify subscription: \(message)"
-            }
+            errorMessage = "Unable to verify subscription: \(message)"
             logger.error("Failed to update subscription status: \(message)")
         }
     }
