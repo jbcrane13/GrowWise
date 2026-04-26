@@ -26,7 +26,7 @@ struct DifficultyBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(backgroundColor)
-            .foregroundColor(.white)
+            .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 

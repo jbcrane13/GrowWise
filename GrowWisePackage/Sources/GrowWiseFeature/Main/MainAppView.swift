@@ -51,6 +51,7 @@ public struct MainAppView: View {
         let companionPlantingService: CompanionPlantingService
         let plantCareAdviceService: PlantCareAdviceService
         let clubCloudKitService: ClubCloudKitService
+        let gardenHealthService: GardenHealthService
     }
 
     public var body: some View {
@@ -72,7 +73,7 @@ public struct MainAppView: View {
                 }
             } else if let error = initializationError {
                 ErrorView(error: error) {
-                    Task {
+                    Task<Void, Never> {
                         await initializeDataService()
                     }
                 }
@@ -93,6 +94,7 @@ public struct MainAppView: View {
                     .environment(services.companionPlantingService)
                     .environment(services.plantCareAdviceService)
                     .environment(services.clubCloudKitService)
+                    .environment(services.gardenHealthService)
             } else {
                 VStack(spacing: 16) {
                     ProgressView()
@@ -164,7 +166,8 @@ public struct MainAppView: View {
                 subscriptionService: SubscriptionService(),
                 companionPlantingService: CompanionPlantingService(),
                 plantCareAdviceService: PlantCareAdviceService(),
-                clubCloudKitService: ClubCloudKitService()
+                clubCloudKitService: ClubCloudKitService(),
+                gardenHealthService: GardenHealthService(dataService: service)
             )
             isInitializing = false
             return
@@ -183,12 +186,13 @@ public struct MainAppView: View {
             subscriptionService: SubscriptionService(),
             companionPlantingService: CompanionPlantingService(),
             plantCareAdviceService: PlantCareAdviceService(),
-            clubCloudKitService: ClubCloudKitService()
+            clubCloudKitService: ClubCloudKitService(),
+            gardenHealthService: GardenHealthService(dataService: service)
         )
         cloudSyncService.attach(dataService: service)
 
         if !ProcessInfo.processInfo.arguments.contains("--uitesting") {
-            Task {
+            Task<Void, Never> {
                 await featureServices?.reminderService.synchronizePendingNotifications()
             }
         }

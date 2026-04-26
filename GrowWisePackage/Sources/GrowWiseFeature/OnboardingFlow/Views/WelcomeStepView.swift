@@ -73,12 +73,12 @@ struct WelcomeStepView: View {
             VStack(spacing: 10) {
                 Text("Cultivation")
                     .font(.system(size: 40, weight: .bold, design: .serif))
-                    .foregroundColor(CultivationTheme.Colors.textPrimary)
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     .tracking(-0.5)
 
                 Text("Your garden, beautifully managed")
                     .font(.system(size: 17, weight: .medium))
-                    .foregroundColor(CultivationTheme.Colors.textSecondary)
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
             }
         }

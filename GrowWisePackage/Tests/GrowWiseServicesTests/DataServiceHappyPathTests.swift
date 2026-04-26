@@ -1,15 +1,15 @@
 import Foundation
-import Testing
 @testable import GrowWiseModels
 @testable import GrowWiseServices
+import Testing
 
 /// Integration tests exercising real DataService production code paths
 /// against an in-memory SwiftData store. These tests directly address the
 /// critical coverage gap (#203) by calling actual DataService methods
 /// instead of mocks/stubs.
+@Suite("DataService Happy Path Tests")
 @MainActor
 struct DataServiceHappyPathTests {
-
     // MARK: - Factory
 
     @Test("makeForTesting creates a valid DataService with accessible repositories")
@@ -38,7 +38,7 @@ struct DataServiceHappyPathTests {
     @Test("deleteGarden removes it from fetch results")
     func deleteGardenHappyPath() throws {
         let ds = try DataService.makeForTesting()
-        let garden = try ds.createGarden(name: "Doomed Garden", type: .inGround, isIndoor: false)
+        let garden = try ds.createGarden(name: "Doomed Garden", type: .outdoor, isIndoor: false)
         #expect(ds.fetchGardens().count == 1)
 
         try ds.deleteGarden(garden)
@@ -54,7 +54,7 @@ struct DataServiceHappyPathTests {
         let plant = try ds.createPlant(
             name: "Basil",
             type: .herb,
-            difficultyLevel: .easy,
+            difficultyLevel: .beginner,
             garden: garden
         )
         #expect(plant.name == "Basil")
@@ -72,7 +72,7 @@ struct DataServiceHappyPathTests {
         let plant = try ds.createPlant(
             name: "Tomato",
             type: .vegetable,
-            difficultyLevel: .easy,
+            difficultyLevel: .beginner,
             garden: garden
         )
         plant.name = "Cherry Tomato"
@@ -86,7 +86,7 @@ struct DataServiceHappyPathTests {
     func deletePlantHappyPath() throws {
         let ds = try DataService.makeForTesting()
         let garden = try ds.createGarden(name: "G", type: .raised, isIndoor: false)
-        let plant = try ds.createPlant(commonName: "Mint", scientificName: nil, garden: garden)
+        let plant = try ds.createPlant(name: "Mint", type: .herb, garden: garden)
         #expect(ds.fetchPlants(for: garden).count == 1)
 
         try ds.deletePlant(plant)
@@ -122,14 +122,14 @@ struct DataServiceHappyPathTests {
     func reminderCRUDHappyPath() throws {
         let ds = try DataService.makeForTesting()
         let garden = try ds.createGarden(name: "G", type: .raised, isIndoor: false)
-        let plant = try ds.createPlant(commonName: "Rose", scientificName: nil, garden: garden)
+        let plant = try ds.createPlant(name: "Rose", type: .flower, garden: garden)
         let reminder = try ds.createReminder(
-            plant: plant,
             title: "Water Rose",
             message: "Time to water Rose",
             type: .watering,
             frequency: .daily,
-            dueDate: Date()
+            dueDate: Date(),
+            plant: plant
         )
         #expect(reminder.reminderType == .watering)
 
@@ -141,13 +141,15 @@ struct DataServiceHappyPathTests {
     func completeReminderHappyPath() throws {
         let ds = try DataService.makeForTesting()
         let garden = try ds.createGarden(name: "G", type: .raised, isIndoor: false)
-        let plant = try ds.createPlant(commonName: "Fern", scientificName: nil, garden: garden)
+        let plant = try ds.createPlant(name: "Fern", type: .houseplant, garden: garden)
         let now = Date()
         let reminder = try ds.createReminder(
-            plant: plant,
+            title: "Water Fern",
+            message: "Time to water Fern",
             type: .watering,
             frequency: .daily,
-            nextDueDate: now
+            dueDate: now,
+            plant: plant
         )
         let originalDate = reminder.nextDueDate
         try ds.completeReminder(reminder)
@@ -162,8 +164,8 @@ struct DataServiceHappyPathTests {
         #expect(ds.getPlantCount() == 0)
 
         let garden = try ds.createGarden(name: "G", type: .raised, isIndoor: false)
-        _ = try ds.createPlant(commonName: "A", scientificName: nil, garden: garden)
-        _ = try ds.createPlant(commonName: "B", scientificName: nil, garden: garden)
+        _ = try ds.createPlant(name: "A", type: .herb, garden: garden)
+        _ = try ds.createPlant(name: "B", type: .herb, garden: garden)
         #expect(ds.getPlantCount() == 2)
         #expect(ds.getPlantCount(for: garden) == 2)
     }
