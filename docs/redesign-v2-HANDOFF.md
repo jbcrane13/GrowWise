@@ -23,6 +23,7 @@ The v1 pass of this redesign landed on master (commits `a4bce27` through `a1c259
 
 Audit commands are in the plan, but these are the most probable gaps:
 
+- **Force light appearance + remove Appearance toggle (Phase 1.5, run first).** The v2 spec was updated on 2026-04-23 to drop dark mode entirely — cream paper always. Dark mode was masking unconverted views in the second pass and making it hard to tell what was actually broken. Force `.preferredColorScheme(.light)` on `MainAppView`, delete the `AppStorage("app_appearance")` machinery, remove the Appearance Picker from `AppSettingsView`, and delete the `AppAppearance` enum. Do this before any visual audit — it's what lets you see what's genuinely wrong.
 - Views that still set `.foregroundColor(.white)`, `.background(Color.black...)`, or similar dark-era tokens.
 - Hero and header views in feature subfolders (Tutorials, PlantDatabase, Community, Settings, Onboarding) that never got swept in the v1 pass.
 - Sheets in `Views/Garden/` (CreateGarden, CreateBed, AddSeed, MovePlant, etc.) that have their own backgrounds or custom styling.

@@ -1,0 +1,185 @@
+# SwiftLint configuration for GrowWise iOS project
+# Swift 6 strict concurrency, SwiftUI, SwiftData
+
+included:
+  - GrowWisePackage/Sources
+  - GrowWise
+
+excluded:
+  - GrowWisePackage/Sources/GrowWiseServices/CompanionPlantingData.json
+  - build
+  - .build
+  - Pods
+
+# Rules
+opt_in_rules:
+  - array_init
+  - attributes
+  - closure_end_indentation
+  - closure_spacing
+  - collection_alignment
+  - contains_over_filter_count
+  - contains_over_filter_is_empty
+  - contains_over_first_not_nil
+  - contains_over_range_nil_comparison
+  - discouraged_object_literal
+  - empty_collection_literal
+  - empty_string
+  - empty_xctest_method
+  - enum_case_associated_values_count
+  - expiring_todo
+  - explicit_init
+  - extension_access_modifier
+  - fallthrough
+  - fatal_error_message
+  - first_where
+  - flatmap_over_map_reduce
+  - force_unwrapping
+  - identical_operands
+  - joined_default_parameter
+  - last_where
+  - legacy_multiple
+  - literal_expression_end_indentation
+  - lower_acl_than_parent
+  - modifier_order
+  - multiline_arguments
+  - multiline_function_chains
+  - multiline_literal_brackets
+  - multiline_parameters
+  - nimble_operator
+  - nslocalizedstring_key
+  - number_separator
+  - object_literal
+  - operator_usage_whitespace
+  - optional_enum_case_matching
+  - overridden_super_call
+  - override_in_extension
+  - pattern_matching_keywords
+  - prefer_self_type_over_type_of_self
+  - private_action
+  - private_outlet
+  - prohibited_super_call
+  - quick_discouraged_call
+  - quick_discouraged_focused_test
+  - quick_discouraged_pending_test
+  - reduce_into
+  - redundant_nil_coalescing
+  - redundant_type_annotation
+  - required_enum_case
+  - single_test_class
+  - sorted_first_last
+  - sorted_imports
+  - static_operator
+  - strong_iboutlet
+  - toggle_bool
+  - unavailable_function
+  - unneeded_parentheses_in_closure_argument
+  - untyped_error_in_catch
+  - vertical_parameter_alignment_on_call
+  - vertical_whitespace_between_cases
+  - vertical_whitespace_closing_braces
+  - vertical_whitespace_opening_braces
+  - xct_specific_matcher
+  - yoda_condition
+
+disabled_rules:
+  - file_header              # Not enforcing file headers
+  - missing_docs             # Not requiring all declarations to be documented
+  - no_extension_access_modifier  # Extensions can have access modifiers
+
+# Rule configurations
+line_length:
+  warning: 130
+  error: 270
+  ignores_comments: true
+  ignores_urls: true
+
+file_length:
+  warning: 500
+  error: 1300
+
+type_body_length:
+  warning: 300
+  error: 900
+
+function_body_length:
+  warning: 60
+  error: 100
+
+function_parameter_count:
+  warning: 6
+  error: 8
+
+cyclomatic_complexity:
+  warning: 10
+  error: 20
+
+nesting:
+  type_level:
+    warning: 3
+    error: 5
+  function_level:
+    warning: 3
+    error: 5
+
+identifier_name:
+  min_length:
+    warning: 2
+    error: 1
+  max_length:
+    warning: 50
+    error: 60
+  excluded:
+    - id
+    - x
+    - y
+    - db
+    - i
+    - j
+    - k
+  validates_start_with_lowercase: error
+  allowed_symbols: ["_"]
+
+type_name:
+  min_length:
+    warning: 3
+    error: 2
+  max_length:
+    warning: 50
+    error: 60
+
+trailing_whitespace:
+  ignores_empty_lines: true
+
+vertical_whitespace:
+  max_empty_lines: 1
+
+force_cast: error
+force_try: error
+force_unwrapping: warning
+
+# Custom rules
+custom_rules:
+  no_print_statements:
+    name: "No Print Statements"
+    message: "Use Logger or OSLog instead of print() for production code."
+    regex: '^\s*print\s*\('
+    severity: warning
+
+  no_force_unwrap_in_guard:
+    name: "Avoid Force Unwrap"
+    message: "Do not use force unwrap. Use guard let or if let instead."
+    regex: '\!\.'
+    severity: warning
+
+  todo_with_issue:
+    name: "TODO with Issue Reference"
+    message: "TODOs must reference a beads issue (e.g., TODO(GW-123): description). Run: bd create 'description'"
+    regex: '\/\/\s*TODO(?!\()'
+    severity: error
+
+  fixme_with_issue:
+    name: "FIXME with Issue Reference"
+    message: "FIXMEs must reference a beads issue (e.g., FIXME(GW-123): description). Run: bd create 'description'"
+    regex: '\/\/\s*FIXME(?!\()'
+    severity: error

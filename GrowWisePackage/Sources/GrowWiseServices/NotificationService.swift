@@ -58,7 +58,7 @@ public final class NotificationService: NSObject {
 
     private func checkNotificationPermissions() {
         guard let notificationCenter else { return }
-        Task {
+        Task<Void, Never> {
             let settings = await notificationCenter.notificationSettings()
             self.authorizationStatus = settings.authorizationStatus
             self.isAuthorized = settings.authorizationStatus == .authorized
@@ -190,7 +190,7 @@ public final class NotificationService: NSObject {
     }
 
     public func clearAllNotifications() {
-        Task {
+        Task<Void, Never> {
             await cancelAllNotifications()
         }
     }
@@ -242,7 +242,7 @@ extension NotificationService: @preconcurrency UNUserNotificationCenterDelegate 
             break
         }
 
-        Task {
+        Task<Void, Never> { @MainActor in
             await updateBadgeCount()
         }
 

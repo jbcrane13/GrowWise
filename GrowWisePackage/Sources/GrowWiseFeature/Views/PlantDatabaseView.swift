@@ -110,7 +110,7 @@ public struct PlantDatabaseView: View {
             .padding(.horizontal)
         }
         .padding(.vertical, 8)
-        .background(Color(.systemGray6))
+        .background(CultivationTheme.Colors.backgroundSecondary)
     }
 
     private var plantDatabaseContent: some View {
@@ -342,7 +342,7 @@ struct DatabasePlantCardView: View {
                 }
             }
             .padding()
-            .background(Color(.systemGray6))
+            .background(CultivationTheme.Colors.backgroundSecondary)
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
@@ -625,7 +625,7 @@ struct PlantDatabaseDetailView: View {
             }
         }
         .padding()
-        .background(Color(.systemGray6))
+        .background(CultivationTheme.Colors.backgroundSecondary)
         .clipShape(RoundedRectangle(cornerRadius: 12))
     }
 
@@ -666,14 +666,9 @@ struct PlantDatabaseDetailView: View {
         Button("Add to My Garden") {
             showingAddToGarden = true
         }
-        .font(.headline)
-        .foregroundColor(.white)
-        .frame(maxWidth: .infinity)
+        .buttonStyle(GradientButtonStyle())
         .padding()
-        .background(Color.blue)
-        .clipShape(RoundedRectangle(cornerRadius: 12))
-        .padding()
-        .background(Color(.systemBackground))
+        .background(CultivationTheme.Colors.background)
         .accessibilityIdentifier("plant_detail_button_add_to_garden")
     }
 

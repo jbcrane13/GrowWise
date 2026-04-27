@@ -58,9 +58,6 @@ public final class GardenViewModel {
     /// Plants grouped by GardenBed for the selected garden.
     public var groupedPlants: [PlantGroup] = []
 
-    /// Live search text — drives `filteredGroups`.
-    public var searchText: String = ""
-
     /// True while the initial load is in progress.
     public var isLoading: Bool = false
 
@@ -74,21 +71,6 @@ public final class GardenViewModel {
     public var userName: String = ""
 
     // MARK: - Computed Properties
-
-    /// Groups filtered by `searchText`. Empty groups are dropped.
-    public var filteredGroups: [PlantGroup] {
-        guard !searchText.isEmpty else { return groupedPlants }
-        let query = searchText.lowercased()
-        return groupedPlants.compactMap { group in
-            let matching = group.plants.filter { plant in
-                (plant.name ?? "").lowercased().contains(query) ||
-                    (plant.scientificName ?? "").lowercased().contains(query) ||
-                    (plant.notes ?? "").lowercased().contains(query)
-            }
-            guard !matching.isEmpty else { return nil }
-            return PlantGroup(id: group.id, bed: group.bed, plants: matching)
-        }
-    }
 
     /// Total number of plants in the current grouping (before search filter).
     public var totalPlantCount: Int {
@@ -106,6 +88,14 @@ public final class GardenViewModel {
                     reminder.isEnabled && reminder.nextDueDate < now
                 }
             })
+    }
+
+    /// Plants currently in the flowering stage.
+    /// Used by the v2 Garden summary strip.
+    public var bloomingCount: Int {
+        groupedPlants
+            .flatMap(\.plants)
+            .count(where: { ($0.growthStage ?? .seedling) == .flowering })
     }
 
     /// Returns `groupedPlants` filtered by the given `GardenFilter`.

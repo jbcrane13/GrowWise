@@ -1,0 +1,313 @@
+{
+  "tomato": {
+    "companions": ["basil", "carrot", "onion", "garlic", "parsley", "spinach", "marigold"],
+    "incompatibles": ["potato", "fennel", "corn", "kohlrabi"],
+    "reasons": {
+      "basil": "Improves flavor and repels flies and mosquitoes",
+      "carrot": "Loosens soil for tomato roots",
+      "marigold": "Repels nematodes and other pests"
+    }
+  },
+  "basil": {
+    "companions": ["tomato", "pepper", "oregano", "asparagus"],
+    "incompatibles": ["sage", "rue"],
+    "reasons": {
+      "tomato": "Mutually beneficial - improves growth and flavor",
+      "pepper": "Repels aphids and spider mites"
+    }
+  },
+  "carrot": {
+    "companions": ["tomato", "onion", "leek", "lettuce", "peas", "radish"],
+    "incompatibles": ["dill", "parsnip"],
+    "reasons": {
+      "tomato": "Shades carrot roots, carrots loosen tomato soil",
+      "onion": "Repels carrot fly"
+    }
+  },
+  "lettuce": {
+    "companions": ["carrot", "radish", "strawberry", "cucumber"],
+    "incompatibles": ["broccoli", "cabbage"],
+    "reasons": {
+      "radish": "Radishes break up soil crust for lettuce",
+      "strawberry": "Shade-loving partners"
+    }
+  },
+  "pepper": {
+    "companions": ["basil", "tomato", "spinach", "onion", "garlic"],
+    "incompatibles": ["fennel", "kohlrabi"],
+    "reasons": {
+      "basil": "Repels pests and improves growth",
+      "spinach": "Shades pepper roots and conserves moisture"
+    }
+  },
+  "cucumber": {
+    "companions": ["beans", "corn", "peas", "radish", "sunflower"],
+    "incompatibles": ["potato", "sage", "strong aromatic herbs"],
+    "reasons": {
+      "beans": "Fix nitrogen in soil",
+      "corn": "Provides shade and support"
+    }
+  },
+  "bean": {
+    "companions": ["corn", "cucumber", "potato", "strawberry", "spinach"],
+    "incompatibles": ["onion", "garlic", "fennel", "shallots"],
+    "reasons": {
+      "corn": "Corn provides support for pole beans",
+      "spinach": "Spinach benefits from bean shade"
+    }
+  },
+  "onion": {
+    "companions": ["carrot", "lettuce", "cabbage", "tomato", "pepper"],
+    "incompatibles": ["beans", "peas", "asparagus"],
+    "reasons": {
+      "carrot": "Repels carrot fly",
+      "cabbage": "Repels cabbage worms"
+    }
+  },
+  "garlic": {
+    "companions": ["rose", "raspberry", "tomato", "pepper"],
+    "incompatibles": ["beans", "peas", "cabbage", "asparagus"],
+    "reasons": {
+      "rose": "Repels aphids and prevents black spot",
+      "raspberry": "Prevents spider mite infestations"
+    }
+  },
+  "spinach": {
+    "companions": ["strawberry", "eggplant", "pepper", "cauliflower"],
+    "incompatibles": ["potato"],
+    "reasons": {
+      "strawberry": "Living mulch for strawberries",
+      "eggplant": "Shade-loving companions"
+    }
+  },
+  "radish": {
+    "companions": ["lettuce", "carrot", "cucumber", "peas", "spinach"],
+    "incompatibles": ["hyssop", "grape"],
+    "reasons": {
+      "lettuce": "Breaks soil crust for lettuce emergence",
+      "cucumber": "Repels cucumber beetles"
+    }
+  },
+  "strawberry": {
+    "companions": ["lettuce", "spinach", "beans", "borage"],
+    "incompatibles": ["cabbage", "broccoli", "tomato", "potato"],
+    "reasons": {
+      "borage": "Attracts pollinators and improves flavor",
+      "lettuce": "Complementary growth patterns"
+    }
+  },
+  "cabbage": {
+    "companions": ["onion", "garlic", "dill", "sage", "rosemary"],
+    "incompatibles": ["strawberry", "tomato", "pole beans", "pepper"],
+    "reasons": {
+      "onion": "Repels cabbage maggots and loopers",
+      "dill": "Attracts beneficial wasps"
+    }
+  },
+  "broccoli": {
+    "companions": ["onion", "garlic", "dill", "celery", "chamomile"],
+    "incompatibles": ["strawberry", "tomato", "pole beans"],
+    "reasons": {
+      "onion": "Repels cabbage pests",
+      "celery": "Complementary growth habits"
+    }
+  },
+  "potato": {
+    "companions": ["beans", "corn", "cabbage", "marigold"],
+    "incompatibles": ["tomato", "cucumber", "sunflower", "raspberry"],
+    "reasons": {
+      "beans": "Fixes nitrogen for heavy-feeding potatoes",
+      "marigold": "Repels potato beetles"
+    }
+  },
+  "rose": {
+    "companions": ["garlic", "onion", "lavender", "sage", "thyme"],
+    "incompatibles": ["fuchsia"],
+    "reasons": {
+      "garlic": "Natural pest repellent for aphids and black spot",
+      "lavender": "Complementary fragrances"
+    }
+  },
+  "marigold": {
+    "companions": ["tomato", "potato", "eggplant", "pepper", "most vegetables"],
+    "incompatibles": ["beans"],
+    "reasons": {
+      "tomato": "Repels root knot nematodes and whiteflies",
+      "most vegetables": "General pest deterrent"
+    }
+  },
+  "corn": {
+    "companions": ["beans", "squash", "cucumber", "peas", "potato"],
+    "incompatibles": ["tomato", "celery"],
+    "reasons": {
+      "beans": "Three sisters planting - nitrogen fixing",
+      "squash": "Three sisters - living mulch"
+    }
+  },
+  "squash": {
+    "companions": ["corn", "beans", "radish", "marigold", " nasturtium"],
+    "incompatibles": ["potato"],
+    "reasons": {
+      "corn": "Three sisters traditional planting",
+      "marigold": "Repels squash bugs"
+    }
+  },
+  "peas": {
+    "companions": ["carrot", "cucumber", "corn", "turnip", "radish"],
+    "incompatibles": ["onion", "garlic", "shallots", "chives"],
+    "reasons": {
+      "carrot": "Peas fix nitrogen, carrots use it",
+      "corn": "Corn provides support for climbing peas"
+    }
+  },
+  "asparagus": {
+    "companions": ["tomato", "parsley", "basil"],
+    "incompatibles": ["onion", "garlic", "potato"],
+    "reasons": {
+      "tomato": "Tomato repels asparagus beetles",
+      "basil": "Improves growth and repels pests"
+    }
+  },
+  "sage": {
+    "companions": ["cabbage", "carrot", "strawberry"],
+    "incompatibles": ["cucumber", "basil", "rue"],
+    "reasons": {
+      "cabbage": "Repels cabbage moths and loopers",
+      "strawberry": "May improve strawberry health"
+    }
+  },
+  "thyme": {
+    "companions": ["cabbage", "eggplant", "potato", "strawberry"],
+    "incompatibles": [],
+    "reasons": {
+      "cabbage": "Repels cabbage worms",
+      "eggplant": "Repels eggplant pests"
+    }
+  },
+  "dill": {
+    "companions": ["cabbage", "broccoli", "corn", "lettuce", "onion"],
+    "incompatibles": ["carrot", "tomato"],
+    "reasons": {
+      "cabbage": "Attracts beneficial insects",
+      "broccoli": "Attracts wasps that prey on pests"
+    }
+  },
+  "mint": {
+    "companions": ["cabbage", "tomato", "broccoli"],
+    "incompatibles": ["parsley", "chamomile", "most herbs"],
+    "reasons": {
+      "cabbage": "Repels cabbage moths (but plant in containers)",
+      "tomato": "Repels rodents and may improve flavor"
+    }
+  },
+  "oregano": {
+    "companions": ["broccoli", "cabbage", "cucumber", "grape"],
+    "incompatibles": [],
+    "reasons": {
+      "broccoli": "General pest deterrent",
+      "cabbage": "Repels cabbage pests"
+    }
+  },
+  "chive": {
+    "companions": ["carrot", "tomato", "apple", "rose"],
+    "incompatibles": ["beans", "peas"],
+    "reasons": {
+      "carrot": "Repels carrot fly and improves growth",
+      "tomato": "Improves tomato flavor and repels aphids"
+    }
+  },
+  "nasturtium": {
+    "companions": ["apple", "cucumber", "squash", "tomato", "radish"],
+    "incompatibles": [],
+    "reasons": {
+      "cucumber": "Repels cucumber beetles and aphids",
+      "tomato": "Repels whiteflies and squash bugs"
+    }
+  },
+  "borage": {
+    "companions": ["tomato", "strawberry", "squash", "cucumber"],
+    "incompatibles": [],
+    "reasons": {
+      "tomato": "Attracts pollinators, improves flavor",
+      "strawberry": "Attracts pollinators and deters pests"
+    }
+  },
+  "lavender": {
+    "companions": ["rose", "sage", "thyme", "rosemary"],
+    "incompatibles": ["impatiens", "camellias"],
+    "reasons": {
+      "rose": "Complementary scents, attracts pollinators",
+      "herbs": "Mediterranean plant grouping"
+    }
+  },
+  "sunflower": {
+    "companions": ["cucumber", "corn", "melon", "squash"],
+    "incompatibles": ["potato", "pole beans"],
+    "reasons": {
+      "cucumber": "Provides shade and support",
+      "corn": "Attracts pollinators for corn"
+    }
+  },
+  "eggplant": {
+    "companions": ["spinach", "thyme", "marigold", "oregano"],
+    "incompatibles": ["fennel", "kohlrabi"],
+    "reasons": {
+      "spinach": "Shades eggplant roots",
+      "thyme": "Repels eggplant flea beetles"
+    }
+  },
+  "cauliflower": {
+    "companions": ["onion", "garlic", "celery", "spinach", "sage"],
+    "incompatibles": ["strawberry", "tomato", "pole beans"],
+    "reasons": {
+      "onion": "Repels cabbage pests",
+      "spinach": "Complementary cool-season crops"
+    }
+  },
+  "celery": {
+    "companions": ["cabbage", "broccoli", "cauliflower", "tomato"],
+    "incompatibles": ["corn", "potato"],
+    "reasons": {
+      "cabbage": "Repels cabbage butterflies",
+      "broccoli": "Complementary growth habits"
+    }
+  },
+  "fennel": {
+    "companions": ["dill"],
+    "incompatibles": ["tomato", "pepper", "eggplant", "beans", "kohlrabi", "most vegetables"],
+    "reasons": {
+      "most vegetables": "Inhibits growth of many plants - plant separately"
+    }
+  },
+  "kohlrabi": {
+    "companions": ["onion", "garlic", "beet", "cucumber"],
+    "incompatibles": ["tomato", "pepper", "eggplant", "pole beans"],
+    "reasons": {
+      "onion": "Repels insect pests",
+      "beet": "Complementary cool-season crops"
+    }
+  },
+  "turnip": {
+    "companions": ["peas", "beans"],
+    "incompatibles": ["horseradish", "mustard"],
+    "reasons": {
+      "peas": "Peas fix nitrogen for turnips"
+    }
+  },
+  "beet": {
+    "companions": ["onion", "kohlrabi", "lettuce", "cabbage"],
+    "incompatibles": ["pole beans", "field mustard"],
+    "reasons": {
+      "onion": "Repels insect pests",
+      "cabbage": "Complementary cool-season crops"
+    }
+  },
+  "parsnip": {
+    "companions": ["onion", "garlic", "radish"],
+    "incompatibles": ["carrot", "celery"],
+    "reasons": {
+      "onion": "Repels root pests",
+      "radish": "Loosens soil for parsnips"
+    }
+  }
+}

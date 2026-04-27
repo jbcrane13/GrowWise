@@ -99,6 +99,57 @@ struct HeroBackgroundModifier: ViewModifier {
 
 **Verification.** `swift build` clean.
 
+## Phase 1.5 — Force light appearance, remove Appearance toggle
+
+**Decision (2026-04-23):** the app is cream paper always. No dark mode, no in-app Appearance setting. Dark mode as a courtesy led to persistent spec drift in both passes — the dark palette masked unconverted views and made gaps hard to spot. Force light, delete the toggle.
+
+**Files and exact edits:**
+
+1. **`GrowWise/GrowWiseApp.swift`** — remove the AppStorage/colorScheme dance and hard-force light.
+
+   Delete:
+   ```swift
+   @AppStorage("app_appearance") private var appearance: AppAppearance = .system
+
+   private var colorScheme: ColorScheme? {
+       switch appearance {
+       case .system: nil
+       case .light: .light
+       case .dark: .dark
+       }
+   }
+   ```
+   Replace `.preferredColorScheme(colorScheme)` with:
+   ```swift
+   .preferredColorScheme(.light)
+   ```
+
+2. **`GrowWisePackage/Sources/GrowWiseFeature/Views/Settings/AppSettingsView.swift`** — rip out the Appearance section and the enum.
+
+   - Delete line 17: `@AppStorage("app_appearance") private var appearance: AppAppearance = .system`
+   - Delete the Appearance `Section` that contains the `Picker` at ~line 177 (the whole block, including its label and the `ForEach(AppAppearance.allCases, ...)`).
+   - Delete the `public enum AppAppearance` declaration at ~line 509.
+
+3. **Residual AppStorage cleanup.** The old `app_appearance` AppStorage key will still be in the UserDefaults of any existing installs — harmless but cruft. Optionally, add a one-shot migration in `GrowWiseApp.init()`:
+   ```swift
+   UserDefaults.standard.removeObject(forKey: "app_appearance")
+   ```
+   Safe to ship or skip.
+
+4. **Audit for `@Environment(\.colorScheme)` usage.** Any view that branched on it is now dead code in the light-only direction.
+   ```bash
+   grep -rn "@Environment(\\\\.colorScheme)" GrowWisePackage/Sources/ --include="*.swift"
+   grep -rn "colorScheme == \\.dark\\|colorScheme == \\.light" GrowWisePackage/Sources/ --include="*.swift"
+   ```
+   Simplify each branch to the `light` case and delete the unreachable arm.
+
+**What to leave alone.** `Color(light:dark:)` in `CultivationTheme.swift` stays — harmless with light forced via `preferredColorScheme`, and keeps the door open if a future product call reverses this. No need to mechanically flatten every theme token.
+
+**Verification.**
+- `swift build` clean.
+- Launch on a simulator that's in system Dark Appearance. App still renders cream paper. If it renders dark, the override didn't stick — check that `preferredColorScheme(.light)` is on the outermost `WindowGroup` content and not buried inside a conditional.
+- Open Me → Settings. There is no Appearance row.
+
 ## Phase 2 — Register custom fonts (Fraunces + Manrope)
 
 **Status:** Required. ADR-019 scoped this out of the v1 pass for simplicity. In the finish-the-conversion pass, Blake decided to pull it back in — the system fallbacks (`.system(design: .serif)` / `.rounded`) are close, but not the field-journal character the spec intends. Fraunces and Manrope are now canon.
@@ -411,6 +462,7 @@ EOF
 
 **Decided:**
 - **Custom fonts:** yes — Phase 2 is in. Fraunces + Manrope registered via CoreText at launch, selected through `CultivationTheme.Fonts.*` with `.serif` / `.rounded` fallbacks that remain live in case a TTF fails to load.
+- **Dark mode:** no — Phase 1.5 forces `.preferredColorScheme(.light)` at the root and removes the in-app Appearance toggle. The app is cream paper regardless of system appearance.
 
 ## Appendix — likely-outdated files to check first
 

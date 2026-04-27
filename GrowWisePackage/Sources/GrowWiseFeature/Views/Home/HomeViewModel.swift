@@ -1,7 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
 import os
-import SwiftData
 import SwiftUI
 
 // SeedInventoryService is in GrowWiseServices (imported above)
@@ -9,6 +8,7 @@ import SwiftUI
 /// Observable view-model for the Home tab care dashboard.
 /// Loads active reminders from DataService and separates them into
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
+@MainActor
 @Observable
 final class HomeViewModel {
     // MARK: - Published State
@@ -32,20 +32,45 @@ final class HomeViewModel {
     /// from the list with a slide-away animation before the next data reload.
     var completedIDs: Set<UUID> = []
 
+    // MARK: - Private Services
+
+    private let seedService = SeedInventoryService()
+
     /// Error message surfaced to the user when a complete operation fails.
     var errorMessage: String?
 
     // MARK: - Derived
 
     var allTasksDone: Bool {
-        let overdueVisible = overdueReminders.filter { !completedIDs.contains($0.id) }
-        let todayVisible = dueTodayReminders.filter { !completedIDs.contains($0.id) }
-        return overdueVisible.isEmpty && todayVisible.isEmpty
+        pendingOverdueReminders.isEmpty && pendingTodayReminders.isEmpty
+    }
+
+    var visibleCareReminders: [PlantReminder] {
+        Array((pendingOverdueReminders + pendingTodayReminders).prefix(3))
+    }
+
+    var visibleCareTaskCount: Int {
+        pendingOverdueReminders.count + pendingTodayReminders.count
+    }
+
+    var visibleOverdueCount: Int {
+        pendingOverdueReminders.count
+    }
+
+    private var pendingOverdueReminders: [PlantReminder] {
+        overdueReminders
+            .filter { !completedIDs.contains($0.id) }
+            .sorted { $0.nextDueDate < $1.nextDueDate }
+    }
+
+    private var pendingTodayReminders: [PlantReminder] {
+        dueTodayReminders
+            .filter { !completedIDs.contains($0.id) }
+            .sorted { $0.nextDueDate < $1.nextDueDate }
     }
 
     // MARK: - Load
 
-    @MainActor
     func load(dataService: DataService) async {
         isLoading = true
 
@@ -84,17 +109,11 @@ final class HomeViewModel {
             allSeeds = []
             errorMessage = "Failed to load seeds: \(error.localizedDescription)"
         }
-        let seedService = SeedInventoryService()
         readyToPlantSeeds = seedService.readyToPlant(seeds: allSeeds, zone: hardinessZone ?? "6", currentDate: Date())
 
-        // Latest club post for the Home "Your Club" card (SwiftData fetch via mainContext)
+        // Latest club post for the Home "Your Club" card
         do {
-            var descriptor = FetchDescriptor<ClubActivity>(
-                sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
-            )
-            descriptor.fetchLimit = 1
-            let posts = try dataService.mainContext.fetch(descriptor)
-            latestClubPost = posts.first
+            latestClubPost = try dataService.fetchLatestClubActivity()
         } catch {
             Logger(subsystem: "com.growwise", category: "HomeViewModel")
                 .error("latestClubPost fetch failed: \(error.localizedDescription, privacy: .public)")
@@ -106,10 +125,9 @@ final class HomeViewModel {
 
     // MARK: - Complete
 
-    @MainActor
     func complete(reminder: PlantReminder, dataService: DataService) async {
         // Optimistic: slide the row away immediately
-        withAnimation(CultivationTheme.Animation.card) {
+        _ = withAnimation(CultivationTheme.Animation.card) {
             completedIDs.insert(reminder.id)
         }
 

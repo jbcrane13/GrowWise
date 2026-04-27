@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<!-- WeatherKit - requires WeatherKit capability enabled in App ID on developer portal -->
+	<key>com.apple.developer.weatherkit</key>
+	<true/>
+
+	<!-- Push notifications - uncomment once enabled in App ID (com.growwiser.app) on developer portal -->
+	<!--
+	<key>aps-environment</key>
+	<string>production</string>
+	-->
+
+	<!-- CloudKit sync for SwiftData persistence -->
+	<key>com.apple.developer.icloud-services</key>
+	<array>
+		<string>CloudKit</string>
+	</array>
+	<key>com.apple.developer.icloud-container-identifiers</key>
+	<array>
+		<string>iCloud.com.growwise.gardening</string>
+	</array>
+
+	<!-- App Groups - uncomment once configured in App ID (needs a real group ID) -->
+	<!--
+	<key>com.apple.security.application-groups</key>
+	<array>
+		<string>group.com.growwiser.app</string>
+	</array>
+	-->
+</dict>
+</plist>

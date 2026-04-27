@@ -5,18 +5,17 @@
 
 ## Agent Readiness
 
-Before starting work, read **`docs/architecture/CLAUDE.md`** for current conventions and **`docs/architecture/ADR.md`** for architecture decisions.
+Before starting work, read **`docs/architecture/ADR.md`** for architecture decisions.
 
 | Resource | Location | Purpose |
 |----------|----------|---------|
-| Architecture guide | `docs/architecture/CLAUDE.md` | Build commands, conventions, design system |
 | ADRs | `docs/architecture/ADR.md` | Architecture decisions with rationale |
 | Design spec | `docs/superpowers/specs/2026-03-09-full-ui-redesign-design.md` | Full UI redesign specification |
 | PRD | `docs/product/gardening-app-prd.md` | Product requirements |
 
 ## OVERVIEW
 
-GrowWise (branded **Cultivation**) is an iOS gardening companion app (iOS 17+) using Swift 6 strict concurrency, SwiftData with CloudKit sync, and SwiftUI. After a full UI redesign (March 2026), it uses a 4-tab navigation structure with a premium glass-morphism design language defined by `CultivationTheme`.
+GrowWise (branded **Cultivation**) is an iOS gardening companion app (iOS 17+) using Swift 6 strict concurrency, SwiftData with CloudKit sync, and SwiftUI. After a full UI redesign (March 2026), i[...]
 
 ## STRUCTURE
 
@@ -242,7 +241,6 @@ No identifier = rejected.
 TODOs must reference a GitHub issue:
 ```swift
 // TODO(#123): description of what needs doing
-// FIXME(#456): description of the problem
 ```
 
 ## DEPLOYMENT & OBSERVABILITY

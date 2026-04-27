@@ -1,0 +1,396 @@
+import GrowWiseModels
+import GrowWiseServices
+import os
+import SwiftUI
+
+#if canImport(UIKit)
+import UIKit
+#endif
+
+public struct PlantReminderCard: View {
+    let plant: Plant
+    let reminderService: ReminderService
+    let onTap: () -> Void
+
+    @State private var wateringReminders: [PlantReminder] = []
+    @State private var showingReminderDetail = false
+
+    public init(plant: Plant, reminderService: ReminderService, onTap: @escaping () -> Void) {
+        self.plant = plant
+        self.reminderService = reminderService
+        self.onTap = onTap
+    }
+
+    public var body: some View {
+        Button(action: onTap) {
+            VStack(alignment: .leading, spacing: 12) {
+                // Plant header
+                HStack {
+                    // Plant icon based on type
+                    Image(systemName: plantIcon)
+                        .font(.title2)
+                        .foregroundColor(plantColor)
+                        .frame(width: 32, height: 32)
+                        .background(
+                            Circle()
+                                .fill(plantColor.opacity(0.1))
+                        )
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        Text(plant.name ?? "Unknown Plant")
+                            .font(.headline)
+                            .fontWeight(.medium)
+                            .lineLimit(1)
+                            .foregroundColor(.primary)
+
+                        Text(plant.plantType?.displayName ?? "Unknown Type")
+                            .font(.caption)
+                            .foregroundColor(.secondary)
+                    }
+
+                    Spacer()
+
+                    // Active reminder count
+                    if !wateringReminders.isEmpty {
+                        Text("\(wateringReminders.count)")
+                            .font(.caption)
+                            .fontWeight(.bold)
+                            .foregroundColor(.white)
+                            .frame(minWidth: 20, minHeight: 20)
+                            .background(
+                                Circle()
+                                    .fill(hasOverdueReminders ? Color.red : Color.blue)
+                            )
+                    }
+                }
+
+                // Next watering info
+                if let nextWatering = nextWateringReminder {
+                    nextWateringView(nextWatering)
+                } else {
+                    noRemindersView
+                }
+
+                // Quick action buttons
+                actionButtonsView
+            }
+            .padding()
+            .background(
+                RoundedRectangle(cornerRadius: 16)
+                    .fill(Color(.secondarySystemGroupedBackground))
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 16)
+                            .stroke(hasOverdueReminders ? Color.red.opacity(0.3) : Color.clear, lineWidth: 1)
+                    )
+            )
+        }
+        .buttonStyle(.plain)
+        .task {
+            loadWateringReminders()
+        }
+        .sheet(isPresented: $showingReminderDetail) {
+            PlantReminderDetailView(
+                plant: plant,
+                reminderService: reminderService,
+                dataService: reminderService.dataService
+            )
+        }
+    }
+
+    // MARK: - Computed Properties
+
+    private var plantIcon: String {
+        switch plant.plantType {
+        case .houseplant:
+            "house.fill"
+
+        case .succulent:
+            "circle.hexagongrid.fill"
+
+        case .herb:
+            "leaf.fill"
+
+        case .vegetable:
+            "carrot.fill"
+
+        case .flower:
+            "camera.macro"
+
+        case .fruit:
+            "apple.logo"
+
+        case .tree:
+            "tree.fill"
+
+        case .shrub:
+            "leaf.circle.fill"
+
+        case .none:
+            "questionmark.circle.fill"
+        }
+    }
+
+    private var plantColor: Color {
+        switch plant.plantType {
+        case .houseplant:
+            .green
+
+        case .succulent:
+            .mint
+
+        case .herb:
+            .green
+
+        case .vegetable:
+            .orange
+
+        case .flower:
+            .pink
+
+        case .fruit:
+            .red
+
+        case .tree:
+            .brown
+
+        case .shrub:
+            .green
+
+        case .none:
+            .gray
+        }
+    }
+
+    private var nextWateringReminder: PlantReminder? {
+        wateringReminders
+            .filter(\.isEnabled)
+            .min { $0.nextDueDate < $1.nextDueDate }
+    }
+
+    private var hasOverdueReminders: Bool {
+        wateringReminders.contains { $0.nextDueDate < Date() && $0.isEnabled }
+    }
+
+    // MARK: - Subviews
+
+    private func nextWateringView(_ reminder: PlantReminder) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            HStack {
+                Image(systemName: "drop.fill")
+                    .font(.caption)
+                    .foregroundColor(.blue)
+
+                Text("Next Watering")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+
+                if reminder.nextDueDate < Date() {
+                    Text("OVERDUE")
+                        .font(.caption2)
+                        .fontWeight(.bold)
+                        .foregroundColor(.red)
+                        .padding(.horizontal, 6)
+                        .padding(.vertical, 2)
+                        .background(
+                            RoundedRectangle(cornerRadius: 4)
+                                .fill(Color.red.opacity(0.1))
+                        )
+                }
+            }
+
+            Text(formatNextWateringDate(reminder.nextDueDate))
+                .font(.subheadline)
+                .fontWeight(.medium)
+                .foregroundColor(reminder.nextDueDate < Date() ? .red : .primary)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.tertiarySystemGroupedBackground))
+        )
+    }
+
+    private var noRemindersView: some View {
+        VStack(spacing: 6) {
+            HStack {
+                Image(systemName: "bell.slash")
+                    .font(.caption)
+                    .foregroundColor(.secondary)
+
+                Text("No Reminders")
+                    .font(.caption)
+                    .fontWeight(.medium)
+                    .foregroundColor(.secondary)
+
+                Spacer()
+            }
+
+            Text("Tap to add watering schedule")
+                .font(.caption2)
+                .foregroundColor(.secondary)
+        }
+        .padding(.vertical, 8)
+        .padding(.horizontal, 12)
+        .background(
+            RoundedRectangle(cornerRadius: 8)
+                .fill(Color(.tertiarySystemGroupedBackground))
+        )
+    }
+
+    private var actionButtonsView: some View {
+        HStack(spacing: 12) {
+            // Quick water button
+            Button(action: quickWaterAction) {
+                HStack(spacing: 4) {
+                    Image(systemName: "drop.fill")
+                        .font(.caption)
+
+                    Text("Water")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(.blue)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color.blue.opacity(0.1))
+                )
+            }
+
+            Spacer()
+
+            // View details button
+            Button(action: { showingReminderDetail = true }, label: {
+                HStack(spacing: 4) {
+                    Image(systemName: "gear")
+                        .font(.caption)
+
+                    Text("Manage")
+                        .font(.caption)
+                        .fontWeight(.medium)
+                }
+                .foregroundColor(.secondary)
+                .padding(.horizontal, 12)
+                .padding(.vertical, 6)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(Color(.quaternarySystemFill))
+                )
+            })
+        }
+    }
+
+    // MARK: - Helper Methods
+
+    private func loadWateringReminders() {
+        wateringReminders = reminderService.getWateringReminders(for: plant)
+    }
+
+    private static let timeOnlyFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
+        let f = DateFormatter()
+        f.dateStyle = .none
+        f.timeStyle = .short
+        return f
+    }()
+
+    private static let dayNameFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
+        let f = DateFormatter()
+        f.dateFormat = "EEEE"
+        return f
+    }()
+
+    private static let shortDateTimeFormatter: DateFormatter = {
+        // swiftlint:disable:next identifier_name
+        let f = DateFormatter()
+        f.dateStyle = .short
+        f.timeStyle = .short
+        return f
+    }()
+
+    private func formatNextWateringDate(_ date: Date) -> String {
+        let calendar = Calendar.current
+
+        if calendar.isDateInToday(date) {
+            return "Today at \(Self.timeOnlyFormatter.string(from: date))"
+        } else if calendar.isDateInTomorrow(date) {
+            return "Tomorrow at \(Self.timeOnlyFormatter.string(from: date))"
+        } else if calendar.isDateInYesterday(date) {
+            return "Yesterday (Overdue)"
+        } else {
+            let daysDifference = calendar.dateComponents([.day], from: Date(), to: date).day ?? 0
+
+            if daysDifference < 0 {
+                return "\(abs(daysDifference)) days overdue"
+            } else if daysDifference <= 7 {
+                let dayName = Self.dayNameFormatter.string(from: date)
+                return "\(dayName) at \(Self.timeOnlyFormatter.string(from: date))"
+            } else {
+                return Self.shortDateTimeFormatter.string(from: date)
+            }
+        }
+    }
+
+    private func quickWaterAction() {
+        // Find the most urgent watering reminder and mark it complete
+        if let reminder = nextWateringReminder {
+            Task {
+                reminder.markCompleted()
+
+                // Provide haptic feedback
+                let impact = UIImpactFeedbackGenerator(style: .medium)
+                impact.impactOccurred()
+
+                // Refresh reminders
+                loadWateringReminders()
+
+                // Reschedule notification if recurring
+                if reminder.isRecurring {
+                    try? await reminderService.notificationService.scheduleReminderNotification(for: reminder)
+                }
+            }
+        }
+    }
+}
+
+#Preview {
+    let plant = Plant(
+        name: "Monstera Deliciosa",
+        plantType: PlantType.houseplant,
+        difficultyLevel: DifficultyLevel.intermediate
+    )
+
+    let dataService = DataService.createFallback()
+    let notificationService = NotificationService()
+    let reminderService = ReminderService(dataService: dataService, notificationService: notificationService)
+
+    VStack(spacing: 16) {
+        PlantReminderCard(
+            plant: plant,
+            reminderService: reminderService,
+            onTap: { print("Plant tapped: \(plant.name ?? "Unknown Plant")") }
+        )
+
+        PlantReminderCard(
+            plant: Plant(
+                name: "Snake Plant",
+                plantType: .succulent,
+                difficultyLevel: .beginner
+            ),
+            reminderService: reminderService,
+            onTap: { print("Plant tapped") }
+        )
+    }
+    .padding()
+    #if canImport(UIKit)
+        .background(Color(.systemGroupedBackground))
+    #else
+        .background(Color(.controlBackgroundColor))
+    #endif
+}

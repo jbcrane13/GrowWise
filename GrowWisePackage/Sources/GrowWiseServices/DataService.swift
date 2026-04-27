@@ -17,7 +17,8 @@ import SwiftData
 @Observable
 public final class DataService {
     private let modelContainer: ModelContainer
-    public var mainContext: ModelContext {
+    /// internal — use DataService facade methods from feature layer
+    var mainContext: ModelContext {
         modelContainer.mainContext
     }
 
@@ -66,14 +67,14 @@ public final class DataService {
         }
 
         // Initialize repositories with shared context
-        let ctx = container.mainContext
-        self.plants = PlantRepository(context: ctx)
-        self.gardens = GardenRepository(context: ctx)
-        self.reminders = ReminderRepository(context: ctx)
-        self.journals = JournalRepository(context: ctx)
-        self.users = UserRepository(context: ctx)
-        self.stats = StatsRepository(context: ctx)
-        self.seeds = SeedRepository(context: ctx)
+        let repos = Self.makeRepositories(from: container.mainContext)
+        self.plants = repos.plants
+        self.gardens = repos.gardens
+        self.reminders = repos.reminders
+        self.journals = repos.journals
+        self.users = repos.users
+        self.stats = repos.stats
+        self.seeds = repos.seeds
 
         // Validate storage configuration
         validateStorageConfiguration()
@@ -147,14 +148,14 @@ public final class DataService {
         self.modelContainer = container
         self.cloudContainer = ProcessInfo.processInfo.arguments.contains("--uitesting") ? nil : CKContainer.default()
 
-        let ctx = container.mainContext
-        self.plants = PlantRepository(context: ctx)
-        self.gardens = GardenRepository(context: ctx)
-        self.reminders = ReminderRepository(context: ctx)
-        self.journals = JournalRepository(context: ctx)
-        self.users = UserRepository(context: ctx)
-        self.stats = StatsRepository(context: ctx)
-        self.seeds = SeedRepository(context: ctx)
+        let repos = Self.makeRepositories(from: container.mainContext)
+        self.plants = repos.plants
+        self.gardens = repos.gardens
+        self.reminders = repos.reminders
+        self.journals = repos.journals
+        self.users = repos.users
+        self.stats = repos.stats
+        self.seeds = repos.seeds
     }
 
     /// Private initializer that accepts an explicit (possibly nil) CloudKit container.
@@ -163,14 +164,20 @@ public final class DataService {
         self.modelContainer = container
         self.cloudContainer = cloudContainer
 
-        let ctx = container.mainContext
-        self.plants = PlantRepository(context: ctx)
-        self.gardens = GardenRepository(context: ctx)
-        self.reminders = ReminderRepository(context: ctx)
-        self.journals = JournalRepository(context: ctx)
-        self.users = UserRepository(context: ctx)
-        self.stats = StatsRepository(context: ctx)
-        self.seeds = SeedRepository(context: ctx)
+        let repos = Self.makeRepositories(from: container.mainContext)
+        self.plants = repos.plants
+        self.gardens = repos.gardens
+        self.reminders = repos.reminders
+        self.journals = repos.journals
+        self.users = repos.users
+        self.stats = repos.stats
+        self.seeds = repos.seeds
+    }
+
+    /// Creates all domain repositories from a given ModelContext.
+    /// Centralises the wiring that all three initializers need.
+    private static func makeRepositories(from context: ModelContext) -> RepositoryBundle {
+        RepositoryBundle(context: context)
     }
 
     // MARK: - User Management
@@ -229,6 +236,9 @@ public final class DataService {
 
     public func deleteGarden(_ garden: Garden) throws {
         try gardens.delete(garden)
+        cache.invalidateAll(withPrefix: "gardens:")
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
     }
 
     // MARK: - Plant Management
@@ -240,7 +250,10 @@ public final class DataService {
         difficultyLevel: DifficultyLevel = .beginner,
         garden: Garden? = nil
     ) throws -> Plant {
-        try plants.create(name: name, type: type, difficultyLevel: difficultyLevel, garden: garden)
+        let plant = try plants.create(name: name, type: type, difficultyLevel: difficultyLevel, garden: garden)
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
+        return plant
     }
 
     /// Insert a fully-configured database plant (e.g. from an external API).
@@ -345,6 +358,8 @@ public final class DataService {
 
     public func deletePlant(_ plant: Plant) throws {
         try plants.delete(plant)
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
     }
 
     // MARK: - Reminder Management
@@ -459,9 +474,9 @@ public final class DataService {
         return entry
     }
 
-    public func deleteJournalEntry(_ entry: JournalEntry) {
+    public func deleteJournalEntry(_ entry: JournalEntry) throws {
         let plant = entry.plant
-        journals.delete(entry)
+        try journals.delete(entry)
 
         cache.invalidate("journal:recent")
         if let plant, let plantId = plant.id {
@@ -888,6 +903,41 @@ public extension DataService {
             sortBy: [SortDescriptor(\GardenClub.createdDate, order: .reverse)]
         )
         return try? mainContext.fetch(fetch).first
+    }
+
+    /// Returns the single most-recent ClubActivity across all clubs.
+    /// Used by HomeViewModel to populate the "Your Club" card.
+    public func fetchLatestClubActivity() throws -> ClubActivity? {
+        var descriptor = FetchDescriptor<ClubActivity>(
+            sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
+        )
+        descriptor.fetchLimit = 1
+        return try mainContext.fetch(descriptor).first
+    }
+}
+
+// MARK: - Private Helpers
+
+/// Groups all seven domain repositories so they can be built once from a ModelContext
+/// and assigned together in each DataService initializer.
+@MainActor
+private struct RepositoryBundle {
+    let plants: PlantRepository
+    let gardens: GardenRepository
+    let reminders: ReminderRepository
+    let journals: JournalRepository
+    let users: UserRepository
+    let stats: StatsRepository
+    let seeds: SeedRepository
+
+    init(context: ModelContext) {
+        plants = PlantRepository(context: context)
+        gardens = GardenRepository(context: context)
+        reminders = ReminderRepository(context: context)
+        journals = JournalRepository(context: context)
+        users = UserRepository(context: context)
+        stats = StatsRepository(context: context)
+        seeds = SeedRepository(context: context)
     }
 }
 

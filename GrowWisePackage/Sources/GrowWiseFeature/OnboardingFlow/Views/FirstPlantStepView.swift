@@ -148,7 +148,7 @@ private struct PlantPickerCard: View {
 
                 Text(plant.name ?? "Plant")
                     .font(.system(size: 14, weight: .semibold, design: .rounded))
-                    .foregroundStyle(isSelected ? .white : CultivationTheme.Colors.textPrimary)
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
                     .lineLimit(1)
 
                 Text(plant.difficultyLevel?.displayName ?? "Easy")

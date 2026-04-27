@@ -1,0 +1,82 @@
+name: Agent Code Review
+
+on:
+  pull_request:
+    types: [opened, synchronize, ready_for_review]
+    branches: [master, main]
+
+jobs:
+  lint-review:
+    name: Automated Quality Review
+    runs-on: macos-14
+    if: github.event.pull_request.draft == false
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Install tools
+        run: |
+          brew install swiftlint swiftformat
+
+      - name: SwiftLint review
+        run: |
+          echo "## SwiftLint Analysis" >> $GITHUB_STEP_SUMMARY
+          VIOLATIONS=$(swiftlint lint --config .swiftlint.yml --reporter json 2>/dev/null \
+            | python3 -c "
+import json, sys
+data = json.load(sys.stdin)
+errors = [v for v in data if v['severity'] == 'error']
+warnings = [v for v in data if v['severity'] == 'warning']
+print(f'Errors: {len(errors)}, Warnings: {len(warnings)}')
+" || echo "Could not parse violations")
+          echo "$VIOLATIONS" >> $GITHUB_STEP_SUMMARY
+
+      - name: SwiftFormat auto-fix
+        run: |
+          swiftformat --config .swiftformat GrowWisePackage/Sources GrowWise
+          if ! git diff --quiet; then
+            git config user.name "github-actions[bot]"
+            git config user.email "github-actions[bot]@users.noreply.github.com"
+            git add GrowWisePackage/Sources GrowWise
+            git commit -m "style: auto-fix SwiftFormat issues [skip ci]"
+            git push
+            echo "## SwiftFormat Check" >> $GITHUB_STEP_SUMMARY
+            echo "Auto-fixed formatting issues and pushed to branch." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "## SwiftFormat Check" >> $GITHUB_STEP_SUMMARY
+            echo "No formatting issues found." >> $GITHUB_STEP_SUMMARY
+          fi
+
+      - name: Architecture pattern check
+        run: |
+          echo "## Architecture Pattern Check" >> $GITHUB_STEP_SUMMARY
+
+          # Check for ViewModel anti-pattern
+          VM_COUNT=$(git diff origin/master...HEAD --name-only \
+            | xargs grep -l "ObservableObject\|ViewModel" 2>/dev/null | wc -l | tr -d ' ')
+
+          if [ "$VM_COUNT" -gt 0 ]; then
+            echo "WARNING: $VM_COUNT changed files may contain ViewModel/ObservableObject usage." >> $GITHUB_STEP_SUMMARY
+            echo "GrowWise uses MV architecture — ViewModels are not allowed." >> $GITHUB_STEP_SUMMARY
+          else
+            echo "No ViewModel anti-patterns detected in changed files." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for force unwraps in new code
+          FORCE_UNWRAPS=$(git diff origin/master...HEAD -- '*.swift' | grep '^+' \
+            | grep -v '^+++' | grep -c '!\.' || echo 0)
+          if [ "$FORCE_UNWRAPS" -gt 0 ]; then
+            echo "WARNING: $FORCE_UNWRAPS potential force unwrap(s) added." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Check for print statements
+          PRINT_STMTS=$(git diff origin/master...HEAD -- '*.swift' | grep '^+' \
+            | grep -v '^+++' | grep -c '^\s*print(' || echo 0)
+          if [ "$PRINT_STMTS" -gt 0 ]; then
+            echo "WARNING: $PRINT_STMTS print() statement(s) added. Use Logger instead." >> $GITHUB_STEP_SUMMARY
+          fi

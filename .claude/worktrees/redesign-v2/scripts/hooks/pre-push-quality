@@ -1,0 +1,32 @@
+#!/usr/bin/env sh
+# GrowWise pre-push hook
+# Runs build verification before allowing push.
+
+set -e
+
+# Skip for non-main branches
+CURRENT_BRANCH=$(git rev-parse --abbrev-ref HEAD 2>/dev/null || echo "unknown")
+if [ "$CURRENT_BRANCH" != "main" ] && [ "$CURRENT_BRANCH" != "master" ]; then
+    echo "Skipping build verification on $CURRENT_BRANCH (main only)"
+    exit 0
+fi
+
+echo "Running pre-push build verification..."
+
+if command -v xcodebuild >/dev/null 2>&1; then
+    echo "  Building GrowWise iOS..."
+    xcodebuild build \
+        -workspace GrowWise.xcworkspace \
+        -scheme GrowWise \
+        -configuration Debug \
+        -destination 'platform=iOS Simulator,name=iPhone 16 Pro' \
+        -quiet \
+        2>&1 | tail -20 || {
+        echo ""
+        echo "❌ Build failed. Fix errors before pushing to main."
+        exit 1
+    }
+    echo "✓ Build verification passed."
+else
+    echo "WARNING: xcodebuild not found, skipping build verification"
+fi

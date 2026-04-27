@@ -10,8 +10,8 @@ struct PlantTypeBadge: View {
             .fontWeight(.medium)
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
-            .background(Color.blue.opacity(0.2))
-            .foregroundColor(.blue)
+            .background(CultivationTheme.Colors.accentSky.opacity(0.15))
+            .foregroundColor(CultivationTheme.Colors.accentSky)
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 }
@@ -26,15 +26,15 @@ struct DifficultyBadge: View {
             .padding(.horizontal, 6)
             .padding(.vertical, 2)
             .background(backgroundColor)
-            .foregroundColor(.white)
+            .foregroundStyle(.white)
             .clipShape(RoundedRectangle(cornerRadius: 4))
     }
 
     private var backgroundColor: Color {
         switch level {
-        case .beginner: .green
-        case .intermediate: .orange
-        case .advanced: .red
+        case .beginner: CultivationTheme.Colors.statusHealthy
+        case .intermediate: CultivationTheme.Colors.statusWarning
+        case .advanced: CultivationTheme.Colors.statusAlert
         }
     }
 }

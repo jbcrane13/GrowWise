@@ -1,0 +1,5 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Beads Issue Tracker
+    url: https://github.com/jbcrane13/GrowWise/issues
+    about: Use `bd add "description"` to file issues in beads (local-first tracker) or open a GitHub issue above.

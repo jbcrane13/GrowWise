@@ -1,3 +1,4 @@
+import CloudKit
 import GrowWiseModels
 import GrowWiseServices
 import os
@@ -11,11 +12,13 @@ private let logger = Logger(subsystem: "com.growwise", category: "GardenClubFeed
 /// surfaces when nearby growers are tracking the same plant species as the user.
 ///
 /// See ADR-019 and the v2 mockup at docs/mockups/cultivation-simplified-wireflow.html.
-public struct GardenClubFeedView: View {
+public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_length
     @Environment(DataService.self)
     private var dataService
     @Environment(LocationService.self)
     private var locationService
+    @Environment(ClubCloudKitService.self)
+    private var clubCloudKitService
 
     @State private var selectedSegment: FeedSegment = .club
     @State private var posts: [ClubActivityViewData] = []
@@ -23,6 +26,7 @@ public struct GardenClubFeedView: View {
     @State private var clubName: String = "Garden Club"
     @State private var memberCount: Int = 0
     @State private var userInitial: String = "?"
+    @State private var userName: String = "Gardener"
     @State private var isPresentingComposer = false
 
     private let club: GardenClub?
@@ -77,7 +81,7 @@ public struct GardenClubFeedView: View {
             }
         }
         #if os(iOS)
-        .navigationBarHidden(true)
+        .toolbar(.hidden, for: .navigationBar)
         #endif
         .task { await load() }
         .sheet(isPresented: $isPresentingComposer) {
@@ -130,9 +134,13 @@ public struct GardenClubFeedView: View {
                             .foregroundStyle(.white)
                     )
                 VStack(alignment: .leading, spacing: 2) {
-                    Text("Share what's growing")
-                        .font(CultivationTheme.Fonts.body(13))
-                        .foregroundStyle(.white)
+                    (
+                        Text("Share what's growing, ")
+                            .font(CultivationTheme.Fonts.body(13, weight: .semibold)) +
+                            Text("\(userName).")
+                            .font(CultivationTheme.Fonts.displayItalic(13, weight: .medium))
+                    )
+                    .foregroundStyle(.white)
                     Text("Tap to add a photo")
                         .font(CultivationTheme.Fonts.body(11))
                         .foregroundStyle(.white.opacity(0.85))
@@ -159,34 +167,44 @@ public struct GardenClubFeedView: View {
     // MARK: - Segmented control
 
     private var segmentControl: some View {
-        HStack(spacing: 18) {
+        HStack(spacing: 0) {
             ForEach(FeedSegment.allCases) { segment in
                 Button {
-                    selectedSegment = segment
-                } label: {
-                    VStack(spacing: 6) {
-                        Text(segment.rawValue)
-                            .font(CultivationTheme.Fonts.body(13, weight: selectedSegment == segment ? .semibold : .medium))
-                            .foregroundStyle(
-                                selectedSegment == segment
-                                    ? CultivationTheme.Colors.textPrimary
-                                    : CultivationTheme.Colors.textTertiary
-                            )
-                        Rectangle()
-                            .fill(selectedSegment == segment ? CultivationTheme.Colors.accentCoral : .clear)
-                            .frame(height: 2)
+                    withAnimation(CultivationTheme.Animation.selection) {
+                        selectedSegment = segment
                     }
+                } label: {
+                    Text(segment.rawValue)
+                        .font(CultivationTheme.Fonts.body(11, weight: selectedSegment == segment ? .semibold : .medium))
+                        .foregroundStyle(
+                            selectedSegment == segment
+                                ? CultivationTheme.Colors.textPrimary
+                                : CultivationTheme.Colors.textTertiary
+                        )
+                        .frame(maxWidth: .infinity)
+                        .padding(.vertical, 8)
+                        .background {
+                            RoundedRectangle(cornerRadius: 8)
+                                .fill(selectedSegment == segment ? CultivationTheme.Colors.cardSurface : Color.clear)
+                                .shadow(
+                                    color: selectedSegment == segment
+                                        ? Color(red: 0.12, green: 0.16, blue: 0.13, opacity: 0.14)
+                                        : .clear,
+                                    radius: 6,
+                                    y: 2
+                                )
+                        }
                 }
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("club_segment_\(segment.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
             }
-            Spacer()
         }
-        .overlay(alignment: .bottom) {
-            Rectangle()
-                .fill(CultivationTheme.Colors.divider)
-                .frame(height: 1)
-        }
+        .padding(3)
+        .background(
+            RoundedRectangle(cornerRadius: 10)
+                .fill(CultivationTheme.Colors.backgroundSecondary)
+        )
+        .accessibilityIdentifier("club_segment_control")
     }
 
     // MARK: - Feed body
@@ -274,7 +292,8 @@ public struct GardenClubFeedView: View {
     @MainActor
     private func load() async {
         let user = dataService.getCurrentUser()
-        userInitial = String(user?.displayName?.prefix(1) ?? "?").uppercased()
+        userName = firstName(from: user?.displayName)
+        userInitial = String(userName.prefix(1)).uppercased()
 
         // Resolve the active club: explicit > first available > none.
         let resolved: GardenClub?
@@ -292,17 +311,41 @@ public struct GardenClubFeedView: View {
         if let activeClub = resolved {
             clubName = activeClub.name ?? "Garden Club"
             memberCount = activeClub.memberIDs?.count ?? 0
-            if let clubID = activeClub.id {
-                do {
-                    let activities = try dataService.fetchClubActivities(for: clubID)
-                    posts = activities.map(Self.viewData(from:))
-                } catch {
-                    logger.error("Failed to fetch club activities: \(error.localizedDescription, privacy: .public)")
-                    posts = []
-                }
-            } else {
+            guard let clubID = activeClub.id else {
                 posts = []
+                return
             }
+
+            // Fetch from SwiftData as the baseline.
+            var localActivities: [ClubActivity] = []
+            do {
+                localActivities = try dataService.fetchClubActivities(for: clubID)
+            } catch {
+                logger.error("Failed to fetch local club activities: \(error.localizedDescription, privacy: .public)")
+            }
+
+            // Attempt a CloudKit fetch. On any error (no iCloud account, network
+            // outage, etc.) log a warning and fall through to the SwiftData results.
+            var merged: [ClubActivityViewData] = localActivities.map(Self.viewData(from:))
+            do {
+                let ckRecords = try await clubCloudKitService.fetchRecentActivities(
+                    for: clubID.uuidString,
+                    limit: 50
+                )
+                let ckViewData = ckRecords.map(Self.viewData(from:))
+
+                // Merge: start with CloudKit records (source of truth), then append
+                // any local records whose IDs are not already represented in CloudKit.
+                let ckIDs = Set(ckViewData.map(\.id))
+                let localOnly = merged.filter { !ckIDs.contains($0.id) }
+                merged = ckViewData + localOnly
+            } catch {
+                logger.warning(
+                    "CloudKit fetch unavailable, using SwiftData-only feed: \(error.localizedDescription, privacy: .public)"
+                )
+            }
+
+            posts = merged
         } else {
             clubName = "Garden Club"
             memberCount = 0
@@ -336,6 +379,43 @@ public struct GardenClubFeedView: View {
             likeCount: 0, // future feature
             commentCount: 0 // future feature
         )
+    }
+
+    /// Maps a raw `CKRecord` for a `ClubActivity` CloudKit record onto the
+    /// presentation type. Field names must match those written by
+    /// `ClubCloudKitService.publishActivity(_:)`.
+    private static func viewData(from record: CKRecord) -> ClubActivityViewData {
+        // The record name is the activity UUID stored as a string by publishActivity.
+        let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
+        let author = record["memberName"] as? String ?? "Member"
+        let caption = record["activityDescription"] as? String
+        let timestamp = record["timestamp"] as? Date
+        let label: String?
+        if let timestamp {
+            let formatter = RelativeDateTimeFormatter()
+            formatter.unitsStyle = .abbreviated
+            label = formatter.localizedString(for: timestamp, relativeTo: .now)
+        } else {
+            label = nil
+        }
+        return ClubActivityViewData(
+            id: id,
+            authorDisplayName: author,
+            caption: caption,
+            zoneTag: nil, // not yet captured in CK record
+            relativeTimeLabel: label,
+            likeCount: 0, // future feature
+            commentCount: 0 // future feature
+        )
+    }
+
+    private func firstName(from displayName: String?) -> String {
+        guard let displayName,
+              let first = displayName.split(separator: " ").first
+        else {
+            return "Gardener"
+        }
+        return String(first)
     }
 }
 

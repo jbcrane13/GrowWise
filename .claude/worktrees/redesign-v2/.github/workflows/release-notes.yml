@@ -1,0 +1,77 @@
+name: Release Notes
+
+on:
+  push:
+    tags:
+      - "v*"
+  workflow_dispatch:
+    inputs:
+      draft:
+        description: "Create as draft release"
+        type: boolean
+        default: true
+
+jobs:
+  release:
+    name: Generate Release Notes
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Generate changelog from commits
+        id: changelog
+        run: |
+          # Get the previous tag to calculate range
+          PREV_TAG=$(git describe --tags --abbrev=0 HEAD~1 2>/dev/null || echo "")
+          CURR_TAG=${GITHUB_REF_NAME:-$(git describe --tags HEAD)}
+
+          echo "Generating release notes from ${PREV_TAG:-beginning} to ${CURR_TAG}"
+
+          if [ -n "$PREV_TAG" ]; then
+            RANGE="${PREV_TAG}..${CURR_TAG}"
+          else
+            RANGE="${CURR_TAG}"
+          fi
+
+          # Categorize commits by conventional commit type
+          FEATURES=$(git log $RANGE --format="%s" | grep "^feat" | sed 's/^feat[^:]*: /- /' || true)
+          FIXES=$(git log $RANGE --format="%s" | grep "^fix" | sed 's/^fix[^:]*: /- /' || true)
+          CHORES=$(git log $RANGE --format="%s" | grep "^chore\|^refactor\|^perf" | sed 's/^\w\+[^:]*: /- /' || true)
+
+          NOTES=""
+          if [ -n "$FEATURES" ]; then
+            NOTES="${NOTES}## New Features\n\n${FEATURES}\n\n"
+          fi
+          if [ -n "$FIXES" ]; then
+            NOTES="${NOTES}## Bug Fixes\n\n${FIXES}\n\n"
+          fi
+          if [ -n "$CHORES" ]; then
+            NOTES="${NOTES}## Improvements\n\n${CHORES}\n\n"
+          fi
+
+          if [ -z "$NOTES" ]; then
+            NOTES="Release ${CURR_TAG}"
+          fi
+
+          echo "notes<<EOF" >> $GITHUB_OUTPUT
+          printf "%b" "$NOTES" >> $GITHUB_OUTPUT
+          echo "EOF" >> $GITHUB_OUTPUT
+
+      - name: Create GitHub Release
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const { data: release } = await github.rest.repos.createRelease({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              tag_name: context.ref.replace('refs/tags/', '') || '${{ github.ref_name }}',
+              name: context.ref.replace('refs/tags/', '') || '${{ github.ref_name }}',
+              body: `${{ steps.changelog.outputs.notes }}`,
+              draft: ${{ inputs.draft || false }},
+              prerelease: false
+            });
+            console.log(`Release created: ${release.html_url}`);

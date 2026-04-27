@@ -270,6 +270,48 @@ public final class ClubCloudKitService {
         return result
     }
 
+    // MARK: - Fetch recent activities for a club
+
+    /// Queries the private CloudKit database for the most recent `ClubActivity`
+    /// records belonging to `clubID`. Results are sorted newest-first and capped
+    /// at `limit`. Callers should wrap this in a `do/catch` and fall back to the
+    /// SwiftData-only path on error — CloudKit availability is not guaranteed.
+    ///
+    /// - Parameters:
+    ///   - clubID: The UUID string identifying the club whose activities to fetch.
+    ///   - limit: Maximum number of records to return (default: 50).
+    /// - Returns: Raw `CKRecord` values ready for mapping to view-data. The
+    ///   record fields mirror those written by `publishActivity(_:)`:
+    ///   `clubID`, `memberName`, `memberID`, `activityType`,
+    ///   `activityDescription`, `gardenName`, `timestamp`.
+    public func fetchRecentActivities(for clubID: String, limit: Int = 50) async throws -> [CKRecord] {
+        try await requireAvailableAccount()
+
+        let predicate = NSPredicate(format: "clubID == %@", clubID)
+        let query = CKQuery(
+            recordType: CloudKitSchema.RecordType.clubActivity,
+            predicate: predicate
+        )
+        query.sortDescriptors = [NSSortDescriptor(key: "timestamp", ascending: false)]
+
+        let zoneName = CloudKitSchema.Zone.gardenClub
+        let zoneID = CKRecordZone.ID(zoneName: zoneName, ownerName: CKCurrentUserDefaultName)
+
+        let (results, _) = try await privateDatabase.records(
+            matching: query,
+            inZoneWith: zoneID,
+            resultsLimit: limit
+        )
+
+        let records = results.compactMap { _, result -> CKRecord? in
+            if case .success(let record) = result { return record }
+            return nil
+        }
+
+        logger.info("fetchRecentActivities: fetched \(records.count) CK records for club \(clubID, privacy: .public)")
+        return records
+    }
+
     // MARK: - Save a club record to shared zone
 
     /// Saves an activity record into the club's shared zone so all members can see it.

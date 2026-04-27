@@ -1,0 +1,85 @@
+name: Dependency Health
+
+on:
+  push:
+    branches: [master, main]
+  pull_request:
+    branches: [master, main]
+    paths:
+      - "GrowWisePackage/Package.swift"
+      - "GrowWisePackage/Package.resolved"
+
+jobs:
+  unused-deps:
+    name: Unused Dependency Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Check for unused SPM dependencies
+        run: |
+          chmod +x scripts/check-unused-deps.sh
+          ./scripts/check-unused-deps.sh 2>&1 | tee dep-report.txt
+
+          echo "## Dependency Report" >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+          cat dep-report.txt >> $GITHUB_STEP_SUMMARY
+          echo "\`\`\`" >> $GITHUB_STEP_SUMMARY
+
+  duplicate-code:
+    name: Duplicate Code Detection
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+
+      - name: Install jscpd
+        run: npm install -g jscpd
+
+      - name: Run duplicate code detection
+        run: |
+          jscpd \
+            --pattern "**/*.swift" \
+            --ignore "**/*.xcodeproj/**,**/.build/**,**/Tests/**" \
+            --min-lines 15 \
+            --min-tokens 100 \
+            --threshold 5 \
+            --reporters "console,json" \
+            --output .jscpd \
+            GrowWisePackage/Sources GrowWise \
+            2>&1 | tee jscpd-output.txt || true
+
+          echo "## Duplicate Code Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+
+          if [ -f ".jscpd/jscpd-report.json" ]; then
+            CLONE_COUNT=$(python3 -c "
+import json
+with open('.jscpd/jscpd-report.json') as f:
+    d = json.load(f)
+stats = d.get('statistics', {}).get('total', {})
+print(f\"Clones: {stats.get('clones', 0)}, Duplicated lines: {stats.get('duplicatedLines', 0)}, Percentage: {stats.get('percentage', 0):.1f}%\")
+" 2>/dev/null || echo "Could not parse report")
+            echo "$CLONE_COUNT" >> $GITHUB_STEP_SUMMARY
+          else
+            echo "jscpd report not generated." >> $GITHUB_STEP_SUMMARY
+          fi
+
+          # Fail if duplication exceeds 10%
+          if [ -f ".jscpd/jscpd-report.json" ]; then
+            python3 -c "
+import json, sys
+with open('.jscpd/jscpd-report.json') as f:
+    d = json.load(f)
+pct = d.get('statistics', {}).get('total', {}).get('percentage', 0)
+if pct > 10:
+    print(f'ERROR: Duplication {pct:.1f}% exceeds 10% threshold.')
+    sys.exit(1)
+else:
+    print(f'Duplication {pct:.1f}% is within threshold.')
+" 2>/dev/null || true
+          fi

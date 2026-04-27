@@ -9,6 +9,9 @@ struct GardenHealthCardView: View {
     @Environment(DataService.self)
     private var dataService
 
+    @Environment(GardenHealthService.self)
+    private var gardenHealthService
+
     @State private var healthScore: GardenHealthScore?
     @State private var showBreakdown = false
     @State private var errorMessage: String?
@@ -125,7 +128,6 @@ struct GardenHealthCardView: View {
 
     func loadHealthScore() {
         let logger = Logger(subsystem: "com.growwise", category: "GardenHealthCardView")
-        let service = GardenHealthService(dataService: dataService)
         let allPlants: [Plant]
         do {
             allPlants = try dataService.plants.fetchAll()
@@ -149,7 +151,7 @@ struct GardenHealthCardView: View {
             return
         }
 
-        healthScore = service.calculateScore(plants: gardenPlants, reminders: allReminders)
+        healthScore = gardenHealthService.calculateScore(plants: gardenPlants, reminders: allReminders)
     }
 }
 

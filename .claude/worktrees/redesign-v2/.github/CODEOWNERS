@@ -1,0 +1,28 @@
+# CODEOWNERS for GrowWise
+# These owners are automatically requested for review on PRs that touch these paths.
+# Format: <pattern> <owner>...
+
+# Default owner for all files
+* @jbcrane13
+
+# Security-sensitive code — require explicit review
+GrowWisePackage/Sources/GrowWiseServices/KeychainManager.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/EncryptionService.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/SecureEnclaveKeyManager.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/KeyRotationManager.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/KeychainStorageService.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/TokenManagementService.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/JWTValidator.swift @jbcrane13
+GrowWisePackage/Sources/GrowWiseServices/AuditLogger.swift @jbcrane13
+
+# Data models — CloudKit compatibility must be maintained
+GrowWisePackage/Sources/GrowWiseModels/ @jbcrane13
+
+# CI and configuration changes
+.github/ @jbcrane13
+.swiftlint.yml @jbcrane13
+.swiftformat @jbcrane13
+.pre-commit-config.yaml @jbcrane13
+
+# App shell and entrypoint
+GrowWise/ @jbcrane13

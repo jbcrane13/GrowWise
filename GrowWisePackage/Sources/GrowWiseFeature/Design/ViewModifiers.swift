@@ -302,3 +302,39 @@ struct QuickStatCard: View {
         }
     }
 }
+
+// MARK: - Paper Grain Overlay
+
+/// Deterministic paper-grain texture drawn via Canvas.
+/// Apply as a full-screen overlay at low opacity for tactile depth.
+struct PaperGrainOverlay: View {
+    var opacity: Double = 0.045
+
+    var body: some View {
+        Canvas { context, size in
+            // 800-point grid of tiny specks using a deterministic LCG seed
+            var seed: UInt64 = 0xA5A5_A5A5_A5A5_A5A5
+            for _ in 0 ..< 800 {
+                seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+                let x = Double(seed >> 33) / Double(UInt32.max) * size.width
+                seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+                let y = Double(seed >> 33) / Double(UInt32.max) * size.height
+                seed = seed &* 6_364_136_223_846_793_005 &+ 1_442_695_040_888_963_407
+                let alpha = 0.15 + Double(seed >> 33) / Double(UInt32.max) * 0.35
+                let rect = CGRect(x: x, y: y, width: 1.5, height: 1.5)
+                context.fill(Path(ellipseIn: rect), with: .color(.black.opacity(alpha)))
+            }
+        }
+        .opacity(opacity)
+        .blendMode(.multiply)
+        .allowsHitTesting(false)
+        .accessibilityHidden(true)
+    }
+}
+
+extension View {
+    /// Overlays a subtle paper-grain texture for tactile depth.
+    func paperGrain(opacity: Double = 0.045) -> some View {
+        overlay(PaperGrainOverlay(opacity: opacity).ignoresSafeArea())
+    }
+}

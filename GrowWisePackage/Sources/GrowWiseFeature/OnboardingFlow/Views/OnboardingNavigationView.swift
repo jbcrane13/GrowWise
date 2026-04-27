@@ -57,7 +57,7 @@ struct OnboardingNavigationView: View {
                     } label: {
                         Image(systemName: "chevron.left")
                             .font(.system(size: 16, weight: .semibold))
-                            .foregroundColor(CultivationTheme.Colors.textPrimary)
+                            .foregroundStyle(CultivationTheme.Colors.textPrimary)
                             .frame(width: 50, height: 50)
                             .background(
                                 Circle()
@@ -105,7 +105,7 @@ struct OnboardingNavigationView: View {
                                 .font(.system(size: 14, weight: .semibold))
                         }
                     }
-                    .foregroundColor(.white)
+                    .foregroundStyle(.white)
                     .frame(maxWidth: .infinity, minHeight: 50)
                     .background(
                         RoundedRectangle(cornerRadius: 16)

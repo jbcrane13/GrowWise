@@ -140,7 +140,8 @@ public struct ClubDetailView: View {
                 UIPasteboard.general.string = inviteCode
                 #endif
                 withAnimation { codeCopied = true }
-                DispatchQueue.main.asyncAfter(deadline: .now() + 2) {
+                Task<Void, Never> {
+                    try? await Task.sleep(for: .seconds(2))
                     withAnimation { codeCopied = false }
                 }
             } label: {
