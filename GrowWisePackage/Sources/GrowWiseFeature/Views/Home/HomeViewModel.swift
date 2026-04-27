@@ -8,8 +8,7 @@ import SwiftUI
 /// Observable view-model for the Home tab care dashboard.
 /// Loads active reminders from DataService and separates them into
 /// overdue vs. due-today buckets. Handles optimistic complete animation.
-@MainActor
-@Observable
+@MainActor @Observable
 final class HomeViewModel {
     // MARK: - Published State
 
