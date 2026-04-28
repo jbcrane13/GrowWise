@@ -48,7 +48,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         gardenHeader
-                        if viewModel.gardens.count > 1 {
+                        if viewModel.gardens.count >= 1 {
                             gardenPicker
                         }
                         gardenSummaryStrip
@@ -309,8 +309,19 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                             }
                     }
                     .buttonStyle(.plain)
+                    .contextMenu {
+                        if viewModel.gardens.count > 1 {
+                            Button(role: .destructive) {
+                                gardenToDelete = garden
+                                showDeleteConfirmation = true
+                            } label: {
+                                Label("Delete Garden", systemImage: "trash")
+                            }
+                            .accessibilityIdentifier("garden_context_delete")
+                        }
+                    }
                     .accessibilityIdentifier(
-                        "garden_picker_\(garden.name?.lowercased().replacingOccurrences(of: " ", with: "_") ?? "unknown")"
+                        "garden_picker_chip_\(garden.name?.lowercased().replacingOccurrences(of: " ", with: "_") ?? "unknown")"
                     )
                 }
 
@@ -407,6 +418,15 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                     .font(CultivationTheme.Fonts.body(14))
                     .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     .multilineTextAlignment(.center)
+            }
+
+            if viewModel.gardens.isEmpty {
+                Button("Create Garden") {
+                    showCreateGarden = true
+                }
+                .buttonStyle(GradientButtonStyle())
+                .padding(.horizontal, 24)
+                .accessibilityIdentifier("garden_button_create_garden")
             }
 
             Button("Add Plant") {
