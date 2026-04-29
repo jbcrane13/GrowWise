@@ -13,6 +13,8 @@ public struct HomeView: View {
 
     @Binding var selectedTab: TabSelection
     @State private var viewModel = HomeViewModel()
+    @State private var showCareShareSheet = false
+    @State private var careShareCaption = ""
 
     public init(selectedTab: Binding<TabSelection>) {
         _selectedTab = selectedTab
@@ -68,6 +70,10 @@ public struct HomeView: View {
                     .accessibilityIdentifier("home_alert_button_ok")
             } message: {
                 Text(viewModel.errorMessage ?? "")
+            }
+            .sheet(isPresented: $showCareShareSheet) {
+                ClubShareComposerSheet(initialCaption: careShareCaption)
+                    .environment(dataService)
             }
             .accessibilityIdentifier("home_screen")
         }
@@ -131,6 +137,10 @@ public struct HomeView: View {
             Button {
                 Task<Void, Never> {
                     await viewModel.complete(reminder: reminder, dataService: dataService)
+                    if dataService.fetchPrimaryClub() != nil {
+                        careShareCaption = postCareCaption(for: reminder)
+                        showCareShareSheet = true
+                    }
                 }
             } label: {
                 RoundedRectangle(cornerRadius: 6)
@@ -323,6 +333,18 @@ public struct HomeView: View {
 
     private var seasonalContextTitle: String {
         seasonalContext.title
+    }
+
+    // MARK: - Share Prompt
+
+    private func postCareCaption(for reminder: PlantReminder) -> String {
+        let plantName = reminder.plant?.name ?? "my plant"
+        switch reminder.reminderType {
+        case .watering: return "Just watered \(plantName) 💧"
+        case .fertilizing: return "Fed \(plantName) today 🌿"
+        case .pruning: return "Pruned \(plantName) ✂️"
+        default: return "Took care of \(plantName) today"
+        }
     }
 
     // MARK: - Empty State

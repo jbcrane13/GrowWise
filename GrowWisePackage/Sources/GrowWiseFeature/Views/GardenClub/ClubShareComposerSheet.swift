@@ -11,6 +11,7 @@ public struct ClubShareComposerSheet: View {
     @Environment(\.dismiss) private var dismiss
 
     let plant: Plant?
+    let initialCaption: String?
     var onPost: () -> Void = {}
 
     @State private var caption = ""
@@ -29,9 +30,13 @@ public struct ClubShareComposerSheet: View {
         return plant?.name
     }
 
-    public init(plant: Plant? = nil, onPost: @escaping () -> Void = {}) {
+    public init(plant: Plant? = nil, initialCaption: String? = nil, onPost: @escaping () -> Void = {}) {
         self.plant = plant
+        self.initialCaption = initialCaption
         self.onPost = onPost
+        if let ic = initialCaption {
+            _caption = State(initialValue: ic)
+        }
     }
 
     public var body: some View {
