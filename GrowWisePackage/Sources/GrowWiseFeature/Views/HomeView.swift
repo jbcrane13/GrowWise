@@ -11,9 +11,12 @@ public struct HomeView: View {
     @Environment(LocationService.self)
     private var locationService
 
+    @Binding var selectedTab: TabSelection
     @State private var viewModel = HomeViewModel()
 
-    public init() {}
+    public init(selectedTab: Binding<TabSelection>) {
+        _selectedTab = selectedTab
+    }
 
     // MARK: - Body
 
@@ -25,14 +28,15 @@ public struct HomeView: View {
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
 
-                    NavigationLink {
-                        GardenClubFeedView()
+                    Button {
+                        selectedTab = .club
                     } label: {
                         clubCard
                     }
                     .buttonStyle(.plain)
+                    .accessibilityLabel("Open Garden Club")
+                    .accessibilityIdentifier("home_card_club")
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                    .accessibilityIdentifier("home_button_your_club")
 
                     SeasonalTipCard()
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -381,6 +385,6 @@ private struct HomeClubPlaceholderCard: View {
 #Preview {
     // swiftlint:disable:next force_try
     let dataService = try! DataService()
-    HomeView()
+    HomeView(selectedTab: .constant(.home))
         .environment(dataService)
 }
