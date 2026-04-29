@@ -40,71 +40,10 @@ struct PlantGroupTests {
 @Suite("GardenViewModel Tests")
 @MainActor
 struct GardenViewModelTests {
-    // MARK: - filteredGroups
-
-    @Test("filteredGroups returns all groups when searchText is empty")
-    func filteredGroupsReturnsAllWhenSearchTextEmpty() async throws {
-        let dataService = try DataService.makeForTesting()
-        let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
-        let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        let plant2 = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
-        let bedB = GardenBed(name: "Bed B", bedType: .raisedBed, garden: garden)
-        dataService.mainContext.insert(bedA)
-        dataService.mainContext.insert(bedB)
-        plant1.bed = bedA
-        plant2.bed = bedB
-
-        let vm = GardenViewModel()
-        await vm.load(dataService: dataService)
-        vm.searchText = ""
-
-        #expect(vm.filteredGroups.count == vm.groupedPlants.count)
-        #expect(vm.filteredGroups.flatMap(\.plants).count == 2)
-    }
-
-    @Test("filteredGroups filters by plant name case-insensitively")
-    func filteredGroupsFiltersByNameCaseInsensitive() async throws {
-        let dataService = try DataService.makeForTesting()
-        let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
-        let plant1 = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        let plant2 = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
-        dataService.mainContext.insert(bedA)
-        plant1.bed = bedA
-        plant2.bed = bedA
-
-        let vm = GardenViewModel()
-        await vm.load(dataService: dataService)
-        vm.searchText = "TOMATO"
-
-        let allFilteredPlants = vm.filteredGroups.flatMap(\.plants)
-        #expect(allFilteredPlants.count == 1)
-        #expect(allFilteredPlants.first?.name == "Tomato")
-    }
-
-    @Test("filteredGroups filters by scientificName")
-    func filteredGroupsFiltersByScientificName() async throws {
-        let dataService = try DataService.makeForTesting()
-        let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
-        let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
-        dataService.mainContext.insert(bedA)
-        plant.bed = bedA
-        plant.scientificName = "Solanum lycopersicum"
-
-        let vm = GardenViewModel()
-        await vm.load(dataService: dataService)
-        vm.searchText = "solanum"
-
-        let allFilteredPlants = vm.filteredGroups.flatMap(\.plants)
-        #expect(allFilteredPlants.count == 1)
-        #expect(allFilteredPlants.first?.name == "Tomato")
-    }
-
-
     // NOTE: Search/filter tests removed — search was moved out of GardenViewModel
     // during the redesign. Search is now handled directly in GardenView.
+    // (filteredGroups, searchText no longer exist on GardenViewModel)
+
 
     // MARK: - totalPlantCount
 
