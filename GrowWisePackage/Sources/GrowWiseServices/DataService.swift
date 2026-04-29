@@ -357,9 +357,16 @@ public final class DataService {
     }
 
     public func deletePlant(_ plant: Plant) throws {
+        // Delete associated reminders before deleting the plant
+        let activeReminders = try reminders.fetchActive()
+        let plantReminders = activeReminders.filter { $0.plantId == plant.id }
+        for reminder in plantReminders {
+            try reminders.delete(reminder)
+        }
         try plants.delete(plant)
         cache.invalidateAll(withPrefix: "plants:")
         cache.invalidateAll(withPrefix: "stats:count:")
+        cache.invalidateAll(withPrefix: "reminders:")
     }
 
     // MARK: - Reminder Management
