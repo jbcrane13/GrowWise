@@ -1,7 +1,7 @@
 import Foundation
 @testable import GrowWiseFeature
 @testable import GrowWiseModels
-import GrowWiseServices
+@testable import GrowWiseServices
 import Testing
 
 // MARK: - HomeViewModelTests

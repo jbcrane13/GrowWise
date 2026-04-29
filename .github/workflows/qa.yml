@@ -1,0 +1,177 @@
+name: QA
+
+on:
+  pull_request:
+    branches: [master]
+  workflow_dispatch:
+    inputs:
+      flow:
+        description: "Specific flow to run (leave empty for diff-based selection)"
+        required: false
+        default: ""
+
+concurrency:
+  group: qa-${{ github.event.pull_request.number || github.run_id }}
+  cancel-in-progress: true
+
+jobs:
+  qa:
+    name: QA — iOS Simulator
+    runs-on: macos-15
+    timeout-minutes: 25
+    permissions:
+      contents: write
+      pull-requests: write
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+          ref: ${{ github.head_ref }}
+
+      - name: Install ImageMagick
+        run: brew install imagemagick -q
+
+      - name: Select Xcode
+        run: sudo xcode-select -s /Applications/Xcode_16.app/Contents/Developer || true
+
+      - name: Boot Simulator
+        run: |
+          xcrun simctl boot "iPhone 16" 2>/dev/null || true
+          sleep 5
+
+      - name: Install Factory Droid
+        run: curl -fsSL https://app.factory.ai/cli | sh
+
+      - name: Create results directory
+        run: mkdir -p qa-results
+
+      - name: Run QA
+        id: qa
+        continue-on-error: true
+        timeout-minutes: 20
+        run: |
+          droid exec --auto high "
+          You are running in a non-interactive CI environment. There is NO human available.
+          Do NOT use AskUser, do NOT wait for confirmations, do NOT pause for input.
+          Run the /qa skill. Write the final report to qa-results/report.md.
+          The PR branch is: ${{ github.head_ref }}.
+          The base branch is: ${{ github.base_ref }}.
+          ${{ github.event.inputs.flow != '' && format('Focus on the following flow: {0}', github.event.inputs.flow) || '' }}
+          "
+        env:
+          FACTORY_API_KEY: ${{ secrets.FACTORY_API_KEY }}
+          CI: "true"
+
+      - name: Apply skill updates from QA
+        id: apply-updates
+        if: always() && steps.qa.outcome != 'cancelled'
+        run: |
+          if [ ! -f qa-results/skill-updates.json ]; then
+            echo "No skill-updates.json found — nothing to apply."
+            exit 0
+          fi
+          python3 - <<'PYEOF'
+          import json, re, sys
+          from pathlib import Path
+
+          updates = json.loads(Path("qa-results/skill-updates.json").read_text())
+          for u in updates:
+              fpath = Path(u["file"])
+              if not fpath.exists():
+                  print(f"SKIP: {fpath} does not exist")
+                  continue
+              content = fpath.read_text()
+              section = u["section"]
+              action = u["action"]
+              new_content_block = u["content"]
+
+              heading_pattern = re.compile(
+                  rf"(^## {re.escape(section)}.*?)(?=^## |\Z)",
+                  re.MULTILINE | re.DOTALL,
+              )
+              match = heading_pattern.search(content)
+              if not match:
+                  print(f"SKIP: section '{section}' not found in {fpath}")
+                  continue
+
+              if action == "append":
+                  insert_at = match.end()
+                  updated = content[:insert_at].rstrip() + "\n" + new_content_block + "\n" + content[insert_at:]
+              elif action == "replace":
+                  updated = content[:match.start()] + f"## {section}\n\n" + new_content_block + "\n\n" + content[match.end():]
+              else:
+                  print(f"SKIP: unknown action '{action}'")
+                  continue
+
+              fpath.write_text(updated)
+              print(f"Applied '{action}' to section '{section}' in {fpath}")
+          PYEOF
+
+      - name: Commit skill updates
+        if: always() && steps.apply-updates.outcome == 'success'
+        run: |
+          if git diff --quiet .factory/skills/; then
+            echo "No skill changes to commit."
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add .factory/skills/
+          git commit -m "chore(qa): update failure catalog from QA run #${{ github.run_number }}"
+          git push origin HEAD:${{ github.head_ref }}
+
+      - name: Upload QA artifacts
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-results-${{ github.run_number }}
+          path: qa-results/
+          retention-days: 14
+
+      - name: Post QA report as PR comment
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/github-script@v7
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          script: |
+            const fs = require('fs');
+            const runUrl = `${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`;
+            const artifactNote = `\n\n---\n[Download artifacts](${runUrl}) · [View workflow run](${runUrl})`;
+
+            let body = '<!-- qa-report -->\n';
+
+            if (fs.existsSync('qa-results/report.md')) {
+              let report = fs.readFileSync('qa-results/report.md', 'utf8').trim();
+              if (!report.startsWith('## QA Report')) {
+                report = '## QA Report\n\n' + report;
+              }
+              body += report + artifactNote;
+            } else {
+              body += '## QA Report\n\n:no_entry: QA did not produce a report. Check the [workflow run](' + runUrl + ') for details.' + artifactNote;
+            }
+
+            const { data: comments } = await github.rest.issues.listComments({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              issue_number: context.issue.number,
+            });
+
+            const existing = comments.find(c => c.body.startsWith('<!-- qa-report -->'));
+
+            if (existing) {
+              await github.rest.issues.updateComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                comment_id: existing.id,
+                body,
+              });
+            } else {
+              await github.rest.issues.createComment({
+                owner: context.repo.owner,
+                repo: context.repo.repo,
+                issue_number: context.issue.number,
+                body,
+              });
+            }

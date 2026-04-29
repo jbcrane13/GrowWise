@@ -1,0 +1,125 @@
+project: GrowWise (Cultivation)
+imagemagick: true
+
+environments:
+  simulator:
+    url: "iOS Simulator — iPhone 16"
+    restrictions: []
+
+default_target: simulator
+
+auth:
+  method: none
+  provider: none
+  notes: >
+    Local-first iOS app — no login or signup. User data stored in SwiftData on-device
+    and synced via CloudKit private database. CloudKit is automatically disabled in
+    test runs via the --uitesting launch argument.
+
+personas:
+  - name: fresh_install
+    description: "No existing data. Starts from the 6-step onboarding wizard."
+    launch_args:
+      - --uitesting
+      - --reset-onboarding
+      - --reset-data
+    test_focus:
+      - onboarding
+      - empty-states
+      - first-run-experience
+    cannot_do:
+      - access main tabs before completing onboarding
+
+  - name: returning_user
+    description: "Has existing plant/garden data. Skips onboarding, lands on Home tab."
+    launch_args:
+      - --uitesting
+      - --skip-onboarding
+    test_focus:
+      - garden-management
+      - reminders
+      - journal
+      - plant-database
+      - garden-club
+    cannot_do:
+      - access premium features without subscription
+
+  - name: subscribed_user
+    description: "StoreKit sandbox premium subscriber. Accesses unlimited AI diagnoses and premium features."
+    launch_args:
+      - --uitesting
+      - --skip-onboarding
+    notes: "Use StoreKit sandbox environment on Simulator. Purchase com.growwise.premium.monthly via the in-app paywall."
+    test_focus:
+      - paywall
+      - premium-diagnostics
+      - ai-diagnoses
+      - subscription-restore
+    cannot_do: []
+
+apps:
+  ios:
+    path_patterns:
+      - "GrowWise/**"
+      - "GrowWisePackage/Sources/**"
+      - "GrowWiseUITests/**"
+    skill: qa-ios
+    test_tool: xcodebuild
+    build_command: >
+      xcodebuild -workspace GrowWise.xcworkspace
+      -scheme GrowWise -sdk iphonesimulator
+      CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+      -destination 'platform=iOS Simulator,name=iPhone 16'
+
+feature_flags:
+  provider: "custom (FeatureFlagService — UserDefaults overrides)"
+  dashboard_url: none
+  how_to_override: >
+    Set UserDefaults key 'feature_flag_override_<flag_raw_value>' to true/false
+    using -testenv in xcodebuild or programmatically. Flags: companion_planting_v2,
+    plant_health_diagnostics, weather_integration, garden_calendar,
+    journal_photo_enhancement, journal_markdown, garden_sharing, premium_analytics,
+    debug_overlay, mock_data.
+
+integrations:
+  storekit:
+    provider: StoreKit 2
+    sandbox: true
+    product_ids:
+      - com.growwise.premium.monthly
+      - com.growwise.premium.yearly
+      - com.growwise.pro.monthly
+      - com.growwise.pro.yearly
+    notes: "iOS Simulator automatically uses StoreKit sandbox. No extra configuration needed."
+
+  crash_reporting:
+    provider: Sentry
+    test_mode: "Set SENTRY_DSN env var to empty string to disable in CI."
+
+  analytics:
+    provider: Amplitude
+    test_mode: "Set AMPLITUDE_API_KEY env var to empty string to disable in CI."
+
+  weather:
+    provider: WeatherKit (Apple)
+    test_mode: "iOS Simulator returns mock weather data. No sandbox credentials needed."
+
+  plant_database:
+    provider: Perenual API
+    key_storage: "Keychain (keychainKey: perenual_api_key)"
+    ci_env_var: PERENUAL_API_KEY
+    notes: "PlantDatabaseService seeds from bundled JSON; Perenual only enriches existing data. Tests work without the key."
+
+  cloudkit:
+    provider: Apple CloudKit
+    container: iCloud.com.growwise.gardening
+    test_mode: "Automatically disabled when --uitesting launch argument is present."
+
+cleanup:
+  auto_cleanup: true
+  strategy: launch-args
+  instructions: >
+    Pass --reset-data and/or --reset-onboarding as launch arguments.
+    These wipe the in-memory SwiftData store between test runs. No manual cleanup needed.
+
+failure_learning: auto_commit
