@@ -391,6 +391,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                     .font(.system(size: 48))
                     .foregroundStyle(CultivationTheme.Colors.brandLeaf)
             }
+            .accessibilityHidden(true)
 
             VStack(spacing: 6) {
                 Text("Start your garden")
