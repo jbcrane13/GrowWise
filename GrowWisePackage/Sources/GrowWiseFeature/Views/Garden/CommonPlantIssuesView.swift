@@ -81,7 +81,7 @@ struct CommonPlantIssuesView: View {
                     .padding(.bottom, 32)
                 }
             }
-            .navigationTitle("Plant Diagnostics")
+            .navigationTitle("Plant Health Guidance")
             .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

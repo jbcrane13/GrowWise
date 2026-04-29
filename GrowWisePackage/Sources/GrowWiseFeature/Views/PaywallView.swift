@@ -184,7 +184,7 @@ public struct PaywallView: View {
                 icon: "leaf",
                 price: "$0",
                 period: "forever",
-                highlights: ["3 AI diagnoses/month", "Basic care reminders", "Up to 50 plants"],
+                highlights: ["3 Plant Health checks/month", "Basic care reminders", "Up to 50 plants"],
                 color: CultivationTheme.Colors.textSecondary,
                 isCurrent: !isActiveSubscriber
             )
@@ -197,7 +197,7 @@ public struct PaywallView: View {
                 price: isYearly ? "$34.99" : "$2.99",
                 period: isYearly ? "/year" : "/month",
                 highlights: [
-                    "Unlimited AI diagnoses",
+                    "Unlimited Plant Health checks",
                     "Smart reminders",
                     "Weather adjustments",
                     "Priority support",
@@ -387,7 +387,7 @@ public struct PaywallView: View {
                 Divider()
                     .background(CultivationTheme.Colors.divider)
 
-                comparisonRow(feature: "AI Diagnoses", free: "3/mo", premium: true, pro: true)
+                comparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true, pro: true)
                 comparisonRow(feature: "Plant Limit", free: "50", premium: "500", pro: true)
                 comparisonRow(feature: "Smart Reminders", free: false, premium: true, pro: true)
                 comparisonRow(feature: "Weather Adjust", free: false, premium: true, pro: true)
