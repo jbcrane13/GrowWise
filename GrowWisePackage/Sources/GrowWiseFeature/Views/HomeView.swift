@@ -136,8 +136,8 @@ public struct HomeView: View {
         return HStack(spacing: 10) {
             Button {
                 Task<Void, Never> {
-                    await viewModel.complete(reminder: reminder, dataService: dataService)
-                    if dataService.fetchPrimaryClub() != nil {
+                    let succeeded = await viewModel.complete(reminder: reminder, dataService: dataService)
+                    if succeeded, dataService.fetchPrimaryClub() != nil {
                         careShareCaption = postCareCaption(for: reminder)
                         showCareShareSheet = true
                     }

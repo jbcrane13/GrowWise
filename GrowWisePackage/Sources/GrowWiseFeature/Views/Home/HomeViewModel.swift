@@ -124,7 +124,8 @@ final class HomeViewModel {
 
     // MARK: - Complete
 
-    func complete(reminder: PlantReminder, dataService: DataService) async {
+    @discardableResult
+    func complete(reminder: PlantReminder, dataService: DataService) async -> Bool {
         // Optimistic: slide the row away immediately
         _ = withAnimation(CultivationTheme.Animation.card) {
             completedIDs.insert(reminder.id)
@@ -157,11 +158,12 @@ final class HomeViewModel {
                 completedIDs.remove(reminder.id)
             }
             errorMessage = "Failed to complete reminder: \(error.localizedDescription)"
-            return
+            return false
         }
 
         // After animation settles, reload to get fresh state (updated nextDueDate etc.)
         try? await Task.sleep(nanoseconds: 400_000_000)
         await load(dataService: dataService)
+        return true
     }
 }
