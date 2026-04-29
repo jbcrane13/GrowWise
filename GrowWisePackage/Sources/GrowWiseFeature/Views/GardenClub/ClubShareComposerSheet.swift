@@ -127,6 +127,7 @@ public struct ClubShareComposerSheet: View {
                         )
                 }
                 .accessibilityLabel(includePlant ? "Remove plant context" : "Add plant context")
+                .accessibilityIdentifier("share_composer_button_plant_toggle")
             }
             .padding(.horizontal, 14)
             .padding(.vertical, 10)

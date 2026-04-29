@@ -907,7 +907,7 @@ public extension DataService {
 
     /// Returns the single most-recent ClubActivity across all clubs.
     /// Used by HomeViewModel to populate the "Your Club" card.
-    public func fetchLatestClubActivity() throws -> ClubActivity? {
+    func fetchLatestClubActivity() throws -> ClubActivity? {
         var descriptor = FetchDescriptor<ClubActivity>(
             sortBy: [SortDescriptor(\.timestamp, order: .reverse)]
         )

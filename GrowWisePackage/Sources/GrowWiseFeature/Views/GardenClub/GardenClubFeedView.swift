@@ -86,10 +86,9 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         .task { await load() }
         .sheet(isPresented: $isPresentingComposer) {
             ClubShareComposerSheet(plant: nil, onPost: {
-                Task { await load() }
+                Task<Void, Never> { await load() }
             })
             .environment(dataService)
-            .environment(locationService)
         }
     }
 
