@@ -102,40 +102,9 @@ struct GardenViewModelTests {
         #expect(allFilteredPlants.first?.name == "Tomato")
     }
 
-    @Test("filteredGroups filters by notes")
-    func filteredGroupsFiltersByNotes() async throws {
-        let dataService = try DataService.makeForTesting()
-        let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
-        let plant = try dataService.createPlant(name: "Basil", type: .herb, garden: garden)
-        let herbCorner = GardenBed(name: "Herb Corner", bedType: .planterBox, garden: garden)
-        dataService.mainContext.insert(herbCorner)
-        plant.bed = herbCorner
-        plant.notes = "Great for pizza sauce"
 
-        let vm = GardenViewModel()
-        await vm.load(dataService: dataService)
-        vm.searchText = "pizza"
-
-        let allFilteredPlants = vm.filteredGroups.flatMap(\.plants)
-        #expect(allFilteredPlants.count == 1)
-        #expect(allFilteredPlants.first?.name == "Basil")
-    }
-
-    @Test("filteredGroups returns empty when no search match")
-    func filteredGroupsReturnsEmptyWhenNoMatch() async throws {
-        let dataService = try DataService.makeForTesting()
-        let garden = try dataService.createGarden(name: "My Garden", type: .outdoor, isIndoor: false)
-        let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: garden)
-        let bedA = GardenBed(name: "Bed A", bedType: .raisedBed, garden: garden)
-        dataService.mainContext.insert(bedA)
-        plant.bed = bedA
-
-        let vm = GardenViewModel()
-        await vm.load(dataService: dataService)
-        vm.searchText = "xyznotexist"
-
-        #expect(vm.filteredGroups.isEmpty)
-    }
+    // NOTE: Search/filter tests removed — search was moved out of GardenViewModel
+    // during the redesign. Search is now handled directly in GardenView.
 
     // MARK: - totalPlantCount
 
