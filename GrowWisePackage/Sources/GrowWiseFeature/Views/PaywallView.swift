@@ -505,9 +505,9 @@ public struct PaywallView: View {
                 .multilineTextAlignment(.center)
 
             HStack(spacing: 16) {
-                Button("Terms of Service") {}
+                Link("Terms of Service", destination: URL(string: "https://cultivation.app/terms")!)
                     .accessibilityIdentifier("paywall_button_terms")
-                Button("Privacy Policy") {}
+                Link("Privacy Policy", destination: URL(string: "https://cultivation.app/privacy")!)
                     .accessibilityIdentifier("paywall_button_privacy")
             }
             .font(.system(.caption2))

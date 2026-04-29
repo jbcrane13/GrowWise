@@ -278,7 +278,7 @@ public final class SubscriptionService {
         }
     }
 
-    /// Check if user has unlimited AI diagnoses
+    /// Check if user has unlimited Plant Health checks
     public var hasUnlimitedDiagnoses: Bool {
         canAccessPremiumFeatures
     }

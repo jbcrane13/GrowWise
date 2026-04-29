@@ -9,7 +9,6 @@ public struct ProfileView: View {
     @State private var plantCount: Int = 0
     @State private var journalCount: Int = 0
     @State private var streakDays: Int = 0
-    @State private var showShareComingSoon = false
     @State private var showAppSettings = false
 
     // Navigation state
@@ -103,11 +102,6 @@ public struct ProfileView: View {
             }
             .task {
                 loadStats()
-            }
-            .alert("Coming Soon", isPresented: $showShareComingSoon) {
-                Button("OK", role: .cancel) {}
-            } message: {
-                Text("Garden sharing via iCloud is coming in a future update.")
             }
             .alert("Error", isPresented: $showPurchaseError, presenting: purchaseError) { _ in
                 Button("OK", role: .cancel) {}
