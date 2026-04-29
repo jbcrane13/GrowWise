@@ -64,7 +64,9 @@ struct PlantDetailView: View {
             AddReminderView(reminderService: reminderService, dataService: dataService)
         }
         .sheet(isPresented: $showingShareToClub) {
-            PublishGardenSheet()
+            // No feed to reload here; GardenClubFeedView reloads on .task when navigated back to.
+            ClubShareComposerSheet(plant: plant, onPost: {})
+                .environment(dataService)
         }
         .sheet(isPresented: $showingEditPlant) {
             Text("Edit Plant View - To be implemented")

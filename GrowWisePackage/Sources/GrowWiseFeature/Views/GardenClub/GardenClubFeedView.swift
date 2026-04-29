@@ -85,10 +85,11 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         #endif
         .task { await load() }
         .sheet(isPresented: $isPresentingComposer) {
-            // Share composer — real composer wiring is a follow-up issue.
-            // First cut: placeholder so the prompt is reachable.
-            Text("Share composer placeholder")
-                .padding()
+            ClubShareComposerSheet(plant: nil, onPost: {
+                Task { await load() }
+            })
+            .environment(dataService)
+            .environment(locationService)
         }
     }
 
