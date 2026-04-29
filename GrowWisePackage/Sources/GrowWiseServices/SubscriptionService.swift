@@ -26,8 +26,10 @@ public final class SubscriptionService {
     private let productIDs = [
         "com.growwise.premium.monthly",
         "com.growwise.premium.yearly",
+        "com.growwise.premium.annual",
         "com.growwise.pro.monthly",
         "com.growwise.pro.yearly",
+        "com.growwise.pro.annual",
     ]
 
     // MARK: - Initialization

@@ -384,7 +384,7 @@ public struct ProfileView: View {
                 }
                 Text("Unlock GrowWise Premium")
                     .font(.title3.bold())
-                Text("Get unlimited diagnoses, expert tips, and more.")
+                Text("Get unlimited care guidance, premium tips, and more.")
                     .font(.subheadline)
                     .foregroundColor(.secondary)
                     .multilineTextAlignment(.center)
@@ -403,8 +403,8 @@ public struct ProfileView: View {
                 planCard(
                     productID: yearlyProductID,
                     title: "Yearly",
-                    price: "$19.99/yr",
-                    detail: "Save 44% — only $1.67/mo",
+                    price: "$34.99/yr",
+                    detail: "Best value — only $2.92/mo",
                     accessibilityID: "profile_subscribe_yearly"
                 )
             }
