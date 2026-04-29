@@ -216,8 +216,8 @@ public struct PaywallView: View {
                 highlights: [
                     "Everything in Premium",
                     "Expert consultations",
-                    "Community features",
                     "Advanced analytics",
+                    "Priority support",
                 ],
                 color: CultivationTheme.Colors.accentAmber,
                 isCurrent: currentTierIs(.pro),
@@ -393,7 +393,7 @@ public struct PaywallView: View {
                 comparisonRow(feature: "Weather Adjust", free: false, premium: true, pro: true)
                 comparisonRow(feature: "Priority Support", free: false, premium: true, pro: true)
                 comparisonRow(feature: "Expert Consults", free: false, premium: false, pro: true)
-                comparisonRow(feature: "Community", free: false, premium: false, pro: true)
+                comparisonRow(feature: "Garden Clubs", free: true, premium: true, pro: true)
                 comparisonRow(feature: "Analytics", free: "Basic", premium: "Standard", pro: true, isLast: true)
             }
             .glassCard()
