@@ -26,7 +26,7 @@ public struct ProfileView: View {
 
     // Product IDs
     private let monthlyProductID = "com.growwise.premium.monthly"
-    private let yearlyProductID = "com.growwise.premium.yearly"
+    private let yearlyProductID = "com.growwise.premium.annual"
 
     public init() {}
 

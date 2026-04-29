@@ -18,9 +18,9 @@ public struct PaywallView: View {
 
     // Product IDs
     private let premiumMonthlyID = "com.growwise.premium.monthly"
-    private let premiumYearlyID = "com.growwise.premium.yearly"
+    private let premiumYearlyID = "com.growwise.premium.annual"
     private let proMonthlyID = "com.growwise.pro.monthly"
-    private let proYearlyID = "com.growwise.pro.yearly"
+    private let proYearlyID = "com.growwise.pro.annual"
 
     public init() {}
 
