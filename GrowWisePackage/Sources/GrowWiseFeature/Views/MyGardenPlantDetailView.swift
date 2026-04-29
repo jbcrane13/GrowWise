@@ -20,7 +20,6 @@ struct PlantDetailView: View {
 
     // MARK: - State
 
-    @State private var showingEditPlant = false
     @State private var showingDeleteConfirmation = false
     @State private var showingReminderView = false
     @State private var showingAssignGarden = false
@@ -64,10 +63,9 @@ struct PlantDetailView: View {
             AddReminderView(reminderService: reminderService, dataService: dataService)
         }
         .sheet(isPresented: $showingShareToClub) {
-            PublishGardenSheet()
-        }
-        .sheet(isPresented: $showingEditPlant) {
-            Text("Edit Plant View - To be implemented")
+            // No feed to reload here; GardenClubFeedView reloads on .task when navigated back to.
+            ClubShareComposerSheet(plant: plant, onPost: {})
+                .environment(dataService)
         }
         .sheet(isPresented: $showingAssignGarden) {
             AssignGardenSheet(plant: plant)
@@ -314,10 +312,6 @@ private extension PlantDetailView {
     var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                Button("Edit Plant") {
-                    showingEditPlant = true
-                }
-
                 Button("Assign to Garden") { showingAssignGarden = true }
 
                 Button {

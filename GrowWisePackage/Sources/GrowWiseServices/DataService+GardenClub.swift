@@ -46,4 +46,52 @@ public extension DataService {
         let repo = ClubActivityRepository(context: mainContext)
         return try repo.fetchAll(for: clubID)
     }
+
+    // MARK: - Posting
+
+    /// Create and persist a new ClubActivity post for the current user's primary club.
+    /// - Parameters:
+    ///   - caption: The post body text (required, non-empty).
+    ///   - activityType: One of "shared", "watered", "harvested", "planted", etc.
+    ///   - plantName: Optional plant name prepended to the description.
+    /// - Throws: `CreateClubPostError.noClub` if the user is not in any club.
+    @discardableResult
+    func createClubPost(
+        caption: String,
+        activityType: String,
+        plantName: String? = nil
+    ) throws -> ClubActivity {
+        guard let club = fetchPrimaryClub(), let clubID = club.id else {
+            throw CreateClubPostError.noClub
+        }
+        let user = getCurrentUser()
+        let memberName = user?.displayName ?? "Gardener"
+        let memberID = user?.id.uuidString ?? UUID().uuidString
+        let description: String = if let plantName {
+            "\(plantName): \(caption)"
+        } else {
+            caption
+        }
+        let activity = ClubActivity(
+            clubID: clubID,
+            memberName: memberName,
+            memberID: memberID,
+            activityType: activityType,
+            description: description
+        )
+        let repo = ClubActivityRepository(context: mainContext)
+        try repo.save(activity)
+        return activity
+    }
+}
+
+public enum CreateClubPostError: Error, LocalizedError {
+    case noClub
+
+    public var errorDescription: String? {
+        switch self {
+        case .noClub:
+            "You're not in a club yet. Join or create one first."
+        }
+    }
 }

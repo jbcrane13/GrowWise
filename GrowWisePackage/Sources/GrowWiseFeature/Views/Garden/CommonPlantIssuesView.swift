@@ -14,7 +14,7 @@ struct PlantIssue: Identifiable {
 // MARK: - CommonPlantIssuesView
 
 /// Shows common issues for a given plant type with symptoms and treatments.
-/// Includes a button to open PlantScannerView for camera-based diagnosis.
+/// Includes a button to open PlantScannerView for a camera-based plant health check.
 struct CommonPlantIssuesView: View {
     let plant: Plant
 
@@ -81,7 +81,7 @@ struct CommonPlantIssuesView: View {
                     .padding(.bottom, 32)
                 }
             }
-            .navigationTitle("Plant Diagnostics")
+            .navigationTitle("Plant Health Guidance")
             .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar {
                 ToolbarItem(placement: .confirmationAction) {

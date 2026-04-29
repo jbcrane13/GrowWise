@@ -111,7 +111,7 @@ public struct MainAppView: View {
 
     private var mainTabView: some View {
         TabView(selection: $selectedTab) {
-            HomeView()
+            HomeView(selectedTab: $selectedTab)
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }

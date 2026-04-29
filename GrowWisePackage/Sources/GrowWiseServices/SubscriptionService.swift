@@ -22,12 +22,15 @@ public final class SubscriptionService {
     private var updateListenerTask: Task<Void, Never>?
     private let logger = Logger(subsystem: "com.growwise.storekit", category: "SubscriptionService")
 
-    /// Product IDs (must match App Store Connect)
+    /// Product IDs (must match App Store Connect).
+    /// .yearly IDs retained to load legacy subscriber entitlements; .annual IDs are the active purchase path for 1.0+.
     private let productIDs = [
         "com.growwise.premium.monthly",
-        "com.growwise.premium.yearly",
+        "com.growwise.premium.yearly", // legacy — kept for existing subscribers
+        "com.growwise.premium.annual", // active: $34.99/yr
         "com.growwise.pro.monthly",
-        "com.growwise.pro.yearly",
+        "com.growwise.pro.yearly", // legacy
+        "com.growwise.pro.annual", // active: $79.99/yr
     ]
 
     // MARK: - Initialization

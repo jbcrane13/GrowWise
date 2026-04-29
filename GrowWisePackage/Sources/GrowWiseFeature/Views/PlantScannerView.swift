@@ -42,7 +42,6 @@ public struct PlantScannerView: View {
                             Text("Primary Finding: \(diagnosis.primaryLabel)")
                                 .font(.headline)
                                 .accessibilityIdentifier("scannerPrimaryFinding")
-                            Text("Confidence: \(Int(diagnosis.confidence * 100))%")
                             Text("Severity: \(diagnosis.severity.rawValue.capitalized)")
                             Text(diagnosis.recommendation)
                                 .font(.subheadline)

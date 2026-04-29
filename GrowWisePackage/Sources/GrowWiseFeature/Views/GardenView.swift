@@ -54,42 +54,46 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                 ScrollView {
                     VStack(alignment: .leading, spacing: 12) {
                         gardenHeader
-                        if !viewModel.gardens.isEmpty {
-                            gardenPicker
-                        }
-                        gardenSummaryStrip
-                        filterChipBar
                         if viewModel.isLoading {
                             loadingState
-                        } else if viewModel.groupedPlants.isEmpty {
-                            emptyState
+                        } else if viewModel.gardens.isEmpty {
+                            noGardenEmptyState
                         } else {
-                            if filteredGroups.isEmpty {
-                                filterEmptyState
+                            if viewModel.gardens.count > 1 {
+                                gardenPicker
+                            }
+                            gardenSummaryStrip
+                            filterChipBar
+                            if viewModel.groupedPlants.isEmpty {
+                                emptyState
                             } else {
-                                ForEach(filteredGroups) { group in
-                                    GardenBedSection(
-                                        group: group,
-                                        onPlantTap: { plant in selectedPlant = plant },
-                                        onQuickAction: { _ in },
-                                        onDelete: { plant in
-                                            Task<Void, Never> {
-                                                do {
-                                                    try dataService.plants.delete(plant)
-                                                } catch {
-                                                    viewModel.error = error
+                                if filteredGroups.isEmpty {
+                                    filterEmptyState
+                                } else {
+                                    ForEach(filteredGroups) { group in
+                                        GardenBedSection(
+                                            group: group,
+                                            onPlantTap: { plant in selectedPlant = plant },
+                                            onQuickAction: { _ in },
+                                            onDelete: { plant in
+                                                Task<Void, Never> {
+                                                    do {
+                                                        try dataService.plants.delete(plant)
+                                                    } catch {
+                                                        viewModel.error = error
+                                                    }
+                                                    await viewModel.load(dataService: dataService)
                                                 }
-                                                await viewModel.load(dataService: dataService)
                                             }
-                                        }
-                                    )
-                                    .accessibilityIdentifier(
-                                        "garden_bed_\(group.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))"
-                                    )
+                                        )
+                                        .accessibilityIdentifier(
+                                            "garden_bed_\(group.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))"
+                                        )
+                                    }
                                 }
                             }
+                            addBedButton
                         }
-                        addBedButton
                     }
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                     .padding(.top, 12)
@@ -387,6 +391,41 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
     }
 
     // MARK: - Empty States
+
+    private var noGardenEmptyState: some View {
+        VStack(spacing: 20) {
+            ZStack {
+                Circle()
+                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.08))
+                    .frame(width: 120, height: 120)
+
+                Image(systemName: "house.and.flag.fill")
+                    .font(.system(size: 48))
+                    .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            }
+            .accessibilityHidden(true)
+
+            VStack(spacing: 6) {
+                Text("Start your garden")
+                    .font(CultivationTheme.Fonts.display(20, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                Text("Create a garden to track your plants, beds, and care schedules.")
+                    .font(CultivationTheme.Fonts.body(14))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .multilineTextAlignment(.center)
+            }
+
+            Button("Create Garden") {
+                showCreateGarden = true
+            }
+            .buttonStyle(GradientButtonStyle())
+            .padding(.horizontal, 24)
+            .accessibilityIdentifier("garden_button_create_first")
+        }
+        .frame(maxWidth: .infinity)
+        .padding(.top, 40)
+    }
 
     private var emptyState: some View {
         VStack(spacing: 20) {

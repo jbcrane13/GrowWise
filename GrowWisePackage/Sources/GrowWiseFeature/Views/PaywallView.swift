@@ -9,7 +9,7 @@ public struct PaywallView: View {
     @Environment(\.dismiss)
     private var dismiss
 
-    @State private var isYearly = false
+    @State private var isYearly = true
     @State private var selectedTier: SubscriptionTier?
     @State private var purchaseError: String?
     @State private var showPurchaseError = false
@@ -18,9 +18,9 @@ public struct PaywallView: View {
 
     // Product IDs
     private let premiumMonthlyID = "com.growwise.premium.monthly"
-    private let premiumYearlyID = "com.growwise.premium.yearly"
+    private let premiumYearlyID = "com.growwise.premium.annual"
     private let proMonthlyID = "com.growwise.pro.monthly"
-    private let proYearlyID = "com.growwise.pro.yearly"
+    private let proYearlyID = "com.growwise.pro.annual"
 
     public init() {}
 
@@ -123,7 +123,7 @@ public struct PaywallView: View {
             }
             .accessibilityIdentifier("paywall_toggle_monthly")
 
-            toggleButton(label: "Yearly", isActive: isYearly, badge: "Save 44%") {
+            toggleButton(label: "Yearly", isActive: isYearly, badge: "Best Value") {
                 withAnimation(CultivationTheme.Animation.selection) {
                     isYearly = true
                 }
@@ -184,7 +184,7 @@ public struct PaywallView: View {
                 icon: "leaf",
                 price: "$0",
                 period: "forever",
-                highlights: ["3 AI diagnoses/month", "Basic care reminders", "Up to 50 plants"],
+                highlights: ["3 Plant Health checks/month", "Basic care reminders", "Up to 50 plants"],
                 color: CultivationTheme.Colors.textSecondary,
                 isCurrent: !isActiveSubscriber
             )
@@ -194,10 +194,10 @@ public struct PaywallView: View {
                 tier: .premium,
                 name: "Premium",
                 icon: "crown",
-                price: isYearly ? "$19.99" : "$2.99",
+                price: isYearly ? "$34.99" : "$2.99",
                 period: isYearly ? "/year" : "/month",
                 highlights: [
-                    "Unlimited AI diagnoses",
+                    "Unlimited Plant Health checks",
                     "Smart reminders",
                     "Weather adjustments",
                     "Priority support",
@@ -216,12 +216,13 @@ public struct PaywallView: View {
                 highlights: [
                     "Everything in Premium",
                     "Expert consultations",
-                    "Community features",
                     "Advanced analytics",
+                    "Priority support",
                 ],
                 color: CultivationTheme.Colors.accentAmber,
                 isCurrent: currentTierIs(.pro),
-                isPopular: true
+                isPopular: true,
+                subtitle: "Coming soon"
             )
             .accessibilityIdentifier("paywall_card_pro")
         }
@@ -245,7 +246,8 @@ public struct PaywallView: View {
         highlights: [String],
         color: Color,
         isCurrent: Bool,
-        isPopular: Bool = false
+        isPopular: Bool = false,
+        subtitle: String? = nil
     ) -> some View {
         let isSelected = selectedTier == tier
 
@@ -297,6 +299,10 @@ public struct PaywallView: View {
                             Text("Free forever")
                                 .font(.system(.caption))
                                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        } else if let subtitle {
+                            Text(subtitle)
+                                .font(.system(.caption))
+                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
                         }
                     }
 
@@ -381,13 +387,13 @@ public struct PaywallView: View {
                 Divider()
                     .background(CultivationTheme.Colors.divider)
 
-                comparisonRow(feature: "AI Diagnoses", free: "3/mo", premium: true, pro: true)
+                comparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true, pro: true)
                 comparisonRow(feature: "Plant Limit", free: "50", premium: "500", pro: true)
                 comparisonRow(feature: "Smart Reminders", free: false, premium: true, pro: true)
                 comparisonRow(feature: "Weather Adjust", free: false, premium: true, pro: true)
                 comparisonRow(feature: "Priority Support", free: false, premium: true, pro: true)
                 comparisonRow(feature: "Expert Consults", free: false, premium: false, pro: true)
-                comparisonRow(feature: "Community", free: false, premium: false, pro: true)
+                comparisonRow(feature: "Garden Clubs", free: true, premium: true, pro: true)
                 comparisonRow(feature: "Analytics", free: "Basic", premium: "Standard", pro: true, isLast: true)
             }
             .glassCard()
@@ -485,7 +491,7 @@ public struct PaywallView: View {
         let tierName = tier == .pro ? "Pro" : "Premium"
         let price = tier == .pro
             ? (isYearly ? "$29.99/yr" : "$4.99/mo")
-            : (isYearly ? "$19.99/yr" : "$2.99/mo")
+            : (isYearly ? "$34.99/yr" : "$2.99/mo")
         return "Subscribe to \(tierName) — \(price)"
     }
 
