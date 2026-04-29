@@ -1,10 +1,10 @@
-# GrowWise (Cultivation) — App Store Copy
+# Cultivation — App Store Copy
 
 ## App Name
-GrowWise
+Cultivation
 
 ## Subtitle (30 chars max)
-Your Smart Garden Companion
+Your Garden Companion
 
 ## Primary Category
 Lifestyle
@@ -21,68 +21,95 @@ Food & Drink
 
 **Plan. Track. Grow.**
 
-GrowWise is your intelligent gardening companion — helping you plan, plant, and nurture your garden with confidence. Whether you're growing tomatoes on a balcony or managing a full backyard vegetable patch, GrowWise guides you every step of the way.
+Cultivation is your gardening companion — helping you plan, plant, and nurture your garden with confidence. Whether you're growing tomatoes on a balcony or managing a full backyard vegetable patch, Cultivation guides you every step of the way.
 
-### Smart Plant Care
-- **Personalized Reminders**: Water, fertilize, prune, and harvest reminders tailored to each plant's needs and your local climate
-- **Overdue Alerts**: Never miss a critical care task — overdue reminders surface at the top of your dashboard
-- **Seasonal Tips**: Get timely gardening advice based on your hardiness zone and current month
+### Plant Care Made Simple
+- **Personalized Reminders**: Water, fertilize, prune, and harvest reminders tailored to each plant's needs and your local weather
+- **Today's Care Dashboard**: See overdue and due-today tasks at a glance — tap to mark them done
+- **Seasonal Tips**: Timely gardening advice based on your hardiness zone and current month
 
-### Garden Planning
+### Plan Your Garden
 - **Seasonal Planner**: Month-by-month guide showing what to plant, transplant, and harvest for your zone
-- **Seed Inventory**: Track your seed packets with photos, expiration dates, and indoor start schedules
-- **Companion Planting**: Smart suggestions for plants that grow well together
+- **Companion Planting**: See which plants grow well together — and which don't
+- **Smart Shopping List**: Auto-generated from your garden plans with category grouping
 
 ### Track Your Progress
-- **Garden Journal**: Log photos and notes for each plant — track growth, issues, and victories
-- **Plant Health Score**: See your overall garden health at a glance
-- **Photo Timeline**: Visual history of each plant's journey from seed to harvest
+- **Photo Journal**: Log photos and notes for each plant — watch your garden grow over time
+- **Plant Health Guidance**: Identify common plant issues and get treatment recommendations
+- **Garden Health Score**: See your overall garden health at a glance
 
 ### Stay Organized
-- **Multiple Gardens**: Manage vegetable beds, herb gardens, flower patches — all in one place
-- **Shopping List**: Track supplies and seeds you need to buy
-- **Compost Tracker**: Monitor your compost pile progress with temperature and moisture logs
+- **Multiple Gardens & Beds**: Manage vegetable beds, herb gardens, flower patches — all in one place
+- **Compost Tracker**: Monitor your compost pile with temperature and moisture logs
+- **Seed Inventory**: Track your seed packets with details and planting schedules
 
-### Discover & Learn
-- **Plant Database**: 50+ vegetables, herbs, fruits, and flowers with detailed care instructions
-- **Growing Guides**: Sun, water, spacing, and soil requirements for every plant
-- **Common Issues**: Pest identification and treatment tips
+### Grow Together
+- **Garden Clubs**: Create or join a club to share what's growing with nearby gardeners
+- **Community Feed**: Share your garden with the community and get inspiration from others
+- **Q&A Forum**: Ask questions and help fellow gardeners
 
 ### Your Data, Your Privacy
 - All data stored locally on your device — no account required
-- Optional CloudKit sync across your devices (iCloud account required)
-- Beautiful, native SwiftUI design optimized for iOS and iPadOS
+- Optional iCloud sync across your devices (iCloud account required)
+- Beautiful, native SwiftUI design optimized for iPhone and iPad
 
 ---
 
 ## What's New
 
-**Version 1.1 — Seed Inventory & Seasonal Planning**
+**Version 1.0 — Cultivation Launches!**
 
-New Features:
-- Track your seed packets with photos and expiration dates
-- Scan seed packets with your camera to auto-fill details
-- See which seeds are ready to plant this month
-- Seasonal planner now includes "Start seeds indoors" tasks from your inventory
-- Get shopping list prompts when you plant your last seed packet
+Welcome to Cultivation — your garden companion.
 
-Improvements:
-- Faster garden loading and smoother scrolling
-- Improved plant database search performance
-- Bug fixes for reminder notifications
+Features:
+- Care task dashboard with weather-adjusted reminders
+- Garden management with beds, companion planting, and health scores
+- Photo journal for tracking plant growth
+- Seasonal planner based on your hardiness zone
+- Garden Clubs — share what's growing with nearby gardeners
+- Community Q&A forum
+- Plant Health guidance with common issues and treatments
+- Compost tracker and shopping list
+- iCloud sync across your devices
 
 ---
 
 ## Keywords (100 chars max, comma-separated)
-garden,plant,growing,vegetables,herbs,seeds,planner,tracker,reminders,homestead,backyard,organic,harvest,companion
+garden,plant,outdoor,growing,reminders,weather,clubs,vegetables,herbs,seeds,planner,companion,harvest
 
 ---
 
 ## Privacy Policy URL
-https://growwise.app/privacy
+https://cultivation.app/privacy
 
 ## Support URL
-https://growwise.app/support
+https://cultivation.app/support
 
 ## Marketing URL
-https://growwise.app
+https://cultivation.app
+
+---
+
+## Subscription Information
+
+Cultivation offers auto-renewing subscriptions:
+
+- **Premium**: $4.99/month or $34.99/year
+- **Pro**: $9.99/month or $79.99/year
+
+Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your account settings on the App Store after purchase.
+
+Free tier includes: basic reminders, 50-plant database, community access, 3 Plant Health checks per month.
+
+---
+
+## CloudKit Data Disclosure
+
+Cultivation uses CloudKit to sync your garden data across your Apple devices. The following data may be stored in your private iCloud database:
+
+- Garden and plant records (names, locations, care dates)
+- Care reminders and journal entries
+- User preferences and settings
+- Club activity you post (stored in the public CloudKit database)
+
+No data is shared with third parties. All CloudKit data is encrypted in transit and at rest by Apple.
