@@ -1,7 +1,12 @@
 # PROJECT KNOWLEDGE BASE
 
-**Updated:** 2026-03-10
-**Status:** Post full-UI-redesign (March 2026)
+**Updated:** 2026-04-29
+**Status:** 1.0 release candidate on TestFlight
+
+## Issue Tracking
+
+GitHub Issues: https://github.com/jbcrane13/GrowWise/issues — use `gh issue create/list/view`.
+BD (beads) is decommissioned. Do NOT use `bd` commands.
 
 ## Agent Readiness
 
