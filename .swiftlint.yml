@@ -183,3 +183,9 @@ custom_rules:
     message: "FIXMEs must reference a beads issue (e.g., FIXME(GW-123): description). Run: bd create 'description'"
     regex: '\/\/\s*FIXME(?!\()'
     severity: error
+
+  no_growwise_user_facing:
+    name: "GrowWise in user-facing string"
+    message: "User-facing strings should say 'Cultivation', not 'GrowWise'. Use module/type names like GrowWiseServices in code, but never in standalone literals."
+    regex: '"[^"\n]*\bGrowWise(?![A-Za-z])[^"\n]*"'
+    severity: error

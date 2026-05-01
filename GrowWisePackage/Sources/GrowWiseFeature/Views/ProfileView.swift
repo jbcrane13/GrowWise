@@ -343,7 +343,7 @@ public struct ProfileView: View {
                     .foregroundColor(.green)
                     .font(.title2)
                 VStack(alignment: .leading, spacing: 2) {
-                    Text(tier == .pro ? "GrowWise Pro" : "GrowWise Premium")
+                    Text(ProfileView.tierDisplayName(tier))
                         .font(.headline)
                     Text("Active subscription")
                         .font(.caption)
@@ -376,7 +376,7 @@ public struct ProfileView: View {
                         .font(.system(size: 32))
                         .foregroundStyle(.white)
                 }
-                Text("Unlock GrowWise Premium")
+                Text(ProfileView.unlockPremiumHeadline)
                     .font(.title3.bold())
                 Text("Get unlimited care guidance, premium tips, and more.")
                     .font(.subheadline)
@@ -518,6 +518,18 @@ public struct ProfileView: View {
         journalCount = dataService.getJournalEntryCount()
         streakDays = dataService.getCurrentUser()?.streakDays ?? 0
     }
+}
+
+extension ProfileView {
+    static func tierDisplayName(_ tier: SubscriptionTier) -> String {
+        switch tier {
+        case .pro: "Cultivation Pro"
+        case .premium: "Cultivation Premium"
+        case .free: "Cultivation Free"
+        }
+    }
+
+    static let unlockPremiumHeadline = "Unlock Cultivation Premium"
 }
 
 #Preview {

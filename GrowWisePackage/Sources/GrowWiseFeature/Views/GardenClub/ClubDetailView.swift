@@ -343,9 +343,9 @@ public struct ClubDetailView: View {
                 Menu {
                     if let code = club.inviteCode {
                         ShareLink(
-                            item: "Join my garden club on GrowWise! Invite code: \(code)",
+                            item: ClubInviteSharing.shareItem(code: code),
                             subject: Text("Garden Club Invite"),
-                            message: Text("Use code \(code) to join on GrowWise")
+                            message: Text(ClubInviteSharing.shareMessage(clubName: club.name, code: code))
                         ) {
                             Label("Share Invite Code", systemImage: "square.and.arrow.up")
                         }
