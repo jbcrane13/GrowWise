@@ -116,7 +116,7 @@ struct SubscriptionStatusFeatureAccessTests {
     }
 
     private func futureDate() -> Date {
-        Date(timeIntervalSinceNow: 30 * 86400)
+        Date(timeIntervalSinceNow: 2_592_000) // 30 days
     }
 }
 
@@ -170,6 +170,7 @@ struct SubscriptionServiceInitialStateTests {
 struct SubscriptionErrorContractTests {
     @Test("All error cases conform to LocalizedError with non-nil descriptions")
     func allErrorsHaveDescriptions() throws {
+        // swiftlint:disable trailing_comma
         let errors: [SubscriptionError] = [
             .purchaseFailed("test"),
             .restoreFailed("test"),
@@ -178,6 +179,7 @@ struct SubscriptionErrorContractTests {
             .productNotFound,
             .productNotPurchasable("com.example.test"),
         ]
+        // swiftlint:enable trailing_comma
 
         for error in errors {
             #expect(error.errorDescription != nil, "\(error) has nil description")
