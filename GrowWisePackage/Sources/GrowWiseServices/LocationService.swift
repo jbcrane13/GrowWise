@@ -1,7 +1,7 @@
 import CoreLocation
 import Foundation
 import GrowWiseModels
-import WeatherKit
+@preconcurrency import WeatherKit
 
 /// Location and weather service using @Observable pattern
 /// Access via @Environment(LocationService.self) in views
@@ -373,7 +373,7 @@ extension LocationService: @preconcurrency CLLocationManagerDelegate {
 
 // MARK: - Supporting Types
 
-public struct WeatherData: Sendable {
+public struct WeatherData {
     public let current: CurrentWeather
     public let hourly: [HourWeather]
     public let daily: [DayWeather]

@@ -1,7 +1,7 @@
 import Foundation
 import GrowWiseModels
 import os
-import UserNotifications
+@preconcurrency import UserNotifications
 
 private let logger = Logger(subsystem: "com.growwise", category: "NotificationService")
 
@@ -185,8 +185,15 @@ public final class NotificationService: NSObject {
         try await notificationCenter.add(request)
     }
 
-    public func getPendingNotifications() async -> [UNNotificationRequest] {
-        await notificationCenter?.pendingNotificationRequests() ?? []
+    public func getPendingNotifications() async -> [PendingNotificationInfo] {
+        let requests = await notificationCenter?.pendingNotificationRequests() ?? []
+        return requests.map {
+            PendingNotificationInfo(
+                identifier: $0.identifier,
+                title: $0.content.title,
+                body: $0.content.body
+            )
+        }
     }
 
     public func clearAllNotifications() {
@@ -197,6 +204,12 @@ public final class NotificationService: NSObject {
 }
 
 // MARK: - Supporting Types
+
+public struct PendingNotificationInfo: Sendable {
+    public let identifier: String
+    public let title: String
+    public let body: String
+}
 
 public struct NotificationStatistics: Sendable {
     public let pendingCount: Int
