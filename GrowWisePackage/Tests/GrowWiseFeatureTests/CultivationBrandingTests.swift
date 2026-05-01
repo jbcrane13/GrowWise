@@ -29,4 +29,11 @@ struct CultivationBrandingTests {
     func notificationBodyUsesCultivation() {
         #expect(ReminderSettingsView.testNotificationBody.hasPrefix("This is a test notification from Cultivation"))
     }
+
+    // MARK: - AR camera permission
+
+    @Test("AR camera permission message uses Cultivation")
+    func arCameraPermissionMessageUsesCultivation() {
+        #expect(ARGardenView.cameraPermissionMessage.hasPrefix("Cultivation needs camera access"))
+    }
 }

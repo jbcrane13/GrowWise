@@ -80,7 +80,7 @@ struct ARGardenView: View {
                 }
                 Button("Cancel", role: .cancel) {}
             } message: {
-                Text("GrowWise needs camera access for AR visualization. Please enable it in Settings.")
+                Text(ARGardenView.cameraPermissionMessage)
             }
             .task {
                 await checkCameraPermission()
@@ -452,3 +452,8 @@ struct ARGardenView: View {
 }
 
 #endif
+
+extension ARGardenView {
+    static let cameraPermissionMessage =
+        "Cultivation needs camera access for AR visualization. Please enable it in Settings."
+}
