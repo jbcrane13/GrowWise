@@ -36,4 +36,24 @@ struct CultivationBrandingTests {
     func arCameraPermissionMessageUsesCultivation() {
         #expect(ARGardenView.cameraPermissionMessage.hasPrefix("Cultivation needs camera access"))
     }
+
+    // MARK: - Club invite share copy
+
+    @Test("Club invite share item uses Cultivation")
+    func clubInviteShareItemUsesCultivation() {
+        let item = ClubInviteSharing.shareItem(code: "ABC123")
+        #expect(item == "Join my garden club on Cultivation! Use invite code: ABC123")
+    }
+
+    @Test("Club invite share message uses Cultivation and includes club name")
+    func clubInviteShareMessageUsesCultivation() {
+        let message = ClubInviteSharing.shareMessage(clubName: "My Garden", code: "ABC123")
+        #expect(message == "Join My Garden on Cultivation with code ABC123")
+    }
+
+    @Test("Club invite share message defaults club name when nil")
+    func clubInviteShareMessageDefaultsClubName() {
+        let message = ClubInviteSharing.shareMessage(clubName: nil, code: "XYZ")
+        #expect(message == "Join our club on Cultivation with code XYZ")
+    }
 }

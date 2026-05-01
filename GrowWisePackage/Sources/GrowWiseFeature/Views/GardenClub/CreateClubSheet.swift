@@ -164,9 +164,9 @@ public struct CreateClubSheet: View {
             // Share button
             if let code = club.inviteCode {
                 ShareLink(
-                    item: "Join my garden club on GrowWise! Use invite code: \(code)",
+                    item: ClubInviteSharing.shareItem(code: code),
                     subject: Text("Garden Club Invite"),
-                    message: Text("Join \(club.name ?? "our club") on GrowWise with code \(code)")
+                    message: Text(ClubInviteSharing.shareMessage(clubName: club.name, code: code))
                 ) {
                     Label("Share Invite", systemImage: "square.and.arrow.up")
                         .font(.system(.body, design: .rounded, weight: .semibold))
