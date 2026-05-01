@@ -14,6 +14,14 @@ public final class SubscriptionService {
     public private(set) var isLoading = false
     public private(set) var errorMessage: String?
 
+    /// Products that are visible and selectable on the paywall.
+    /// Filters `availableProducts` to only those whose IDs are in `purchasableProductIDs`,
+    /// ensuring "coming soon" tiers (e.g. Pro) cannot be purchased even if loaded.
+    public var purchasableProducts: [Product] {
+        let allowed = Set(Self.purchasableProductIDs)
+        return availableProducts.filter { allowed.contains($0.id) }
+    }
+
     /// Transaction history
     public private(set) var purchaseHistory: [Transaction] = []
 
@@ -22,16 +30,25 @@ public final class SubscriptionService {
     private var updateListenerTask: Task<Void, Never>?
     private let logger = Logger(subsystem: "com.growwise.storekit", category: "SubscriptionService")
 
-    /// Product IDs (must match App Store Connect).
-    /// .yearly IDs retained to load legacy subscriber entitlements; .annual IDs are the active purchase path for 1.0+.
-    private let productIDs = [
+    /// Product IDs that are currently sold on the paywall.
+    /// Pro tier is intentionally excluded — it is "Coming soon" in 1.0 and not yet purchasable.
+    public static let purchasableProductIDs: [String] = [
         "com.growwise.premium.monthly",
-        "com.growwise.premium.yearly", // legacy — kept for existing subscribers
-        "com.growwise.premium.annual", // active: $34.99/yr
-        "com.growwise.pro.monthly",
-        "com.growwise.pro.yearly", // legacy
-        "com.growwise.pro.annual", // active: $79.99/yr
+        "com.growwise.premium.annual",
     ]
+
+    /// Product IDs that may resolve as active entitlements but are not currently sold.
+    /// Includes legacy `.yearly` IDs (for existing Premium subscribers) and Pro IDs
+    /// (for any historical Pro entitlements that may exist).
+    public static let entitlementOnlyProductIDs: [String] = [
+        "com.growwise.premium.yearly",
+        "com.growwise.pro.monthly",
+        "com.growwise.pro.yearly",
+        "com.growwise.pro.annual",
+    ]
+
+    /// Full set of product IDs queried from the App Store for entitlement resolution.
+    public static let productIDs: [String] = purchasableProductIDs + entitlementOnlyProductIDs
 
     // MARK: - Initialization
 
@@ -59,7 +76,7 @@ public final class SubscriptionService {
         errorMessage = nil
 
         do {
-            let products = try await Product.products(for: Set(productIDs))
+            let products = try await Product.products(for: Set(Self.productIDs))
             availableProducts = products.sorted { $0.price < $1.price }
             isLoading = false
             logger.info("Loaded \(products.count) products")
@@ -75,6 +92,11 @@ public final class SubscriptionService {
 
     /// Purchase a product
     public func purchase(_ product: Product) async throws -> Transaction? {
+        guard Self.purchasableProductIDs.contains(product.id) else {
+            logger.error("Attempted to purchase non-purchasable product: \(product.id)")
+            throw SubscriptionError.productNotPurchasable(product.id)
+        }
+
         isLoading = true
         errorMessage = nil
 
@@ -322,6 +344,7 @@ public enum SubscriptionError: LocalizedError, Sendable {
     case verificationFailed
     case unknownResult
     case productNotFound
+    case productNotPurchasable(String)
 
     public var errorDescription: String? {
         switch self {
@@ -339,6 +362,9 @@ public enum SubscriptionError: LocalizedError, Sendable {
 
         case .productNotFound:
             "Product not found in App Store"
+
+        case .productNotPurchasable(let id):
+            "This plan is not currently available for purchase (\(id))"
         }
     }
 }
@@ -360,11 +386,14 @@ public final class PaywallState {
     }
 
     public var monthlyProducts: [Product] {
-        service.availableProducts.filter { $0.id.contains("monthly") }
+        service.purchasableProducts.filter { $0.id.contains("monthly") }
     }
 
+    /// Yearly-billed products. Active subscription IDs use the `.annual` suffix
+    /// (e.g. `com.growwise.premium.annual`); the legacy `.yearly` suffix is
+    /// entitlement-only and intentionally excluded by sourcing from `purchasableProducts`.
     public var yearlyProducts: [Product] {
-        service.availableProducts.filter { $0.id.contains("yearly") }
+        service.purchasableProducts.filter { $0.id.contains("annual") }
     }
 
     public func purchaseSelectedProduct() async {
