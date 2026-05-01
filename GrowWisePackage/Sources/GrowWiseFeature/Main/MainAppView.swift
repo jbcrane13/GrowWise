@@ -22,7 +22,7 @@ public struct MainAppView: View {
     // DataService initialized asynchronously in this view, then injected to children
     @State private var dataService: DataService?
     @State private var featureServices: FeatureServices?
-    @State private var selectedTab: TabSelection = .home
+    @State private var router = AppRouter()
     @State private var isInitializing = true
     @State private var initializationError: Error?
     @State private var cachedOnboardingStatus: Bool?
@@ -86,6 +86,7 @@ public struct MainAppView: View {
             } else if let ds = dataService, let services = featureServices {
                 mainTabView
                     .environment(ds)
+                    .environment(router)
                     .environment(services.reminderService)
                     .environment(services.photoService)
                     .environment(services.plantDatabaseService)
@@ -110,8 +111,9 @@ public struct MainAppView: View {
     }
 
     private var mainTabView: some View {
-        TabView(selection: $selectedTab) {
-            HomeView(selectedTab: $selectedTab)
+        @Bindable var router = router
+        return TabView(selection: $router.selectedTab) {
+            HomeView()
                 .tabItem {
                     Label("Home", systemImage: "house.fill")
                 }

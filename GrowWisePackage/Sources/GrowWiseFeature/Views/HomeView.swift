@@ -10,15 +10,14 @@ public struct HomeView: View {
     private var dataService
     @Environment(LocationService.self)
     private var locationService
+    @Environment(AppRouter.self)
+    private var router
 
-    @Binding var selectedTab: TabSelection
     @State private var viewModel = HomeViewModel()
     @State private var showCareShareSheet = false
     @State private var careShareCaption = ""
 
-    public init(selectedTab: Binding<TabSelection>) {
-        _selectedTab = selectedTab
-    }
+    public init() {}
 
     // MARK: - Body
 
@@ -31,7 +30,7 @@ public struct HomeView: View {
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
 
                     Button {
-                        selectedTab = .club
+                        router.selectedTab = .club
                     } label: {
                         clubCard
                     }
@@ -407,6 +406,7 @@ private struct HomeClubPlaceholderCard: View {
 #Preview {
     // swiftlint:disable:next force_try
     let dataService = try! DataService()
-    HomeView(selectedTab: .constant(.home))
+    HomeView()
         .environment(dataService)
+        .environment(AppRouter())
 }
