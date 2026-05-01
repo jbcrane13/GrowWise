@@ -22,4 +22,11 @@ struct CultivationBrandingTests {
     func paywallUnlockHeadlineUsesCultivation() {
         #expect(ProfileView.unlockPremiumHeadline == "Unlock Cultivation Premium")
     }
+
+    // MARK: - Test notification body
+
+    @Test("Test-notification body uses Cultivation")
+    func notificationBodyUsesCultivation() {
+        #expect(ReminderSettingsView.testNotificationBody.hasPrefix("This is a test notification from Cultivation"))
+    }
 }

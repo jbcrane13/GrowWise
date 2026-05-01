@@ -336,7 +336,7 @@ public struct ReminderSettingsView: View {
             do {
                 try await notificationService.scheduleSeasonalReminder(
                     title: "Test Notification",
-                    body: "This is a test notification from GrowWise. Your reminder settings are working correctly!",
+                    body: ReminderSettingsView.testNotificationBody,
                     date: Date().addingTimeInterval(5), // 5 seconds from now
                     identifier: "test_notification_\(UUID().uuidString)"
                 )
@@ -463,6 +463,11 @@ struct PendingNotificationsView: View {
         let requests = await notificationService.getPendingNotifications()
         pendingNotifications = requests
     }
+}
+
+extension ReminderSettingsView {
+    static let testNotificationBody =
+        "This is a test notification from Cultivation. Your reminder settings are working correctly!"
 }
 
 #Preview {
