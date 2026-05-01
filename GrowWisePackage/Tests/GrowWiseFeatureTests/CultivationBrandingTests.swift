@@ -15,4 +15,11 @@ struct CultivationBrandingTests {
     func tierDisplayNamePremiumUsesCultivation() {
         #expect(ProfileView.tierDisplayName(.premium) == "Cultivation Premium")
     }
+
+    // MARK: - ProfileView paywall headline
+
+    @Test("Paywall unlock headline uses Cultivation")
+    func paywallUnlockHeadlineUsesCultivation() {
+        #expect(ProfileView.unlockPremiumHeadline == "Unlock Cultivation Premium")
+    }
 }

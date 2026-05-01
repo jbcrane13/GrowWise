@@ -376,7 +376,7 @@ public struct ProfileView: View {
                         .font(.system(size: 32))
                         .foregroundStyle(.white)
                 }
-                Text("Unlock GrowWise Premium")
+                Text(ProfileView.unlockPremiumHeadline)
                     .font(.title3.bold())
                 Text("Get unlimited care guidance, premium tips, and more.")
                     .font(.subheadline)
@@ -528,6 +528,8 @@ extension ProfileView {
         case .free: "Cultivation Free"
         }
     }
+
+    static let unlockPremiumHeadline = "Unlock Cultivation Premium"
 }
 
 #Preview {
