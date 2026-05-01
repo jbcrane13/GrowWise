@@ -31,5 +31,6 @@ struct FilterChip: View {
                 .clipShape(Capsule())
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("filter_chip_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }

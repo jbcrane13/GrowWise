@@ -16,11 +16,9 @@ public struct PaywallView: View {
     @State private var showRestoreSuccess = false
     @State private var appeared = false
 
-    // Product IDs
+    // Product IDs (Premium only — Pro is "Coming soon" and not purchasable)
     private let premiumMonthlyID = "com.growwise.premium.monthly"
     private let premiumYearlyID = "com.growwise.premium.annual"
-    private let proMonthlyID = "com.growwise.pro.monthly"
-    private let proYearlyID = "com.growwise.pro.annual"
 
     public init() {}
 
@@ -31,8 +29,6 @@ public struct PaywallView: View {
         switch (tier, isYearly) {
         case (.premium, false): return premiumMonthlyID
         case (.premium, true): return premiumYearlyID
-        case (.pro, false): return proMonthlyID
-        case (.pro, true): return proYearlyID
         default: return nil
         }
     }
@@ -203,28 +199,10 @@ public struct PaywallView: View {
                     "Priority support",
                 ],
                 color: CultivationTheme.Colors.accentCoral,
-                isCurrent: currentTierIs(.premium)
+                isCurrent: currentTierIs(.premium),
+                isPopular: true
             )
             .accessibilityIdentifier("paywall_card_premium")
-
-            tierCard(
-                tier: .pro,
-                name: "Pro",
-                icon: "crown.fill",
-                price: isYearly ? "$29.99" : "$4.99",
-                period: isYearly ? "/year" : "/month",
-                highlights: [
-                    "Everything in Premium",
-                    "Expert consultations",
-                    "Advanced analytics",
-                    "Priority support",
-                ],
-                color: CultivationTheme.Colors.accentAmber,
-                isCurrent: currentTierIs(.pro),
-                isPopular: true,
-                subtitle: "Coming soon"
-            )
-            .accessibilityIdentifier("paywall_card_pro")
         }
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 20)
@@ -487,12 +465,9 @@ public struct PaywallView: View {
     }
 
     private var purchaseButtonLabel: String {
-        guard let tier = selectedTier else { return "Select a Plan" }
-        let tierName = tier == .pro ? "Pro" : "Premium"
-        let price = tier == .pro
-            ? (isYearly ? "$29.99/yr" : "$4.99/mo")
-            : (isYearly ? "$34.99/yr" : "$2.99/mo")
-        return "Subscribe to \(tierName) — \(price)"
+        guard selectedTier == .premium else { return "Select a Plan" }
+        let price = isYearly ? "$34.99/yr" : "$2.99/mo"
+        return "Subscribe to Premium — \(price)"
     }
 
     // MARK: - Legal Footer
@@ -522,7 +497,7 @@ public struct PaywallView: View {
     private func purchase() async {
         guard let productID = selectedProductID else { return }
 
-        let product = subscriptionService.availableProducts.first { $0.id == productID }
+        let product = subscriptionService.purchasableProducts.first { $0.id == productID }
         guard let product else {
             purchaseError = "Product not available. Please check your connection and try again."
             showPurchaseError = true

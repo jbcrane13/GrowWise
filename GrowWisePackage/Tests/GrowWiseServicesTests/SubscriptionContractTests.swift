@@ -116,7 +116,7 @@ struct SubscriptionStatusFeatureAccessTests {
     }
 
     private func futureDate() -> Date {
-        Date(timeIntervalSinceNow: 30 * 86400)
+        Date(timeIntervalSinceNow: 2_592_000) // 30 days
     }
 }
 
@@ -170,18 +170,29 @@ struct SubscriptionServiceInitialStateTests {
 struct SubscriptionErrorContractTests {
     @Test("All error cases conform to LocalizedError with non-nil descriptions")
     func allErrorsHaveDescriptions() throws {
+        // swiftlint:disable trailing_comma
         let errors: [SubscriptionError] = [
             .purchaseFailed("test"),
             .restoreFailed("test"),
             .verificationFailed,
             .unknownResult,
             .productNotFound,
+            .productNotPurchasable("com.example.test"),
         ]
+        // swiftlint:enable trailing_comma
 
         for error in errors {
             #expect(error.errorDescription != nil, "\(error) has nil description")
             #expect(try !#require(error.errorDescription?.isEmpty), "\(error) has empty description")
         }
+    }
+
+    @Test("productNotPurchasable preserves the offending product ID in the description")
+    func productNotPurchasablePreservesID() {
+        let id = "com.growwise.pro.annual"
+        let error = SubscriptionError.productNotPurchasable(id)
+
+        #expect(error.errorDescription?.contains(id) == true)
     }
 
     @Test("purchaseFailed preserves the failure reason in the description")
@@ -205,5 +216,87 @@ struct SubscriptionErrorContractTests {
         let error = SubscriptionError.verificationFailed
 
         #expect(error.errorDescription?.lowercased().contains("verification") == true)
+    }
+}
+
+// MARK: - Product Catalog Invariant Tests
+
+//
+// These guard the pricing-inconsistency fix from #273: Pro must never appear
+// in the purchasable list, the two static lists must stay disjoint, and the
+// queried `productIDs` must remain their union.
+
+@Suite(.tags(.integration))
+@MainActor
+struct SubscriptionProductCatalogTests {
+    @Test("purchasableProductIDs and entitlementOnlyProductIDs are disjoint")
+    func purchasableAndEntitlementOnlyAreDisjoint() {
+        let purchasable = Set(SubscriptionService.purchasableProductIDs)
+        let entitlementOnly = Set(SubscriptionService.entitlementOnlyProductIDs)
+
+        #expect(purchasable.isDisjoint(with: entitlementOnly))
+    }
+
+    @Test("purchasableProductIDs contains no Pro tier IDs")
+    func purchasableExcludesPro() {
+        for id in SubscriptionService.purchasableProductIDs {
+            #expect(!id.contains("pro"), "Pro tier must not be purchasable in 1.0 — found: \(id)")
+        }
+    }
+
+    @Test("purchasableProductIDs covers monthly + annual Premium")
+    func purchasableCoversPremiumBilling() {
+        let ids = Set(SubscriptionService.purchasableProductIDs)
+
+        #expect(ids.contains("com.growwise.premium.monthly"))
+        #expect(ids.contains("com.growwise.premium.annual"))
+    }
+
+    @Test("entitlementOnlyProductIDs retains legacy Premium .yearly for existing subscribers")
+    func entitlementOnlyRetainsLegacyPremium() {
+        let ids = Set(SubscriptionService.entitlementOnlyProductIDs)
+
+        #expect(ids.contains("com.growwise.premium.yearly"))
+    }
+
+    @Test("productIDs is the union of purchasable + entitlementOnly")
+    func productIDsIsUnion() {
+        let union = Set(SubscriptionService.purchasableProductIDs)
+            .union(SubscriptionService.entitlementOnlyProductIDs)
+
+        #expect(Set(SubscriptionService.productIDs) == union)
+        #expect(SubscriptionService.productIDs.count == union.count, "productIDs must not contain duplicates")
+    }
+}
+
+// MARK: - PaywallState Filter Tests
+
+//
+// PaywallState.monthlyProducts/yearlyProducts must source from
+// `purchasableProducts`, not raw `availableProducts`, so Pro tier products
+// loaded for entitlement resolution never surface in the paywall UI.
+
+@Suite(.tags(.integration))
+@MainActor
+struct PaywallStateFilterTests {
+    @Test("monthlyProducts is empty when no products are loaded")
+    func monthlyProductsEmptyOnFreshService() {
+        let state = PaywallState(service: SubscriptionService())
+
+        #expect(state.monthlyProducts.isEmpty)
+    }
+
+    @Test("yearlyProducts is empty when no products are loaded")
+    func yearlyProductsEmptyOnFreshService() {
+        let state = PaywallState(service: SubscriptionService())
+
+        #expect(state.yearlyProducts.isEmpty)
+    }
+
+    @Test("purchasableProducts is empty when no products are loaded")
+    func purchasableProductsEmptyOnFreshService() {
+        let service = SubscriptionService()
+
+        #expect(service.purchasableProducts.isEmpty)
     }
 }

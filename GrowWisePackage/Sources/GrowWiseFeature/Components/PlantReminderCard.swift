@@ -21,6 +21,10 @@ public struct PlantReminderCard: View {
         self.onTap = onTap
     }
 
+    private var plantIdentifier: String {
+        plant.id?.uuidString ?? "unknown"
+    }
+
     public var body: some View {
         Button(action: onTap) {
             VStack(alignment: .leading, spacing: 12) {
@@ -85,6 +89,7 @@ public struct PlantReminderCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("plantReminderCard_button_\(plantIdentifier)")
         .task {
             loadWateringReminders()
         }

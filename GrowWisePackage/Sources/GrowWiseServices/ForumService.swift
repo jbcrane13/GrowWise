@@ -132,9 +132,24 @@ public final class ForumService {
     // MARK: - Init
 
     public init() {
-        guard !ProcessInfo.processInfo.arguments.contains("--uitesting") else { return }
+        // CKContainer(identifier:) triggers os_crash when the host process lacks
+        // the iCloud entitlement (UI tests and the SwiftPM test runner).
+        guard !Self.isRunningInTestEnvironment else { return }
         let container = CKContainer(identifier: "iCloud.com.growwise.gardening")
         self.publicDatabase = container.publicCloudDatabase
+    }
+
+    private static var isRunningInTestEnvironment: Bool {
+        let info = ProcessInfo.processInfo
+        if info.arguments.contains("--uitesting") { return true }
+        if info.environment["XCTestConfigurationFilePath"] != nil { return true }
+        // SwiftPM's swift-testing runner sets neither env var; detect via the
+        // helper executable name or a loaded .xctest bundle.
+        if info.arguments.first?.contains("swiftpm-testing-helper") == true { return true }
+        if Bundle.allBundles.contains(where: { ($0.bundlePath as NSString).pathExtension == "xctest" }) {
+            return true
+        }
+        return false
     }
 
     // MARK: - Fetch Questions

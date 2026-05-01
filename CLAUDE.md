@@ -4,7 +4,9 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 ## Project Overview
 
-GrowWise (branded **Cultivation**) is an iOS gardening companion app — plant tracking, garden management, care reminders, plant journal, and tutorials. iOS 17+ primary, macOS 14+ secondary. Swift 6 strict concurrency, SwiftData + CloudKit, SwiftUI.
+GrowWise (branded **Cultivation**) is an iOS gardening companion app — plant tracking, garden management, care reminders, plant journal, sharing-first Garden Club, and tutorials. iOS 17+ primary, macOS 14+ secondary. Swift 6 strict concurrency, SwiftData + CloudKit, SwiftUI.
+
+**Status:** Cultivation 1.0 RC on TestFlight (build 1777504517, commit `289ae15`). The visual redesign (cream paper v2) and 4-tab navigation shipped via PR #270.
 
 ## Key Documents
 
@@ -67,85 +69,103 @@ View (@State/@Binding)
 GrowWise/                        # App shell (entry point, assets, entitlements)
 GrowWisePackage/                 # All development happens here
   Sources/
-    GrowWiseModels/              # SwiftData @Model classes + enums (no deps)
-    GrowWiseServices/            # @Observable services, repositories, managers
+    GrowWiseModels/              # 15 @Model SwiftData classes + enums (no deps)
+    GrowWiseServices/            # @Observable services, Repositories/, DataService+*.swift extensions
     GrowWiseFeature/             # SwiftUI views (strict MV)
-      Design/                    # CultivationTheme.swift — single source of truth
+      Design/                    # CultivationTheme.swift, ViewModifiers.swift, GardenComponents.swift
+      Main/MainAppView.swift     # Root 4-tab container
       Views/
-        Garden/                  # GardenView, GardenViewModel, GardenHeroHeader, GardenBedSection, PlantQuickCard
-        Home/                    # HomeView, HomeViewModel, HomeHeroHeader
-        Journal/                 # JournalView
-        Community/               # Community forum views
-        GardenClub/              # Garden club dashboard, chat, events
-        PlantDatabase/           # Plant database browser
-        Settings/                # Settings views
-        Tutorials/               # Tutorial content views
-      Components/                # ViewModifiers.swift, GardenComponents.swift, StatCard
-      OnboardingFlow/            # 7-step onboarding wizard
-      Main/MainAppView.swift     # Root 5-tab container
+        GardenView.swift         # Top-level garden screen
+        HomeView.swift           # Top-level home screen
+        ProfileView.swift        # Top-level "Me" screen
+        Garden/                  # GardenViewModel, GardenHeroHeader, GardenBedSection, PlantQuickCard, seed/shopping/AR sheets
+        Home/                    # HomeViewModel, HomeHeroHeader, GardenHealthCardView, SeasonalTipCard, YourClubCard
+        GardenClub/              # ClubChatView, ClubEventsView, GardenClubFeedView, ClubShareComposerSheet, GardenClubTabRoute
+        Community/               # Forum, ask-question, public garden views (still reachable from Me tab)
+        PlantDatabase/           # PerenualBrowseView
+        Settings/                # AppSettingsView
+        Tutorials/               # TutorialView, TutorialProgressView (presented via .sheet)
+      Components/                # FilterChip, PlantCardView, PlantReminderCard, ReadyToPlantCard, StatCard, SuggestedSeedsCard, ValidatedTextField, ReminderRowView, PerenualEnrichmentCard
+      OnboardingFlow/            # OnboardingView + Views/ (multi-step wizard)
   Tests/
     GrowWiseModelsTests/
-    GrowWiseServicesTests/       # 6 test files excluded from compilation (see Package.swift)
-    GrowWiseFeatureTests/
-GrowWiseUITests/                 # XCUITest (some skipped post-redesign)
+    GrowWiseServicesTests/
+    GrowWiseFeatureTests/        # CultivationThemeTests, GardenViewModelTests, HomeViewModelTests, GardenClubFeedRoutingTests, SmartTagTests
+GrowWiseUITests/                 # XCUITest — care task flows, onboarding, paywall, etc.
 ```
 
 **Dependency graph:** `GrowWiseFeature` → `GrowWiseServices` → `GrowWiseModels`
 
 **External deps:** Sentry (error tracking), Amplitude (analytics), swift-docc-plugin
 
-## Navigation — 5 Tabs
+## Navigation — 4 Tabs (ADR-019)
 
 ```
-MainAppView (TabView, coral accent tint)
-├── Home       — Care task dashboard (urgency-grouped tasks, weather, health score, seasonal planner)
+MainAppView (TabView, coral accent tint, .paperGrain() overlay)
+├── Home       — Care task dashboard + "Your Club" share card
 ├── Garden     — Hero header → grouped plant list by bed/area → PlantQuickCard → PlantDetailView
-├── Journal    — Timeline of plant journal entries
-├── Reminders  — Dedicated reminder list (own NavigationStack)
-└── Profile    — Settings + tutorials (via .sheet)
+├── Club       — GardenClubTabContainer (feed, chat, events) — sharing as a primary pillar
+└── Me         — Profile, settings, tutorials, achievements, forum, garden clubs (via navigationDestination)
 ```
+
+Reminders and Journal are no longer top-level tabs (deleted in ADR-019). Reminder rows live on Home; journal entries render as a photo strip on Plant Detail. The `JournalEntry` and `PlantReminder` models are still present.
 
 **Garden tab flow:** GardenHeroHeader (serif title, selector chips) → grouped LazyVStack of GardenBedSection → plant tap → PlantQuickCard bottom sheet → "View Full Details" → dismisses sheet, 350ms delay, pushes PlantDetailView via navigationDestination(item:).
 
-**Home tab features:** Urgency-grouped tasks with inline quick-care icons (💧/🌿/✂️), weather card, tutorial cards, plant guide, garden health score card, seasonal planner, community card.
+**Home tab features:** Urgency-grouped tasks with inline quick-care icons (💧/🌿/✂️), weather card, garden health score card, seasonal planner, "Your Club" share card, post-care share prompt.
 
-## Design System — CultivationTheme ("Botanical Field Journal")
+## Design System — CultivationTheme v2 ("Cream Paper Field Journal")
 
 **Single source of truth:** `GrowWiseFeature/Design/CultivationTheme.swift`
 
-Design language: **Botanical Field Journal** — serif typography, warm earth tones (stone/sage), coral accents, premium glass-morphism. Dark-first adaptive (`#0C0C0C` background).
+Design language (ADR-019, v2 since 2026-04-20): **Cream paper field journal** — `.system(design: .serif)` display, `.system(design: .rounded)` body, warm cream/ink palette, sage greens, coral accent for actions. Light-first with adaptive dark mode (warm dark, not pure black).
 
-Key tokens: `CultivationTheme.Colors.*` (incl. `accentCoral`, `brandLeaf`, `brandForest`, `statusAlert`/`Warning`/`Healthy`), `Spacing.*` (`screenPadding: 20`, `cardPadding: 16`, `sectionGap: 24`), `Radius.*` (`card: 16`, `chip: 20`), `Animation.*` (`spring`, `snappy`), `Gradients.ctaGradient` (`#2d6a4f → #52b788`)
+Key tokens:
+- `Colors.*` — `background` (`#F6F0E4` cream), `textPrimary` (`#1F2A22` ink), `brandLeaf` (`#7B9069` sage), `brandForest` (`#2E4631` moss), `accentCoral` (`#D9694B`), `accentAmber` (`#C99327` honey), `accentSky` (`#6F94A6`), `statusAlert`/`Warning`/`Healthy`
+- `Spacing.*`, `Radius.*` (`card`, `chip`)
+- `Animation.*` — `card`, `tab`, `selection`, `sheet`, `entrance` (no more `spring`/`snappy`)
+- `Gradients.cta` (moss → sage), `Gradients.warmAccent` (coral → honey)
 
-**Shared components (ViewModifiers.swift):** `.glassCard()` (glass-morphism card), `GlassPill`, `IconBubble`, `StatusDot`, `GradientButtonStyle`, `QuickStatCard`
+**Shared components (ViewModifiers.swift):** `.paperCard()` (paper card surface), `.paperGrain()` (subtle texture overlay), `.sectionLabel()`, `.heroBackground()`, `SmartTag`, `IconBubble`, `StatusDot`, `GlassPill`, `QuickStatCard`, `CoralButtonStyle`, `SecondaryButtonStyle`, `GradientButtonStyle`
 
 **Garden components (GardenComponents.swift):** `PlantRow`, `BedGroupHeader`, `CompanionTipCard`, `TaskRow`
 
-**Anti-patterns:** No system font defaults, no teal/purple gradients, no generic tech aesthetics.
+**Anti-patterns:** No system font defaults (use serif/rounded explicitly), no dark glass-morphism (deprecated in v2), no teal/purple gradients, no generic tech aesthetics.
 
 ## Key Services
 
 | Service | Role |
 |---------|------|
-| `DataService` | SwiftData coordinator, owns 6 repositories, `makeForTesting()` factory |
+| `DataService` | SwiftData coordinator, owns 7 repositories (plants/gardens/reminders/journals/users/stats/seeds), `makeForTesting()` factory. Extended via `DataService+ClubChat`, `+ClubEvents`, `+GardenClub` for club CRUD. |
 | `ModelContainerFactory` | Creates persistent or in-memory containers |
 | `ReminderService` | Smart scheduling with weather adjustment |
+| `NotificationService` | Local notification scheduling, permissions |
 | `LocationService` | Hardiness zones, WeatherKit, CLLocationManager |
 | `PlantDatabaseService` | 50+ plant JSON database seeding via PlantSeedingWorker |
+| `PerenualAPIService` / `PerenualEnrichmentService` | Third-party plant database enrichment |
 | `CloudSyncService` | CloudKit private user data + public garden showcase |
-| `SubscriptionService` | StoreKit 2 in-app purchases |
+| `ClubCloudKitService` | CloudKit sync for shared club content |
+| `GardenClubService` | Club membership, feed, smart-match logic |
+| `SubscriptionService` | StoreKit 2 in-app purchases (annual + monthly tiers) |
 | `ValidationService` | Input validation (Sendable singleton) |
-| `PlantCareAdviceService` | Contextual care tips for plant detail (#139) |
-| `GardenHealthService` | Garden health score computation (#142) |
-| `SeasonalPlannerService` | Zone-based seasonal calendar (#141) |
-| `PlantDiagnosticService` | AI-powered plant health diagnostics (#140) |
-| `ShoppingListService` | Shopping list management (#132, #133) |
+| `KeychainService` / `BiometricService` | Secure storage and Face ID/Touch ID gating |
+| `AnalyticsService` / `ObservabilityService` | Amplitude analytics + Sentry traces |
+| `FeatureFlagService` | Runtime feature gating |
+| `PlantCareAdviceService` | Contextual care tips for plant detail |
+| `GardenHealthService` | Garden health score computation |
+| `SeasonalPlannerService` | Zone-based seasonal calendar |
+| `PlantDiagnosticService` | Plant health diagnostics (Vision-based) |
+| `CompanionPlantingService` | Companion-planting compatibility lookups |
+| `ShoppingListService` | Shopping list management |
+| `SeedInventoryService` / `SeedScannerService` | Seed packet inventory + barcode scan |
 | `AchievementService` | 21 achievements, progress milestones |
+| `TutorialService` | Tutorial progression and content |
 | `ForumService` | Community Q&A forum (CloudKit) |
+| `PhotoService` | Plant/journal photo capture and storage |
 
 ## SwiftData & CloudKit
 
-14 `@Model` classes: Plant, Garden, User, PlantReminder, JournalEntry, GardenBed, SoilLog, GardeningStats, CompostBatch, ShoppingItem, Seed, GardenClub, ClubActivity, ClubEvent, ClubMessage. All properties optional with defaults for CloudKit compatibility.
+15 `@Model` classes: Plant, Garden, User, PlantReminder, JournalEntry, GardenBed, SoilLog, GardeningStats, CompostBatch, ShoppingItem, Seed, GardenClub, ClubActivity, ClubEvent, ClubMessage. All properties optional with defaults for CloudKit compatibility.
 
 **CloudKit container:** `iCloud.com.growwise.gardening` — referenced in 3 places that must stay in sync:
 1. `GrowWise/GrowWise.entitlements`
@@ -167,7 +187,7 @@ let service = try await DataService.makeForTesting()
 
 **Launch arguments for UI tests:** `--uitesting` (in-memory SwiftData, skip CloudKit), `--skip-onboarding`, `--reset-data`, `--reset-onboarding`
 
-**Excluded test files** (see Package.swift `exclude` list): DataServiceNilSelfTests, DataServiceStorageConfigurationTests, DataServiceTests, DataTransformationServiceTests, NotificationServiceTests, ValidationServiceTests
+**CI:** `.github/workflows/qa.yml` runs XCUITest flows on PRs (macos-15 runner, iPhone 16 simulator). Local QA flows live in `.factory/skills/qa-ios/`. `ci.yml`, `coverage.yml`, `security.yml`, `docc.yml`, `agent-code-review.yml`, and `droid-wiki-refresh.yml` round out the workflow set.
 
 ## Conventions
 
