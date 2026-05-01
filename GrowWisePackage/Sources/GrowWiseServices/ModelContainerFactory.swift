@@ -126,7 +126,7 @@ public struct ModelContainerFactory {
                 do {
                     let fallbackSchema = Schema([User.self] as [any PersistentModel.Type])
                     let tempURL = FileManager.default.temporaryDirectory
-                        .appendingPathComponent("GrowWise-Emergency-\(UUID().uuidString).sqlite")
+                        .appendingPathComponent("Cultivation-Emergency-\(UUID().uuidString).sqlite")
                     let tempConfig = ModelConfiguration(schema: fallbackSchema, url: tempURL)
                     if let tempContainer = try? ModelContainer(for: fallbackSchema, configurations: [tempConfig]) {
                         logger.warning("[Emergency] Level 3 fallback successful (temp file)")
