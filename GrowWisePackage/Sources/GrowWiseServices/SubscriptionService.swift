@@ -46,9 +46,8 @@ public final class SubscriptionService {
         }
     }
 
-    nonisolated deinit {
-        // Task will be cancelled when the service is deallocated
-        // Cannot directly reference main actor isolated property from deinit
+    deinit {
+        updateListenerTask?.cancel()
     }
 
     // MARK: - Product Loading

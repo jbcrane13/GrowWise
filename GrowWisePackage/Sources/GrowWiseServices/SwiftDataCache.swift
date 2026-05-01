@@ -192,7 +192,7 @@ public final class SwiftDataCache {
     }
 
     /// Preload value into cache if not already cached
-    public func preload(_ key: String, policy: TTLPolicy = .medium, loader: () async throws -> some Any) async {
+    public func preload<T: Sendable>(_ key: String, policy: TTLPolicy = .medium, loader: @Sendable () async throws -> T) async {
         // Skip if already cached and not expired
         if let entry = cache[key], !entry.isExpired {
             return
@@ -209,7 +209,7 @@ public final class SwiftDataCache {
     }
 
     /// Warm cache with batch of items
-    public func warmBatch(_ items: [(key: String, policy: TTLPolicy, loader: () async throws -> Any)]) async {
+    public func warmBatch(_ items: [(key: String, policy: TTLPolicy, loader: @Sendable () async throws -> any Sendable)]) async {
         let startTime = CFAbsoluteTimeGetCurrent()
         var successCount = 0
 
