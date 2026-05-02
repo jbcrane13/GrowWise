@@ -166,6 +166,22 @@ public final class ReminderService {
         }
     }
 
+    // swiftlint:disable:next function_parameter_count
+    public func updateReminder(
+        _ reminder: PlantReminder,
+        title: String,
+        message: String,
+        type: ReminderType,
+        frequency: ReminderFrequency,
+        customFrequencyDays: Int?,
+        preferredTime: Date?,
+        priority: ReminderPriority,
+        enableWeatherAdjustment: Bool,
+        isEnabled: Bool
+    ) async throws {
+        // Implementation in subsequent tasks.
+    }
+
     public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
         let allReminders = dataService.fetchActiveReminders()
         let wateringReminders = allReminders.filter { $0.reminderType == .watering }
@@ -1020,6 +1036,8 @@ public enum ReminderError: Error, LocalizedError {
     case notificationPermissionDenied
     case invalidFrequency
     case invalidTime
+    case emptyTitle
+    case invalidCustomFrequency
 
     public var errorDescription: String? {
         switch self {
@@ -1037,6 +1055,12 @@ public enum ReminderError: Error, LocalizedError {
 
         case .invalidTime:
             "Invalid notification time"
+
+        case .emptyTitle:
+            "Reminder title cannot be empty"
+
+        case .invalidCustomFrequency:
+            "Custom frequency requires at least 1 day"
         }
     }
 }
