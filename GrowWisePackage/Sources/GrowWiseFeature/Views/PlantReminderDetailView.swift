@@ -78,7 +78,7 @@ public struct PlantReminderDetailView: View {
                     }
             }
             .sheet(item: $selectedReminder) { reminder in
-                EditReminderView(
+                EditReminderViewPlaceholder(
                     reminder: reminder,
                     reminderService: reminderService,
                     onSave: { loadReminders() },
@@ -678,7 +678,7 @@ struct SuggestionCard: View {
 }
 
 /// Placeholder for EditReminderView
-struct EditReminderView: View {
+struct EditReminderViewPlaceholder: View {
     let reminder: PlantReminder
     let reminderService: ReminderService
     let onSave: () -> Void
