@@ -311,7 +311,7 @@ struct ReminderServiceUpdateTests {
             isEnabled: reminder.isEnabled
         )
 
-        #expect(reminder.message == "")
+        #expect(reminder.message.isEmpty)
     }
 
     // MARK: - Notification reschedule
