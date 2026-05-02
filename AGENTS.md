@@ -265,3 +265,28 @@ Before ending a session:
 3. `git commit -m "..."` — commit
 4. `git push` — push to remote (mandatory)
 5. `git push` — push to remote (mandatory)
+
+## Activity — 2026-05-01
+- 646a82d Potential fix for pull request finding
+- fd22693 Potential fix for pull request finding
+- d98a16c Potential fix for pull request finding
+- a2d6c55 feat(#274): updateReminder cancels/reschedules notification
+- 5bc80e3 feat(#274): updateReminder prefills default message on type change
+- c34f785 feat(#274): updateReminder recalculates nextDueDate on schedule change
+- 155995c feat(#274): updateReminder mutates editable fields and persists
+- 43fe642 feat(#274): updateReminder validates title and custom frequency days
+- 0aa10ca feat(#274): add ReminderError cases and updateReminder stub
+- a9b4258 docs(#274): add implementation plan for full reminder editing
+- e03b71e docs(#274): add design spec for full reminder editing
+- e8e1f11 fix: resolve Swift 6 concurrency build failures for CodeQL analysis
+- 8c5a7d4 Initial plan
+- 2976bfd chore(#275): add SwiftLint no_growwise_user_facing custom rule
+- 9fd7070 chore(#275): rename emergency SQLite filename prefix to Cultivation
+- d4ac7c6 feat(#275): unify club invite share copy under ClubInviteSharing helper
+- e5bb8d2 feat(#275): rename AR camera permission copy to Cultivation
+- 0afc7e0 feat(#275): rename test-notification body to Cultivation
+- 9ffaf73 feat(#275): rename paywall headline to "Unlock Cultivation Premium"
+- 297c66d feat(#275): rename paywall tier label to Cultivation Pro/Premium
+- d37c683 docs(#275): add implementation plan for Cultivation rename
+- ce3bbbf docs(#275): add design spec for Cultivation rename + SwiftLint guard
+- 78e1e9e Update docs, archive skill file, add accessibility IDs
