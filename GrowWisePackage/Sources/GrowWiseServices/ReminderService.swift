@@ -191,7 +191,11 @@ public final class ReminderService {
             _ = days // referenced for clarity; mutation happens later
         }
 
-        // 2. Mutate the model.
+        // 2. Snapshot pre-mutation state for change detection.
+        let frequencyChanged = reminder.frequency != frequency || reminder.customFrequencyDays != customFrequencyDays
+        let timeChanged = reminder.preferredNotificationTime != preferredTime
+
+        // 3. Mutate the model.
         reminder.title = trimmedTitle
         reminder.message = message
         reminder.reminderType = type
@@ -204,7 +208,19 @@ public final class ReminderService {
         reminder.isEnabled = isEnabled
         reminder.lastModified = Date()
 
-        // 3. Save.
+        // 4. Recalculate nextDueDate when schedule inputs changed.
+        if frequencyChanged || timeChanged, let plant = reminder.plant {
+            let baseDays = (frequency == .custom ? (customFrequencyDays ?? frequency.days) : frequency.days)
+            reminder.nextDueDate = await calculateNextDueDate(
+                baseFrequencyDays: baseDays,
+                reminderType: type,
+                plant: plant,
+                enableWeatherAdjustment: enableWeatherAdjustment,
+                preferredTime: preferredTime
+            )
+        }
+
+        // 5. Save.
         try dataService.mainContext.save()
     }
 

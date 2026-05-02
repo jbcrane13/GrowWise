@@ -183,4 +183,73 @@ struct ReminderServiceUpdateTests {
 
         #expect(reminder.lastModified > pre)
     }
+
+    // MARK: - Schedule recalc
+
+    @Test("updateReminder recalculates nextDueDate when frequency changes")
+    func recalculatesNextDueDateOnFrequencyChange() async throws {
+        let (service, _, _, reminder) = try await makeService()
+        let originalDate = reminder.nextDueDate
+        // Reminder was created weekly. Switch to daily — next due should move much closer.
+
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: reminder.message,
+            type: reminder.reminderType,
+            frequency: .daily,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.nextDueDate != originalDate)
+        // Daily reminder should be due within ~2 days; weekly is ~7 days out.
+        let twoDays: TimeInterval = 60 * 60 * 24 * 2
+        #expect(reminder.nextDueDate.timeIntervalSinceNow < twoDays)
+    }
+
+    @Test("updateReminder leaves nextDueDate alone when only title changes")
+    func preservesNextDueDateWhenScheduleUnchanged() async throws {
+        let (service, _, _, reminder) = try await makeService()
+        let originalDate = reminder.nextDueDate
+
+        try await service.updateReminder(
+            reminder,
+            title: "Renamed",
+            message: reminder.message,
+            type: reminder.reminderType,
+            frequency: .weekly,
+            customFrequencyDays: reminder.customFrequencyDays,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.nextDueDate == originalDate)
+    }
+
+    @Test("updateReminder accepts custom frequency days")
+    func acceptsCustomFrequencyDays() async throws {
+        let (service, _, _, reminder) = try await makeService()
+
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: reminder.message,
+            type: reminder.reminderType,
+            frequency: .custom,
+            customFrequencyDays: 3,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.frequency == .custom)
+        #expect(reminder.customFrequencyDays == 3)
+    }
 }
