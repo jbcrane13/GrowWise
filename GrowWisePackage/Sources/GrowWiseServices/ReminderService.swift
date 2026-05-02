@@ -191,8 +191,29 @@ public final class ReminderService {
             _ = days // referenced for clarity; mutation happens later
         }
 
+        func effectiveFrequencyDays(
+            for frequency: ReminderFrequency,
+            baseFrequencyDays: Int?,
+            customFrequencyDays: Int?
+        ) -> Int {
+            if frequency == .custom {
+                return customFrequencyDays ?? baseFrequencyDays ?? frequency.days
+            }
+            return frequency.days
+        }
+
         // 2. Snapshot pre-mutation state for change detection.
-        let frequencyChanged = reminder.frequency != frequency || reminder.customFrequencyDays != customFrequencyDays
+        let existingFrequencyDays = effectiveFrequencyDays(
+            for: reminder.frequency,
+            baseFrequencyDays: reminder.baseFrequencyDays,
+            customFrequencyDays: reminder.customFrequencyDays
+        )
+        let updatedFrequencyDays = effectiveFrequencyDays(
+            for: frequency,
+            baseFrequencyDays: frequency.days,
+            customFrequencyDays: customFrequencyDays
+        )
+        let frequencyChanged = existingFrequencyDays != updatedFrequencyDays
         let timeChanged = reminder.preferredNotificationTime != preferredTime
         let enableStateChanged = reminder.isEnabled != isEnabled
 
