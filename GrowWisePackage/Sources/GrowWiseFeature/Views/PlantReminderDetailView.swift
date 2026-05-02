@@ -78,7 +78,7 @@ public struct PlantReminderDetailView: View {
                     }
             }
             .sheet(item: $selectedReminder) { reminder in
-                EditReminderViewPlaceholder(
+                EditReminderView(
                     reminder: reminder,
                     reminderService: reminderService,
                     onSave: { loadReminders() },
@@ -674,37 +674,6 @@ struct SuggestionCard: View {
             RoundedRectangle(cornerRadius: 12)
                 .fill(Color(.tertiarySystemGroupedBackground))
         )
-    }
-}
-
-/// Placeholder for EditReminderView
-struct EditReminderViewPlaceholder: View {
-    let reminder: PlantReminder
-    let reminderService: ReminderService
-    let onSave: () -> Void
-    let onDelete: (PlantReminder) -> Void
-
-    @Environment(\.dismiss)
-    private var dismiss
-
-    var body: some View {
-        NavigationStack {
-            Text("Edit Reminder - Coming Soon")
-                .navigationTitle("Edit Reminder")
-                .toolbar {
-                    ToolbarItem(placement: .cancellationAction) {
-                        Button("Cancel") { dismiss() }
-                            .accessibilityIdentifier("plantreminder_button_edit_cancel")
-                    }
-                    ToolbarItem(placement: .primaryAction) {
-                        Button("Save") {
-                            onSave()
-                            dismiss()
-                        }
-                        .accessibilityIdentifier("plantreminder_button_edit_save")
-                    }
-                }
-        }
     }
 }
 
