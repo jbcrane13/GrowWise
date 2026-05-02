@@ -405,7 +405,7 @@ struct TimePickerSheet: View {
 struct PendingNotificationsView: View {
     @Environment(NotificationService.self)
     private var notificationService
-    @State private var pendingNotifications: [UNNotificationRequest] = []
+    @State private var pendingNotifications: [PendingNotificationInfo] = []
 
     var body: some View {
         List {
@@ -429,20 +429,12 @@ struct PendingNotificationsView: View {
             } else {
                 ForEach(pendingNotifications, id: \.identifier) { notification in
                     VStack(alignment: .leading, spacing: 8) {
-                        Text(notification.content.title)
+                        Text(notification.title)
                             .font(.headline)
 
-                        Text(notification.content.body)
+                        Text(notification.body)
                             .font(.subheadline)
                             .foregroundColor(.secondary)
-
-                        if let trigger = notification.trigger as? UNCalendarNotificationTrigger,
-                           let nextDate = trigger.nextTriggerDate()
-                        {
-                            Text("Scheduled: \(nextDate, style: .date) at \(nextDate, style: .time)")
-                                .font(.caption)
-                                .foregroundColor(.blue)
-                        }
                     }
                     .padding(.vertical, 4)
                 }

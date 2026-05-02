@@ -27,7 +27,7 @@ public final class SubscriptionService {
 
     // MARK: - Private Properties
 
-    private var updateListenerTask: Task<Void, Never>?
+    private nonisolated(unsafe) var updateListenerTask: Task<Void, Never>?
     private let logger = Logger(subsystem: "com.growwise.storekit", category: "SubscriptionService")
 
     /// Product IDs that are currently sold on the paywall.
