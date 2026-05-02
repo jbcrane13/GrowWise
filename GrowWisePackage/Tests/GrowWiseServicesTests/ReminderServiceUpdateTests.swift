@@ -219,7 +219,7 @@ struct ReminderServiceUpdateTests {
             title: "Renamed",
             message: reminder.message,
             type: reminder.reminderType,
-            frequency: .weekly,
+            frequency: reminder.frequency,
             customFrequencyDays: reminder.customFrequencyDays,
             preferredTime: reminder.preferredNotificationTime,
             priority: reminder.priority,
