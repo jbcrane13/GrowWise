@@ -179,7 +179,17 @@ public final class ReminderService {
         enableWeatherAdjustment: Bool,
         isEnabled: Bool
     ) async throws {
-        // Implementation in subsequent tasks.
+        // 1. Validate.
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            throw ReminderError.emptyTitle
+        }
+        if frequency == .custom {
+            guard let days = customFrequencyDays, days >= 1 else {
+                throw ReminderError.invalidCustomFrequency
+            }
+            _ = days // referenced for clarity; mutation happens later
+        }
     }
 
     public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
