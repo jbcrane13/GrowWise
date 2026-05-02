@@ -194,18 +194,18 @@ public final class ReminderService {
         // 2. Snapshot pre-mutation state for change detection.
         let frequencyChanged = reminder.frequency != frequency || reminder.customFrequencyDays != customFrequencyDays
         let timeChanged = reminder.preferredNotificationTime != preferredTime
+        let enableStateChanged = reminder.isEnabled != isEnabled
 
-        // 2b. Resolve effective message: prefill the type's default
+        // 3. Resolve effective message: prefill the type's default
         // when the user changed the type and left the message blank.
         let trimmedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
-        let effectiveMessage: String = {
-            if reminder.reminderType != type, trimmedMessage.isEmpty {
-                return type.defaultMessage
-            }
-            return message
-        }()
+        let effectiveMessage: String = if reminder.reminderType != type, trimmedMessage.isEmpty {
+            type.defaultMessage
+        } else {
+            message
+        }
 
-        // 3. Mutate the model.
+        // 4. Mutate the model.
         reminder.title = trimmedTitle
         reminder.message = effectiveMessage
         reminder.reminderType = type
@@ -218,7 +218,7 @@ public final class ReminderService {
         reminder.isEnabled = isEnabled
         reminder.lastModified = Date()
 
-        // 4. Recalculate nextDueDate when schedule inputs changed.
+        // 5. Recalculate nextDueDate when schedule inputs changed.
         if frequencyChanged || timeChanged, let plant = reminder.plant {
             let baseDays = (frequency == .custom ? (customFrequencyDays ?? frequency.days) : frequency.days)
             reminder.nextDueDate = await calculateNextDueDate(
@@ -230,7 +230,17 @@ public final class ReminderService {
             )
         }
 
-        // 5. Save.
+        // 6. Reschedule notification.
+        if shouldScheduleNotifications {
+            if !isEnabled {
+                await notificationService.cancelReminderNotification(for: reminder.id)
+            } else if frequencyChanged || timeChanged || enableStateChanged {
+                await notificationService.cancelReminderNotification(for: reminder.id)
+                try await notificationService.scheduleReminderNotification(for: reminder)
+            }
+        }
+
+        // 7. Save.
         try dataService.mainContext.save()
     }
 

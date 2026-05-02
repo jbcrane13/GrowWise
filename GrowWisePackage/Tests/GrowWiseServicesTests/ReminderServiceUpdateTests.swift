@@ -315,4 +315,55 @@ struct ReminderServiceUpdateTests {
 
         #expect(reminder.message == "")
     }
+
+    // MARK: - Notification reschedule
+
+    @Test("updateReminder runs without throwing when shouldScheduleNotifications is true")
+    func runsWithSchedulingEnabled() async throws {
+        let dataService = try DataService.makeForTesting()
+        let notificationService = NotificationService(notificationCenter: nil)
+        let service = ReminderService(
+            dataService: dataService,
+            notificationService: notificationService,
+            shouldScheduleNotifications: true
+        )
+        let plant = try dataService.createPlant(name: "Mint-\(UUID())", type: .herb)
+        let reminder = try await service.createSmartReminder(
+            for: plant,
+            type: .watering,
+            baseFrequencyDays: ReminderFrequency.weekly.days,
+            enableWeatherAdjustment: false,
+            priority: .medium,
+            preferredTime: Date()
+        )
+
+        // Toggle isEnabled both ways and change frequency — exercises both cancel and schedule branches.
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: reminder.message,
+            type: reminder.reminderType,
+            frequency: .daily,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: false // disable — should hit the cancel branch
+        )
+
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: reminder.message,
+            type: reminder.reminderType,
+            frequency: .weekly,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: true // re-enable — should hit the cancel + schedule branches
+        )
+
+        #expect(reminder.isEnabled == true)
+    }
 }
