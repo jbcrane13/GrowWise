@@ -129,4 +129,58 @@ struct ReminderServiceUpdateTests {
             )
         }
     }
+
+    // MARK: - Mutation
+
+    @Test("updateReminder mutates editable fields")
+    func mutatesEditableFields() async throws {
+        let (service, _, _, reminder) = try await makeService()
+        let newTime = Date(timeIntervalSinceNow: 3600)
+
+        try await service.updateReminder(
+            reminder,
+            title: "Updated title",
+            message: "Updated message",
+            type: .fertilizing,
+            frequency: .biweekly,
+            customFrequencyDays: nil,
+            preferredTime: newTime,
+            priority: .high,
+            enableWeatherAdjustment: true,
+            isEnabled: true
+        )
+
+        #expect(reminder.title == "Updated title")
+        #expect(reminder.message == "Updated message")
+        #expect(reminder.reminderType == .fertilizing)
+        #expect(reminder.frequency == .biweekly)
+        #expect(reminder.baseFrequencyDays == ReminderFrequency.biweekly.days)
+        #expect(reminder.customFrequencyDays == nil)
+        #expect(reminder.preferredNotificationTime == newTime)
+        #expect(reminder.priority == .high)
+        #expect(reminder.enableWeatherAdjustment == true)
+        #expect(reminder.isEnabled == true)
+    }
+
+    @Test("updateReminder advances lastModified")
+    func advancesLastModified() async throws {
+        let (service, _, _, reminder) = try await makeService()
+        let pre = reminder.lastModified
+        try? await Task.sleep(nanoseconds: 10_000_000) // 10 ms — ensures clock advances on fast machines
+
+        try await service.updateReminder(
+            reminder,
+            title: "New title",
+            message: reminder.message,
+            type: reminder.reminderType,
+            frequency: .weekly,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.lastModified > pre)
+    }
 }

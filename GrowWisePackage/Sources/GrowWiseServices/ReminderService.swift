@@ -190,6 +190,22 @@ public final class ReminderService {
             }
             _ = days // referenced for clarity; mutation happens later
         }
+
+        // 2. Mutate the model.
+        reminder.title = trimmedTitle
+        reminder.message = message
+        reminder.reminderType = type
+        reminder.frequency = frequency
+        reminder.baseFrequencyDays = frequency.days
+        reminder.customFrequencyDays = (frequency == .custom) ? customFrequencyDays : nil
+        reminder.preferredNotificationTime = preferredTime
+        reminder.priority = priority
+        reminder.enableWeatherAdjustment = enableWeatherAdjustment
+        reminder.isEnabled = isEnabled
+        reminder.lastModified = Date()
+
+        // 3. Save.
+        try dataService.mainContext.save()
     }
 
     public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
