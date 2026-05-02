@@ -252,4 +252,67 @@ struct ReminderServiceUpdateTests {
         #expect(reminder.frequency == .custom)
         #expect(reminder.customFrequencyDays == 3)
     }
+
+    // MARK: - Message prefill on type change
+
+    @Test("updateReminder prefills message with new type's default when message is empty and type changes")
+    func prefillsMessageOnTypeChangeWhenEmpty() async throws {
+        let (service, _, _, reminder) = try await makeService()
+        // Original reminder is .watering; change to .fertilizing with empty message.
+
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: "",
+            type: .fertilizing,
+            frequency: .weekly,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.message == ReminderType.fertilizing.defaultMessage)
+    }
+
+    @Test("updateReminder preserves user message when type changes and message is non-empty")
+    func preservesUserMessageOnTypeChange() async throws {
+        let (service, _, _, reminder) = try await makeService()
+
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: "Custom user message",
+            type: .fertilizing,
+            frequency: .weekly,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.message == "Custom user message")
+    }
+
+    @Test("updateReminder preserves empty message when type does not change")
+    func preservesEmptyMessageWhenTypeUnchanged() async throws {
+        let (service, _, _, reminder) = try await makeService()
+
+        try await service.updateReminder(
+            reminder,
+            title: reminder.title,
+            message: "",
+            type: reminder.reminderType, // unchanged
+            frequency: .weekly,
+            customFrequencyDays: nil,
+            preferredTime: reminder.preferredNotificationTime,
+            priority: reminder.priority,
+            enableWeatherAdjustment: reminder.enableWeatherAdjustment,
+            isEnabled: reminder.isEnabled
+        )
+
+        #expect(reminder.message == "")
+    }
 }

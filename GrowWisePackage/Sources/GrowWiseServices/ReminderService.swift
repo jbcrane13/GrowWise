@@ -195,9 +195,19 @@ public final class ReminderService {
         let frequencyChanged = reminder.frequency != frequency || reminder.customFrequencyDays != customFrequencyDays
         let timeChanged = reminder.preferredNotificationTime != preferredTime
 
+        // 2b. Resolve effective message: prefill the type's default
+        // when the user changed the type and left the message blank.
+        let trimmedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveMessage: String = {
+            if reminder.reminderType != type, trimmedMessage.isEmpty {
+                return type.defaultMessage
+            }
+            return message
+        }()
+
         // 3. Mutate the model.
         reminder.title = trimmedTitle
-        reminder.message = message
+        reminder.message = effectiveMessage
         reminder.reminderType = type
         reminder.frequency = frequency
         reminder.baseFrequencyDays = frequency.days
