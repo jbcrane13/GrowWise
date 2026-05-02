@@ -166,6 +166,105 @@ public final class ReminderService {
         }
     }
 
+    // swiftlint:disable:next function_parameter_count
+    public func updateReminder(
+        _ reminder: PlantReminder,
+        title: String,
+        message: String,
+        type: ReminderType,
+        frequency: ReminderFrequency,
+        customFrequencyDays: Int?,
+        preferredTime: Date?,
+        priority: ReminderPriority,
+        enableWeatherAdjustment: Bool,
+        isEnabled: Bool
+    ) async throws {
+        // 1. Validate.
+        let trimmedTitle = title.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard !trimmedTitle.isEmpty else {
+            throw ReminderError.emptyTitle
+        }
+        if frequency == .custom {
+            guard let days = customFrequencyDays, days >= 1 else {
+                throw ReminderError.invalidCustomFrequency
+            }
+            _ = days // referenced for clarity; mutation happens later
+        }
+
+        func effectiveFrequencyDays(
+            for frequency: ReminderFrequency,
+            baseFrequencyDays: Int?,
+            customFrequencyDays: Int?
+        ) -> Int {
+            if frequency == .custom {
+                return customFrequencyDays ?? baseFrequencyDays ?? frequency.days
+            }
+            return frequency.days
+        }
+
+        // 2. Snapshot pre-mutation state for change detection.
+        let existingFrequencyDays = effectiveFrequencyDays(
+            for: reminder.frequency,
+            baseFrequencyDays: reminder.baseFrequencyDays,
+            customFrequencyDays: reminder.customFrequencyDays
+        )
+        let updatedFrequencyDays = effectiveFrequencyDays(
+            for: frequency,
+            baseFrequencyDays: frequency.days,
+            customFrequencyDays: customFrequencyDays
+        )
+        let frequencyChanged = existingFrequencyDays != updatedFrequencyDays
+        let timeChanged = reminder.preferredNotificationTime != preferredTime
+        let enableStateChanged = reminder.isEnabled != isEnabled
+
+        // 3. Resolve effective message: prefill the type's default
+        // when the user changed the type and left the message blank.
+        let trimmedMessage = message.trimmingCharacters(in: .whitespacesAndNewlines)
+        let effectiveMessage: String = if reminder.reminderType != type, trimmedMessage.isEmpty {
+            type.defaultMessage
+        } else {
+            message
+        }
+
+        // 4. Mutate the model.
+        reminder.title = trimmedTitle
+        reminder.message = effectiveMessage
+        reminder.reminderType = type
+        reminder.frequency = frequency
+        reminder.baseFrequencyDays = frequency.days
+        reminder.customFrequencyDays = (frequency == .custom) ? customFrequencyDays : nil
+        reminder.preferredNotificationTime = preferredTime
+        reminder.priority = priority
+        reminder.enableWeatherAdjustment = enableWeatherAdjustment
+        reminder.isEnabled = isEnabled
+        reminder.lastModified = Date()
+
+        // 5. Recalculate nextDueDate when schedule inputs changed.
+        if frequencyChanged || timeChanged, let plant = reminder.plant {
+            let baseDays = (frequency == .custom ? (customFrequencyDays ?? frequency.days) : frequency.days)
+            reminder.nextDueDate = await calculateNextDueDate(
+                baseFrequencyDays: baseDays,
+                reminderType: type,
+                plant: plant,
+                enableWeatherAdjustment: enableWeatherAdjustment,
+                preferredTime: preferredTime
+            )
+        }
+
+        // 6. Reschedule notification.
+        if shouldScheduleNotifications {
+            if !isEnabled {
+                await notificationService.cancelReminderNotification(for: reminder.id)
+            } else if frequencyChanged || timeChanged || enableStateChanged {
+                await notificationService.cancelReminderNotification(for: reminder.id)
+                try await notificationService.scheduleReminderNotification(for: reminder)
+            }
+        }
+
+        // 7. Save.
+        try dataService.mainContext.save()
+    }
+
     public func getWateringReminders(for plant: Plant? = nil) -> [PlantReminder] {
         let allReminders = dataService.fetchActiveReminders()
         let wateringReminders = allReminders.filter { $0.reminderType == .watering }
@@ -1020,6 +1119,8 @@ public enum ReminderError: Error, LocalizedError {
     case notificationPermissionDenied
     case invalidFrequency
     case invalidTime
+    case emptyTitle
+    case invalidCustomFrequency
 
     public var errorDescription: String? {
         switch self {
@@ -1037,6 +1138,12 @@ public enum ReminderError: Error, LocalizedError {
 
         case .invalidTime:
             "Invalid notification time"
+
+        case .emptyTitle:
+            "Reminder title cannot be empty"
+
+        case .invalidCustomFrequency:
+            "Custom frequency requires at least 1 day"
         }
     }
 }
