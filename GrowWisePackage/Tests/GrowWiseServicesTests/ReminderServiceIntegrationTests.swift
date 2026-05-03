@@ -148,7 +148,7 @@ struct ReminderServiceIntegrationTests {
         #expect(reminder.baseFrequencyDays == expectedDays)
     }
 
-    @Test("createSmartReminder with daily frequency (1 day) stores baseFrequencyDays == 1")
+    @Test("createSmartReminder with daily frequency (1 day) stores baseFrequencyDays == 1 and frequency == .daily")
     func testCreateSmartReminderDailyFrequency() async throws {
         let dataService = try makeInMemoryDataService()
         let service = makeReminderService(dataService: dataService)
@@ -162,9 +162,11 @@ struct ReminderServiceIntegrationTests {
         )
 
         #expect(reminder.baseFrequencyDays == 1)
+        #expect(reminder.frequency == .daily)
+        #expect(reminder.customFrequencyDays == nil)
     }
 
-    @Test("createSmartReminder with weekly frequency (7 days) stores baseFrequencyDays == 7")
+    @Test("createSmartReminder with weekly frequency (7 days) stores frequency == .weekly")
     func testCreateSmartReminderWeeklyFrequency() async throws {
         let dataService = try makeInMemoryDataService()
         let service = makeReminderService(dataService: dataService)
@@ -173,14 +175,16 @@ struct ReminderServiceIntegrationTests {
         let reminder = try await service.createSmartReminder(
             for: plant,
             type: .watering,
-            baseFrequencyDays: ReminderFrequency.weekly.days,
+            baseFrequencyDays: 7,
             enableWeatherAdjustment: false
         )
 
         #expect(reminder.baseFrequencyDays == 7)
+        #expect(reminder.frequency == .weekly)
+        #expect(reminder.customFrequencyDays == nil)
     }
 
-    @Test("createSmartReminder with biweekly frequency (14 days) stores baseFrequencyDays == 14")
+    @Test("createSmartReminder with biweekly frequency (14 days) stores frequency == .biweekly")
     func testCreateSmartReminderBiweeklyFrequency() async throws {
         let dataService = try makeInMemoryDataService()
         let service = makeReminderService(dataService: dataService)
@@ -194,6 +198,44 @@ struct ReminderServiceIntegrationTests {
         )
 
         #expect(reminder.baseFrequencyDays == 14)
+        #expect(reminder.frequency == .biweekly)
+        #expect(reminder.customFrequencyDays == nil)
+    }
+
+    @Test("createSmartReminder with monthly frequency (30 days) stores frequency == .monthly")
+    func testCreateSmartReminderMonthlyFrequency() async throws {
+        let dataService = try makeInMemoryDataService()
+        let service = makeReminderService(dataService: dataService)
+        let plant = try dataService.createPlant(name: "Aloe-\(UUID())", type: .succulent)
+
+        let reminder = try await service.createSmartReminder(
+            for: plant,
+            type: .fertilizing,
+            baseFrequencyDays: 30,
+            enableWeatherAdjustment: false
+        )
+
+        #expect(reminder.baseFrequencyDays == 30)
+        #expect(reminder.frequency == .monthly)
+        #expect(reminder.customFrequencyDays == nil)
+    }
+
+    @Test("createSmartReminder with non-canonical cadence (5 days) falls back to .custom and preserves baseFrequencyDays")
+    func testCreateSmartReminderCustomFrequencyPreservesDays() async throws {
+        let dataService = try makeInMemoryDataService()
+        let service = makeReminderService(dataService: dataService)
+        let plant = try dataService.createPlant(name: "Sage-\(UUID())", type: .herb)
+
+        let reminder = try await service.createSmartReminder(
+            for: plant,
+            type: .watering,
+            baseFrequencyDays: 5,
+            enableWeatherAdjustment: false
+        )
+
+        #expect(reminder.baseFrequencyDays == 5)
+        #expect(reminder.frequency == .custom)
+        #expect(reminder.customFrequencyDays == 5)
     }
 
     // MARK: createSmartReminder — weather adjustment flag

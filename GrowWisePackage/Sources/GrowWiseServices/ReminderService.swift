@@ -90,11 +90,13 @@ public final class ReminderService {
             preferredTime: preferredTime
         )
 
+        let derivedFrequency = Self.frequency(forBaseDays: baseFrequencyDays)
+
         let reminder = try dataService.createReminder(
             title: generateReminderTitle(type: type, plant: plant),
             message: generateReminderMessage(type: type, plant: plant),
             type: type,
-            frequency: .custom,
+            frequency: derivedFrequency,
             dueDate: nextDueDate,
             plant: plant
         )
@@ -103,6 +105,9 @@ public final class ReminderService {
         reminder.priority = priority
         reminder.enableWeatherAdjustment = enableWeatherAdjustment
         reminder.baseFrequencyDays = baseFrequencyDays
+        if derivedFrequency == .custom {
+            reminder.customFrequencyDays = baseFrequencyDays
+        }
 
         // Set preferred notification time if provided
         if let preferredTime {
@@ -530,6 +535,24 @@ public final class ReminderService {
         case 4 ... 7: .weekly
         case 8 ... 14: .biweekly
         default: .monthly
+        }
+    }
+
+    /// Maps a base frequency in days to the matching named `ReminderFrequency`.
+    /// Falls back to `.custom` for cadences that don't match a canonical case so the
+    /// caller can preserve the exact day count via `customFrequencyDays`.
+    static func frequency(forBaseDays days: Int) -> ReminderFrequency {
+        switch days {
+        case 1: .daily
+        case 2: .everyOtherDay
+        case 3: .twiceWeekly
+        case 7: .weekly
+        case 14: .biweekly
+        case 30: .monthly
+        case 90: .quarterly
+        case 180: .seasonally
+        case 365: .yearly
+        default: .custom
         }
     }
 
