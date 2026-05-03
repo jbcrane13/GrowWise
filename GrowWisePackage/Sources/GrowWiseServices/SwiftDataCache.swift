@@ -192,7 +192,7 @@ public final class SwiftDataCache {
     }
 
     /// Preload value into cache if not already cached
-    public func preload<T: Sendable>(_ key: String, policy: TTLPolicy = .medium, loader: @Sendable () async throws -> T) async {
+    public func preload(_ key: String, policy: TTLPolicy = .medium, loader: @Sendable () async throws -> some Sendable) async {
         // Skip if already cached and not expired
         if let entry = cache[key], !entry.isExpired {
             return
