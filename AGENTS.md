@@ -290,3 +290,9 @@ Before ending a session:
 - d37c683 docs(#275): add implementation plan for Cultivation rename
 - ce3bbbf docs(#275): add design spec for Cultivation rename + SwiftLint guard
 - 78e1e9e Update docs, archive skill file, add accessibility IDs
+
+## Activity — 2026-05-02
+- c69aea1 Use 'some Sendable' in preload signature
+- 9011e6e fix: Swift 6 concurrency fixes for Release archive
+- a54b562 chore: bump build 1777745186 for TestFlight RC
+- b299d58 Add 2026-05-01 activity log to AGENTS.md
