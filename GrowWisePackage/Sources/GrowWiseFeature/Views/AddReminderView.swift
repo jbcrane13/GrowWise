@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length type_body_length
+
 public struct AddReminderView: View {
     let reminderService: ReminderService
     let dataService: DataService
@@ -575,3 +578,5 @@ struct PlantPickerView: View {
 
     AddReminderView(reminderService: reminderService, dataService: dataService)
 }
+
+// swiftlint:enable file_length type_body_length

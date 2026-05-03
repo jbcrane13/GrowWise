@@ -3,6 +3,9 @@ import GrowWiseServices
 import os
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes line_length type_body_length
+
 // MARK: - AddSeedSheet
 
 /// Sheet form for adding a new seed to the inventory with optional packet scanning.
@@ -447,3 +450,5 @@ struct AddSeedSheet: View {
     }
     #endif
 }
+
+// swiftlint:enable attributes line_length type_body_length

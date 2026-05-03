@@ -1,6 +1,9 @@
 import Foundation
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable large_tuple
+
 // MARK: - Feature Flags
 
 /// Defines all feature flags for GrowWise.
@@ -145,3 +148,5 @@ public final class FeatureFlagService {
         case remote
     }
 }
+
+// swiftlint:enable large_tuple

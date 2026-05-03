@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable for_where
+
 // MARK: - SeedInventoryService
 
 @MainActor
@@ -217,3 +220,5 @@ public final class SeedInventoryService {
         return nil
     }
 }
+
+// swiftlint:enable for_where

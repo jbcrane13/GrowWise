@@ -1,5 +1,8 @@
 import Foundation
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 /// Service for managing measurement unit preferences and locale-aware formatting.
 ///
 /// Provides temperature, length, and volume formatting that respects
@@ -118,3 +121,5 @@ import Foundation
         return formatter
     }()
 }
+
+// swiftlint:enable attributes

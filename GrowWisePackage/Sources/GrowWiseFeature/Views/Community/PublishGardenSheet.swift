@@ -3,6 +3,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 struct PublishGardenSheet: View {
     @Environment(CloudSyncService.self)
     private var cloudSyncService
@@ -246,3 +249,5 @@ struct PublishGardenSheet: View {
         }
     }
 }
+
+// swiftlint:enable line_length

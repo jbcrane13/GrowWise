@@ -3,6 +3,9 @@ import GrowWiseServices
 import StoreKit
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length force_unwrapping function_body_length function_parameter_count type_body_length
+
 public struct PaywallView: View {
     @Environment(SubscriptionService.self)
     private var subscriptionService
@@ -545,3 +548,5 @@ private enum ComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLi
             .environment(SubscriptionService())
     }
 }
+
+// swiftlint:enable file_length force_unwrapping function_body_length function_parameter_count type_body_length

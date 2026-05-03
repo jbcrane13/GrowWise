@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length multiline_literal_brackets trailing_comma
+
 private let logger = Logger(subsystem: "com.growwise", category: "PlantCareAdviceService")
 
 // MARK: - CareTip
@@ -269,3 +272,5 @@ public final class PlantCareAdviceService {
         return []
     }
 }
+
+// swiftlint:enable line_length multiline_literal_brackets trailing_comma

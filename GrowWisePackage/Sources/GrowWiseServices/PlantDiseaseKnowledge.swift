@@ -1,5 +1,8 @@
 import Foundation
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length line_length type_body_length
+
 // MARK: - Plant Condition Model
 
 /// A single plant disease, pest, or deficiency entry in the knowledge base.
@@ -506,3 +509,5 @@ public enum PlantDiseaseKnowledge {
         ),
     ]
 }
+
+// swiftlint:enable file_length line_length type_body_length

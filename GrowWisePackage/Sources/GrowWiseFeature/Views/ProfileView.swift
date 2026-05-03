@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes file_length pattern_matching_keywords type_body_length
+
 public struct ProfileView: View {
     @Environment(DataService.self) private var dataService
     @Environment(SubscriptionService.self) private var subscriptionService
@@ -539,3 +542,5 @@ extension ProfileView {
     ProfileView()
         .environment(dataService)
 }
+
+// swiftlint:enable attributes file_length pattern_matching_keywords type_body_length

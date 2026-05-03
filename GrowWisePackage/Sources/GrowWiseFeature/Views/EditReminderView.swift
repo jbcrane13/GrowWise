@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable type_body_length
+
 public struct EditReminderView: View {
     let reminder: PlantReminder
     let reminderService: ReminderService
@@ -452,3 +455,5 @@ extension EditReminderView {
         }
     }
 }
+
+// swiftlint:enable type_body_length

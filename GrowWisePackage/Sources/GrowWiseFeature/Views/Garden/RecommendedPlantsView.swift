@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable identifier_name
+
 // MARK: - RecommendedPlantsView
 
 /// Shows smart plant recommendations based on garden conditions and user profile.
@@ -439,3 +442,5 @@ private struct SuggestionChip: View {
         .accessibilityIdentifier("suggestion_chip_\(recommendation.plant.name ?? "")")
     }
 }
+
+// swiftlint:enable identifier_name

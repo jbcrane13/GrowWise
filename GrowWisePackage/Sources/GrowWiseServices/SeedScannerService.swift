@@ -134,8 +134,6 @@ public final class SeedScannerService {
     }
 
     private nonisolated func parseDepth(_ text: String) -> Double? {
-        // Match patterns like "depth: 1/4 inch", "1/2\" deep", "1/4 in. deep", "plant 1/2 inch deep"
-        // swiftlint:disable:next line_length
         let fractionPattern = #"(?:depth[:\s]*|plant\s+)?((\d+)\s*/\s*(\d+))\s*(?:inch|in\.?|\")\s*(?:deep)?"#
         if let match = text.range(of: fractionPattern, options: .regularExpression) {
             let matched = String(text[match])

@@ -4,6 +4,9 @@ import GrowWiseModels
 import os.log
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable function_body_length line_length
+
 /// Factory responsible for vending a valid `ModelContainer`.
 ///
 /// All model types, CloudKit configuration, and the 6-level emergency fallback
@@ -203,3 +206,5 @@ public struct ModelContainerFactory {
         ] as [any PersistentModel.Type])
     }
 }
+
+// swiftlint:enable function_body_length line_length

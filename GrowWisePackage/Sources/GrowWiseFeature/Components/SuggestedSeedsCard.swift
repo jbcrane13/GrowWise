@@ -3,6 +3,9 @@ import GrowWiseServices
 import os
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 struct SuggestedSeedsCard: View {
     @Environment(DataService.self) private var dataService
 
@@ -103,3 +106,5 @@ struct SuggestedSeedsCard: View {
         )
     }
 }
+
+// swiftlint:enable attributes

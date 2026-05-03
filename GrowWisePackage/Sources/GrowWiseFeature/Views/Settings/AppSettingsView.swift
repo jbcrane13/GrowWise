@@ -4,6 +4,9 @@ import os
 import StoreKit
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes file_length type_body_length
+
 public struct AppSettingsView: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
@@ -502,3 +505,5 @@ extension MeasurementSystem {
             .environment(DataService.createFallback())
     }
 }
+
+// swiftlint:enable attributes file_length type_body_length

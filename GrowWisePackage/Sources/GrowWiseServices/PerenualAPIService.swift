@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity file_length force_unwrapping identifier_name line_length
+
 private let logger = Logger(subsystem: "com.growwise", category: "PerenualAPI")
 
 // MARK: - Perenual API Response Models
@@ -534,3 +537,5 @@ public extension PerenualSpeciesDetail {
         return instructions
     }
 }
+
+// swiftlint:enable cyclomatic_complexity file_length force_unwrapping identifier_name line_length

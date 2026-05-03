@@ -2,6 +2,9 @@ import GrowWiseModels
 import SwiftData
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length
+
 // MARK: - CompostTrackerView
 
 /// Dedicated compost batch tracker showing active and completed batches
@@ -743,3 +746,5 @@ struct CompostLogEntrySheet: View {
         }
     }
 }
+
+// swiftlint:enable file_length

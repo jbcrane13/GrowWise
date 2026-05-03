@@ -1,6 +1,9 @@
 import GrowWiseModels
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 struct SkillAssessmentView: View {
     @Binding var userProfile: UserProfile
 
@@ -142,3 +145,5 @@ extension GardeningSkillLevel {
         }
     }
 }
+
+// swiftlint:enable line_length

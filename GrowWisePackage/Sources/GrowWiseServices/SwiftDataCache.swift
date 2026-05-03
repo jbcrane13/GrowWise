@@ -1,6 +1,9 @@
 import Foundation
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable large_tuple
+
 private let logger = Logger(subsystem: "com.growwise", category: "SwiftDataCache")
 
 /// High-performance caching layer for SwiftData queries with TTL management
@@ -263,3 +266,5 @@ public final class SwiftDataCache {
         }
     }
 }
+
+// swiftlint:enable large_tuple

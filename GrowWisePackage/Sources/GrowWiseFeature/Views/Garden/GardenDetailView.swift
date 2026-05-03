@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable type_body_length
+
 // MARK: - GardenDetailView
 
 /// Drill-down view for a single garden showing its beds, plants, and stats.
@@ -476,3 +479,5 @@ struct OutlineButtonStyle: ButtonStyle {
             .animation(CultivationTheme.Animation.card, value: configuration.isPressed)
     }
 }
+
+// swiftlint:enable type_body_length

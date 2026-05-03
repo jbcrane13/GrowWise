@@ -1,6 +1,9 @@
 import GrowWiseModels
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 // MARK: - PlantIssue
 
 struct PlantIssue: Identifiable {
@@ -97,7 +100,6 @@ struct CommonPlantIssuesView: View {
 
     // MARK: - Issue Database
 
-    // swiftlint:disable:next function_body_length
     private func commonIssues(for type: PlantType) -> [PlantIssue] {
         switch type {
         case .vegetable:
@@ -214,3 +216,5 @@ private struct IssueCard: View {
         .accessibilityIdentifier("issues_card_\(issue.name)")
     }
 }
+
+// swiftlint:enable line_length

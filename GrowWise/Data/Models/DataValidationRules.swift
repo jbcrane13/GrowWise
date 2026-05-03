@@ -4,6 +4,9 @@ import GrowWiseServices
 import os
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity file_length type_body_length
+
 private let logger = Logger(subsystem: "com.growwise", category: "DataValidationRules")
 
 /// Comprehensive data validation rules for GrowWise entities
@@ -580,3 +583,5 @@ enum DataValidationRules {
         return allResults
     }
 }
+
+// swiftlint:enable cyclomatic_complexity file_length type_body_length

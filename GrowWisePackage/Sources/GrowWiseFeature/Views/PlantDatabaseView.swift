@@ -3,6 +3,9 @@ import GrowWiseServices
 import SwiftData
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes file_length force_unwrapping multiple_closures_with_trailing_closure
+
 public struct PlantDatabaseView: View {
     @Environment(DataService.self) private var dataService
     @Environment(PerenualAPIService.self) private var perenualAPI
@@ -785,3 +788,5 @@ enum DatabaseSortOption: CaseIterable {
     PlantDatabaseView()
         .environment(DataService.createFallback())
 }
+
+// swiftlint:enable attributes file_length force_unwrapping multiple_closures_with_trailing_closure

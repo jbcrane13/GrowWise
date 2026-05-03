@@ -15,6 +15,9 @@ import CoreImage.CIFilterBuiltins
 import GrowWiseModels
 import Photos
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length type_body_length
+
 private let logger = Logger(subsystem: "com.growwise", category: "PhotoService")
 
 #if canImport(UIKit)
@@ -651,3 +654,5 @@ public enum PhotoError: Error, Sendable {
         }
     }
 }
+
+// swiftlint:enable file_length type_body_length

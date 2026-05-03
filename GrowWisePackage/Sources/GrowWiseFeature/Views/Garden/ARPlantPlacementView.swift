@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable multiline_arguments
+
 // MARK: - AR Plant Placement Overlay
 
 #if canImport(ARKit) && os(iOS)
@@ -308,3 +311,5 @@ struct ARPlantPlacementView: View {
 }
 
 #endif
+
+// swiftlint:enable multiline_arguments

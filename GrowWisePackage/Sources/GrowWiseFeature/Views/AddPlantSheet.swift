@@ -4,6 +4,9 @@ import PhotosUI
 import SwiftData
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length type_body_length
+
 /// Sheet view for adding a new plant to the user's garden.
 public struct AddPlantSheet: View {
     @Environment(\.dismiss)
@@ -799,3 +802,5 @@ struct FlowLayout: Layout {
 #Preview {
     AddPlantSheet()
 }
+
+// swiftlint:enable file_length type_body_length

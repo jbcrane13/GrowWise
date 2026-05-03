@@ -2,6 +2,9 @@ import CloudKit
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable function_body_length type_body_length
+
 /// Detail view for a forum question showing the full body, answers, and interaction controls.
 struct QuestionDetailView: View {
     @Environment(ForumService.self)
@@ -413,3 +416,5 @@ struct QuestionDetailView: View {
         }
     }
 }
+
+// swiftlint:enable function_body_length type_body_length

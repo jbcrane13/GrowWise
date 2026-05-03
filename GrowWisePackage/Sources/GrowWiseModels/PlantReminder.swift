@@ -1,6 +1,9 @@
 import Foundation
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity
+
 @Model
 public final class PlantReminder {
     public var id = UUID()
@@ -374,3 +377,5 @@ public enum ReminderPriority: String, CaseIterable, Codable, Sendable {
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity

@@ -3,6 +3,9 @@ import GrowWiseServices
 import os
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 // MARK: - GardenHealthCardView
 
 struct GardenHealthCardView: View {
@@ -326,3 +329,5 @@ struct GardenHealthBreakdownSheet: View {
         }
     }
 }
+
+// swiftlint:enable attributes

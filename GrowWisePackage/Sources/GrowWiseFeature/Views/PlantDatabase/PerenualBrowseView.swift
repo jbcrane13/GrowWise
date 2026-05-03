@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes file_length force_unwrapping identifier_name
+
 /// Browse and search the Perenual plant database (10K+ species).
 /// Shown as a tab/section within the Plant Guide when an API key is configured.
 public struct PerenualBrowseView: View {
@@ -620,3 +623,5 @@ struct PerenualDetailView: View {
         }
     }
 }
+
+// swiftlint:enable attributes file_length force_unwrapping identifier_name

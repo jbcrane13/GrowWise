@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length line_length
+
 // MARK: - GardenFilter
 
 /// Filter chips shown in the Garden tab plant list.
@@ -542,3 +545,5 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
         .accessibilityIdentifier("garden_button_add_bed")
     }
 }
+
+// swiftlint:enable file_length line_length

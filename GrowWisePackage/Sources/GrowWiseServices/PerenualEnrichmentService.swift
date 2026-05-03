@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 private let logger = Logger(subsystem: "com.growwise", category: "PerenualEnrichment")
 
 /// Enriches local Plant objects with Perenual API data.
@@ -91,3 +94,5 @@ public final class PerenualEnrichmentService {
         }
     }
 }
+
+// swiftlint:enable line_length

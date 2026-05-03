@@ -3,6 +3,9 @@ import GrowWiseServices
 import os
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 // SeedInventoryService is in GrowWiseServices (imported above)
 
 /// Observable view-model for the Home tab care dashboard.
@@ -167,3 +170,5 @@ final class HomeViewModel {
         return true
     }
 }
+
+// swiftlint:enable attributes

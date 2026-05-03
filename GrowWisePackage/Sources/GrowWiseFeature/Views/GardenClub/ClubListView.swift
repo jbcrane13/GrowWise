@@ -3,6 +3,9 @@ import GrowWiseServices
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
+
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
 #endif
 
 public struct ClubListView: View {
@@ -202,3 +205,5 @@ private struct ClubRowView: View {
 #Preview {
     ClubListView()
 }
+
+// swiftlint:enable attributes

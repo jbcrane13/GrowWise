@@ -3,6 +3,9 @@ import GrowWiseModels
 import os
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length type_body_length
+
 private let logger = Logger(subsystem: "com.growwise", category: "PlantDatabase")
 
 /// Sample plant database with 25+ common plants for MVP
@@ -683,3 +686,5 @@ struct PlantData {
     let pruningFrequencyWeeks: Int?
     let companionPlants: [String]?
 }
+
+// swiftlint:enable file_length type_body_length

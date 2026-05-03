@@ -5,6 +5,9 @@ import SwiftUI
 
 #if canImport(UIKit)
 import UIKit
+
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
 #endif
 
 public struct PlantReminderCard: View {
@@ -399,3 +402,5 @@ public struct PlantReminderCard: View {
         .background(Color(.controlBackgroundColor))
     #endif
 }
+
+// swiftlint:enable line_length

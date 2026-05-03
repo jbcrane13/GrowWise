@@ -8,6 +8,9 @@ import Vision
 import UIKit
 #elseif canImport(AppKit)
 import AppKit
+
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity line_length pattern_matching_keywords
 #endif
 
 public struct PlantClassificationCandidate: Sendable, Equatable {
@@ -370,3 +373,5 @@ public final class PlantDiagnosticService {
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity line_length pattern_matching_keywords

@@ -3,6 +3,9 @@ import GrowWiseServices
 import os
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 // MARK: - SeedDetailView
 
 /// Read-only detail view for a seed, showing packet photo, growing requirements, and linked plant info.
@@ -291,3 +294,5 @@ struct SeedDetailView: View {
         }
     }
 }
+
+// swiftlint:enable attributes

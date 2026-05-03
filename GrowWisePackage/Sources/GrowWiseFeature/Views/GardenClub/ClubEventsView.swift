@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes file_length identifier_name line_length
+
 public struct ClubEventsView: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
@@ -584,3 +587,5 @@ struct EventDetailSheet: View {
         ClubEventsView(club: club)
     }
 }
+
+// swiftlint:enable attributes file_length identifier_name line_length

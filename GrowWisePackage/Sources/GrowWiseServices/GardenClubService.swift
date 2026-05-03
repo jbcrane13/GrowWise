@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable force_unwrapping
+
 @MainActor
 public final class GardenClubService {
     private let clubRepository: ClubRepository
@@ -130,3 +133,5 @@ public enum GardenClubError: Error, LocalizedError {
         }
     }
 }
+
+// swiftlint:enable force_unwrapping

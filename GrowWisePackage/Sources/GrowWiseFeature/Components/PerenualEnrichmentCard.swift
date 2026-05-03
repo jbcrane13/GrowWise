@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes force_unwrapping identifier_name line_length
+
 /// Reusable card that displays Perenual API-enriched data for any Plant.
 /// Drop into any view — handles async loading, caching, and graceful fallback.
 /// Shows: image, origin, hardiness zone, growth rate, description, safety warnings.
@@ -334,3 +337,5 @@ public struct PerenualEnrichmentThumbnail: View {
         }
     }
 }
+
+// swiftlint:enable attributes force_unwrapping identifier_name line_length

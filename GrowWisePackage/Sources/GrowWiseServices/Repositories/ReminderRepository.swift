@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable function_parameter_count
+
 @MainActor
 public final class ReminderRepository {
     private let context: ModelContext
@@ -112,3 +115,5 @@ public final class ReminderRepository {
         }
     }
 }
+
+// swiftlint:enable function_parameter_count

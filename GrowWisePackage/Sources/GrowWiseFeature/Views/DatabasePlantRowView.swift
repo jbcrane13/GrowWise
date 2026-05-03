@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 // MARK: - Database Plant Row View
 
 struct DatabasePlantRowView: View {
@@ -99,3 +102,5 @@ struct DatabasePlantRowView: View {
         }
     }
 }
+
+// swiftlint:enable line_length

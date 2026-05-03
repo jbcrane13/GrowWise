@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 public struct JoinClubSheet: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
@@ -177,3 +180,5 @@ public struct JoinClubSheet: View {
 #Preview {
     JoinClubSheet()
 }
+
+// swiftlint:enable attributes

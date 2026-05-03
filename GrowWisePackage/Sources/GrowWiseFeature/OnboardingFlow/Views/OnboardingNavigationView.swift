@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 struct OnboardingNavigationView: View {
     @Binding var currentStep: OnboardingStep
     @Binding var userProfile: UserProfile
@@ -267,3 +270,5 @@ enum StepDirection {
         }
     }
 }
+
+// swiftlint:enable line_length

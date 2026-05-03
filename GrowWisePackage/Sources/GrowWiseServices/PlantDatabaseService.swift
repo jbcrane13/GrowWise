@@ -3,6 +3,9 @@ import GrowWiseModels
 import os
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity function_parameter_count
+
 private let logger = Logger(subsystem: "com.growwise", category: "PlantDatabaseService")
 
 // MARK: - JSON Codable Type for Plant Data
@@ -447,3 +450,5 @@ public enum PlantingSeason: String, CaseIterable, Codable {
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_parameter_count

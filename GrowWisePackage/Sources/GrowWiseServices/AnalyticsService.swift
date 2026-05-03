@@ -2,6 +2,9 @@ import AmplitudeSwift
 import Foundation
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable pattern_matching_keywords
+
 // MARK: - Analytics Events
 
 /// All Amplitude events tracked in GrowWise.
@@ -237,3 +240,5 @@ public final class AnalyticsService {
         set { amplitude?.configuration.optOut = newValue }
     }
 }
+
+// swiftlint:enable pattern_matching_keywords

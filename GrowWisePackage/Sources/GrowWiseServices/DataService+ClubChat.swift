@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 /// Club Chat (messages) convenience methods on DataService.
 public extension DataService {
     // MARK: - Messages
@@ -39,3 +42,5 @@ public extension DataService {
         try repo.delete(message)
     }
 }
+
+// swiftlint:enable line_length

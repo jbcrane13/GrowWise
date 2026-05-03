@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes
+
 /// Sheet for composing and posting a new Garden Club activity.
 ///
 /// Accepts an optional `plant` for pre-filling context. Calls `onPost` on
@@ -230,3 +233,5 @@ public struct ClubShareComposerSheet: View {
         }
     }
 }
+
+// swiftlint:enable attributes

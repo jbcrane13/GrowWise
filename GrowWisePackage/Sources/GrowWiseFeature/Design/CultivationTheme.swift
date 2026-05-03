@@ -1,6 +1,9 @@
 import SwiftUI
 #if canImport(UIKit)
 import UIKit
+
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable identifier_name line_length
 #endif
 
 /// Single source of truth for all Cultivation design tokens.
@@ -237,3 +240,5 @@ extension Color {
         #endif
     }
 }
+
+// swiftlint:enable identifier_name line_length

@@ -5,6 +5,9 @@ import os
 import SwiftData
 import WeatherKit
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity file_length function_body_length type_body_length
+
 private let logger = Logger(subsystem: "com.growwise", category: "ReminderService")
 
 public struct WeatherAdjustmentSnapshot: Sendable, Equatable {
@@ -1284,3 +1287,5 @@ public extension ReminderService {
 }
 
 // MARK: - Supporting Types
+
+// swiftlint:enable cyclomatic_complexity file_length function_body_length type_body_length

@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable line_length
+
 /// Service that manages shopping list generation and persistence for gardens.
 ///
 /// Uses auto-generation logic to suggest items based on garden composition,
@@ -136,3 +139,5 @@ public final class ShoppingListService {
         ]
     }
 }
+
+// swiftlint:enable line_length

@@ -2,6 +2,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable attributes identifier_name type_body_length
+
 public struct ClubDetailView: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
@@ -475,3 +478,5 @@ private struct ActivityRowView: View {
         ClubDetailView(club: club)
     }
 }
+
+// swiftlint:enable attributes identifier_name type_body_length

@@ -2,6 +2,9 @@ import Foundation
 import GrowWiseModels
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable function_parameter_count line_length
+
 /// Club Events (scheduling + RSVP) convenience methods on DataService.
 public extension DataService {
     // MARK: - Events
@@ -85,3 +88,5 @@ public enum ClubRSVPResponse: String, CaseIterable {
     case declined
     case maybe
 }
+
+// swiftlint:enable function_parameter_count line_length

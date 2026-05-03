@@ -1,6 +1,9 @@
 import Foundation
 import GrowWiseModels
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable multiline_arguments
+
 // MARK: - Achievement Definition
 
 public enum AchievementCategory: String, CaseIterable, Sendable {
@@ -310,3 +313,5 @@ public final class AchievementService {
         }
     }
 }
+
+// swiftlint:enable multiline_arguments

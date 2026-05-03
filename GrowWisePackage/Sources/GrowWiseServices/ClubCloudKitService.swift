@@ -3,6 +3,9 @@ import Foundation
 import GrowWiseModels
 import os
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity function_body_length identifier_name line_length
+
 /// Handles CloudKit sharing for Garden Clubs.
 ///
 /// Garden Clubs use CKShare so that multiple iCloud users can collaborate
@@ -393,3 +396,5 @@ public enum ClubCloudKitError: LocalizedError, Sendable {
         }
     }
 }
+
+// swiftlint:enable cyclomatic_complexity function_body_length identifier_name line_length

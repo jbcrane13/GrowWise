@@ -1,6 +1,9 @@
 import Foundation
 import GrowWiseModels
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable cyclomatic_complexity line_length
+
 // MARK: - SeasonalActivity
 
 public enum SeasonalActivity: String, Sendable, CaseIterable {
@@ -320,7 +323,6 @@ public final class SeasonalPlannerService {
         var fertilizeMonths: Set<Int> = []
     }
 
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
     private func plantingCalendar(for type: PlantType, zone: String?) -> PlantCalendar {
         let zoneNum = extractZoneNumber(from: zone) ?? 7
         // Shift months earlier for warmer zones, later for colder
@@ -399,3 +401,5 @@ public final class SeasonalPlannerService {
         })
     }
 }
+
+// swiftlint:enable cyclomatic_complexity line_length

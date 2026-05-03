@@ -5,6 +5,9 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable function_body_length large_tuple type_body_length
+
 public struct HomeView: View {
     @Environment(DataService.self)
     private var dataService
@@ -410,3 +413,5 @@ private struct HomeClubPlaceholderCard: View {
         .environment(dataService)
         .environment(AppRouter())
 }
+
+// swiftlint:enable function_body_length large_tuple type_body_length

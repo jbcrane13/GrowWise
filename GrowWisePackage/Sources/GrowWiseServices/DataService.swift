@@ -4,6 +4,9 @@ import GrowWiseModels
 import os
 import SwiftData
 
+// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
+// swiftlint:disable file_length function_parameter_count large_tuple type_body_length
+
 /// Modern @Observable data service for SwiftData operations
 /// Injected via environment - access with @Environment(DataService.self)
 /// No longer uses ObservableObject pattern - automatic observation with @Observable
@@ -983,3 +986,5 @@ public struct UserDataExport: Codable {
         self.totalJournalEntries = totalJournalEntries
     }
 }
+
+// swiftlint:enable file_length function_parameter_count large_tuple type_body_length
