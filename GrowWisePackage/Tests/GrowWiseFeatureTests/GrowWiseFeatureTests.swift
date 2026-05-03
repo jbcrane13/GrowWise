@@ -3,7 +3,7 @@ import SwiftUI
 @testable import GrowWiseFeature
 @testable import GrowWiseModels
 
-@Suite("GrowWise Feature Tests")
+@Suite("GrowWise Feature Tests", .serialized)
 struct GrowWiseFeatureTests {
     
     

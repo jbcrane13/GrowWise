@@ -6,6 +6,7 @@ import Testing
 
 // MARK: - HomeViewModelTests
 
+@Suite(.serialized)
 @MainActor
 struct HomeViewModelTests {
     // MARK: - load() — bucket separation

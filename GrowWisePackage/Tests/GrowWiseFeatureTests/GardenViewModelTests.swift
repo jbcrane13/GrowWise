@@ -37,7 +37,7 @@ struct PlantGroupTests {
 
 // MARK: - GardenViewModelTests
 
-@Suite("GardenViewModel Tests")
+@Suite("GardenViewModel Tests", .serialized)
 @MainActor
 struct GardenViewModelTests {
     // NOTE: Search/filter tests removed — search was moved out of GardenViewModel
