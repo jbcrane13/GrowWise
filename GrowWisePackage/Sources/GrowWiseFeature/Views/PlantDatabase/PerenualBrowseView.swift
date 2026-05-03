@@ -2,14 +2,13 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
-// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable attributes file_length force_unwrapping identifier_name
-
 /// Browse and search the Perenual plant database (10K+ species).
 /// Shown as a tab/section within the Plant Guide when an API key is configured.
 public struct PerenualBrowseView: View {
-    @Environment(PerenualAPIService.self) private var api
-    @Environment(DataService.self) private var dataService
+    @Environment(PerenualAPIService.self)
+    private var api
+    @Environment(DataService.self)
+    private var dataService
 
     @State private var results: [PerenualSpeciesSummary] = []
     @State private var searchText = ""
@@ -316,9 +315,12 @@ struct PerenualSpeciesCard: View {
 
 struct PerenualDetailView: View {
     let detail: PerenualSpeciesDetail
-    @Environment(\.dismiss) private var dismiss
-    @Environment(DataService.self) private var dataService
-    @Environment(PlantDatabaseService.self) private var plantDatabaseService
+    @Environment(\.dismiss)
+    private var dismiss
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(PlantDatabaseService.self)
+    private var plantDatabaseService
     @State private var showAddConfirmation = false
 
     var body: some View {
@@ -449,10 +451,13 @@ struct PerenualDetailView: View {
                 value: detail.growthRate ?? "Unknown"
             )
 
-            if let hardiness = detail.hardiness, let min = hardiness.min {
-                let zoneText = hardiness.max != nil && hardiness.max != min
-                    ? "Zones \(min)–\(hardiness.max!)"
-                    : "Zone \(min)"
+            if let hardiness = detail.hardiness, let minZone = hardiness.min {
+                let zoneText: String = {
+                    if let maxZone = hardiness.max, maxZone != minZone {
+                        return "Zones \(minZone)–\(maxZone)"
+                    }
+                    return "Zone \(minZone)"
+                }()
                 factCard(icon: "thermometer", color: CultivationTheme.Colors.accentCoral, label: "Hardiness", value: zoneText)
             }
 
@@ -509,12 +514,12 @@ struct PerenualDetailView: View {
 
     private var safetySection: some View {
         let warnings: [(String, String)] = {
-            var w: [(String, String)] = []
-            if detail.poisonousToPets == true { w.append(("pawprint.fill", "Toxic to pets")) }
-            if detail.poisonousToHumans == true { w.append(("person.fill.xmark", "Toxic to humans")) }
-            if detail.invasive == true { w.append(("exclamationmark.triangle.fill", "Invasive species")) }
-            if detail.thorny == true { w.append(("bolt.fill", "Has thorns")) }
-            return w
+            var collected: [(String, String)] = []
+            if detail.poisonousToPets == true { collected.append(("pawprint.fill", "Toxic to pets")) }
+            if detail.poisonousToHumans == true { collected.append(("person.fill.xmark", "Toxic to humans")) }
+            if detail.invasive == true { collected.append(("exclamationmark.triangle.fill", "Invasive species")) }
+            if detail.thorny == true { collected.append(("bolt.fill", "Has thorns")) }
+            return collected
         }()
 
         return Group {
@@ -624,4 +629,4 @@ struct PerenualDetailView: View {
     }
 }
 
-// swiftlint:enable attributes file_length force_unwrapping identifier_name
+// swiftlint:disable:this file_length

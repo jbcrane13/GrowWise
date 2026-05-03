@@ -41,12 +41,19 @@ opt_in_rules:
   - legacy_multiple
   - literal_expression_end_indentation
   - lower_acl_than_parent
+  # modifier_order — removed in #284: conflicts with SwiftFormat's default modifier ordering output.
+  #   SwiftFormat applies its own ordering, which collides with SwiftLint's expected order
+  #   for `public nonisolated static`-style declarations. Re-enable only if .swiftformat is
+  #   updated to match SwiftLint's modifier_order rule.
   - multiline_arguments
   - multiline_function_chains
   - multiline_literal_brackets
   - multiline_parameters
   - nimble_operator
   - nslocalizedstring_key
+  # number_separator — removed in #284: SwiftFormat does not insert underscore separators in
+  #   numeric literals, so SwiftLint flags formatted output. Re-enable only when SwiftFormat
+  #   is configured to enforce a matching `numberFormatting` rule (currently unsupported).
   - object_literal
   - operator_usage_whitespace
   - optional_enum_case_matching
@@ -84,7 +91,10 @@ disabled_rules:
   - file_header              # Not enforcing file headers
   - missing_docs             # Not requiring all declarations to be documented
   - no_extension_access_modifier  # Extensions can have access modifiers
-  - opening_brace            # Conflicts with SwiftFormat's --wrap-arguments before-first
+  # opening_brace — disabled in #284: conflicts with SwiftFormat's `--wrap-arguments before-first`
+  #   rule, which places `{` on a new line in some multi-line argument layouts. SwiftLint's
+  #   opening_brace expects same-line `{`. Re-enable only if SwiftFormat is reconfigured.
+  - opening_brace
 
 # Rule configurations
 line_length:
