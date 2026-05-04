@@ -4,11 +4,13 @@ import Foundation
 
 // MARK: - FeatureFlagService Tests
 
-@Suite("FeatureFlagService Tests")
+@Suite("FeatureFlagService Tests", .serialized)
 @MainActor
 struct FeatureFlagServiceTests {
 
-    // Use an isolated UserDefaults suite to avoid polluting the shared store
+    // Use an isolated UserDefaults suite to avoid polluting the shared store.
+    // .serialized ensures init()'s cleanup runs to completion between tests so override writes
+    // (e.g. setOverride in testOverridePriorityOverRemote) cannot leak across parallel tests.
     let userDefaults = UserDefaults(suiteName: "com.growwise.tests.featureflags")!
 
     init() {
