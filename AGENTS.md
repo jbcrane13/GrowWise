@@ -296,3 +296,10 @@ Before ending a session:
 - 9011e6e fix: Swift 6 concurrency fixes for Release archive
 - a54b562 chore: bump build 1777745186 for TestFlight RC
 - b299d58 Add 2026-05-01 activity log to AGENTS.md
+
+## Activity — 2026-05-03
+- f57563e fix(#284): replace file-scope SwiftLint suppressions with targeted directives
+- 62af77e fix(#279): map createSmartReminder baseFrequencyDays to logical ReminderFrequency
+- f34dadb fix(#213): serialize SwiftUI/SwiftData feature test suites to eliminate signal 5/11 crash
+- 4a0bc47 fix(#284): resolve all swiftlint --strict violations
+- 3eb8e19 Update AGENTS.md
