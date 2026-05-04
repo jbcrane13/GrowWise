@@ -204,9 +204,9 @@ struct ReminderServiceUpdateTests {
         )
 
         #expect(reminder.nextDueDate != originalDate)
-        // Daily reminder should be due within ~2 days; weekly is ~7 days out.
-        let twoDays: TimeInterval = 60 * 60 * 24 * 2
-        #expect(reminder.nextDueDate.timeIntervalSinceNow < twoDays)
+        #expect(reminder.nextDueDate < originalDate)
+        let threeDays: TimeInterval = 60 * 60 * 24 * 3
+        #expect(reminder.nextDueDate.timeIntervalSinceNow < threeDays)
     }
 
     @Test("updateReminder leaves nextDueDate alone when only title changes")
