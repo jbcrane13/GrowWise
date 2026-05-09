@@ -64,10 +64,10 @@ public enum PlantDiagnosticError: Error, LocalizedError {
     public var errorDescription: String? {
         switch self {
         case .invalidImage:
-            "The selected image is invalid for diagnosis."
+            "The selected image is invalid for a plant health check."
 
         case .noClassification:
-            "No diagnosis could be produced from the image."
+            "No plant health guidance could be produced from this image."
 
         case .diagnosisLimitReached(let remaining, let tier):
             "You have reached your monthly Plant Health check limit (\(tier.aiDiagnosesPerMonth) per month on the \(tier.displayName) plan). Upgrade for unlimited checks. Remaining: \(remaining)."
@@ -75,9 +75,9 @@ public enum PlantDiagnosticError: Error, LocalizedError {
     }
 }
 
-// MARK: - Diagnosis Limit Constants
+// MARK: - Plant Health Check Limit Constants
 
-private enum DiagnosisLimits {
+private enum PlantHealthCheckLimits {
     static let freeTierMonthlyLimit = 3
 }
 
@@ -96,12 +96,12 @@ public final class PlantDiagnosticService {
 
     // MARK: - Subscription Tier Enforcement
 
-    /// Whether the given user can perform another diagnosis this month.
+    /// Whether the given user can perform another plant health check this month.
     public func canDiagnose(user: User) -> Bool {
         remainingDiagnoses(user: user) != 0
     }
 
-    /// Number of diagnoses remaining this month. Returns -1 for unlimited (premium/pro).
+    /// Number of plant health checks remaining this month. Returns -1 for unlimited (premium/pro).
     public func remainingDiagnoses(user: User) -> Int {
         let tier = user.subscriptionTier
         let limit = tier.aiDiagnosesPerMonth
@@ -112,7 +112,7 @@ public final class PlantDiagnosticService {
         return max(limit - used, 0)
     }
 
-    /// Diagnoses used in the current calendar month, accounting for monthly reset.
+    /// Plant health checks used in the current calendar month, accounting for monthly reset.
     private func diagnosesUsedThisMonth(user: User) -> Int {
         guard let lastReset = user.lastDiagnosisReset else {
             // Never reset — all recorded uses are from the current period
@@ -135,10 +135,10 @@ public final class PlantDiagnosticService {
         ])
     }
 
-    // MARK: - Diagnosis
+    // MARK: - Plant Health Check
 
-    /// Run a full diagnosis, enforcing the user's subscription limits.
-    /// Increments `user.aiDiagnosesUsed` and updates `user.lastDiagnosisReset` on success.
+    /// Run a plant health check, enforcing the user's subscription limits.
+    /// Increments the user's monthly health-check usage counter on success.
     public func diagnose(image: PlatformImage, user: User) async {
         isAnalyzing = true
         lastError = nil
@@ -155,8 +155,8 @@ public final class PlantDiagnosticService {
 
         do {
             let candidates = try await classify(image: image)
-            let diagnosis = summarize(candidates)
-            lastDiagnosis = diagnosis
+            let guidance = summarize(candidates)
+            lastDiagnosis = guidance
 
             // Track usage
             let calendar = Calendar.current
@@ -177,7 +177,7 @@ public final class PlantDiagnosticService {
         }
     }
 
-    /// Legacy diagnose without user — no tier enforcement.
+    /// Legacy image check without user — no tier enforcement.
     public func diagnose(image: PlatformImage) async {
         isAnalyzing = true
         lastError = nil
@@ -185,8 +185,8 @@ public final class PlantDiagnosticService {
 
         do {
             let candidates = try await classify(image: image)
-            let diagnosis = summarize(candidates)
-            lastDiagnosis = diagnosis
+            let guidance = summarize(candidates)
+            lastDiagnosis = guidance
         } catch {
             lastError = error.localizedDescription
         }

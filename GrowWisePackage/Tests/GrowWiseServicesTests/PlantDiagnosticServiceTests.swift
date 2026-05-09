@@ -299,7 +299,7 @@ struct PlantDiagnosticServiceTests {
 
     // MARK: - PlantDiagnosticError
 
-    @Test("diagnosisLimitReached error includes tier name and limit")
+    @Test("health check limit error includes tier name and limit without diagnosis copy")
     func diagnosisLimitReachedErrorDescription() {
         let error = PlantDiagnosticError.diagnosisLimitReached(remaining: 0, tier: .free)
         let description = error.localizedDescription
@@ -307,18 +307,23 @@ struct PlantDiagnosticServiceTests {
         #expect(description.contains("Free"))
         #expect(description.contains("3 per month"))
         #expect(description.contains("Upgrade"))
+        #expect(description.localizedCaseInsensitiveContains("plant health check"))
+        #expect(!description.localizedCaseInsensitiveContains("diagnosis"))
+        #expect(!description.contains("AI"))
     }
 
-    @Test("invalidImage error has user-friendly description")
+    @Test("invalidImage error describes plant health check")
     func invalidImageErrorDescription() {
         let error = PlantDiagnosticError.invalidImage
-        #expect(error.localizedDescription.contains("invalid"))
+        #expect(error.localizedDescription.localizedCaseInsensitiveContains("plant health check"))
+        #expect(!error.localizedDescription.localizedCaseInsensitiveContains("diagnosis"))
     }
 
-    @Test("noClassification error has user-friendly description")
+    @Test("noClassification error describes plant health guidance")
     func noClassificationErrorDescription() {
         let error = PlantDiagnosticError.noClassification
-        #expect(error.localizedDescription.contains("No diagnosis"))
+        #expect(error.localizedDescription.contains("No plant health guidance"))
+        #expect(!error.localizedDescription.localizedCaseInsensitiveContains("diagnosis"))
     }
 
     // MARK: - Initial State

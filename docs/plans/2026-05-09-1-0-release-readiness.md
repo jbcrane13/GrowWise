@@ -129,6 +129,8 @@ git commit -m "fix: persist reminder deletes"
 - Modify: `GrowWisePackage/Sources/GrowWiseServices/PlantDiagnosticService.swift`
 - Modify tests that assert scanner copy, likely `GrowWiseUITests/PhaseOneTwoUITests.swift`
 
+**Progress:** Completed.
+
 **Steps:**
 1. Replace user-facing `Diagnosis` / `diagnosis` copy with `Plant Health Check`, `Care Guidance`, or `Plant Health Guidance`.
 2. Keep internal type names unless a user-facing string leaks.
