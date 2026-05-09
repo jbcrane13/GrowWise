@@ -54,6 +54,7 @@ public struct HomeView: View {
                         .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                 }
             }
+            .accessibilityIdentifier("home_screen")
             .safeAreaInset(edge: .top, spacing: 0) {
                 HomeHeroHeader(
                     userName: viewModel.userName,

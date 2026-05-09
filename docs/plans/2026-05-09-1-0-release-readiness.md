@@ -239,6 +239,8 @@ git commit -m "fix: persist reminder deletes"
 - Modify: `GrowWiseUITests/CompostShoppingProfileUITests.swift`
 - Modify: `GrowWiseUITests/Phase3And4UITests.swift`
 
+**Progress:** Completed.
+
 **Steps:**
 1. Replace stale user-facing `GrowWise` expectations with `Cultivation` where appropriate.
 2. Replace brittle visible text assertions with accessibility identifiers where stable IDs exist.
