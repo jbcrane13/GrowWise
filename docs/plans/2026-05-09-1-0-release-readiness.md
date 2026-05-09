@@ -150,6 +150,8 @@ git commit -m "fix: persist reminder deletes"
 - Modify: `GrowWisePackage/Sources/GrowWiseFeature/Resources/de.lproj/Localizable.strings`
 - Modify: `GrowWisePackage/Sources/GrowWiseServices/Resources/tutorials.json`
 
+**Progress:** Completed.
+
 **Steps:**
 1. Replace user-facing `GrowWise` with `Cultivation` only in resource strings/content.
 2. Do not rename module IDs, bundle IDs, product IDs, CloudKit IDs, logger subsystems, or source imports per ADR-020.

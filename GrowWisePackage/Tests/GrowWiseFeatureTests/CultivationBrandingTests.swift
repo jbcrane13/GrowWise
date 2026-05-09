@@ -1,4 +1,5 @@
 @testable import GrowWiseFeature
+import Foundation
 import GrowWiseModels
 import Testing
 
@@ -55,5 +56,30 @@ struct CultivationBrandingTests {
     func clubInviteShareMessageDefaultsClubName() {
         let message = ClubInviteSharing.shareMessage(clubName: nil, code: "XYZ")
         #expect(message == "Join our club on Cultivation with code XYZ")
+    }
+
+    // MARK: - Resource-backed branding
+
+    @Test("Resource-backed user-facing copy uses Cultivation")
+    func resourceBackedCopyUsesCultivation() throws {
+        let packageRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+
+        let resourcePaths = [
+            "Sources/GrowWiseFeature/Resources/en.lproj/Localizable.strings",
+            "Sources/GrowWiseFeature/Resources/fr.lproj/Localizable.strings",
+            "Sources/GrowWiseFeature/Resources/es.lproj/Localizable.strings",
+            "Sources/GrowWiseFeature/Resources/de.lproj/Localizable.strings",
+            "Sources/GrowWiseServices/Resources/tutorials.json",
+        ]
+
+        for resourcePath in resourcePaths {
+            let resourceURL = packageRoot.appendingPathComponent(resourcePath)
+            let contents = try String(contentsOf: resourceURL, encoding: .utf8)
+            #expect(!contents.contains("GrowWise"), "\(resourcePath) still contains GrowWise")
+            #expect(!contents.contains("Grow Wise"), "\(resourcePath) still contains Grow Wise")
+        }
     }
 }

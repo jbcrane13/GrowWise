@@ -1,4 +1,4 @@
-/* French - Localization for GrowWise */
+/* French - Localization for Cultivation */
 
 /* Navigation & Tabs */
 "tab.home" = "Accueil";
@@ -65,7 +65,7 @@
 "common.retry" = "Réessayer";
 
 /* Onboarding */
-"onboarding.welcome" = "Bienvenue sur GrowWise";
+"onboarding.welcome" = "Bienvenue sur Cultivation";
 "onboarding.experienceQuestion" = "Quel est votre niveau d'expérience ?";
 "onboarding.level.beginner" = "Débutant";
 "onboarding.level.intermediate" = "Intermédiaire";
@@ -85,7 +85,7 @@
 "plantCare.lastFertilized" = "Dernière fertilisation";
 
 /* Subscription */
-"subscription.unlock" = "Débloquez GrowWise Premium";
+"subscription.unlock" = "Débloquez Cultivation Premium";
 "subscription.tier.free" = "Gratuit";
 "subscription.tier.premium" = "Premium";
 "subscription.tier.pro" = "Pro";
