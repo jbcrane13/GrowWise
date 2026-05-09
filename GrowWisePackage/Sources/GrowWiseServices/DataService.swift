@@ -393,7 +393,7 @@ public final class DataService {
             user: getCurrentUser()
         )
 
-        cache.invalidate("reminders:active")
+        invalidateReminderCaches()
         if let plantId = plant.id {
             cache.invalidate("plants:\(plantId.uuidString)")
         }
@@ -441,10 +441,18 @@ public final class DataService {
 
     public func completeReminder(_ reminder: PlantReminder) throws {
         try reminders.complete(reminder)
+        invalidateReminderCaches()
     }
 
     public func deleteReminder(_ reminder: PlantReminder) throws {
         try reminders.delete(reminder)
+        invalidateReminderCaches()
+    }
+
+    private func invalidateReminderCaches() {
+        cache.invalidateAll(withPrefix: "reminders:")
+        cache.invalidateAll(withPrefix: "stats:count:")
+        cache.invalidate("stats:gardening_summary")
     }
 
     // MARK: - Journal Management

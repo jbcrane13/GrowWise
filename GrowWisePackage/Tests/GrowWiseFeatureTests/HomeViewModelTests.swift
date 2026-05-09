@@ -296,7 +296,7 @@ struct HomeViewModelTests {
         #expect(vm.completedIDs.contains(reminder.id))
     }
 
-    @Test("complete() persists the completion and allTasksDone reflects it via completedIDs")
+    @Test("complete() reloads without stale completed reminders")
     func completeReloadsDataAfterDelay() async throws {
         let dataService = try DataService.makeForTesting()
         let plant = try dataService.createPlant(name: "Tomato", type: .vegetable)
@@ -320,19 +320,10 @@ struct HomeViewModelTests {
         // complete() persists completion, waits ~400 ms, then reloads
         await vm.complete(reminder: reminder, dataService: dataService)
 
-        // INTEGRATION GAP: DataService.completeReminder() does not invalidate the
-        // "reminders:active:limit:50" cache key (only exact invalidate("reminders:active")
-        // is called on create, not on complete). The reload inside complete() therefore
-        // gets a 2-minute cache hit with stale data: the now-disabled reminder is still
-        // returned by fetchActiveReminders() and lands back in dueTodayReminders.
-        // Fix: add cache.invalidateAll(withPrefix: "reminders:active") inside
-        // DataService.completeReminder(), or filter by isEnabled in HomeViewModel.load().
-        //
-        // What we CAN assert: persistence worked, and allTasksDone is true because
-        // completedIDs accounts for the visually-completed reminder.
         #expect(reminder.isEnabled == false) // markCompleted() ran
         #expect(vm.completedIDs.contains(reminder.id)) // optimistic id retained after reload
-        #expect(vm.allTasksDone) // completedIDs hides the stale row
+        #expect(vm.dueTodayReminders.isEmpty) // reload no longer reads stale active-reminder cache
+        #expect(vm.allTasksDone) // completed reminder is no longer pending
     }
 
     // MARK: - latestClubPost

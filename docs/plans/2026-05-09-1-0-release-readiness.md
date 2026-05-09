@@ -19,6 +19,7 @@
 - #275 Remaining user-facing GrowWise resource strings
 - #285 Stale UI tests for Cultivation/current flows
 - #286 Reminder delete action does not remove persisted reminder
+- #296 Completing a reminder can reload stale active-reminder cache
 - #288 Persist onboarding level/goals and use them in personalization
 - #289 Onboarding creates a real first garden, skippable
 - #290 First plant onboarding creates a database-backed plant in the selected garden
@@ -45,12 +46,15 @@ Deferred, not 1.0:
 
 ---
 
-### Task 1: Persist Reminder Deletes (#286)
+### Task 1: Persist Reminder Mutations (#286 + #296)
 
 **Files:**
 - Modify: `GrowWisePackage/Sources/GrowWiseFeature/Views/PlantReminderDetailView.swift:432`
 - Modify: `GrowWisePackage/Sources/GrowWiseServices/DataService.swift:446`
 - Modify: `GrowWisePackage/Tests/GrowWiseServicesTests/DataServiceEdgeCaseTests.swift:580`
+- Modify: `GrowWisePackage/Tests/GrowWiseFeatureTests/HomeViewModelTests.swift:300`
+
+**Progress:** Completed.
 
 **Step 1: Write/update the failing service test**
 
@@ -68,7 +72,7 @@ Expected before implementation: FAIL because `DataService.deleteReminder(_:)` do
 
 **Step 3: Implement service cache invalidation**
 
-Update `DataService.deleteReminder(_:)` to invalidate reminder/stat caches after repository deletion:
+Update reminder mutation methods to invalidate reminder/stat caches after repository changes:
 
 ```swift
 public func deleteReminder(_ reminder: PlantReminder) throws {
@@ -78,6 +82,8 @@ public func deleteReminder(_ reminder: PlantReminder) throws {
     cache.invalidate("stats:gardening_summary")
 }
 ```
+
+Apply the same cache policy to `completeReminder(_:)` so Home reloads do not keep stale completed reminders.
 
 **Step 4: Implement view delete persistence**
 

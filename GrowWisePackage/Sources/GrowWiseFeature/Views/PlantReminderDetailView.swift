@@ -430,9 +430,14 @@ public struct PlantReminderDetailView: View {
     }
 
     private func deleteReminder(_ reminder: PlantReminder) {
-        reminderService.cancelNotification(for: reminder)
-        // In a real implementation, you would delete from the data service
-        loadReminders()
+        do {
+            reminderService.cancelNotification(for: reminder)
+            try dataService.deleteReminder(reminder)
+            loadReminders()
+        } catch {
+            errorMessage = "Failed to delete reminder: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     private func completeWateringReminder() {
