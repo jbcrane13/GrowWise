@@ -357,10 +357,6 @@ public struct PaywallView: View {
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         .frame(width: 66)
-                    Text("Pro")
-                        .font(.system(.caption, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
-                        .frame(width: 40)
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.cardPadding)
                 .padding(.vertical, 10)
@@ -368,14 +364,13 @@ public struct PaywallView: View {
                 Divider()
                     .background(CultivationTheme.Colors.divider)
 
-                comparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true, pro: true)
-                comparisonRow(feature: "Plant Limit", free: "50", premium: "500", pro: true)
-                comparisonRow(feature: "Smart Reminders", free: false, premium: true, pro: true)
-                comparisonRow(feature: "Weather Adjust", free: false, premium: true, pro: true)
-                comparisonRow(feature: "Priority Support", free: false, premium: true, pro: true)
-                comparisonRow(feature: "Expert Consults", free: false, premium: false, pro: true)
-                comparisonRow(feature: "Garden Clubs", free: true, premium: true, pro: true)
-                comparisonRow(feature: "Analytics", free: "Basic", premium: "Standard", pro: true, isLast: true)
+                comparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true)
+                comparisonRow(feature: "Plant Limit", free: "50", premium: "500")
+                comparisonRow(feature: "Smart Reminders", free: false, premium: true)
+                comparisonRow(feature: "Weather Adjust", free: false, premium: true)
+                comparisonRow(feature: "Priority Support", free: false, premium: true)
+                comparisonRow(feature: "Garden Clubs", free: true, premium: true)
+                comparisonRow(feature: "Analytics", free: "Basic", premium: "Standard", isLast: true)
             }
             .glassCard()
         }
@@ -386,7 +381,6 @@ public struct PaywallView: View {
         feature: String,
         free: ComparisonValue,
         premium: ComparisonValue,
-        pro: ComparisonValue,
         isLast: Bool = false
     ) -> some View {
         VStack(spacing: 0) {
@@ -400,8 +394,6 @@ public struct PaywallView: View {
                     .frame(width: 50)
                 comparisonCell(value: premium)
                     .frame(width: 66)
-                comparisonCell(value: pro)
-                    .frame(width: 40)
             }
             .padding(.horizontal, CultivationTheme.Spacing.cardPadding)
             .padding(.vertical, 8)

@@ -167,6 +167,8 @@ git commit -m "fix: persist reminder deletes"
 - Modify: `GrowWisePackage/Sources/GrowWiseFeature/Views/PaywallView.swift`
 - Modify/add tests in `GrowWisePackage/Tests/GrowWiseServicesTests/SubscriptionContractTests.swift` or feature tests if practical.
 
+**Progress:** Completed.
+
 **Steps:**
 1. Keep Premium monthly/annual actionable.
 2. Remove the Pro comparison column or mark it clearly as unavailable without implying purchase.
