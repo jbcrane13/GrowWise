@@ -253,6 +253,8 @@ git commit -m "fix: persist reminder deletes"
 
 ### Task 8: Final Release Verification
 
+**Progress:** Completed.
+
 **Commands:**
 
 ```bash
@@ -269,3 +271,9 @@ gh issue list --repo jbcrane13/GrowWise --state open --limit 200 --json number,t
 - Package tests run and pass.
 - App build succeeds.
 - Open 1.0 board has no remaining blockers except explicitly deferred #287.
+
+**Verification (2026-05-09):**
+- `swiftformat --lint --config .swiftformat GrowWisePackage/Sources GrowWise`: 0/175 files require formatting, 10 files skipped.
+- `swiftlint lint --strict --config .swiftlint.yml`: 0 violations, 0 serious in 175 files.
+- `ssh mac-mini "cd ~/Projects/GrowWise/.worktrees/1-0-release-readiness-final-9632f08/GrowWisePackage && swift test"`: 1477 tests in 166 suites passed.
+- `ssh mac-mini "cd ~/Projects/GrowWise/.worktrees/1-0-release-readiness-final-9632f08 && xcodebuild -workspace GrowWise.xcworkspace -scheme GrowWise -sdk iphonesimulator build CODE_SIGN_IDENTITY='' CODE_SIGNING_REQUIRED=NO"`: build succeeded.
