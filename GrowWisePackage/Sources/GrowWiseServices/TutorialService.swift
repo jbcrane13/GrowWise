@@ -38,14 +38,43 @@ public final class TutorialService {
 
     public func getRecommendedTutorials(for user: User) -> [TutorialTopic] {
         let skillLevel = user.skillLevel
-        let userGardenType = "container"
+        let userGardenTypes = Set((user.gardens ?? []).compactMap { $0.gardenType?.rawValue } + ["all"])
+        let goals = user.gardeningGoals ?? []
 
         return getTutorialsForSkillLevel(skillLevel)
             .filter { tutorial in
-                tutorial.relevantGardenTypes.contains(userGardenType) ||
-                    tutorial.relevantGardenTypes.contains("all")
+                !userGardenTypes.isDisjoint(with: tutorial.relevantGardenTypes)
             }
-            .sorted { $0.estimatedDuration < $1.estimatedDuration }
+            .sorted {
+                let lhsPriority = tutorialPriority($0, goals: goals)
+                let rhsPriority = tutorialPriority($1, goals: goals)
+                if lhsPriority != rhsPriority {
+                    return lhsPriority < rhsPriority
+                }
+                return $0.estimatedDuration < $1.estimatedDuration
+            }
+    }
+
+    private func tutorialPriority(_ tutorial: TutorialTopic, goals: [GardeningGoal]) -> Int {
+        let goalSet = Set(goals)
+
+        if goalSet.contains(.learnSkills), tutorial.category == .planning {
+            return 0
+        }
+        if goalSet.contains(.growFood), [.planning, .preparation].contains(tutorial.category) {
+            return 1
+        }
+        if goalSet.contains(.sustainability), [.environment, .preparation].contains(tutorial.category) {
+            return 1
+        }
+        if goalSet.contains(.relaxation), tutorial.category == .care {
+            return 1
+        }
+        if goalSet.contains(.beautifySpace), [.planning, .care].contains(tutorial.category) {
+            return 1
+        }
+
+        return 10
     }
 
     // MARK: - Progress Tracking

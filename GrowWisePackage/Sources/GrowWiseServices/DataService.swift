@@ -198,6 +198,17 @@ public final class DataService {
         try users.update(user)
     }
 
+    public func updateOnboardingProfile(
+        for user: User,
+        gardeningGoals: [GardeningGoal],
+        preferredPlantTypes: [PlantType]
+    ) throws {
+        user.gardeningGoals = gardeningGoals
+        user.preferredPlantTypes = preferredPlantTypes
+        user.lastModified = Date()
+        try users.update(user)
+    }
+
     // MARK: - Garden Management
 
     @discardableResult

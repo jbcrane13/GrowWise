@@ -184,7 +184,7 @@ struct OnboardingNavigationView: View {
                     skillLevel: userProfile.skillLevel
                 )
 
-                await saveUserPreferences(user: user)
+                try await saveUserPreferences(user: user)
                 await createFirstPlantIfSelected(user: user)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
@@ -234,7 +234,8 @@ struct OnboardingNavigationView: View {
         }
     }
 
-    private func saveUserPreferences(user: User) async {
+    @MainActor
+    private func saveUserPreferences(user: User) async throws {
         if let goalsData = try? JSONEncoder().encode(userProfile.goals.map(\.rawValue)) {
             UserDefaults.standard.set(goalsData, forKey: "userGardeningGoals")
         }
@@ -249,6 +250,15 @@ struct OnboardingNavigationView: View {
         if userProfile.hasNotificationPermission {
             notificationService.setupNotificationCategories()
         }
+
+        try dataService.updateOnboardingProfile(
+            for: user,
+            gardeningGoals: OnboardingPersonalization.modelGoals(from: userProfile.goals),
+            preferredPlantTypes: OnboardingPersonalization.preferredPlantTypes(
+                goals: userProfile.goals,
+                interests: userProfile.interests
+            )
+        )
     }
 }
 

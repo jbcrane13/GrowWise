@@ -146,7 +146,9 @@ struct RecommendedPlantsView: View {
             skillLevel: user?.skillLevel ?? .beginner,
             availableSpace: spaceRequirementFromGarden(),
             timeCommitment: user?.timeCommitment ?? .moderate,
-            gardenType: garden.gardenType?.rawValue ?? "outdoor"
+            gardenType: garden.gardenType?.rawValue ?? "outdoor",
+            preferredPlantTypes: user?.preferredPlantTypes ?? [],
+            gardeningGoals: user?.gardeningGoals ?? []
         )
 
         recommendations = plantDatabaseService.getRecommendedPlants(for: profile, limit: 8)
@@ -396,7 +398,9 @@ struct SuggestedPlantsSection: View {
             skillLevel: user?.skillLevel ?? .beginner,
             availableSpace: spaceRequirement(),
             timeCommitment: user?.timeCommitment ?? .moderate,
-            gardenType: garden.gardenType?.rawValue ?? "outdoor"
+            gardenType: garden.gardenType?.rawValue ?? "outdoor",
+            preferredPlantTypes: user?.preferredPlantTypes ?? [],
+            gardeningGoals: user?.gardeningGoals ?? []
         )
 
         suggestions = plantDatabaseService.getRecommendedPlants(for: profile, limit: 4)
