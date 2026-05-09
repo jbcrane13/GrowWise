@@ -59,6 +59,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         let authorDisplayName: String
         let caption: String?
         let zoneTag: String?
+        let photoURL: String?
         let relativeTimeLabel: String?
         let likeCount: Int
         let commentCount: Int
@@ -85,10 +86,11 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         #endif
         .task { await load() }
         .sheet(isPresented: $isPresentingComposer) {
-            ClubShareComposerSheet(plant: nil, onPost: {
+            ClubShareComposerSheet(plant: nil, club: club, onPost: {
                 Task<Void, Never> { await load() }
             })
             .environment(dataService)
+            .environment(clubCloudKitService)
         }
     }
 
@@ -234,7 +236,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
                 if index == 1, let match = smartMatch {
                     smartMatchCard(match)
                 }
-                PostCard(post: post)
+                ClubPostCard(post: post)
             }
             if posts.count < 2, let match = smartMatch {
                 smartMatchCard(match)
@@ -358,7 +360,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         }
     }
 
-    private static func viewData(from activity: ClubActivity) -> ClubActivityViewData {
+    static func viewData(from activity: ClubActivity) -> ClubActivityViewData {
         let id = activity.id ?? UUID()
         let author = activity.memberName ?? "Member"
         let caption = activity.activityDescription
@@ -375,6 +377,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             authorDisplayName: author,
             caption: caption,
             zoneTag: nil, // not yet captured on ClubActivity
+            photoURL: activity.photoURL,
             relativeTimeLabel: label,
             likeCount: 0, // future feature
             commentCount: 0 // future feature
@@ -384,11 +387,13 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     /// Maps a raw `CKRecord` for a `ClubActivity` CloudKit record onto the
     /// presentation type. Field names must match those written by
     /// `ClubCloudKitService.publishActivity(_:)`.
-    private static func viewData(from record: CKRecord) -> ClubActivityViewData {
+    static func viewData(from record: CKRecord) -> ClubActivityViewData {
         // The record name is the activity UUID stored as a string by publishActivity.
         let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
         let author = record["memberName"] as? String ?? "Member"
         let caption = record["activityDescription"] as? String
+        let photoURL = (record["photo"] as? CKAsset)?.fileURL?.absoluteString
+            ?? record["photoURL"] as? String
         let timestamp = record["timestamp"] as? Date
         let label: String?
         if let timestamp {
@@ -403,6 +408,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             authorDisplayName: author,
             caption: caption,
             zoneTag: nil, // not yet captured in CK record
+            photoURL: photoURL,
             relativeTimeLabel: label,
             likeCount: 0, // future feature
             commentCount: 0 // future feature
@@ -416,83 +422,5 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             return "Gardener"
         }
         return String(first)
-    }
-}
-
-// MARK: - Post card
-
-private struct PostCard: View {
-    let post: GardenClubFeedView.ClubActivityViewData
-
-    var body: some View {
-        VStack(alignment: .leading, spacing: 10) {
-            HStack(spacing: 10) {
-                Circle()
-                    .fill(LinearGradient(
-                        colors: [CultivationTheme.Colors.brandMint, CultivationTheme.Colors.brandLeaf],
-                        startPoint: .topLeading,
-                        endPoint: .bottomTrailing
-                    ))
-                    .frame(width: 32, height: 32)
-                    .overlay(
-                        Text(initials(of: post.authorDisplayName))
-                            .font(CultivationTheme.Fonts.display(13, weight: .semibold))
-                            .foregroundStyle(.white)
-                    )
-                VStack(alignment: .leading, spacing: 1) {
-                    Text(post.authorDisplayName)
-                        .font(CultivationTheme.Fonts.body(13, weight: .bold))
-                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                    HStack(spacing: 5) {
-                        if let zone = post.zoneTag {
-                            Text("Zone \(zone)")
-                                .foregroundStyle(CultivationTheme.Colors.smartTagForeground)
-                                .fontWeight(.bold)
-                        }
-                        if let when = post.relativeTimeLabel {
-                            Text(post.zoneTag == nil ? when : "\u{00B7} \(when)")
-                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                        }
-                    }
-                    .font(CultivationTheme.Fonts.body(10))
-                }
-                Spacer()
-            }
-
-            if let caption = post.caption {
-                Text(caption)
-                    .font(CultivationTheme.Fonts.body(13))
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                    .lineLimit(nil)
-            }
-
-            // Photo placeholder — wire to PhotoService asset URL when available
-            RoundedRectangle(cornerRadius: 12)
-                .fill(LinearGradient(
-                    colors: [CultivationTheme.Colors.brandLeaf, CultivationTheme.Colors.brandForest],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                ))
-                .frame(height: 120)
-
-            HStack(spacing: 16) {
-                if post.likeCount > 0 {
-                    Label("\(post.likeCount)", systemImage: "heart")
-                }
-                if post.commentCount > 0 {
-                    Label("\(post.commentCount)", systemImage: "bubble.right")
-                }
-                Label("Share", systemImage: "arrow.up.right")
-            }
-            .font(CultivationTheme.Fonts.body(11, weight: .semibold))
-            .foregroundStyle(CultivationTheme.Colors.textTertiary)
-        }
-        .padding(14)
-        .paperCard()
-        .accessibilityIdentifier("club_post_\(post.id.uuidString)")
-    }
-
-    private func initials(of name: String) -> String {
-        String(name.prefix(1)).uppercased()
     }
 }

@@ -1,5 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
+import PhotosUI
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
@@ -9,23 +10,41 @@ import SwiftUI
 ///
 /// Accepts an optional `plant` for pre-filling context. Calls `onPost` on
 /// success so the parent can refresh its feed.
-public struct ClubShareComposerSheet: View {
+public struct ClubShareComposerSheet: View { // swiftlint:disable:this type_body_length
     @Environment(DataService.self) private var dataService
+    @Environment(PhotoService.self) private var photoService
+    @Environment(ClubCloudKitService.self) private var clubCloudKitService
     @Environment(\.dismiss) private var dismiss
 
     let plant: Plant?
+    let club: GardenClub?
     let initialCaption: String?
     var onPost: () -> Void = {}
 
     @State private var caption = ""
     @State private var includePlant = true
+    @State private var availableClubs: [GardenClub] = []
+    @State private var selectedClubID: UUID?
+    @State private var selectedPhotoItem: PhotosPickerItem?
+    @State private var selectedPhotoData: Data?
     @State private var isPosting = false
     @State private var errorMessage: String?
     @State private var showError = false
-    @State private var clubName = "Your Club"
+    @State private var offlineMessage: String?
+    @State private var showOfflineNotice = false
 
     private var captionIsEmpty: Bool {
         caption.trimmingCharacters(in: .whitespaces).isEmpty
+    }
+
+    private var selectedClub: GardenClub? {
+        if let club { return club }
+        guard let selectedClubID else { return availableClubs.first }
+        return availableClubs.first { $0.id == selectedClubID } ?? availableClubs.first
+    }
+
+    private var selectedClubName: String {
+        selectedClub?.name ?? "Garden Club"
     }
 
     private var resolvedPlantName: String? {
@@ -33,8 +52,14 @@ public struct ClubShareComposerSheet: View {
         return plant?.name
     }
 
-    public init(plant: Plant? = nil, initialCaption: String? = nil, onPost: @escaping () -> Void = {}) {
+    public init(
+        plant: Plant? = nil,
+        club: GardenClub? = nil,
+        initialCaption: String? = nil,
+        onPost: @escaping () -> Void = {}
+    ) {
         self.plant = plant
+        self.club = club
         self.initialCaption = initialCaption
         self.onPost = onPost
         if let ic = initialCaption {
@@ -48,7 +73,7 @@ public struct ClubShareComposerSheet: View {
                 CultivationTheme.Colors.background.ignoresSafeArea()
                 scrollContent
             }
-            .navigationTitle("Share with \(clubName)")
+            .navigationTitle("Share with \(selectedClubName)")
             .gwNavigationBarTitleDisplayMode(.inline)
             .toolbar { toolbarContent }
             .alert("Couldn't post", isPresented: $showError) {
@@ -57,7 +82,13 @@ public struct ClubShareComposerSheet: View {
             } message: {
                 Text(errorMessage ?? "Something went wrong.")
             }
-            .task { loadClubName() }
+            .alert("Saved locally", isPresented: $showOfflineNotice) {
+                Button("OK") { dismiss() }
+                    .accessibilityIdentifier("share_composer_alert_offline")
+            } message: {
+                Text(offlineMessage ?? "Your post is visible locally and will be ready to retry when iCloud is available.")
+            }
+            .task { loadClubs() }
         }
         .accessibilityIdentifier("screen_share_composer")
     }
@@ -67,10 +98,14 @@ public struct ClubShareComposerSheet: View {
     private var scrollContent: some View {
         ScrollView {
             VStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
+                if club == nil {
+                    clubSelectionSection
+                }
                 captionSection
                 if plant != nil {
                     plantContextSection
                 }
+                photoSection
                 postFooterHint
             }
             .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -103,6 +138,36 @@ public struct ClubShareComposerSheet: View {
     }
 
     // MARK: - Plant context chip
+
+    private var clubSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Club")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            if availableClubs.isEmpty {
+                Text("Join or create a club before posting.")
+                    .font(CultivationTheme.Fonts.body(13))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .padding(CultivationTheme.Spacing.cardPadding)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassCard()
+                    .accessibilityIdentifier("share_composer_text_no_club")
+            } else {
+                Picker("Club", selection: $selectedClubID) {
+                    ForEach(availableClubs, id: \.id) { club in
+                        Text(club.name ?? "Garden Club")
+                            .tag(club.id)
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassCard()
+                .accessibilityIdentifier("share_composer_picker_club")
+            }
+        }
+    }
 
     private var plantContextSection: some View {
         VStack(alignment: .leading, spacing: 6) {
@@ -160,6 +225,52 @@ public struct ClubShareComposerSheet: View {
         }
     }
 
+    // MARK: - Photo section
+
+    private var photoSection: some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Text("Photo")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            PhotosPicker(selection: $selectedPhotoItem, matching: .images) {
+                HStack(spacing: 10) {
+                    Image(systemName: selectedPhotoData == nil ? "photo.badge.plus" : "photo.fill")
+                        .font(.system(size: 16, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                    Text(selectedPhotoData == nil ? "Add Photo" : "Photo attached")
+                        .font(CultivationTheme.Fonts.body(13, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    Spacer()
+                    if selectedPhotoData != nil {
+                        Button {
+                            selectedPhotoData = nil
+                            selectedPhotoItem = nil
+                        } label: {
+                            Image(systemName: "xmark.circle.fill")
+                                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        }
+                        .accessibilityLabel("Remove attached photo")
+                        .accessibilityIdentifier("share_composer_button_remove_photo")
+                    }
+                }
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .background(
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                        .fill(CultivationTheme.Colors.cardSurface)
+                )
+                .overlay(
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                        .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
+                )
+            }
+            .accessibilityIdentifier("share_composer_button_add_photo")
+            .onChange(of: selectedPhotoItem) { _, newValue in
+                Task<Void, Never> { await loadSelectedPhoto(newValue) }
+            }
+        }
+    }
+
     // MARK: - Footer hint
 
     private var postFooterHint: some View {
@@ -198,7 +309,7 @@ public struct ClubShareComposerSheet: View {
                     ? CultivationTheme.Colors.textTertiary
                     : CultivationTheme.Colors.accentCoral
             )
-            .disabled(captionIsEmpty)
+            .disabled(captionIsEmpty || selectedClub == nil)
             .accessibilityIdentifier("share_composer_button_post")
         }
     }
@@ -209,28 +320,67 @@ public struct ClubShareComposerSheet: View {
     private func submitPost() async {
         let trimmed = caption.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
+        guard let selectedClub else {
+            errorMessage = CreateClubPostError.noClub.localizedDescription
+            showError = true
+            return
+        }
 
         isPosting = true
         defer { isPosting = false }
 
         do {
-            try dataService.createClubPost(
+            let photoURL = try await saveSelectedPhotoIfNeeded()
+            let activity = try dataService.createClubPost(
                 caption: trimmed,
                 activityType: "shared",
-                plantName: resolvedPlantName
+                plantName: resolvedPlantName,
+                club: selectedClub,
+                photoURL: photoURL
             )
             onPost()
-            dismiss()
+            do {
+                try await clubCloudKitService.publishActivity(activity)
+                dismiss()
+            } catch {
+                offlineMessage = [
+                    "Your post is visible locally.",
+                    "iCloud sync is unavailable right now, so open the club again later to retry syncing.",
+                ].joined(separator: " ")
+                showOfflineNotice = true
+            }
         } catch {
             errorMessage = error.localizedDescription
             showError = true
         }
     }
 
-    private func loadClubName() {
-        if let name = dataService.fetchPrimaryClub()?.name {
-            clubName = name
+    private func loadClubs() {
+        do {
+            availableClubs = try dataService.fetchClubs()
+            if selectedClubID == nil {
+                selectedClubID = club?.id ?? availableClubs.first?.id
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            showError = true
         }
+    }
+
+    @MainActor
+    private func loadSelectedPhoto(_ item: PhotosPickerItem?) async {
+        guard let item else { return }
+        do {
+            selectedPhotoData = try await item.loadTransferable(type: Data.self)
+        } catch {
+            errorMessage = "Couldn't load that photo. Please try another image."
+            showError = true
+        }
+    }
+
+    private func saveSelectedPhotoIfNeeded() async throws -> String? {
+        guard let selectedPhotoData else { return nil }
+        return try await photoService.saveClubPostPhotoData(selectedPhotoData)
     }
 }
 

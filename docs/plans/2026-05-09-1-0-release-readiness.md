@@ -188,6 +188,8 @@ git commit -m "fix: persist reminder deletes"
 - Modify: `GrowWisePackage/Sources/GrowWiseServices/ClubCloudKitService.swift`
 - Reuse: `GrowWisePackage/Sources/GrowWiseServices/PhotoService.swift`
 
+**Progress:** Completed.
+
 **Steps:**
 1. Add photo attachment to composer.
 2. Add selected club handling where the composer can be launched without an explicit club.
