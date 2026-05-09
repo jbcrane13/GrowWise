@@ -66,9 +66,11 @@ struct FirstPlantStepView: View {
                                 if selectedPlant?.id == plant.id {
                                     selectedPlant = nil
                                     userProfile.selectedFirstPlantName = nil
+                                    userProfile.selectedFirstPlantID = nil
                                 } else {
                                     selectedPlant = plant
                                     userProfile.selectedFirstPlantName = plant.name
+                                    userProfile.selectedFirstPlantID = plant.id
                                 }
                             }
                         }
@@ -80,6 +82,7 @@ struct FirstPlantStepView: View {
                 Button {
                     selectedPlant = nil
                     userProfile.selectedFirstPlantName = nil
+                    userProfile.selectedFirstPlantID = nil
                 } label: {
                     Text("Skip — I'll add plants later")
                         .font(.system(size: 14, design: .rounded))

@@ -185,8 +185,8 @@ struct OnboardingNavigationView: View {
                 )
 
                 try await saveUserPreferences(user: user)
-                try await createFirstGardenIfRequested()
-                await createFirstPlantIfSelected(user: user)
+                let firstGarden = try await createFirstGardenIfRequested()
+                try await createFirstPlantIfSelected(garden: firstGarden)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
                 await MainActor.run {
@@ -207,12 +207,12 @@ struct OnboardingNavigationView: View {
     }
 
     @MainActor
-    private func createFirstGardenIfRequested() async throws {
-        guard userProfile.shouldCreateFirstGarden else { return }
+    private func createFirstGardenIfRequested() async throws -> Garden? {
+        guard userProfile.shouldCreateFirstGarden else { return nil }
         let trimmedName = userProfile.firstGardenName.trimmingCharacters(in: .whitespacesAndNewlines)
         let gardenName = trimmedName.isEmpty ? "My First Garden" : trimmedName
 
-        try dataService.createGarden(
+        return try dataService.createGarden(
             name: gardenName,
             type: userProfile.gardenType,
             isIndoor: OnboardingPersonalization.defaultIsIndoor(for: userProfile.gardenType),
@@ -221,32 +221,26 @@ struct OnboardingNavigationView: View {
     }
 
     @MainActor
-    private func createFirstPlantIfSelected(user: User) async {
+    private func createFirstPlantIfSelected(garden: Garden?) async throws {
         guard let plantName = userProfile.selectedFirstPlantName, !plantName.isEmpty else { return }
-
-        let plant = Plant(
-            name: plantName,
-            plantType: .flower,
-            difficultyLevel: .beginner
-        )
-        plant.plantingDate = Date()
-
-        do {
-            try dataService.plants.add(plant)
-
-            // Auto-create a watering reminder due tomorrow
-            let tomorrow = Calendar.current.date(byAdding: .day, value: 1, to: Date()) ?? Date()
-            _ = try dataService.createReminder(
-                title: "Water \(plantName)",
-                message: "Time to water your new \(plantName)!",
-                type: .watering,
-                frequency: .weekly,
-                dueDate: tomorrow,
-                plant: plant
-            )
-        } catch {
-            // Non-critical — plant creation failure shouldn't block onboarding
+        guard let garden else {
+            throw OnboardingSaveError.firstPlantNeedsGarden
         }
+        guard let template = selectedFirstPlantTemplate(named: plantName) else {
+            throw OnboardingSaveError.firstPlantTemplateMissing(plantName)
+        }
+
+        try dataService.createStarterPlant(from: template, in: garden)
+    }
+
+    private func selectedFirstPlantTemplate(named plantName: String) -> Plant? {
+        let templates = dataService.fetchPlantDatabase()
+        if let selectedFirstPlantID = userProfile.selectedFirstPlantID,
+           let match = templates.first(where: { $0.id == selectedFirstPlantID })
+        {
+            return match
+        }
+        return templates.first { $0.name == plantName }
     }
 
     @MainActor
@@ -280,6 +274,21 @@ struct OnboardingNavigationView: View {
 enum StepDirection {
     case next
     case previous
+}
+
+private enum OnboardingSaveError: LocalizedError {
+    case firstPlantNeedsGarden
+    case firstPlantTemplateMissing(String)
+
+    var errorDescription: String? {
+        switch self {
+        case .firstPlantNeedsGarden:
+            "Create a first garden before adding a first plant, or skip the first plant for now."
+
+        case .firstPlantTemplateMissing(let name):
+            "Could not find \(name) in the plant database. Please pick a plant again or skip for now."
+        }
+    }
 }
 
 #Preview {

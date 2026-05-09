@@ -127,6 +127,7 @@ public struct UserProfile {
     var hasNotificationPermission: Bool = false
     var preferredNotificationTime: Date = Calendar.current.date(from: DateComponents(hour: 9)) ?? Date()
     var selectedFirstPlantName: String?
+    var selectedFirstPlantID: UUID?
 }
 
 public enum GardeningGoal: String, CaseIterable, Identifiable {
