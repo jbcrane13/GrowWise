@@ -586,6 +586,19 @@ public final class DataService {
         invalidateReminderCaches()
     }
 
+    public func buildStarterPlan() throws -> StarterPlan {
+        let gardenList = try gardens.fetchAll(offset: 0, limit: 50)
+        let plantList = try plants.fetchAll()
+        let reminderList = try reminders.fetchActive(limit: 50)
+
+        return StarterPlanService.build(
+            user: getCurrentUser(),
+            gardens: gardenList,
+            plants: plantList,
+            reminders: reminderList
+        )
+    }
+
     private func invalidateReminderCaches() {
         cache.invalidateAll(withPrefix: "reminders:")
         cache.invalidateAll(withPrefix: "stats:count:")

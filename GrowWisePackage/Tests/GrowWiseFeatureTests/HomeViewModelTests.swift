@@ -106,6 +106,21 @@ struct HomeViewModelTests {
         #expect(vm.userName.isEmpty)
     }
 
+    @Test("load() publishes starter plan actions")
+    func loadPublishesStarterPlanActions() async throws {
+        let dataService = try DataService.makeForTesting()
+        _ = try dataService.createUser(
+            email: "test@example.com",
+            displayName: "Alice",
+            skillLevel: .beginner
+        )
+
+        let vm = HomeViewModel()
+        await vm.load(dataService: dataService)
+
+        #expect(vm.starterPlan.actions.map(\.kind) == [.createGarden, .startTutorial])
+    }
+
     // MARK: - allTasksDone
 
     @Test("allTasksDone is true when all visible reminders are in completedIDs")

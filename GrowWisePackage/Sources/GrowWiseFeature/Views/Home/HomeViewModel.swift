@@ -21,6 +21,7 @@ final class HomeViewModel {
     var totalPlantCount: Int = 0
     var isLoading = false
     var userName: String = ""
+    var starterPlan = StarterPlan()
 
     /// Seeds that are ready to start indoors based on zone and current date.
     var readyToPlantSeeds: [Seed] = []
@@ -99,6 +100,13 @@ final class HomeViewModel {
         } catch {
             totalPlantCount = 0
             errorMessage = "Failed to load plants: \(error.localizedDescription)"
+        }
+
+        do {
+            starterPlan = try dataService.buildStarterPlan()
+        } catch {
+            starterPlan = StarterPlan()
+            errorMessage = "Failed to load starter plan: \(error.localizedDescription)"
         }
 
         // Resolve ready-to-plant seeds

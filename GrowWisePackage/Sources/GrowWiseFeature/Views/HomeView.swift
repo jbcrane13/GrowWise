@@ -32,6 +32,13 @@ public struct HomeView: View {
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
 
+                    if !viewModel.starterPlan.actions.isEmpty {
+                        StarterPlanCard(actions: viewModel.starterPlan.actions) { action in
+                            handleStarterPlanAction(action)
+                        }
+                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    }
+
                     Button {
                         router.selectedTab = .club
                     } label: {
@@ -130,6 +137,16 @@ public struct HomeView: View {
         .padding(CultivationTheme.Spacing.cardPadding)
         .paperCard()
         .accessibilityIdentifier("home_card_today_care")
+    }
+
+    private func handleStarterPlanAction(_ action: StarterPlanAction) {
+        switch action.kind {
+        case .createGarden, .addPlant, .reviewWateringReminder, .browseRecommendations:
+            router.selectedTab = .garden
+
+        case .startTutorial:
+            router.selectedTab = .profile
+        }
     }
 
     private func careTaskRow(_ reminder: PlantReminder) -> some View {
