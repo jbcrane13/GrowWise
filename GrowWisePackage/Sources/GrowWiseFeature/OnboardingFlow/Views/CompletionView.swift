@@ -87,17 +87,19 @@ struct CompletionView: View {
                 CompletionSummaryRow(
                     icon: "leaf.fill",
                     iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.70),
-                    label: "Garden",
-                    value: userProfile.gardenType.displayName
+                    label: "First Garden",
+                    value: Self.gardenSummary(for: userProfile)
                 )
 
-                Divider().padding(.leading, 48)
-                CompletionSummaryRow(
-                    icon: "square.grid.2x2.fill",
-                    iconColor: CultivationTheme.Colors.textTertiary,
-                    label: "Space",
-                    value: userProfile.spaceSize.displayName
-                )
+                if userProfile.shouldCreateFirstGarden {
+                    Divider().padding(.leading, 48)
+                    CompletionSummaryRow(
+                        icon: "square.grid.2x2.fill",
+                        iconColor: CultivationTheme.Colors.textTertiary,
+                        label: "Space",
+                        value: userProfile.spaceSize.displayName
+                    )
+                }
             }
             .paperCard()
             .padding(.horizontal, 24)
@@ -110,6 +112,12 @@ struct CompletionView: View {
             withAnimation(.spring(duration: 0.65, bounce: 0.2).delay(0.1)) { heroVisible = true }
             withAnimation(.spring(duration: 0.55).delay(0.55)) { summaryVisible = true }
         }
+    }
+
+    static func gardenSummary(for profile: UserProfile) -> String {
+        guard profile.shouldCreateFirstGarden else { return "Skipped" }
+        let trimmedName = profile.firstGardenName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? "My First Garden" : trimmedName
     }
 }
 

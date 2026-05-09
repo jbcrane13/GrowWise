@@ -216,7 +216,7 @@ git commit -m "fix: persist reminder deletes"
 - Modify: `GrowWisePackage/Sources/GrowWiseServices/TutorialService.swift`
 - Add/modify tests under `GrowWisePackage/Tests/GrowWiseServicesTests/` and `GrowWisePackage/Tests/GrowWiseFeatureTests/`
 
-**Progress:** #288 completed.
+**Progress:** #288 and #289 completed.
 
 **Steps:**
 1. Persist onboarding level/goals onto `User`, including `gardeningGoals` and derived `preferredPlantTypes`.

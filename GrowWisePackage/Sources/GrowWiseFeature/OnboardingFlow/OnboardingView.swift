@@ -120,6 +120,8 @@ public struct UserProfile {
     var goals: Set<GardeningGoal> = []
     var gardenType: GardenType = .outdoor
     var spaceSize: SpaceSize = .small
+    var shouldCreateFirstGarden: Bool = true
+    var firstGardenName: String = "My First Garden"
     var interests: Set<PlantType> = []
     var hasLocationPermission: Bool = false
     var hasNotificationPermission: Bool = false

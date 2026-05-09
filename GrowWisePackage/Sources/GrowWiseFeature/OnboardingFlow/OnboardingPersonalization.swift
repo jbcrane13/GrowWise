@@ -15,6 +15,16 @@ enum OnboardingPersonalization {
         return Array(Set(goalTypes).union(interests))
             .sorted { $0.rawValue < $1.rawValue }
     }
+
+    static func defaultIsIndoor(for gardenType: GardenType) -> Bool {
+        switch gardenType {
+        case .indoor, .windowsill:
+            true
+
+        case .outdoor, .container, .raised, .hydroponic, .greenhouse, .balcony:
+            false
+        }
+    }
 }
 
 extension GardeningGoal {

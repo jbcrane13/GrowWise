@@ -185,6 +185,7 @@ struct OnboardingNavigationView: View {
                 )
 
                 try await saveUserPreferences(user: user)
+                try await createFirstGardenIfRequested()
                 await createFirstPlantIfSelected(user: user)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
@@ -203,6 +204,20 @@ struct OnboardingNavigationView: View {
         isSaving = false
         errorMessage = message
         showingError = true
+    }
+
+    @MainActor
+    private func createFirstGardenIfRequested() async throws {
+        guard userProfile.shouldCreateFirstGarden else { return }
+        let trimmedName = userProfile.firstGardenName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let gardenName = trimmedName.isEmpty ? "My First Garden" : trimmedName
+
+        try dataService.createGarden(
+            name: gardenName,
+            type: userProfile.gardenType,
+            isIndoor: OnboardingPersonalization.defaultIsIndoor(for: userProfile.gardenType),
+            spaceSize: userProfile.spaceSize
+        )
     }
 
     @MainActor

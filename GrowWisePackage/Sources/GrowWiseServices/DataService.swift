@@ -212,8 +212,19 @@ public final class DataService {
     // MARK: - Garden Management
 
     @discardableResult
-    public func createGarden(name: String, type: GardenType, isIndoor: Bool) throws -> Garden {
-        let garden = try gardens.create(name: name, type: type, isIndoor: isIndoor, user: getCurrentUser())
+    public func createGarden(
+        name: String,
+        type: GardenType,
+        isIndoor: Bool,
+        spaceSize: SpaceSize = .small
+    ) throws -> Garden {
+        let garden = try gardens.create(
+            name: name,
+            type: type,
+            isIndoor: isIndoor,
+            user: getCurrentUser(),
+            spaceSize: spaceSize
+        )
 
         // Ensure garden and plant caches reflect the newly added garden
         cache.invalidateAll(withPrefix: "gardens:")
