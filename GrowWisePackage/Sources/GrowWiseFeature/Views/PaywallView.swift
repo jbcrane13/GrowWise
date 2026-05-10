@@ -22,8 +22,10 @@ public struct PaywallView: View {
     // Product IDs (Premium only — Pro is "Coming soon" and not purchasable)
     private let premiumMonthlyID = "com.growwise.premium.monthly"
     private let premiumYearlyID = "com.growwise.premium.annual"
-    static let comparisonPlanNames = ["Free", "Premium"]
-    static let comparisonRows: [PaywallComparisonRow] = [
+    internal static let freePlanName = "Free"
+    internal static let premiumPlanName = "Premium"
+    internal static let comparisonPlanNames = [freePlanName, premiumPlanName]
+    internal static let comparisonRows: [PaywallComparisonRow] = [
         PaywallComparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true),
         PaywallComparisonRow(feature: "Plant Limit", free: "50", premium: "500"),
         PaywallComparisonRow(feature: "Smart Reminders", free: false, premium: true),
@@ -189,7 +191,7 @@ public struct PaywallView: View {
         VStack(spacing: 12) {
             tierCard(
                 tier: .free,
-                name: "Free",
+                name: Self.freePlanName,
                 icon: "leaf",
                 price: "$0",
                 period: "forever",
@@ -201,7 +203,7 @@ public struct PaywallView: View {
 
             tierCard(
                 tier: .premium,
-                name: "Premium",
+                name: Self.premiumPlanName,
                 icon: "crown",
                 price: isYearly ? "$34.99" : "$2.99",
                 period: isYearly ? "/year" : "/month",
@@ -531,7 +533,7 @@ public struct PaywallView: View {
 
 // MARK: - Comparison Value
 
-enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
+internal enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
     case check
     case cross
     case text(String)
@@ -545,7 +547,7 @@ enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLit
     }
 }
 
-struct PaywallComparisonRow {
+internal struct PaywallComparisonRow {
     let feature: String
     let free: PaywallComparisonValue
     let premium: PaywallComparisonValue
