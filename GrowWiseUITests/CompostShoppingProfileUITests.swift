@@ -1,5 +1,7 @@
 import XCTest
 
+// swiftlint:disable single_test_class
+
 // MARK: - Compost Tracker UI Tests
 
 @MainActor
@@ -55,7 +57,9 @@ final class CompostTrackerUITests: XCTestCase {
                 NSPredicate(format: "identifier CONTAINS 'compost'")
             ).firstMatch
             guard gardenDetailTab.waitForExistence(timeout: 3) else {
-                throw XCTSkip("Compost tracker not directly accessible from Garden tab root — requires garden to be created first")
+                throw XCTSkip(
+                    "Compost tracker not directly accessible from Garden tab root — requires garden to be created first"
+                )
             }
             gardenDetailTab.tap()
         }
@@ -172,10 +176,10 @@ final class ShoppingListUITests: XCTestCase {
     }
 }
 
-// MARK: - Profile / Settings UI Tests
+// MARK: - Me / Settings UI Tests
 
 @MainActor
-final class ProfileSettingsUITests: XCTestCase {
+final class MeSettingsUITests: XCTestCase {
     var app: XCUIApplication!
 
     override func setUpWithError() throws {
@@ -189,67 +193,49 @@ final class ProfileSettingsUITests: XCTestCase {
         app.terminate()
     }
 
-    private func navigateToProfile() {
-        let profileTab = app.tabBars.buttons["Profile"]
-        if !profileTab.waitForExistence(timeout: 3) {
-            // Try "Settings" tab name
-            let settingsTab = app.tabBars.buttons["Settings"]
-            if settingsTab.waitForExistence(timeout: 3) {
-                settingsTab.tap()
-            }
-            return
-        }
-        profileTab.tap()
+    private func navigateToMe() {
+        let meTab = app.tabBars.buttons["Me"]
+        XCTAssertTrue(meTab.waitForExistence(timeout: 3), "Me tab not found")
+        meTab.tap()
     }
 
     // MARK: - Tests
 
-    /// Verifies the Profile/Settings tab is reachable.
-    func testProfileTabLoads() throws {
-        navigateToProfile()
+    /// Verifies the Me/Settings tab is reachable.
+    func testMeTabLoads() throws {
+        navigateToMe()
 
-        let profileScreen = app.otherElements.matching(
-            NSPredicate(format: "identifier == 'profile_screen' OR identifier == 'settings_screen'")
-        ).firstMatch
+        let profileScreen = app.scrollViews.matching(identifier: "profile_screen").firstMatch
         guard profileScreen.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Profile/Settings screen not found — tab may have a different identifier")
+            throw XCTSkip("Me screen not found")
         }
 
-        XCTAssertTrue(profileScreen.exists, "Profile or Settings screen should be visible")
+        XCTAssertTrue(profileScreen.exists, "Me screen should be visible")
     }
 
-    /// Verifies user display name is shown on the profile screen.
-    func testProfileShowsUserInfo() throws {
-        navigateToProfile()
+    /// Verifies user display name is shown on the Me screen.
+    func testMeShowsUserInfo() throws {
+        navigateToMe()
 
-        let profileScreen = app.otherElements.matching(
-            NSPredicate(format: "identifier == 'profile_screen' OR identifier == 'settings_screen'")
-        ).firstMatch
+        let profileScreen = app.scrollViews.matching(identifier: "profile_screen").firstMatch
         guard profileScreen.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Profile/Settings screen not found")
+            throw XCTSkip("Me screen not found")
         }
 
-        // User info section should exist
-        let userSection = app.otherElements.matching(
-            NSPredicate(format: "identifier CONTAINS 'profile'")
-        ).firstMatch
-        XCTAssertTrue(userSection.waitForExistence(timeout: 3) || profileScreen.exists,
-                      "Profile screen should show user information")
+        XCTAssertTrue(profileScreen.exists, "Me screen should show user information")
     }
 
     /// Verifies the App Settings screen is accessible.
     func testAppSettingsNavigates() throws {
-        navigateToProfile()
+        navigateToMe()
 
-        let settingsButton = app.buttons.matching(
-            NSPredicate(format: "identifier CONTAINS 'settings'")
-        ).firstMatch
+        let settingsButton = app.buttons.matching(identifier: "profile_row_settings").firstMatch
         guard settingsButton.waitForExistence(timeout: 3) else {
-            throw XCTSkip("Settings button not found on profile screen")
+            throw XCTSkip("Settings button not found on Me screen")
         }
         settingsButton.tap()
 
-        let settingsScreen = app.otherElements.matching(identifier: "appsettings_screen").firstMatch
+        let settingsScreen = app.scrollViews.matching(identifier: "appsettings_screen").firstMatch
         XCTAssertTrue(settingsScreen.waitForExistence(timeout: 5), "App Settings screen did not open")
     }
 }
@@ -281,18 +267,18 @@ final class HomeScreenUITests: XCTestCase {
     // MARK: - Tests
 
     /// Verifies Home screen loads with its accessibility identifier.
-    func testHomeScreenLoads() throws {
+    func testHomeScreenLoads() {
         navigateToHome()
 
-        let homeScreen = app.otherElements.matching(identifier: "home_screen").firstMatch
+        let homeScreen = app.scrollViews.matching(identifier: "home_screen").firstMatch
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 10), "Home screen did not load")
     }
 
     /// Verifies seasonal tip card appears on Home.
-    func testSeasonalTipCardVisible() throws {
+    func testSeasonalTipCardVisible() {
         navigateToHome()
 
-        let homeScreen = app.otherElements.matching(identifier: "home_screen").firstMatch
+        let homeScreen = app.scrollViews.matching(identifier: "home_screen").firstMatch
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 10))
 
         // Scroll to seasonal tip card
@@ -305,62 +291,45 @@ final class HomeScreenUITests: XCTestCase {
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 3), "Home screen should still be visible")
     }
 
-    /// Verifies the "Browse Plant Guide" button is present and tappable.
-    func testBrowsePlantGuideButton() throws {
+    /// Verifies the current Home care summary appears.
+    func testTodayCareSummaryVisible() {
         navigateToHome()
 
-        let homeScreen = app.otherElements.matching(identifier: "home_screen").firstMatch
+        let homeScreen = app.scrollViews.matching(identifier: "home_screen").firstMatch
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 10))
 
-        let plantGuideButton = app.buttons.matching(identifier: "home_button_plantguide").firstMatch
-        if !plantGuideButton.waitForExistence(timeout: 3) {
-            app.scrollViews.firstMatch.swipeUp()
-        }
-        guard plantGuideButton.waitForExistence(timeout: 3) else {
-            throw XCTSkip("Browse Plant Guide button not visible — may be scrolled off screen")
-        }
-        plantGuideButton.tap()
-
-        // Plant database should open (either as modal or full screen)
-        let plantDB = app.otherElements.matching(identifier: "plantdatabase_screen").firstMatch
-        XCTAssertTrue(plantDB.waitForExistence(timeout: 5), "Plant database should open after tapping Browse Plant Guide")
+        let todayCareTitle = app.staticTexts["Today's care · 0 tasks"]
+        let emptyStateTitle = app.staticTexts["Your garden is thriving"]
+        XCTAssertTrue(
+            todayCareTitle.waitForExistence(timeout: 3) || emptyStateTitle.waitForExistence(timeout: 3),
+            "Today care summary should be visible"
+        )
     }
 
-    /// Verifies the Seasonal Planner link on Home is present.
-    func testSeasonalPlannerLinkOnHome() throws {
+    /// Verifies the Club entry point on Home is present.
+    func testClubCardOnHome() {
         navigateToHome()
 
-        let homeScreen = app.otherElements.matching(identifier: "home_screen").firstMatch
+        let homeScreen = app.scrollViews.matching(identifier: "home_screen").firstMatch
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 10))
 
-        // Scroll until the button is visible
-        let plannerButton = app.buttons.matching(identifier: "home_button_seasonalplanner").firstMatch
-        var attempts = 0
-        while !plannerButton.exists && attempts < 4 {
+        let clubCard = app.buttons.matching(identifier: "home_card_club").firstMatch
+        if !clubCard.waitForExistence(timeout: 3) {
             app.scrollViews.firstMatch.swipeUp()
-            attempts += 1
         }
-
-        guard plannerButton.waitForExistence(timeout: 3) else {
-            throw XCTSkip("Seasonal Planner link not found after scrolling — may require plants in the garden")
-        }
-
-        XCTAssertTrue(plannerButton.isEnabled, "Seasonal Planner button should be enabled")
+        XCTAssertTrue(clubCard.waitForExistence(timeout: 3), "Club card should be visible on Home")
     }
 
     /// Verifies overdue tasks section header is accessible.
-    func testOverdueTasksSectionPresent() throws {
+    func testOverdueTasksSectionPresent() {
         navigateToHome()
 
-        let homeScreen = app.otherElements.matching(identifier: "home_screen").firstMatch
+        let homeScreen = app.scrollViews.matching(identifier: "home_screen").firstMatch
         XCTAssertTrue(homeScreen.waitForExistence(timeout: 10))
 
-        // With --reset-data, there are no plants/reminders, so check either empty state or overdue header
+        // With --reset-data, there are no plants/reminders, so the care card should show its empty state.
         let emptyState = app.otherElements.matching(identifier: "home_empty_state").firstMatch
-        let overdueHeader = app.staticTexts.matching(identifier: "home_label_section_overdue").firstMatch
-
-        let hasContent = emptyState.waitForExistence(timeout: 5) || overdueHeader.waitForExistence(timeout: 3)
-        XCTAssertTrue(hasContent, "Home should show either empty state or overdue section")
+        XCTAssertTrue(emptyState.waitForExistence(timeout: 5), "Home should show the care empty state")
     }
 }
 
@@ -381,70 +350,22 @@ final class SeasonalPlannerUITests: XCTestCase {
         app.terminate()
     }
 
-    private func navigateToSeasonalPlanner() {
-        // Navigate via Home tab Seasonal Planner link
-        let homeTab = app.tabBars.buttons["Home"]
-        if homeTab.waitForExistence(timeout: 5) {
-            homeTab.tap()
-        }
-
-        var attempts = 0
-        let plannerButton = app.buttons.matching(identifier: "home_button_seasonalplanner").firstMatch
-        while !plannerButton.exists && attempts < 4 {
-            app.scrollViews.firstMatch.swipeUp()
-            attempts += 1
-        }
-        if plannerButton.waitForExistence(timeout: 3) {
-            plannerButton.tap()
-        }
-    }
-
     // MARK: - Tests
 
     /// Verifies seasonal planner screen loads.
     func testSeasonalPlannerLoads() throws {
-        navigateToSeasonalPlanner()
-
-        let plannerScreen = app.otherElements.matching(identifier: "seasonalplanner_screen").firstMatch
-        guard plannerScreen.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Seasonal Planner screen not found — Seasonal Planner link may not be visible without plants")
-        }
-
-        XCTAssertTrue(plannerScreen.exists, "Seasonal Planner screen should be visible")
+        throw XCTSkip("Seasonal Planner is not exposed from the current 1.0 Home surface")
     }
 
     /// Verifies month selector strip is present.
     func testMonthSelectorPresent() throws {
-        navigateToSeasonalPlanner()
-
-        let plannerScreen = app.otherElements.matching(identifier: "seasonalplanner_screen").firstMatch
-        guard plannerScreen.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Seasonal Planner not accessible from Home")
-        }
-
-        let currentMonthButton = app.buttons.matching(
-            NSPredicate(format: "identifier BEGINSWITH 'seasonalplanner_button_month_'")
-        ).firstMatch
-        XCTAssertTrue(currentMonthButton.waitForExistence(timeout: 5), "Month selector buttons should be visible in Seasonal Planner")
+        throw XCTSkip("Seasonal Planner is not exposed from the current 1.0 Home surface")
     }
 
     /// Verifies tapping a different month updates the activities list.
     func testMonthSelectionUpdatesActivities() throws {
-        navigateToSeasonalPlanner()
-
-        let plannerScreen = app.otherElements.matching(identifier: "seasonalplanner_screen").firstMatch
-        guard plannerScreen.waitForExistence(timeout: 5) else {
-            throw XCTSkip("Seasonal Planner not accessible")
-        }
-
-        // Tap month 6 (June)
-        let juneButton = app.buttons.matching(identifier: "seasonalplanner_button_month_6").firstMatch
-        guard juneButton.waitForExistence(timeout: 3) else {
-            throw XCTSkip("June month button not found")
-        }
-        juneButton.tap()
-
-        // The screen should update without crashing
-        XCTAssertTrue(plannerScreen.waitForExistence(timeout: 3), "Planner screen should update after selecting a month")
+        throw XCTSkip("Seasonal Planner is not exposed from the current 1.0 Home surface")
     }
 }
+
+// swiftlint:enable single_test_class

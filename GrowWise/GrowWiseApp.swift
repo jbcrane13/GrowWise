@@ -30,9 +30,13 @@ struct CultivationApp: App {
             }()
         )
 
-        // Store Perenual API key securely on first launch
-        if !PerenualAPIService.hasAPIKey {
-            PerenualAPIService.storeAPIKey("sk-LSIM69d0612798a7616109")
+        // Store an optional bundled Perenual API key securely on first launch.
+        // Release builds must work without a bundled key; Perenual screens surface retryable errors.
+        if !PerenualAPIService.hasAPIKey,
+           let bundledKey = Bundle.main.object(forInfoDictionaryKey: "PERENUAL_API_KEY") as? String,
+           !bundledKey.isEmpty
+        {
+            PerenualAPIService.storeAPIKey(bundledKey)
         }
 
         let launchArgs = ProcessInfo.processInfo.arguments

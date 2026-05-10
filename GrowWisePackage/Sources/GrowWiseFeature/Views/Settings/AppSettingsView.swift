@@ -52,6 +52,7 @@ public struct AppSettingsView: View {
             .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
             .padding(.vertical, CultivationTheme.Spacing.sectionGap)
         }
+        .accessibilityIdentifier("appsettings_screen")
         .background(CultivationTheme.Colors.background)
         .navigationTitle("Settings")
         .task { loadUserPreferences() }

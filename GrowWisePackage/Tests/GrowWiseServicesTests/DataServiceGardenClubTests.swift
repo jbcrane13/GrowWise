@@ -38,4 +38,23 @@ struct DataServiceGardenClubTests {
         )
         #expect(activity.activityDescription == "Basil: Looking healthy!")
     }
+
+    @Test("createClubPost can target an explicit club and persist a photo URL")
+    func createClubPostWithExplicitClubAndPhotoURL() async throws {
+        let service = try await DataService.makeForTesting()
+        let firstClub = try service.createClub(name: "First Club", ownerID: "u1")
+        let secondClub = try service.createClub(name: "Second Club", ownerID: "u1")
+        let photoURL = "file:///tmp/club-photo.jpg"
+
+        let activity = try service.createClubPost(
+            caption: "First tomato flower",
+            activityType: "shared",
+            club: secondClub,
+            photoURL: photoURL
+        )
+
+        #expect(activity.clubID == secondClub.id)
+        #expect(activity.clubID != firstClub.id)
+        #expect(activity.photoURL == photoURL)
+    }
 }

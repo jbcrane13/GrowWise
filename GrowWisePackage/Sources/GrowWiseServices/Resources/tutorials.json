@@ -62,7 +62,7 @@
         "duration": 5,
         "tips": [
           "Check plants every weekend at the same time",
-          "Keep a simple plant care journal or use the GrowWise app",
+          "Keep a simple plant care journal or use the Cultivation app",
           "Take photos to track growth progress"
         ],
         "commonMistakes": [
@@ -349,7 +349,7 @@
       },
       {
         "title": "When Plants Stop Growing",
-        "content": "Slow or stopped growth can indicate several issues: dormancy, pot-bound roots, insufficient light, or nutrient deficiency. Learn to diagnose the cause.",
+        "content": "Slow or stopped growth can indicate several issues: dormancy, pot-bound roots, insufficient light, or nutrient deficiency. Learn to identify the cause.",
         "imageURL": "step-slow-growth",
         "duration": 8,
         "tips": [

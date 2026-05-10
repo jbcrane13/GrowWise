@@ -59,9 +59,11 @@ public extension DataService {
     func createClubPost(
         caption: String,
         activityType: String,
-        plantName: String? = nil
+        plantName: String? = nil,
+        club: GardenClub? = nil,
+        photoURL: String? = nil
     ) throws -> ClubActivity {
-        guard let club = fetchPrimaryClub(), let clubID = club.id else {
+        guard let club = club ?? fetchPrimaryClub(), let clubID = club.id else {
             throw CreateClubPostError.noClub
         }
         let user = getCurrentUser()
@@ -79,6 +81,7 @@ public extension DataService {
             activityType: activityType,
             description: description
         )
+        activity.photoURL = photoURL
         let repo = ClubActivityRepository(context: mainContext)
         try repo.save(activity)
         return activity

@@ -51,7 +51,7 @@ struct CompletionView: View {
 
             Spacer().frame(height: 32)
 
-            // Profile summary card — glass, 4 rows
+            // Profile summary card — glass, setup rows
             VStack(alignment: .leading, spacing: 0) {
                 HStack {
                     Image(systemName: "person.crop.circle.fill")
@@ -73,31 +73,49 @@ struct CompletionView: View {
                     value: userProfile.skillLevel.displayName
                 )
 
-                if let firstGoal = userProfile.goals.first {
-                    Divider().padding(.leading, 48)
-                    CompletionSummaryRow(
-                        icon: "scope",
-                        iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.80),
-                        label: "Goal",
-                        value: firstGoal.displayName
-                    )
-                }
+                Divider().padding(.leading, 48)
+                CompletionSummaryRow(
+                    icon: "scope",
+                    iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.80),
+                    label: "Goals",
+                    value: Self.goalsSummary(for: userProfile)
+                )
 
                 Divider().padding(.leading, 48)
                 CompletionSummaryRow(
                     icon: "leaf.fill",
                     iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.70),
-                    label: "Garden",
-                    value: userProfile.gardenType.displayName
+                    label: "First Garden",
+                    value: Self.gardenSummary(for: userProfile)
                 )
+
+                if userProfile.shouldCreateFirstGarden {
+                    Divider().padding(.leading, 48)
+                    CompletionSummaryRow(
+                        icon: "square.grid.2x2.fill",
+                        iconColor: CultivationTheme.Colors.textTertiary,
+                        label: "Space",
+                        value: userProfile.spaceSize.displayName
+                    )
+                }
 
                 Divider().padding(.leading, 48)
                 CompletionSummaryRow(
-                    icon: "square.grid.2x2.fill",
-                    iconColor: CultivationTheme.Colors.textTertiary,
-                    label: "Space",
-                    value: userProfile.spaceSize.displayName
+                    icon: "sprout.fill",
+                    iconColor: CultivationTheme.Colors.brandLeaf.opacity(0.80),
+                    label: "First Plant",
+                    value: Self.firstPlantSummary(for: userProfile)
                 )
+
+                if let nextCare = Self.nextCareSummary(for: userProfile) {
+                    Divider().padding(.leading, 48)
+                    CompletionSummaryRow(
+                        icon: "drop.fill",
+                        iconColor: CultivationTheme.Colors.accentSky,
+                        label: "Next Care",
+                        value: nextCare
+                    )
+                }
             }
             .paperCard()
             .padding(.horizontal, 24)
@@ -110,6 +128,31 @@ struct CompletionView: View {
             withAnimation(.spring(duration: 0.65, bounce: 0.2).delay(0.1)) { heroVisible = true }
             withAnimation(.spring(duration: 0.55).delay(0.55)) { summaryVisible = true }
         }
+    }
+
+    static func gardenSummary(for profile: UserProfile) -> String {
+        guard profile.shouldCreateFirstGarden else { return "Skipped" }
+        let trimmedName = profile.firstGardenName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? "My First Garden" : trimmedName
+    }
+
+    static func firstPlantSummary(for profile: UserProfile) -> String {
+        let trimmedName = profile.selectedFirstPlantName?.trimmingCharacters(in: .whitespacesAndNewlines) ?? ""
+        return trimmedName.isEmpty ? "Skipped" : trimmedName
+    }
+
+    static func nextCareSummary(for profile: UserProfile) -> String? {
+        firstPlantSummary(for: profile) == "Skipped" ? nil : "Watering reminder"
+    }
+
+    static func goalsSummary(for profile: UserProfile) -> String {
+        let selectedGoals = GardeningGoal.allCases.filter { profile.goals.contains($0) }
+        guard !selectedGoals.isEmpty else { return "None selected" }
+
+        let visibleGoals = selectedGoals.prefix(2).map(\.displayName).joined(separator: ", ")
+        let remainingCount = selectedGoals.count - 2
+        guard remainingCount > 0 else { return visibleGoals }
+        return "\(visibleGoals) +\(remainingCount)"
     }
 }
 

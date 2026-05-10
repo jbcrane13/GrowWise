@@ -599,10 +599,6 @@ struct DataServiceEdgeCaseTests {
 
         try service.deleteReminder(reminder)
 
-        // deleteReminder does not invalidate the active-reminders cache, so we must
-        // invalidate it manually before re-fetching to see the post-delete state.
-        service.invalidateAllCaches()
-
         let afterIds = service.fetchActiveReminders().map(\.id)
         #expect(!afterIds.contains(reminder.id))
     }

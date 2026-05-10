@@ -336,6 +336,14 @@ public final class ClubCloudKitService {
         record["activityDescription"] = activity.activityDescription ?? ""
         record["gardenName"] = activity.gardenName ?? ""
         record["timestamp"] = activity.timestamp ?? Date()
+        if let photoURL = activity.photoURL {
+            record["photoURL"] = photoURL
+            if let assetURL = Self.localFileURL(from: photoURL),
+               FileManager.default.fileExists(atPath: assetURL.path)
+            {
+                record["photo"] = CKAsset(fileURL: assetURL)
+            }
+        }
 
         do {
             _ = try await privateDatabase.save(record)
@@ -344,6 +352,13 @@ public final class ClubCloudKitService {
             logger.error("Failed to publish activity: \(error.localizedDescription)")
             throw ClubCloudKitError.saveFailed(error.localizedDescription)
         }
+    }
+
+    private static func localFileURL(from urlString: String) -> URL? {
+        if let url = URL(string: urlString), url.isFileURL {
+            return url
+        }
+        return URL(fileURLWithPath: urlString)
     }
 }
 

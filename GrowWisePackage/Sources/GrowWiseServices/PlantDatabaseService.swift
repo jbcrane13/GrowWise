@@ -271,6 +271,15 @@ public final class PlantDatabaseService {
         let gardenCompatibility = checkGardenTypeCompatibility(plant: plant, gardenType: userProfile.gardenType)
         score += gardenCompatibility * 20
 
+        if !userProfile.preferredPlantTypes.isEmpty {
+            maxScore += 20
+            if let plantType = plant.plantType, userProfile.preferredPlantTypes.contains(plantType) {
+                score += 20
+            } else {
+                score += 5
+            }
+        }
+
         return (score / maxScore) * 100
     }
 
@@ -286,10 +295,37 @@ public final class PlantDatabaseService {
         }
         if plant.spaceRequirement == userProfile.availableSpace { reasons.append("Ideal size for your available space") }
         if estimateCareTime(for: plant) == userProfile.timeCommitment { reasons.append("Matches your time commitment level") }
-        if plant.plantType == .herb || plant.plantType == .vegetable { reasons.append("Provides fresh, homegrown food") }
+        if let goalReason = goalReason(for: plant, userProfile: userProfile) {
+            reasons.append(goalReason)
+        } else if plant.plantType == .herb || plant.plantType == .vegetable {
+            reasons.append("Provides fresh, homegrown food")
+        }
         if plant.difficultyLevel == .beginner { reasons.append("Very forgiving for new gardeners") }
         if reasons.isEmpty { reasons.append("A versatile plant suitable for many garden types") }
         return reasons
+    }
+
+    private func goalReason(for plant: Plant, userProfile: UserGardenProfile) -> String? {
+        guard let plantType = plant.plantType else { return nil }
+        let goals = Set(userProfile.gardeningGoals)
+
+        if goals.contains(.growFood), [.vegetable, .herb, .fruit].contains(plantType) {
+            return "Matches your Grow My Own Food goal"
+        }
+        if goals.contains(.beautifySpace), [.flower, .shrub, .tree].contains(plantType) {
+            return "Matches your Beautify My Space goal"
+        }
+        if goals.contains(.medicinalHerbs), plantType == .herb {
+            return "Supports your wellness garden goal"
+        }
+        if goals.contains(.airPurification), [.houseplant, .tree].contains(plantType) {
+            return "Supports your air quality goal"
+        }
+        if goals.contains(.sustainability), [.vegetable, .herb, .fruit, .tree].contains(plantType) {
+            return "Supports your Sustainable Living goal"
+        }
+
+        return nil
     }
 
     private func estimateCareTime(for plant: Plant) -> UserTimeCommitment {
@@ -410,17 +446,23 @@ public struct UserGardenProfile {
     public let availableSpace: SpaceRequirement
     public let timeCommitment: UserTimeCommitment
     public let gardenType: String
+    public let preferredPlantTypes: [PlantType]
+    public let gardeningGoals: [GardeningGoal]
 
     public init(
         skillLevel: GardeningSkillLevel,
         availableSpace: SpaceRequirement,
         timeCommitment: UserTimeCommitment,
-        gardenType: String
+        gardenType: String,
+        preferredPlantTypes: [PlantType] = [],
+        gardeningGoals: [GardeningGoal] = []
     ) {
         self.skillLevel = skillLevel
         self.availableSpace = availableSpace
         self.timeCommitment = timeCommitment
         self.gardenType = gardenType
+        self.preferredPlantTypes = preferredPlantTypes
+        self.gardeningGoals = gardeningGoals
     }
 }
 

@@ -313,7 +313,7 @@ struct PerenualSpeciesCard: View {
 
 // MARK: - Detail View
 
-struct PerenualDetailView: View {
+struct PerenualDetailView: View { // swiftlint:disable:this type_body_length
     let detail: PerenualSpeciesDetail
     @Environment(\.dismiss)
     private var dismiss
@@ -322,6 +322,10 @@ struct PerenualDetailView: View {
     @Environment(PlantDatabaseService.self)
     private var plantDatabaseService
     @State private var showAddConfirmation = false
+    @State private var availableGardens: [Garden] = []
+    @State private var selectedGarden: Garden?
+    @State private var showingError = false
+    @State private var errorMessage = ""
 
     var body: some View {
         NavigationStack {
@@ -348,6 +352,8 @@ struct PerenualDetailView: View {
                         // Safety warnings
                         safetySection
 
+                        gardenSelectionSection
+
                         Spacer(minLength: 80)
                     }
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -369,6 +375,12 @@ struct PerenualDetailView: View {
             } message: {
                 Text("\(detail.commonName) has been added to your plant collection.")
             }
+            .alert("Couldn't add plant", isPresented: $showingError) {
+                Button("OK", role: .cancel) {}
+            } message: {
+                Text(errorMessage)
+            }
+            .task { loadGardens() }
         }
     }
 
@@ -555,7 +567,8 @@ struct PerenualDetailView: View {
         } label: {
             Text("Add to My Garden")
         }
-        .buttonStyle(GradientButtonStyle())
+        .buttonStyle(GradientButtonStyle(isDisabled: selectedGarden == nil))
+        .disabled(selectedGarden == nil)
         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
         .padding(.bottom, 16)
         .background {
@@ -570,6 +583,34 @@ struct PerenualDetailView: View {
             .frame(height: 100)
         }
         .accessibilityIdentifier("perenual_add_to_garden")
+    }
+
+    private var gardenSelectionSection: some View {
+        VStack(alignment: .leading, spacing: 8) {
+            Text("Add to")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            if availableGardens.isEmpty {
+                Text("Create a garden before adding this plant.")
+                    .font(.system(.subheadline, design: .rounded))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .padding(CultivationTheme.Spacing.cardPadding)
+                    .frame(maxWidth: .infinity, alignment: .leading)
+                    .glassCard()
+            } else {
+                Picker("Garden", selection: $selectedGarden) {
+                    ForEach(availableGardens) { garden in
+                        Text(garden.name ?? "Garden").tag(garden as Garden?)
+                    }
+                }
+                .pickerStyle(.menu)
+                .padding(CultivationTheme.Spacing.cardPadding)
+                .frame(maxWidth: .infinity, alignment: .leading)
+                .glassCard()
+                .accessibilityIdentifier("perenual_picker_garden")
+            }
+        }
     }
 
     // MARK: - Helpers
@@ -609,6 +650,12 @@ struct PerenualDetailView: View {
     }
 
     private func addToGarden() {
+        guard let selectedGarden else {
+            errorMessage = "Create or select a garden before adding this plant."
+            showingError = true
+            return
+        }
+
         do {
             let care = detail.mappedCareInstructions
             let careText = care.isEmpty ? "" : "\n\nCare Instructions:\n" + care.map { "• \($0)" }.joined(separator: "\n")
@@ -622,9 +669,18 @@ struct PerenualDetailView: View {
                 space: detail.mappedSpaceRequirement,
                 notes: (detail.description ?? "") + careText
             )
+            try dataService.createUserPlant(from: detail, in: selectedGarden)
             showAddConfirmation = true
         } catch {
-            // Duplicate or DB error — silently skip
+            errorMessage = error.localizedDescription
+            showingError = true
+        }
+    }
+
+    private func loadGardens() {
+        availableGardens = dataService.fetchGardens(limit: 50)
+        if selectedGarden == nil {
+            selectedGarden = availableGardens.first
         }
     }
 }

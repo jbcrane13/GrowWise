@@ -7,6 +7,16 @@ import SwiftData
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
 // swiftlint:disable file_length function_parameter_count large_tuple type_body_length
 
+public struct StarterPlantCreationResult {
+    public let plant: Plant
+    public let reminder: PlantReminder
+
+    public init(plant: Plant, reminder: PlantReminder) {
+        self.plant = plant
+        self.reminder = reminder
+    }
+}
+
 /// Modern @Observable data service for SwiftData operations
 /// Injected via environment - access with @Environment(DataService.self)
 /// No longer uses ObservableObject pattern - automatic observation with @Observable
@@ -198,11 +208,33 @@ public final class DataService {
         try users.update(user)
     }
 
+    public func updateOnboardingProfile(
+        for user: User,
+        gardeningGoals: [GardeningGoal],
+        preferredPlantTypes: [PlantType]
+    ) throws {
+        user.gardeningGoals = gardeningGoals
+        user.preferredPlantTypes = preferredPlantTypes
+        user.lastModified = Date()
+        try users.update(user)
+    }
+
     // MARK: - Garden Management
 
     @discardableResult
-    public func createGarden(name: String, type: GardenType, isIndoor: Bool) throws -> Garden {
-        let garden = try gardens.create(name: name, type: type, isIndoor: isIndoor, user: getCurrentUser())
+    public func createGarden(
+        name: String,
+        type: GardenType,
+        isIndoor: Bool,
+        spaceSize: SpaceSize = .small
+    ) throws -> Garden {
+        let garden = try gardens.create(
+            name: name,
+            type: type,
+            isIndoor: isIndoor,
+            user: getCurrentUser(),
+            spaceSize: spaceSize
+        )
 
         // Ensure garden and plant caches reflect the newly added garden
         cache.invalidateAll(withPrefix: "gardens:")
@@ -257,6 +289,111 @@ public final class DataService {
         cache.invalidateAll(withPrefix: "plants:")
         cache.invalidateAll(withPrefix: "stats:count:")
         return plant
+    }
+
+    @discardableResult
+    public func createUserPlant(
+        from template: Plant,
+        in garden: Garden?,
+        plantingDate: Date = Date()
+    ) throws -> Plant {
+        let plant = Plant(
+            name: template.name ?? "Plant",
+            plantType: template.plantType ?? .houseplant,
+            difficultyLevel: template.difficultyLevel ?? .beginner,
+            isUserPlant: true
+        )
+        plant.scientificName = template.scientificName
+        plant.sunlightRequirement = template.sunlightRequirement
+        plant.wateringFrequency = template.wateringFrequency
+        plant.spaceRequirement = template.spaceRequirement
+        plant.notes = template.notes
+        plant.photoURLs = template.photoURLs
+        plant.companionPlants = template.companionPlants
+        plant.garden = garden
+        plant.plantingDate = plantingDate
+
+        try plants.add(plant)
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
+        return plant
+    }
+
+    @discardableResult
+    public func createUserPlant(
+        from detail: PerenualSpeciesDetail,
+        in garden: Garden?,
+        plantingDate: Date = Date()
+    ) throws -> Plant {
+        let plant = Plant(
+            name: detail.commonName,
+            plantType: detail.mappedPlantType,
+            difficultyLevel: detail.mappedDifficultyLevel,
+            isUserPlant: true
+        )
+        plant.scientificName = detail.scientificName.first
+        plant.sunlightRequirement = detail.mappedSunlightLevel
+        plant.wateringFrequency = detail.mappedWateringFrequency
+        plant.spaceRequirement = detail.mappedSpaceRequirement
+        plant.notes = Self.notes(from: detail)
+        if let imageURL = detail.defaultImage?.bestURL {
+            plant.photoURLs = [imageURL]
+        }
+        plant.garden = garden
+        plant.plantingDate = plantingDate
+
+        try plants.add(plant)
+        cache.invalidateAll(withPrefix: "plants:")
+        cache.invalidateAll(withPrefix: "stats:count:")
+        return plant
+    }
+
+    public func createStarterPlant(
+        from template: Plant,
+        in garden: Garden?,
+        plantingDate: Date = Date()
+    ) throws -> StarterPlantCreationResult {
+        let plant = try createUserPlant(from: template, in: garden, plantingDate: plantingDate)
+        let frequency = Self.reminderFrequency(for: plant.wateringFrequency)
+        let dueDate = Calendar.current.date(
+            byAdding: .day,
+            value: max(frequency.days, 1),
+            to: plantingDate
+        ) ?? plantingDate
+        let plantName = plant.name ?? "your plant"
+        let reminder = try createReminder(
+            title: "Water \(plantName)",
+            message: "Time to water \(plantName).",
+            type: .watering,
+            frequency: frequency,
+            dueDate: dueDate,
+            plant: plant
+        )
+        return StarterPlantCreationResult(plant: plant, reminder: reminder)
+    }
+
+    private static func reminderFrequency(for wateringFrequency: WateringFrequency?) -> ReminderFrequency {
+        switch wateringFrequency {
+        case .daily: .daily
+        case .everyOtherDay: .everyOtherDay
+        case .twiceWeekly: .twiceWeekly
+        case .weekly: .weekly
+        case .biweekly: .biweekly
+        case .monthly: .monthly
+        case .asNeeded, .none: .weekly
+        }
+    }
+
+    private static func notes(from detail: PerenualSpeciesDetail) -> String {
+        var sections: [String] = []
+        if let description = detail.description, !description.isEmpty {
+            sections.append(description)
+        }
+        let care = detail.mappedCareInstructions
+        if !care.isEmpty {
+            sections.append("Care Instructions:\n" + care.map { "• \($0)" }.joined(separator: "\n"))
+        }
+        return sections.joined(separator: "\n\n")
     }
 
     /// Insert a fully-configured database plant (e.g. from an external API).
@@ -393,7 +530,7 @@ public final class DataService {
             user: getCurrentUser()
         )
 
-        cache.invalidate("reminders:active")
+        invalidateReminderCaches()
         if let plantId = plant.id {
             cache.invalidate("plants:\(plantId.uuidString)")
         }
@@ -441,10 +578,31 @@ public final class DataService {
 
     public func completeReminder(_ reminder: PlantReminder) throws {
         try reminders.complete(reminder)
+        invalidateReminderCaches()
     }
 
     public func deleteReminder(_ reminder: PlantReminder) throws {
         try reminders.delete(reminder)
+        invalidateReminderCaches()
+    }
+
+    public func buildStarterPlan() throws -> StarterPlan {
+        let gardenList = try gardens.fetchAll(offset: 0, limit: 50)
+        let plantList = try plants.fetchAll()
+        let reminderList = try reminders.fetchActive(limit: 50)
+
+        return StarterPlanService.build(
+            user: getCurrentUser(),
+            gardens: gardenList,
+            plants: plantList,
+            reminders: reminderList
+        )
+    }
+
+    private func invalidateReminderCaches() {
+        cache.invalidateAll(withPrefix: "reminders:")
+        cache.invalidateAll(withPrefix: "stats:count:")
+        cache.invalidate("stats:gardening_summary")
     }
 
     // MARK: - Journal Management

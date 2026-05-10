@@ -16,7 +16,7 @@ public struct PlantScannerView: View {
         NavigationStack {
             ScrollView {
                 VStack(spacing: 16) {
-                    Text("Plant Health Scanner")
+                    Text("Plant Health Check")
                         .font(.title2)
                         .fontWeight(.semibold)
 
@@ -27,23 +27,23 @@ public struct PlantScannerView: View {
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("scannerChoosePhotoButton")
 
-                    Button("Run Sample Diagnosis") {
+                    Button("Show Sample Guidance") {
                         diagnosticService.setSampleDiagnosis()
                     }
                     .buttonStyle(.bordered)
                     .accessibilityIdentifier("scannerRunSampleButton")
 
                     if diagnosticService.isAnalyzing {
-                        ProgressView("Analyzing image...")
+                        ProgressView("Checking image...")
                     }
 
-                    if let diagnosis = diagnosticService.lastDiagnosis {
+                    if let guidance = diagnosticService.lastDiagnosis {
                         VStack(alignment: .leading, spacing: 8) {
-                            Text("Primary Finding: \(diagnosis.primaryLabel)")
+                            Text("Primary Finding: \(guidance.primaryLabel)")
                                 .font(.headline)
                                 .accessibilityIdentifier("scannerPrimaryFinding")
-                            Text("Severity: \(diagnosis.severity.rawValue.capitalized)")
-                            Text(diagnosis.recommendation)
+                            Text("Severity: \(guidance.severity.rawValue.capitalized)")
+                            Text(guidance.recommendation)
                                 .font(.subheadline)
                                 .foregroundColor(.secondary)
                         }

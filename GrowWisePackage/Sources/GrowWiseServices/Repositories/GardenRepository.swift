@@ -33,8 +33,15 @@ public final class GardenRepository {
     }
 
     @discardableResult
-    public func create(name: String, type: GardenType, isIndoor: Bool, user: User?) throws -> Garden {
+    public func create(
+        name: String,
+        type: GardenType,
+        isIndoor: Bool,
+        user: User?,
+        spaceSize: SpaceSize = .small
+    ) throws -> Garden {
         let garden = Garden(name: name, gardenType: type, isIndoor: isIndoor)
+        garden.spaceAvailable = spaceSize
 
         if let user {
             garden.user = user

@@ -48,6 +48,7 @@ public struct AddPlantSheet: View {
     @State private var suggestions: [Plant] = []
     @State private var searchTask: Task<Void, Never>?
     @State private var nameFieldCommitted = false
+    @State private var selectedTemplate: Plant?
 
     // Companion planting analysis
     @State private var compatibilityAnalysis: GardenCompatibilityAnalysis?
@@ -94,8 +95,12 @@ public struct AddPlantSheet: View {
                                     // Debounced autocomplete
                                     searchTask?.cancel()
                                     nameFieldCommitted = false
+                                    if selectedTemplate?.name != newValue {
+                                        selectedTemplate = nil
+                                    }
                                     guard !newValue.isEmpty else {
                                         suggestions = []
+                                        selectedTemplate = nil
                                         return
                                     }
                                     searchTask = Task {
@@ -530,6 +535,7 @@ public struct AddPlantSheet: View {
     }
 
     private func applyTemplate(_ plant: Plant) {
+        selectedTemplate = plant
         plantName = plant.name ?? plantName
         scientificName = plant.scientificName ?? scientificName
         if let type = plant.plantType { selectedPlantType = type }
@@ -548,23 +554,50 @@ public struct AddPlantSheet: View {
 
         isSaving = true
 
-        let newPlant = Plant(
-            name: plantName,
-            plantType: selectedPlantType,
-            difficultyLevel: selectedDifficultyLevel
-        )
+        let newPlant: Plant
+        do {
+            if let selectedTemplate {
+                newPlant = try dataService.createUserPlant(
+                    from: selectedTemplate,
+                    in: selectedGarden,
+                    plantingDate: plantingDate
+                )
+            } else {
+                newPlant = try dataService.createPlant(
+                    name: plantName,
+                    type: selectedPlantType,
+                    difficultyLevel: selectedDifficultyLevel,
+                    garden: selectedGarden
+                )
+            }
+        } catch {
+            errorMessage = "Failed to add plant: \(error.localizedDescription)"
+            showingError = true
+            isSaving = false
+            return
+        }
 
-        newPlant.scientificName = scientificName.isEmpty ? nil : scientificName
+        newPlant.name = plantName
+        newPlant.scientificName = scientificName.isEmpty ? newPlant.scientificName : scientificName
+        newPlant.plantType = selectedPlantType
+        newPlant.difficultyLevel = selectedDifficultyLevel
         newPlant.plantingDate = plantingDate
         newPlant.bed = selectedBed
-        newPlant.notes = notes.isEmpty ? nil : notes
+        if !notes.isEmpty {
+            newPlant.notes = notes
+        }
 
         if !photoURLs.isEmpty {
             newPlant.photoURLs = photoURLs.map(\.absoluteString)
         }
-
-        newPlant.garden = selectedGarden
-        modelContext.insert(newPlant)
+        do {
+            try dataService.plants.update(newPlant)
+        } catch {
+            errorMessage = "Failed to save plant: \(error.localizedDescription)"
+            showingError = true
+            isSaving = false
+            return
+        }
         savedPlant = newPlant
         wateringSchedule = reminderService.suggestWateringSchedule(for: newPlant, in: selectedGarden)
         showWateringSchedule = true

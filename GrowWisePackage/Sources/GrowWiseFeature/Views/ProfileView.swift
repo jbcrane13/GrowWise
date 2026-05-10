@@ -79,6 +79,7 @@ public struct ProfileView: View {
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.vertical, CultivationTheme.Spacing.sectionGap)
             }
+            .accessibilityIdentifier("profile_screen")
             .background(CultivationTheme.Colors.background)
             .navigationTitle("Me")
             .sheet(isPresented: $showTutorials) {

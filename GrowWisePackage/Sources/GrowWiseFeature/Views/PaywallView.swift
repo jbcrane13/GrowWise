@@ -22,6 +22,18 @@ public struct PaywallView: View {
     // Product IDs (Premium only — Pro is "Coming soon" and not purchasable)
     private let premiumMonthlyID = "com.growwise.premium.monthly"
     private let premiumYearlyID = "com.growwise.premium.annual"
+    internal static let freePlanName = "Free"
+    internal static let premiumPlanName = "Premium"
+    /// Source-of-truth rows for the Free vs Premium plan comparison table.
+    internal static let comparisonRows: [PaywallComparisonRow] = [
+        PaywallComparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true),
+        PaywallComparisonRow(feature: "Plant Limit", free: "50", premium: "500"),
+        PaywallComparisonRow(feature: "Smart Reminders", free: false, premium: true),
+        PaywallComparisonRow(feature: "Weather Adjust", free: false, premium: true),
+        PaywallComparisonRow(feature: "Priority Support", free: false, premium: true),
+        PaywallComparisonRow(feature: "Garden Clubs", free: true, premium: true),
+        PaywallComparisonRow(feature: "Analytics", free: "Basic", premium: "Standard")
+    ]
 
     public init() {}
 
@@ -179,7 +191,7 @@ public struct PaywallView: View {
         VStack(spacing: 12) {
             tierCard(
                 tier: .free,
-                name: "Free",
+                name: Self.freePlanName,
                 icon: "leaf",
                 price: "$0",
                 period: "forever",
@@ -191,7 +203,7 @@ public struct PaywallView: View {
 
             tierCard(
                 tier: .premium,
-                name: "Premium",
+                name: Self.premiumPlanName,
                 icon: "crown",
                 price: isYearly ? "$34.99" : "$2.99",
                 period: isYearly ? "/year" : "/month",
@@ -349,18 +361,14 @@ public struct PaywallView: View {
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("Free")
+                    Text(Self.freePlanName)
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(width: 50)
-                    Text("Premium")
+                    Text(Self.premiumPlanName)
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         .frame(width: 66)
-                    Text("Pro")
-                        .font(.system(.caption, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.accentAmber)
-                        .frame(width: 40)
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.cardPadding)
                 .padding(.vertical, 10)
@@ -368,14 +376,14 @@ public struct PaywallView: View {
                 Divider()
                     .background(CultivationTheme.Colors.divider)
 
-                comparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true, pro: true)
-                comparisonRow(feature: "Plant Limit", free: "50", premium: "500", pro: true)
-                comparisonRow(feature: "Smart Reminders", free: false, premium: true, pro: true)
-                comparisonRow(feature: "Weather Adjust", free: false, premium: true, pro: true)
-                comparisonRow(feature: "Priority Support", free: false, premium: true, pro: true)
-                comparisonRow(feature: "Expert Consults", free: false, premium: false, pro: true)
-                comparisonRow(feature: "Garden Clubs", free: true, premium: true, pro: true)
-                comparisonRow(feature: "Analytics", free: "Basic", premium: "Standard", pro: true, isLast: true)
+                ForEach(Array(Self.comparisonRows.enumerated()), id: \.offset) { index, row in
+                    comparisonRow(
+                        feature: row.feature,
+                        free: row.free,
+                        premium: row.premium,
+                        isLast: index == Self.comparisonRows.count - 1
+                    )
+                }
             }
             .glassCard()
         }
@@ -384,9 +392,8 @@ public struct PaywallView: View {
 
     private func comparisonRow(
         feature: String,
-        free: ComparisonValue,
-        premium: ComparisonValue,
-        pro: ComparisonValue,
+        free: PaywallComparisonValue,
+        premium: PaywallComparisonValue,
         isLast: Bool = false
     ) -> some View {
         VStack(spacing: 0) {
@@ -400,8 +407,6 @@ public struct PaywallView: View {
                     .frame(width: 50)
                 comparisonCell(value: premium)
                     .frame(width: 66)
-                comparisonCell(value: pro)
-                    .frame(width: 40)
             }
             .padding(.horizontal, CultivationTheme.Spacing.cardPadding)
             .padding(.vertical, 8)
@@ -414,7 +419,7 @@ public struct PaywallView: View {
     }
 
     @ViewBuilder
-    private func comparisonCell(value: ComparisonValue) -> some View {
+    private func comparisonCell(value: PaywallComparisonValue) -> some View {
         switch value {
         case .check:
             Image(systemName: "checkmark.circle.fill")
@@ -528,7 +533,7 @@ public struct PaywallView: View {
 
 // MARK: - Comparison Value
 
-private enum ComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
+internal enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
     case check
     case cross
     case text(String)
@@ -540,6 +545,13 @@ private enum ComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLi
     init(stringLiteral value: String) {
         self = .text(value)
     }
+}
+
+/// A single feature row in the Free vs Premium paywall comparison table.
+internal struct PaywallComparisonRow {
+    let feature: String
+    let free: PaywallComparisonValue
+    let premium: PaywallComparisonValue
 }
 
 #Preview {

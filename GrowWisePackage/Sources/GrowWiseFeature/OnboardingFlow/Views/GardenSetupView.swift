@@ -14,62 +14,102 @@ struct GardenSetupView: View {
             )
 
             VStack(spacing: 16) {
+                gardenCreationSection
+
                 // Garden type — horizontal chip row
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("GARDEN TYPE")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                        .tracking(1.0)
-                        .padding(.horizontal, 20)
+                if userProfile.shouldCreateFirstGarden {
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("GARDEN TYPE")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                            .tracking(1.0)
+                            .padding(.horizontal, 20)
 
-                    ScrollView(.horizontal, showsIndicators: false) {
-                        HStack(spacing: 8) {
-                            ForEach(GardenType.allCases, id: \.self) { type in
-                                GardenTypeChip(
-                                    type: type,
-                                    isSelected: userProfile.gardenType == type
-                                ) {
-                                    withAnimation(.spring(duration: 0.25)) {
-                                        userProfile.gardenType = type
+                        ScrollView(.horizontal, showsIndicators: false) {
+                            HStack(spacing: 8) {
+                                ForEach(GardenType.allCases, id: \.self) { type in
+                                    GardenTypeChip(
+                                        type: type,
+                                        isSelected: userProfile.gardenType == type
+                                    ) {
+                                        withAnimation(.spring(duration: 0.25)) {
+                                            userProfile.gardenType = type
+                                        }
                                     }
-                                }
-                                .accessibilityIdentifier("onboarding_gardentype_\(type.rawValue)")
-                            }
-                        }
-                        .padding(.horizontal, 20)
-                    }
-                }
-
-                // Space size — vertical list, fills remaining height
-                VStack(alignment: .leading, spacing: 10) {
-                    Text("YOUR SPACE")
-                        .font(.system(size: 11, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                        .tracking(1.0)
-                        .padding(.horizontal, 20)
-
-                    VStack(spacing: 8) {
-                        ForEach(SpaceSize.allCases, id: \.self) { size in
-                            SpaceSizeRow(
-                                size: size,
-                                isSelected: userProfile.spaceSize == size
-                            ) {
-                                withAnimation(.spring(duration: 0.25)) {
-                                    userProfile.spaceSize = size
+                                    .accessibilityIdentifier("onboarding_gardentype_\(type.rawValue)")
                                 }
                             }
                             .padding(.horizontal, 20)
-                            .frame(maxHeight: .infinity)
-                            .accessibilityIdentifier("onboarding_space_\(size.rawValue)")
                         }
                     }
-                    .frame(maxHeight: .infinity)
+
+                    // Space size — vertical list, fills remaining height
+                    VStack(alignment: .leading, spacing: 10) {
+                        Text("YOUR SPACE")
+                            .font(.system(size: 11, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                            .tracking(1.0)
+                            .padding(.horizontal, 20)
+
+                        VStack(spacing: 8) {
+                            ForEach(SpaceSize.allCases, id: \.self) { size in
+                                SpaceSizeRow(
+                                    size: size,
+                                    isSelected: userProfile.spaceSize == size
+                                ) {
+                                    withAnimation(.spring(duration: 0.25)) {
+                                        userProfile.spaceSize = size
+                                    }
+                                }
+                                .padding(.horizontal, 20)
+                                .frame(maxHeight: .infinity)
+                                .accessibilityIdentifier("onboarding_space_\(size.rawValue)")
+                            }
+                        }
+                        .frame(maxHeight: .infinity)
+                    }
                 }
             }
             .frame(maxHeight: .infinity)
         }
         .padding(.top, 8)
         .padding(.bottom, 4)
+    }
+
+    private var gardenCreationSection: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Toggle(isOn: $userProfile.shouldCreateFirstGarden) {
+                VStack(alignment: .leading, spacing: 2) {
+                    Text("Create your first garden")
+                        .font(.system(size: 15, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    Text(userProfile.shouldCreateFirstGarden ? "Ready for plants after setup" : "Skipped for now")
+                        .font(.system(size: 12))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                }
+            }
+            .tint(CultivationTheme.Colors.brandLeaf)
+            .accessibilityIdentifier("onboarding_toggle_create_garden")
+
+            if userProfile.shouldCreateFirstGarden {
+                TextField("Garden name", text: $userProfile.firstGardenName)
+                    .font(.system(size: 15, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    .padding(12)
+                    .background(
+                        RoundedRectangle(cornerRadius: 12)
+                            .fill(CultivationTheme.Colors.backgroundSecondary)
+                    )
+                    .overlay(
+                        RoundedRectangle(cornerRadius: 12)
+                            .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
+                    )
+                    .accessibilityIdentifier("onboarding_textfield_garden_name")
+            }
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .glassCard()
+        .padding(.horizontal, 20)
     }
 }
 

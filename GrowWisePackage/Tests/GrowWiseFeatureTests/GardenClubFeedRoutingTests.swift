@@ -1,3 +1,4 @@
+import Foundation
 @testable import GrowWiseFeature
 import GrowWiseModels
 import SwiftData
@@ -24,13 +25,29 @@ struct GardenClubFeedRoutingTests {
 
     @Test("Multiple clubs routes to list")
     func multipleClubsRoutesToList() {
-        let a = GardenClub(name: "A", ownerID: "user-1", inviteCode: "AAAAAA")
-        let b = GardenClub(name: "B", ownerID: "user-1", inviteCode: "BBBBBB")
-        let route = GardenClubTabRoute.resolve(clubs: [a, b])
+        let firstClub = GardenClub(name: "A", ownerID: "user-1", inviteCode: "AAAAAA")
+        let secondClub = GardenClub(name: "B", ownerID: "user-1", inviteCode: "BBBBBB")
+        let route = GardenClubTabRoute.resolve(clubs: [firstClub, secondClub])
         guard case .list(let clubs) = route else {
             Issue.record("expected .list route, got \(route)")
             return
         }
         #expect(clubs.count == 2)
+    }
+
+    @Test("ClubActivity view data carries optional photo URL")
+    func clubActivityViewDataCarriesPhotoURL() {
+        let activity = ClubActivity(
+            clubID: UUID(),
+            memberName: "Avery",
+            memberID: "user-1",
+            activityType: "shared",
+            description: "First tomato flower"
+        )
+        activity.photoURL = "file:///tmp/tomato.jpg"
+
+        let viewData = GardenClubFeedView.viewData(from: activity)
+
+        #expect(viewData.photoURL == "file:///tmp/tomato.jpg")
     }
 }

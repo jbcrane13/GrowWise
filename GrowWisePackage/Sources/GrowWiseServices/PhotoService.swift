@@ -88,6 +88,10 @@ public final class PhotoService {
         photosPath.appendingPathComponent("plant_\(plantId.uuidString)")
     }
 
+    private var clubPhotoPath: URL {
+        photosPath.appendingPathComponent("club_posts")
+    }
+
     private func createPlantDirectoryIfNeeded(for plantId: UUID) {
         let plantPath = plantPhotoPath(for: plantId)
         do {
@@ -95,6 +99,10 @@ public final class PhotoService {
         } catch {
             logger.error("Failed to create plant photo directory: \(error.localizedDescription, privacy: .public)")
         }
+    }
+
+    private func createClubPhotoDirectoryIfNeeded() throws {
+        try FileManager.default.createDirectory(at: clubPhotoPath, withIntermediateDirectories: true)
     }
 
     // MARK: - Photo Saving
@@ -172,6 +180,32 @@ public final class PhotoService {
         notes: String = ""
     ) async throws -> PlantPhoto {
         try await savePhoto(image, for: plant, type: type, notes: notes)
+    }
+
+    /// Stores a Garden Club post photo using the same local photo directory,
+    /// compression, and cache-loading path as plant photos.
+    public func saveClubPostPhotoData(_ data: Data) async throws -> String {
+        try createClubPhotoDirectoryIfNeeded()
+
+        let outputData: Data
+        if let image = UIImage(data: data) {
+            let processedImage = await processImage(image)
+            guard let jpegData = processedImage.jpegData(compressionQuality: compressionQuality) else {
+                throw PhotoError.compressionFailed
+            }
+            outputData = jpegData
+        } else {
+            outputData = data
+        }
+
+        let filename = "club_post_\(UUID().uuidString).jpg"
+        let fileURL = clubPhotoPath.appendingPathComponent(filename)
+
+        try await Task.detached(priority: .background) {
+            try outputData.write(to: fileURL)
+        }.value
+
+        return fileURL.absoluteString
     }
 
     // MARK: - Photo Loading
@@ -524,6 +558,10 @@ public final class PhotoService {
 
     public func requestCameraPermission() async -> Bool {
         false
+    }
+
+    public func saveClubPostPhotoData(_: Data) async throws -> String {
+        throw PhotoError.saveLocationUnavailable
     }
 }
 #endif

@@ -146,7 +146,9 @@ struct RecommendedPlantsView: View {
             skillLevel: user?.skillLevel ?? .beginner,
             availableSpace: spaceRequirementFromGarden(),
             timeCommitment: user?.timeCommitment ?? .moderate,
-            gardenType: garden.gardenType?.rawValue ?? "outdoor"
+            gardenType: garden.gardenType?.rawValue ?? "outdoor",
+            preferredPlantTypes: user?.preferredPlantTypes ?? [],
+            gardeningGoals: user?.gardeningGoals ?? []
         )
 
         recommendations = plantDatabaseService.getRecommendedPlants(for: profile, limit: 8)
@@ -185,21 +187,7 @@ struct RecommendedPlantsView: View {
 
     private func addPlantToGarden(_ plant: Plant) {
         do {
-            let newPlant = Plant(
-                name: plant.name ?? "Unknown",
-                plantType: plant.plantType ?? .houseplant,
-                difficultyLevel: plant.difficultyLevel ?? .beginner,
-                isUserPlant: true
-            )
-            newPlant.scientificName = plant.scientificName
-            newPlant.sunlightRequirement = plant.sunlightRequirement
-            newPlant.wateringFrequency = plant.wateringFrequency
-            newPlant.spaceRequirement = plant.spaceRequirement
-            newPlant.notes = plant.notes
-            newPlant.garden = garden
-            newPlant.plantingDate = Date()
-
-            try dataService.plants.add(newPlant)
+            try dataService.createUserPlant(from: plant, in: garden)
 
             if let plantID = plant.id {
                 addedPlantIDs.insert(plantID)
@@ -396,7 +384,9 @@ struct SuggestedPlantsSection: View {
             skillLevel: user?.skillLevel ?? .beginner,
             availableSpace: spaceRequirement(),
             timeCommitment: user?.timeCommitment ?? .moderate,
-            gardenType: garden.gardenType?.rawValue ?? "outdoor"
+            gardenType: garden.gardenType?.rawValue ?? "outdoor",
+            preferredPlantTypes: user?.preferredPlantTypes ?? [],
+            gardeningGoals: user?.gardeningGoals ?? []
         )
 
         suggestions = plantDatabaseService.getRecommendedPlants(for: profile, limit: 4)
