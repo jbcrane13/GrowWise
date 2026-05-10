@@ -563,13 +563,12 @@ public struct AddPlantSheet: View {
                     plantingDate: plantingDate
                 )
             } else {
-                newPlant = Plant(
+                newPlant = try dataService.createPlant(
                     name: plantName,
-                    plantType: selectedPlantType,
-                    difficultyLevel: selectedDifficultyLevel
+                    type: selectedPlantType,
+                    difficultyLevel: selectedDifficultyLevel,
+                    garden: selectedGarden
                 )
-                newPlant.garden = selectedGarden
-                modelContext.insert(newPlant)
             }
         } catch {
             errorMessage = "Failed to add plant: \(error.localizedDescription)"
