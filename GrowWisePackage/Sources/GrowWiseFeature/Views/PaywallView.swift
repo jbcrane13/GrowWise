@@ -22,6 +22,16 @@ public struct PaywallView: View {
     // Product IDs (Premium only — Pro is "Coming soon" and not purchasable)
     private let premiumMonthlyID = "com.growwise.premium.monthly"
     private let premiumYearlyID = "com.growwise.premium.annual"
+    static let comparisonPlanNames = ["Free", "Premium"]
+    static let comparisonRows: [PaywallComparisonRow] = [
+        PaywallComparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true),
+        PaywallComparisonRow(feature: "Plant Limit", free: "50", premium: "500"),
+        PaywallComparisonRow(feature: "Smart Reminders", free: false, premium: true),
+        PaywallComparisonRow(feature: "Weather Adjust", free: false, premium: true),
+        PaywallComparisonRow(feature: "Priority Support", free: false, premium: true),
+        PaywallComparisonRow(feature: "Garden Clubs", free: true, premium: true),
+        PaywallComparisonRow(feature: "Analytics", free: "Basic", premium: "Standard"),
+    ]
 
     public init() {}
 
@@ -349,11 +359,11 @@ public struct PaywallView: View {
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text("Free")
+                    Text(Self.comparisonPlanNames[0])
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(width: 50)
-                    Text("Premium")
+                    Text(Self.comparisonPlanNames[1])
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         .frame(width: 66)
@@ -364,13 +374,14 @@ public struct PaywallView: View {
                 Divider()
                     .background(CultivationTheme.Colors.divider)
 
-                comparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true)
-                comparisonRow(feature: "Plant Limit", free: "50", premium: "500")
-                comparisonRow(feature: "Smart Reminders", free: false, premium: true)
-                comparisonRow(feature: "Weather Adjust", free: false, premium: true)
-                comparisonRow(feature: "Priority Support", free: false, premium: true)
-                comparisonRow(feature: "Garden Clubs", free: true, premium: true)
-                comparisonRow(feature: "Analytics", free: "Basic", premium: "Standard", isLast: true)
+                ForEach(Array(Self.comparisonRows.enumerated()), id: \.offset) { index, row in
+                    comparisonRow(
+                        feature: row.feature,
+                        free: row.free,
+                        premium: row.premium,
+                        isLast: index == Self.comparisonRows.count - 1
+                    )
+                }
             }
             .glassCard()
         }
@@ -379,8 +390,8 @@ public struct PaywallView: View {
 
     private func comparisonRow(
         feature: String,
-        free: ComparisonValue,
-        premium: ComparisonValue,
+        free: PaywallComparisonValue,
+        premium: PaywallComparisonValue,
         isLast: Bool = false
     ) -> some View {
         VStack(spacing: 0) {
@@ -406,7 +417,7 @@ public struct PaywallView: View {
     }
 
     @ViewBuilder
-    private func comparisonCell(value: ComparisonValue) -> some View {
+    private func comparisonCell(value: PaywallComparisonValue) -> some View {
         switch value {
         case .check:
             Image(systemName: "checkmark.circle.fill")
@@ -520,7 +531,7 @@ public struct PaywallView: View {
 
 // MARK: - Comparison Value
 
-private enum ComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
+enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
     case check
     case cross
     case text(String)
@@ -532,6 +543,12 @@ private enum ComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLi
     init(stringLiteral value: String) {
         self = .text(value)
     }
+}
+
+struct PaywallComparisonRow {
+    let feature: String
+    let free: PaywallComparisonValue
+    let premium: PaywallComparisonValue
 }
 
 #Preview {
