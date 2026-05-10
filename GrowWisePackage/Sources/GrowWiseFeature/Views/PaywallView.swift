@@ -24,7 +24,7 @@ public struct PaywallView: View {
     private let premiumYearlyID = "com.growwise.premium.annual"
     internal static let freePlanName = "Free"
     internal static let premiumPlanName = "Premium"
-    internal static let comparisonPlanNames = [freePlanName, premiumPlanName]
+    /// Source-of-truth rows for the Free vs Premium plan comparison table.
     internal static let comparisonRows: [PaywallComparisonRow] = [
         PaywallComparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true),
         PaywallComparisonRow(feature: "Plant Limit", free: "50", premium: "500"),
@@ -32,7 +32,7 @@ public struct PaywallView: View {
         PaywallComparisonRow(feature: "Weather Adjust", free: false, premium: true),
         PaywallComparisonRow(feature: "Priority Support", free: false, premium: true),
         PaywallComparisonRow(feature: "Garden Clubs", free: true, premium: true),
-        PaywallComparisonRow(feature: "Analytics", free: "Basic", premium: "Standard"),
+        PaywallComparisonRow(feature: "Analytics", free: "Basic", premium: "Standard")
     ]
 
     public init() {}
@@ -361,11 +361,11 @@ public struct PaywallView: View {
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(maxWidth: .infinity, alignment: .leading)
-                    Text(Self.comparisonPlanNames[0])
+                    Text(Self.freePlanName)
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.textSecondary)
                         .frame(width: 50)
-                    Text(Self.comparisonPlanNames[1])
+                    Text(Self.premiumPlanName)
                         .font(.system(.caption, weight: .semibold))
                         .foregroundStyle(CultivationTheme.Colors.accentCoral)
                         .frame(width: 66)
@@ -547,6 +547,7 @@ internal enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleBy
     }
 }
 
+/// A single feature row in the Free vs Premium paywall comparison table.
 internal struct PaywallComparisonRow {
     let feature: String
     let free: PaywallComparisonValue
