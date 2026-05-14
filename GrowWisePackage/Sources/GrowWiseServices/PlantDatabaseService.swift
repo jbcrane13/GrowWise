@@ -67,6 +67,8 @@ public final class PlantDatabaseService {
                 case .houseplants: plantData.type == .houseplant
                 case .fruits: plantData.type == .fruit
                 case .succulents: plantData.type == .succulent
+                case .trees: plantData.type == .tree
+                case .shrubs: plantData.type == .shrub
                 }
             }
             do {
@@ -428,6 +430,8 @@ public enum SeedCategory: String, CaseIterable, Sendable {
     case houseplants
     case fruits
     case succulents
+    case trees
+    case shrubs
 
     public var displayName: String {
         rawValue.capitalized

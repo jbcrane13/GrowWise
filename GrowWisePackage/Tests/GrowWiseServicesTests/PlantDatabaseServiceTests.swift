@@ -148,9 +148,20 @@ struct PlantDatabaseServiceTests {
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await plantDBService.seedPlantDatabase()
         // Use the cache-free count API to verify all plants were persisted
-        // Expanded database: 50+ plants across vegetables, herbs, flowers, houseplants, fruits, succulents, trees, shrubs
-        #expect(dataService.getPlantDatabaseCount() >= 50)
+        // 1.0 offline baseline: 80+ plants across vegetables, herbs, flowers, houseplants, fruits, succulents, trees, shrubs
+        #expect(dataService.getPlantDatabaseCount() >= 80)
         _ = plantDBService
+    }
+
+    @Test("Seeded database includes practical tree and shrub coverage")
+    func databaseIncludesPracticalTreeAndShrubCoverage() async throws {
+        let dataService = try DataService.makeForTesting()
+        let plantDBService = PlantDatabaseService(dataService: dataService)
+        try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
+        let counts = plantDBService.getPlantCountByType()
+
+        #expect((counts[.tree] ?? 0) >= 3)
+        #expect((counts[.shrub] ?? 0) >= 3)
     }
 
     // MARK: - Idempotency
