@@ -1,7 +1,6 @@
 import GrowWiseModels
 import GrowWiseServices
 import PhotosUI
-import SwiftData
 import SwiftUI
 
 // Sheet view for adding a new plant to the user's garden.
@@ -19,8 +18,6 @@ public struct AddPlantSheet: View {
     private var plantDatabaseService
     @Environment(ReminderService.self)
     private var reminderService
-    @Environment(\.modelContext)
-    private var modelContext
 
     // Form fields
     @State private var plantName: String = ""
@@ -501,12 +498,18 @@ public struct AddPlantSheet: View {
     private func createGarden() {
         let name = newGardenName.trimmingCharacters(in: .whitespaces)
         guard !name.isEmpty else { return }
-        let garden = Garden(name: name)
-        modelContext.insert(garden)
-        newGardenName = ""
-        // Reload and select the new garden
-        loadGardens()
-        selectedGarden = availableGardens.last(where: { $0.name == name })
+
+        do {
+            let garden = try dataService.createGarden(name: name, type: .outdoor, isIndoor: false)
+            newGardenName = ""
+            showCreateGarden = false
+            loadGardens()
+            selectedGarden = garden
+            loadBeds(for: garden)
+        } catch {
+            errorMessage = "Could not create garden: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     private func loadBeds(for garden: Garden?) {
@@ -560,6 +563,7 @@ public struct AddPlantSheet: View {
                 newPlant = try dataService.createUserPlant(
                     from: selectedTemplate,
                     in: selectedGarden,
+                    gardenBed: selectedBed,
                     plantingDate: plantingDate
                 )
             } else {
