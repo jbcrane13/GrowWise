@@ -122,6 +122,9 @@ public struct UserProfile {
     var spaceSize: SpaceSize = .small
     var shouldCreateFirstGarden: Bool = true
     var firstGardenName: String = "My First Garden"
+    var shouldCreateFirstContainer: Bool = true
+    var firstContainerName: String = "Starter Container"
+    var firstContainerType: BedType = .pot
     var interests: Set<PlantType> = []
     var hasLocationPermission: Bool = false
     var hasNotificationPermission: Bool = false

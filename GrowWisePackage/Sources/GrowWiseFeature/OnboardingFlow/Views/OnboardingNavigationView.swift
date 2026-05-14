@@ -186,7 +186,8 @@ struct OnboardingNavigationView: View {
 
                 try await saveUserPreferences(user: user)
                 let firstGarden = try await createFirstGardenIfRequested()
-                try await createFirstPlantIfSelected(garden: firstGarden)
+                let firstContainer = try await createFirstContainerIfRequested(garden: firstGarden)
+                try await createFirstPlantIfSelected(garden: firstGarden, gardenBed: firstContainer)
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
                 await MainActor.run {
@@ -221,7 +222,21 @@ struct OnboardingNavigationView: View {
     }
 
     @MainActor
-    private func createFirstPlantIfSelected(garden: Garden?) async throws {
+    private func createFirstContainerIfRequested(garden: Garden?) async throws -> GardenBed? {
+        guard userProfile.shouldCreateFirstGarden, userProfile.shouldCreateFirstContainer else { return nil }
+        guard let garden else { return nil }
+        let trimmedName = userProfile.firstContainerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        let containerName = trimmedName.isEmpty ? "Starter Container" : trimmedName
+
+        return try dataService.createGardenBed(
+            name: containerName,
+            bedType: userProfile.firstContainerType,
+            in: garden
+        )
+    }
+
+    @MainActor
+    private func createFirstPlantIfSelected(garden: Garden?, gardenBed: GardenBed?) async throws {
         guard let plantName = userProfile.selectedFirstPlantName, !plantName.isEmpty else { return }
         guard let garden else {
             throw OnboardingSaveError.firstPlantNeedsGarden
@@ -230,7 +245,7 @@ struct OnboardingNavigationView: View {
             throw OnboardingSaveError.firstPlantTemplateMissing(plantName)
         }
 
-        try dataService.createStarterPlant(from: template, in: garden)
+        _ = try dataService.createStarterPlant(from: template, in: garden, gardenBed: gardenBed)
     }
 
     private func selectedFirstPlantTemplate(named plantName: String) -> Plant? {
