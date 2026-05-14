@@ -11,6 +11,7 @@ struct FirstPlantStepView: View {
 
     @State private var beginnerPlants: [Plant] = []
     @State private var selectedPlant: Plant?
+    @State private var loadErrorMessage: String?
 
     /// Curated plant names for onboarding — diverse, beginner-friendly, common.
     private static let curatedNames: Set<String> = [
@@ -53,30 +54,39 @@ struct FirstPlantStepView: View {
                 }
 
                 // Plant grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                ], spacing: 12) {
-                    ForEach(beginnerPlants.prefix(8)) { plant in
-                        PlantPickerCard(
-                            plant: plant,
-                            isSelected: selectedPlant?.id == plant.id
-                        ) {
-                            withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
-                                if selectedPlant?.id == plant.id {
-                                    selectedPlant = nil
-                                    userProfile.selectedFirstPlantName = nil
-                                    userProfile.selectedFirstPlantID = nil
-                                } else {
-                                    selectedPlant = plant
-                                    userProfile.selectedFirstPlantName = plant.name
-                                    userProfile.selectedFirstPlantID = plant.id
+                if let loadErrorMessage, beginnerPlants.isEmpty {
+                    Text(loadErrorMessage)
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .accessibilityIdentifier("onboarding_firstplant_error")
+                } else {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                    ], spacing: 12) {
+                        ForEach(beginnerPlants.prefix(8)) { plant in
+                            PlantPickerCard(
+                                plant: plant,
+                                isSelected: selectedPlant?.id == plant.id
+                            ) {
+                                withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
+                                    if selectedPlant?.id == plant.id {
+                                        selectedPlant = nil
+                                        userProfile.selectedFirstPlantName = nil
+                                        userProfile.selectedFirstPlantID = nil
+                                    } else {
+                                        selectedPlant = plant
+                                        userProfile.selectedFirstPlantName = plant.name
+                                        userProfile.selectedFirstPlantID = plant.id
+                                    }
                                 }
                             }
                         }
                     }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
 
                 // Skip option
                 Button {
@@ -95,12 +105,19 @@ struct FirstPlantStepView: View {
             Spacer()
         }
         .task {
-            loadPlants()
+            await loadPlants()
         }
     }
 
-    private func loadPlants() {
-        let allBeginner = plantDatabaseService.getBeginnerFriendlyPlants()
+    private func loadPlants() async {
+        let allBeginner: [Plant]
+        do {
+            allBeginner = try await plantDatabaseService.getSeededBeginnerFriendlyPlants()
+            loadErrorMessage = nil
+        } catch {
+            allBeginner = plantDatabaseService.getBeginnerFriendlyPlants()
+            loadErrorMessage = "Starter plants are unavailable right now. You can skip and add plants later."
+        }
 
         // Prefer curated list for consistent onboarding experience
         let curated = allBeginner.filter { plant in

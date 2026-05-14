@@ -453,6 +453,7 @@ public final class DataService {
         plant.isUserPlant = false
         plant.notes = notes
         try plants.add(plant)
+        invalidatePlantDatabaseCache()
     }
 
     public func fetchPlants(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) -> [Plant] {
@@ -506,6 +507,10 @@ public final class DataService {
 
         cache.set(cacheKey, value: allPlants, policy: .long)
         return allPlants
+    }
+
+    func invalidatePlantDatabaseCache() {
+        cache.invalidateAll(withPrefix: "plant_database:")
     }
 
     private func fetchPlantDatabasePage(offset: Int, limit: Int) -> [Plant] {

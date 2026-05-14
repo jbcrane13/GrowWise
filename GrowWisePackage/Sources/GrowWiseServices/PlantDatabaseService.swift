@@ -81,6 +81,7 @@ public final class PlantDatabaseService {
 
         if !failures.isEmpty { throw PlantDatabaseSeedingError(failures: failures) }
 
+        dataService.invalidatePlantDatabaseCache()
         let totalTime = CFAbsoluteTimeGetCurrent() - startTime
         let totalPlants = dataService.fetchPlantDatabase().count
         logger.info("Seeded \(totalPlants) plants in \(String(format: "%.2f", totalTime), privacy: .public)s")
@@ -120,6 +121,11 @@ public final class PlantDatabaseService {
 
     public func getBeginnerFriendlyPlants() -> [Plant] {
         filterPlants(difficulty: .beginner)
+    }
+
+    public func getSeededBeginnerFriendlyPlants() async throws -> [Plant] {
+        try await seedPlantDatabase()
+        return getBeginnerFriendlyPlants()
     }
 
     public func getPlantsBySeason(_ season: PlantingSeason) -> [Plant] {
