@@ -4,7 +4,7 @@ import os
 import SwiftData
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable cyclomatic_complexity function_parameter_count
+// swiftlint:disable cyclomatic_complexity file_length function_parameter_count
 
 private let logger = Logger(subsystem: "com.growwise", category: "PlantDatabaseService")
 
