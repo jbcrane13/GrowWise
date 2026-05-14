@@ -58,6 +58,32 @@ public final class PerenualEnrichmentService {
         return await fetchAndCache(scientificName: sciName, key: key)
     }
 
+    /// Returns cached enrichment when available, otherwise waits for a lookup.
+    public func loadEnrichment(for plant: Plant) async -> PerenualSpeciesDetail? {
+        guard let sciName = plant.scientificName, !sciName.isEmpty else { return nil }
+        let key = sciName.lowercased()
+
+        if let cached = cache[key] {
+            return cached
+        }
+
+        if inflight.contains(key) {
+            for _ in 0 ..< 30 {
+                try? await Task.sleep(for: .milliseconds(200))
+                if let cached = cache[key] {
+                    return cached
+                }
+                if !inflight.contains(key) {
+                    return nil
+                }
+            }
+            return nil
+        }
+
+        inflight.insert(key)
+        return await fetchAndCache(scientificName: sciName, key: key)
+    }
+
     // MARK: - Private
 
     @discardableResult
