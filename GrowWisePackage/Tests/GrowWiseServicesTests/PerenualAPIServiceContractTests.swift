@@ -658,7 +658,7 @@ struct PerenualNetworkContractTests {
         // Temporarily remove API key — this is tricky since it's in Keychain.
         // We test the error type exists and has a description instead.
         let error = PerenualError.noAPIKey
-        #expect(error.errorDescription?.contains("API key") == true)
+        #expect(error.errorDescription == "Online plant database is not configured for this build.")
     }
 }
 

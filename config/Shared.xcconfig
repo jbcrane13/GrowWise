@@ -26,6 +26,8 @@ TARGETED_DEVICE_FAMILY = 1,2
 GENERATE_INFOPLIST_FILE = YES
 INFOPLIST_KEY_UISupportedInterfaceOrientations = portrait landscape-left landscape-right
 INFOPLIST_KEY_UISupportedInterfaceOrientations_iPad = portrait landscape-left landscape-right portrait-upside-down
+PERENUAL_API_KEY =
+INFOPLIST_KEY_PERENUAL_API_KEY = $(PERENUAL_API_KEY)
 
 // ==========================================
 // Entitlements
