@@ -16,6 +16,8 @@ public struct AddPlantSheet: View {
     private var companionService
     @Environment(PlantDatabaseService.self)
     private var plantDatabaseService
+    @Environment(PerenualAPIService.self)
+    private var perenualAPIService
     @Environment(ReminderService.self)
     private var reminderService
 
@@ -42,10 +44,12 @@ public struct AddPlantSheet: View {
     @State private var saveTask: Task<Void, Never>?
 
     // Autocomplete state
-    @State private var suggestions: [Plant] = []
+    @State private var suggestions: [PlantSearchResult] = []
     @State private var searchTask: Task<Void, Never>?
     @State private var nameFieldCommitted = false
     @State private var selectedTemplate: Plant?
+    @State private var selectedPerenualDetail: PerenualSpeciesDetail?
+    @State private var loadingPerenualSuggestionID: Int?
 
     // Companion planting analysis
     @State private var compatibilityAnalysis: GardenCompatibilityAnalysis?
@@ -95,44 +99,35 @@ public struct AddPlantSheet: View {
                                     if selectedTemplate?.name != newValue {
                                         selectedTemplate = nil
                                     }
+                                    if selectedPerenualDetail?.commonName != newValue {
+                                        selectedPerenualDetail = nil
+                                    }
                                     guard !newValue.isEmpty else {
                                         suggestions = []
                                         selectedTemplate = nil
+                                        selectedPerenualDetail = nil
                                         return
                                     }
                                     searchTask = Task {
                                         try? await Task.sleep(for: .milliseconds(300))
                                         guard !Task.isCancelled else { return }
-                                        suggestions = plantDatabaseService.searchPlants(query: newValue)
+                                        let localResults = plantDatabaseService.searchPlants(query: newValue)
+                                        let onlineResults = await searchOnlinePlants(query: newValue)
+                                        suggestions = PlantSearchResult.combine(local: localResults, perenual: onlineResults)
                                     }
                                 }
 
                                 if !suggestions.isEmpty, !nameFieldCommitted {
                                     ScrollView(.horizontal, showsIndicators: false) {
                                         HStack(spacing: 8) {
-                                            ForEach(suggestions, id: \.id) { suggestion in
+                                            ForEach(suggestions) { suggestion in
                                                 Button {
-                                                    applyTemplate(suggestion)
+                                                    applySuggestion(suggestion)
                                                 } label: {
-                                                    Text(suggestion.name ?? "")
-                                                        .font(.system(.caption, weight: .medium))
-                                                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                                                        .padding(.horizontal, 12)
-                                                        .padding(.vertical, 6)
-                                                        .background {
-                                                            Capsule()
-                                                                .fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
-                                                                .overlay {
-                                                                    Capsule()
-                                                                        .stroke(
-                                                                            CultivationTheme.Colors.accentCoral.opacity(0.3),
-                                                                            lineWidth: 1
-                                                                        )
-                                                                }
-                                                        }
+                                                    suggestionPill(suggestion)
                                                 }
                                                 .buttonStyle(.plain)
-                                                .accessibilityIdentifier("addplant_suggestion_\(suggestion.name ?? "")")
+                                                .accessibilityIdentifier("addplant_suggestion_\(suggestion.displayName)")
                                             }
                                         }
                                     }
@@ -478,6 +473,33 @@ public struct AddPlantSheet: View {
         }
     }
 
+    private func suggestionPill(_ suggestion: PlantSearchResult) -> some View {
+        HStack(spacing: 6) {
+            if suggestion.source == .perenual, loadingPerenualSuggestionID == suggestion.perenualSpecies?.id {
+                ProgressView()
+                    .controlSize(.small)
+            }
+
+            Text(suggestion.displayName)
+                .font(.system(.caption, weight: .medium))
+
+            Text(suggestion.source == .perenual ? "Online" : "Local")
+                .font(.system(size: 10, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+        }
+        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+        .padding(.horizontal, 12)
+        .padding(.vertical, 6)
+        .background {
+            Capsule()
+                .fill(CultivationTheme.Colors.accentCoral.opacity(0.12))
+                .overlay {
+                    Capsule()
+                        .stroke(CultivationTheme.Colors.accentCoral.opacity(0.3), lineWidth: 1)
+                }
+        }
+    }
+
     // MARK: - Data Methods
 
     private func loadGardens() {
@@ -539,12 +561,56 @@ public struct AddPlantSheet: View {
 
     private func applyTemplate(_ plant: Plant) {
         selectedTemplate = plant
+        selectedPerenualDetail = nil
         plantName = plant.name ?? plantName
         scientificName = plant.scientificName ?? scientificName
         if let type = plant.plantType { selectedPlantType = type }
         if let diff = plant.difficultyLevel { selectedDifficultyLevel = diff }
         suggestions = []
         nameFieldCommitted = true
+    }
+
+    private func applySuggestion(_ suggestion: PlantSearchResult) {
+        switch suggestion.source {
+        case .local:
+            guard let plant = suggestion.localPlant else { return }
+            applyTemplate(plant)
+
+        case .perenual:
+            guard let species = suggestion.perenualSpecies else { return }
+            Task { await applyPerenualSuggestion(species) }
+        }
+    }
+
+    private func searchOnlinePlants(query: String) async -> [PerenualSpeciesSummary] {
+        guard PerenualAPIService.hasAPIKey else { return [] }
+        do {
+            let response = try await perenualAPIService.fetchSpeciesList(query: query, page: 1)
+            return response.data
+        } catch {
+            return []
+        }
+    }
+
+    @MainActor
+    private func applyPerenualSuggestion(_ species: PerenualSpeciesSummary) async {
+        loadingPerenualSuggestionID = species.id
+        defer { loadingPerenualSuggestionID = nil }
+
+        do {
+            let detail = try await perenualAPIService.fetchSpeciesDetail(id: species.id)
+            selectedTemplate = nil
+            selectedPerenualDetail = detail
+            plantName = detail.commonName
+            scientificName = detail.scientificName.first ?? scientificName
+            selectedPlantType = detail.mappedPlantType
+            selectedDifficultyLevel = detail.mappedDifficultyLevel
+            suggestions = []
+            nameFieldCommitted = true
+        } catch {
+            errorMessage = "Could not load online plant details: \(error.localizedDescription)"
+            showingError = true
+        }
     }
 
     @MainActor
@@ -559,7 +625,14 @@ public struct AddPlantSheet: View {
 
         let newPlant: Plant
         do {
-            if let selectedTemplate {
+            if let selectedPerenualDetail {
+                newPlant = try dataService.createUserPlant(
+                    from: selectedPerenualDetail,
+                    in: selectedGarden,
+                    gardenBed: selectedBed,
+                    plantingDate: plantingDate
+                )
+            } else if let selectedTemplate {
                 newPlant = try dataService.createUserPlant(
                     from: selectedTemplate,
                     in: selectedGarden,

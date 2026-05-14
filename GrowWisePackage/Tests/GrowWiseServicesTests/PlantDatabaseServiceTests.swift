@@ -217,6 +217,36 @@ struct PlantDatabaseServiceTests {
         #expect(!uppercase.isEmpty)
     }
 
+    @Test("unified search results prefer local plants and deduplicate Perenual summaries")
+    func unifiedSearchResultsPreferLocalPlantsAndDeduplicateOnlineSummaries() {
+        let localBasil = Plant(name: "Basil", plantType: .herb, difficultyLevel: .beginner)
+        localBasil.scientificName = "Ocimum basilicum"
+        let duplicateBasil = PerenualSpeciesSummary(
+            id: 10,
+            commonName: "Basil",
+            scientificName: ["Ocimum basilicum"],
+            otherName: nil,
+            family: nil,
+            genus: "Ocimum",
+            defaultImage: nil
+        )
+        let onlineRose = PerenualSpeciesSummary(
+            id: 11,
+            commonName: "Rose",
+            scientificName: ["Rosa"],
+            otherName: nil,
+            family: nil,
+            genus: "Rosa",
+            defaultImage: nil
+        )
+
+        let results = PlantSearchResult.combine(local: [localBasil], perenual: [duplicateBasil, onlineRose])
+
+        #expect(results.map(\.displayName) == ["Basil", "Rose"])
+        #expect(results.first?.source == .local)
+        #expect(results.last?.source == .perenual)
+    }
+
     // MARK: - Filter
 
     @Test("filterPlants by type returns only plants of that type")

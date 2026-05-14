@@ -447,6 +447,64 @@ public struct PlantRecommendation: Identifiable {
     }
 }
 
+public enum PlantSearchResultSource: String {
+    case local
+    case perenual
+}
+
+public struct PlantSearchResult: Identifiable {
+    public let id: String
+    public let displayName: String
+    public let scientificName: String?
+    public let source: PlantSearchResultSource
+    public let localPlant: Plant?
+    public let perenualSpecies: PerenualSpeciesSummary?
+
+    public static func combine(
+        local plants: [Plant],
+        perenual species: [PerenualSpeciesSummary],
+        limit: Int = 8
+    ) -> [PlantSearchResult] {
+        var seenKeys: Set<String> = []
+        var results: [PlantSearchResult] = []
+
+        for plant in plants {
+            let name = plant.name ?? "Plant"
+            let key = dedupeKey(name: name, scientificName: plant.scientificName)
+            guard seenKeys.insert(key).inserted else { continue }
+            results.append(PlantSearchResult(
+                id: "local-\(plant.id?.uuidString ?? name)",
+                displayName: name,
+                scientificName: plant.scientificName,
+                source: .local,
+                localPlant: plant,
+                perenualSpecies: nil
+            ))
+        }
+
+        for item in species {
+            let key = dedupeKey(name: item.commonName, scientificName: item.scientificName.first)
+            guard seenKeys.insert(key).inserted else { continue }
+            results.append(PlantSearchResult(
+                id: "perenual-\(item.id)",
+                displayName: item.commonName,
+                scientificName: item.scientificName.first,
+                source: .perenual,
+                localPlant: nil,
+                perenualSpecies: item
+            ))
+        }
+
+        return Array(results.prefix(max(1, limit)))
+    }
+
+    private static func dedupeKey(name: String, scientificName: String?) -> String {
+        let scientific = scientificName?.trimmingCharacters(in: .whitespacesAndNewlines).lowercased() ?? ""
+        if !scientific.isEmpty { return scientific }
+        return name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+}
+
 public struct UserGardenProfile {
     public let skillLevel: GardeningSkillLevel
     public let availableSpace: SpaceRequirement
