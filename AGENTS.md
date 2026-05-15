@@ -303,3 +303,12 @@ Before ending a session:
 - f34dadb fix(#213): serialize SwiftUI/SwiftData feature test suites to eliminate signal 5/11 crash
 - 4a0bc47 fix(#284): resolve all swiftlint --strict violations
 - 3eb8e19 Update AGENTS.md
+- f8b7d10 Update AGENTS.md
+
+## Activity — 2026-05-04
+- c3e6aa7 fix: serialize FeatureFlagServiceTests to eliminate UserDefaults state leak
+- 644f337 fix: stabilize ReminderServiceUpdateTests timing assertion
+
+## Activity — 2026-05-11
+- 1acc15f chore(deps): bump github.com/amplitude/amplitude-swift
+- 09b3be2 chore(deps): bump github.com/getsentry/sentry-cocoa in /GrowWisePackage
