@@ -424,7 +424,7 @@ public enum PerenualError: LocalizedError {
 
     public var errorDescription: String? {
         switch self {
-        case .noAPIKey: "No Perenual API key configured"
+        case .noAPIKey: "Online plant database is not configured for this build."
         case .invalidURL: "Invalid request URL"
         case .invalidResponse: "Invalid server response"
         case .unauthorized: "Invalid API key — check your Perenual subscription"

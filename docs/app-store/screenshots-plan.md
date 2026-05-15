@@ -1,7 +1,7 @@
 # Cultivation — App Store Screenshots Plan
 
 ## Overview
-Generate 10 screenshots per device size (iPhone, iPad) covering core flows and features.
+Generate screenshots around the 1.0 promise: set up an outdoor garden, organize plants by bed or area, follow timely care guidance, and share progress with a private garden club.
 
 ## Device Sizes Required
 | Device | Display | Size | Notes |
@@ -13,10 +13,10 @@ Generate 10 screenshots per device size (iPhone, iPad) covering core flows and f
 ---
 
 ## Current App Structure (4 Tabs)
-- **Home** — Care task dashboard, weather, seasonal tips, club card
-- **Garden** — Plant list grouped by bed, add plant/garden FAB
-- **Club** — Garden Club feed, create/join, chat, share
-- **Me** — Profile, stats, settings, subscription
+- **Home** - Care task dashboard, weather, seasonal tips, club card
+- **Garden** - Plant list grouped by bed/area, first garden setup, add plant
+- **Club** - Private Garden Club feed, create/join, share composer
+- **Me** - Profile, stats, settings, subscription
 
 ---
 
@@ -32,13 +32,12 @@ Generate 10 screenshots per device size (iPhone, iPad) covering core flows and f
 - Your Club card
 **Caption**: "Never miss a watering or fertilizing task"
 
-### 2. Garden Tab — Plant List
+### 2. Garden Tab - Plant List
 **Feature**: Plants grouped by bed/area with hero header
 **Frame**: Garden screen showing:
 - Hero header with garden selector and plant count
 - Plants grouped by bed/area
 - Plant rows with health status indicators
-- Floating add button (coral FAB)
 **Caption**: "All your plants, organized by garden bed"
 
 ### 3. Add Plant — Quick Entry
@@ -60,22 +59,22 @@ Generate 10 screenshots per device size (iPhone, iPad) covering core flows and f
 - Photo journal strip
 **Caption**: "Track every plant's journey from seed to harvest"
 
-### 5. Club Tab — Garden Club Feed
-**Feature**: Share what's growing with nearby gardeners
+### 5. Club Tab - Garden Club Feed
+**Feature**: Share what's growing with a private garden club
 **Frame**: Club feed showing:
 - Club name and member count
 - Activity posts with photos
 - Share button
-- Member avatars
+- Empty/loading/offline states when applicable
 **Caption**: "Share what's growing with your garden club"
 
-### 6. Club — Create or Join
+### 6. Club - Create or Join
 **Feature**: Club creation and invite code flow
 **Frame**: Create Club sheet or Join Club sheet showing:
 - Club name field
 - Invite code display/copy
 - Join via invite code
-**Caption**: "Start a garden club or join one nearby"
+**Caption**: "Start a private garden club or join with an invite code"
 
 ### 7. Plant Health Guidance
 **Feature**: Common plant issues and treatments
@@ -160,6 +159,6 @@ Create a `--demo-data` launch argument that populates:
 - 5 plants across beds (tomato, pepper, basil, lettuce, carrot)
 - 3 overdue reminders
 - 2 due-today reminders
-- 1 garden club with 2 posts
+- 1 private garden club with 2 posts
 - 2 journal entries with photos
 - Hardiness zone: 7a

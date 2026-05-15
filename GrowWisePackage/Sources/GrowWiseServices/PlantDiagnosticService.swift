@@ -59,6 +59,7 @@ public struct PlantDiagnosis: Sendable, Equatable {
 public enum PlantDiagnosticError: Error, LocalizedError {
     case invalidImage
     case noClassification
+    case missingCurrentUser
     case diagnosisLimitReached(remaining: Int, tier: SubscriptionTier)
 
     public var errorDescription: String? {
@@ -68,6 +69,9 @@ public enum PlantDiagnosticError: Error, LocalizedError {
 
         case .noClassification:
             "No plant health guidance could be produced from this image."
+
+        case .missingCurrentUser:
+            "Finish setup before running a Plant Health check so monthly limits can be applied."
 
         case .diagnosisLimitReached(let remaining, let tier):
             "You have reached your monthly Plant Health check limit (\(tier.aiDiagnosesPerMonth) per month on the \(tier.displayName) plan). Upgrade for unlimited checks. Remaining: \(remaining)."
@@ -136,6 +140,19 @@ public final class PlantDiagnosticService {
     }
 
     // MARK: - Plant Health Check
+
+    /// Run a plant health check from UI flows that may not have a loaded current user yet.
+    public func diagnose(image: PlatformImage, currentUser user: User?) async {
+        lastDiagnosis = nil
+        lastError = nil
+
+        guard let user else {
+            lastError = PlantDiagnosticError.missingCurrentUser.localizedDescription
+            return
+        }
+
+        await diagnose(image: image, user: user)
+    }
 
     /// Run a plant health check, enforcing the user's subscription limits.
     /// Increments the user's monthly health-check usage counter on success.

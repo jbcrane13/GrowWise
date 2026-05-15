@@ -3,7 +3,7 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable file_length line_length
+// swiftlint:disable file_length
 
 // MARK: - GardenFilter
 
@@ -88,9 +88,6 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                                                     await viewModel.load(dataService: dataService)
                                                 }
                                             }
-                                        )
-                                        .accessibilityIdentifier(
-                                            "garden_bed_\(group.displayName.lowercased().replacingOccurrences(of: " ", with: "_"))"
                                         )
                                     }
                                 }
@@ -546,4 +543,4 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
     }
 }
 
-// swiftlint:enable file_length line_length
+// swiftlint:enable file_length

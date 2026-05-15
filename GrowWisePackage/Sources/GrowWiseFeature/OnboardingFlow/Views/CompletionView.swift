@@ -92,6 +92,14 @@ struct CompletionView: View {
                 if userProfile.shouldCreateFirstGarden {
                     Divider().padding(.leading, 48)
                     CompletionSummaryRow(
+                        icon: userProfile.firstContainerType.iconName,
+                        iconColor: CultivationTheme.Colors.accentCoral,
+                        label: "First Container",
+                        value: Self.containerSummary(for: userProfile)
+                    )
+
+                    Divider().padding(.leading, 48)
+                    CompletionSummaryRow(
                         icon: "square.grid.2x2.fill",
                         iconColor: CultivationTheme.Colors.textTertiary,
                         label: "Space",
@@ -134,6 +142,12 @@ struct CompletionView: View {
         guard profile.shouldCreateFirstGarden else { return "Skipped" }
         let trimmedName = profile.firstGardenName.trimmingCharacters(in: .whitespacesAndNewlines)
         return trimmedName.isEmpty ? "My First Garden" : trimmedName
+    }
+
+    static func containerSummary(for profile: UserProfile) -> String {
+        guard profile.shouldCreateFirstGarden, profile.shouldCreateFirstContainer else { return "Skipped" }
+        let trimmedName = profile.firstContainerName.trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmedName.isEmpty ? "Starter Container" : trimmedName
     }
 
     static func firstPlantSummary(for profile: UserProfile) -> String {

@@ -148,9 +148,20 @@ struct PlantDatabaseServiceTests {
         let plantDBService = PlantDatabaseService(dataService: dataService)
         try await plantDBService.seedPlantDatabase()
         // Use the cache-free count API to verify all plants were persisted
-        // Expanded database: 50+ plants across vegetables, herbs, flowers, houseplants, fruits, succulents, trees, shrubs
-        #expect(dataService.getPlantDatabaseCount() >= 50)
+        // 1.0 offline baseline: 80+ plants across vegetables, herbs, flowers, houseplants, fruits, succulents, trees, shrubs
+        #expect(dataService.getPlantDatabaseCount() >= 80)
         _ = plantDBService
+    }
+
+    @Test("Seeded database includes practical tree and shrub coverage")
+    func databaseIncludesPracticalTreeAndShrubCoverage() async throws {
+        let dataService = try DataService.makeForTesting()
+        let plantDBService = PlantDatabaseService(dataService: dataService)
+        try await seedAndFlush(dataService: dataService, plantDBService: plantDBService)
+        let counts = plantDBService.getPlantCountByType()
+
+        #expect((counts[.tree] ?? 0) >= 3)
+        #expect((counts[.shrub] ?? 0) >= 3)
     }
 
     // MARK: - Idempotency
@@ -215,6 +226,36 @@ struct PlantDatabaseServiceTests {
         let lowercase = plantDBService.searchPlants(query: "basil")
         #expect(uppercase.count == lowercase.count)
         #expect(!uppercase.isEmpty)
+    }
+
+    @Test("unified search results prefer local plants and deduplicate Perenual summaries")
+    func unifiedSearchResultsPreferLocalPlantsAndDeduplicateOnlineSummaries() {
+        let localBasil = Plant(name: "Basil", plantType: .herb, difficultyLevel: .beginner)
+        localBasil.scientificName = "Ocimum basilicum"
+        let duplicateBasil = PerenualSpeciesSummary(
+            id: 10,
+            commonName: "Basil",
+            scientificName: ["Ocimum basilicum"],
+            otherName: nil,
+            family: nil,
+            genus: "Ocimum",
+            defaultImage: nil
+        )
+        let onlineRose = PerenualSpeciesSummary(
+            id: 11,
+            commonName: "Rose",
+            scientificName: ["Rosa"],
+            otherName: nil,
+            family: nil,
+            genus: "Rosa",
+            defaultImage: nil
+        )
+
+        let results = PlantSearchResult.combine(local: [localBasil], perenual: [duplicateBasil, onlineRose])
+
+        #expect(results.map(\.displayName) == ["Basil", "Rose"])
+        #expect(results.first?.source == .local)
+        #expect(results.last?.source == .perenual)
     }
 
     // MARK: - Filter

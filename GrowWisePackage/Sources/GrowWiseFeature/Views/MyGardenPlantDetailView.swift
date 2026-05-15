@@ -15,8 +15,6 @@ struct PlantDetailView: View {
     private var reminderService
     @Environment(PlantCareAdviceService.self)
     private var careAdviceService
-    @Environment(PerenualEnrichmentService.self)
-    private var perenualEnrichment
 
     // MARK: - State
 
@@ -41,6 +39,7 @@ struct PlantDetailView: View {
                     heroPhoto
                     titleBlock
                     statRow
+                    PerenualEnrichmentCard(plant: plant)
                     actionButtons
                     adviceCard
                     photoJournalStrip

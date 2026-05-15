@@ -26,6 +26,21 @@ struct PlantDatabaseOnboardingPersonalizationTests {
         #expect(recommendations.first?.reasons.contains("Matches your Grow My Own Food goal") == true)
     }
 
+    @Test("seeded beginner plants include onboarding curated starters")
+    func seededBeginnerPlantsIncludeOnboardingCuratedStarters() async throws {
+        let dataService = try DataService.makeForTesting()
+        let plantDBService = PlantDatabaseService(dataService: dataService)
+
+        let plants = try await plantDBService.getSeededBeginnerFriendlyPlants()
+        let names = Set(plants.compactMap(\.name))
+
+        #expect(names.contains("Basil"))
+        #expect(names.contains("Mint"))
+        #expect(names.contains("Lettuce"))
+        #expect(names.contains("Snake Plant"))
+        #expect(names.contains("Pothos"))
+    }
+
     private func seedRecommendationFixtures(dataService: DataService) throws {
         try dataService.insertDatabasePlant(
             name: "Marigold",

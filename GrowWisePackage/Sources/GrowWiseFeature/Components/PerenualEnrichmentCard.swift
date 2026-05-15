@@ -237,29 +237,8 @@ public struct PerenualEnrichmentCard: View {
     // MARK: - Data Loading
 
     private func loadEnrichment() async {
-        // First check synchronous cache
-        if let cached = enrichment.enrichment(for: plant) {
-            detail = cached
-            isLoading = false
-            hasChecked = true
-            return
-        }
-
-        // Wait a moment for the async fetch the enrichment(for:) call triggered
         isLoading = true
-        try? await Task.sleep(for: .milliseconds(200))
-
-        // Poll for result (the service fires a background task on first call)
-        for _ in 0 ..< 30 { // Up to ~6 seconds
-            if let cached = enrichment.enrichment(for: plant) {
-                detail = cached
-                isLoading = false
-                hasChecked = true
-                return
-            }
-            try? await Task.sleep(for: .milliseconds(200))
-        }
-
+        detail = await enrichment.loadEnrichment(for: plant)
         isLoading = false
         hasChecked = true
     }
@@ -316,7 +295,7 @@ public struct PerenualEnrichmentThumbnail: View {
             }
         }
         .task(id: plant.scientificName) {
-            loadFromCache()
+            await loadEnrichment()
         }
     }
 
@@ -329,8 +308,8 @@ public struct PerenualEnrichmentThumbnail: View {
         }
     }
 
-    private func loadFromCache() {
-        guard let detail = enrichment.enrichment(for: plant) else { return }
+    private func loadEnrichment() async {
+        guard let detail = await enrichment.loadEnrichment(for: plant) else { return }
         imageURL = detail.defaultImage?.thumbnail ?? detail.defaultImage?.smallUrl
         if let min = detail.hardiness?.min {
             hardinessZone = "Z\(min)"

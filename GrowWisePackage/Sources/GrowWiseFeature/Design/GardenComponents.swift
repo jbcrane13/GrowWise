@@ -53,6 +53,7 @@ struct PlantRow: View {
     let plant: Plant
     var isUrgent: Bool = false
     var onComplete: (() -> Void)?
+    var onOpen: (() -> Void)?
 
     private var plantID: String {
         plant.id?.uuidString ?? "unknown"
@@ -74,6 +75,10 @@ struct PlantRow: View {
             return "\(watering) · \(stage)"
         }
         return watering
+    }
+
+    private var accessibilitySummary: String {
+        "\(plant.name ?? "Unnamed Plant"), \(careSubtitle), \(healthStatus.displayName)"
     }
 
     var body: some View {
@@ -132,6 +137,10 @@ struct PlantRow: View {
             }
         }
         .padding(CultivationTheme.Spacing.cardPadding)
+        .contentShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+        .onTapGesture {
+            onOpen?()
+        }
         .background {
             if isUrgent {
                 RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
@@ -139,6 +148,9 @@ struct PlantRow: View {
             }
         }
         .paperCard()
+        .accessibilityElement(children: isUrgent ? .contain : .ignore)
+        .accessibilityLabel(accessibilitySummary)
+        .accessibilityAddTraits(.isButton)
         .accessibilityIdentifier("garden_row_plant_\(plantID)")
     }
 }

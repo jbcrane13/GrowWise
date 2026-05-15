@@ -11,6 +11,7 @@ struct FirstPlantStepView: View {
 
     @State private var beginnerPlants: [Plant] = []
     @State private var selectedPlant: Plant?
+    @State private var loadErrorMessage: String?
 
     /// Curated plant names for onboarding — diverse, beginner-friendly, common.
     private static let curatedNames: Set<String> = [
@@ -19,10 +20,8 @@ struct FirstPlantStepView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 28) {
+        ScrollView {
+            VStack(spacing: 22) {
                 // Hero icon
                 ZStack {
                     Circle()
@@ -53,30 +52,39 @@ struct FirstPlantStepView: View {
                 }
 
                 // Plant grid
-                LazyVGrid(columns: [
-                    GridItem(.flexible()),
-                    GridItem(.flexible()),
-                ], spacing: 12) {
-                    ForEach(beginnerPlants.prefix(8)) { plant in
-                        PlantPickerCard(
-                            plant: plant,
-                            isSelected: selectedPlant?.id == plant.id
-                        ) {
-                            withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
-                                if selectedPlant?.id == plant.id {
-                                    selectedPlant = nil
-                                    userProfile.selectedFirstPlantName = nil
-                                    userProfile.selectedFirstPlantID = nil
-                                } else {
-                                    selectedPlant = plant
-                                    userProfile.selectedFirstPlantName = plant.name
-                                    userProfile.selectedFirstPlantID = plant.id
+                if let loadErrorMessage, beginnerPlants.isEmpty {
+                    Text(loadErrorMessage)
+                        .font(.system(size: 14, design: .rounded))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        .multilineTextAlignment(.center)
+                        .padding(.horizontal, 24)
+                        .accessibilityIdentifier("onboarding_firstplant_error")
+                } else {
+                    LazyVGrid(columns: [
+                        GridItem(.flexible()),
+                        GridItem(.flexible()),
+                    ], spacing: 12) {
+                        ForEach(beginnerPlants.prefix(8)) { plant in
+                            PlantPickerCard(
+                                plant: plant,
+                                isSelected: selectedPlant?.id == plant.id
+                            ) {
+                                withAnimation(.spring(duration: 0.3, bounce: 0.2)) {
+                                    if selectedPlant?.id == plant.id {
+                                        selectedPlant = nil
+                                        userProfile.selectedFirstPlantName = nil
+                                        userProfile.selectedFirstPlantID = nil
+                                    } else {
+                                        selectedPlant = plant
+                                        userProfile.selectedFirstPlantName = plant.name
+                                        userProfile.selectedFirstPlantID = plant.id
+                                    }
                                 }
                             }
                         }
                     }
+                    .padding(.horizontal, 20)
                 }
-                .padding(.horizontal, 20)
 
                 // Skip option
                 Button {
@@ -88,19 +96,29 @@ struct FirstPlantStepView: View {
                         .font(.system(size: 14, design: .rounded))
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
                 .accessibilityIdentifier("onboarding_firstplant_skip")
             }
             .padding(.horizontal, 4)
-
-            Spacer()
+            .padding(.top, 16)
+            .padding(.bottom, 28)
         }
+        .scrollIndicators(.hidden)
         .task {
-            loadPlants()
+            await loadPlants()
         }
     }
 
-    private func loadPlants() {
-        let allBeginner = plantDatabaseService.getBeginnerFriendlyPlants()
+    private func loadPlants() async {
+        let allBeginner: [Plant]
+        do {
+            allBeginner = try await plantDatabaseService.getSeededBeginnerFriendlyPlants()
+            loadErrorMessage = nil
+        } catch {
+            allBeginner = plantDatabaseService.getBeginnerFriendlyPlants()
+            loadErrorMessage = "Starter plants are unavailable right now. You can skip and add plants later."
+        }
 
         // Prefer curated list for consistent onboarding experience
         let curated = allBeginner.filter { plant in
@@ -123,6 +141,15 @@ private struct PlantPickerCard: View {
     let plant: Plant
     let isSelected: Bool
     let onTap: () -> Void
+
+    private var accessibilityID: String {
+        let rawName = plant.name ?? "unknown"
+        let sanitized = rawName
+            .lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+            .filter { $0.isLetter || $0.isNumber || $0 == "_" }
+        return "onboarding_firstplant_card_\(sanitized)"
+    }
 
     private var plantIcon: String {
         plant.plantType?.iconName ?? "leaf.fill"
@@ -180,7 +207,7 @@ private struct PlantPickerCard: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("onboarding_firstplant_card_\(plant.name ?? "unknown")")
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 

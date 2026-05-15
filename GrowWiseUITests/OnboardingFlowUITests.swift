@@ -43,7 +43,7 @@ final class OnboardingFlowUITests: XCTestCase {
         nextButton.tap()
     }
 
-    private func advanceToCompletion(skipGarden: Bool = false) {
+    private func advanceToCompletion(skipGarden: Bool = false, selectFirstPlant: Bool = false) {
         XCTAssertTrue(app.staticTexts["Cultivation"].waitForExistence(timeout: 5.0))
         tapNext()
 
@@ -71,23 +71,34 @@ final class OnboardingFlowUITests: XCTestCase {
         tapNext()
 
         XCTAssertTrue(element("onboarding_firstplant_title").waitForExistence(timeout: 5.0))
-        let firstPlantSkip = app.buttons.matching(identifier: "onboarding_firstplant_skip").firstMatch
-        XCTAssertTrue(firstPlantSkip.waitForExistence(timeout: 3.0))
-        firstPlantSkip.tap()
+        if selectFirstPlant {
+            let basilCard = element("onboarding_firstplant_card_basil")
+            XCTAssertTrue(basilCard.waitForExistence(timeout: 5.0), "Basil starter plant card not found")
+            basilCard.tap()
+        } else {
+            let firstPlantSkip = app.buttons.matching(identifier: "onboarding_firstplant_skip").firstMatch
+            XCTAssertTrue(firstPlantSkip.waitForExistence(timeout: 3.0))
+            firstPlantSkip.tap()
+        }
         tapNext()
     }
 
     // MARK: - Complete Onboarding Flow Tests
 
     func testCompleteOnboardingFlow() {
-        advanceToCompletion()
+        advanceToCompletion(selectFirstPlant: true)
 
         XCTAssertTrue(app.staticTexts["Your garden awaits!"].waitForExistence(timeout: 5.0))
         XCTAssertTrue(app.staticTexts["First Plant"].waitForExistence(timeout: 3.0))
+        XCTAssertTrue(app.staticTexts["Basil"].waitForExistence(timeout: 3.0))
         tapNext()
 
         let tabBar = app.tabBars.firstMatch
         XCTAssertTrue(tabBar.waitForExistence(timeout: 5.0))
+
+        app.tabBars.buttons["Garden"].tap()
+        XCTAssertTrue(app.staticTexts["Basil"].waitForExistence(timeout: 8.0))
+        XCTAssertTrue(app.staticTexts["Starter Container"].waitForExistence(timeout: 8.0))
     }
 
     func testOnboardingSkipGardenFlow() {

@@ -243,6 +243,27 @@ public final class DataService {
         return garden
     }
 
+    @discardableResult
+    public func createGardenBed(
+        name: String,
+        bedType: BedType,
+        in garden: Garden
+    ) throws -> GardenBed {
+        let bed = GardenBed(name: name, bedType: bedType, garden: garden)
+        var beds = garden.beds ?? []
+        beds.append(bed)
+        garden.beds = beds
+        garden.lastModified = Date()
+
+        mainContext.insert(bed)
+        try mainContext.save()
+
+        cache.invalidateAll(withPrefix: "gardens:")
+        cache.invalidateAll(withPrefix: "plants:")
+
+        return bed
+    }
+
     public func fetchGardens(offset: Int = 0, limit: Int = 20) -> [Garden] {
         let clampedOffset = max(0, offset)
         let clampedLimit = max(1, min(limit, 50))
@@ -295,6 +316,7 @@ public final class DataService {
     public func createUserPlant(
         from template: Plant,
         in garden: Garden?,
+        gardenBed: GardenBed? = nil,
         plantingDate: Date = Date()
     ) throws -> Plant {
         let plant = Plant(
@@ -311,7 +333,11 @@ public final class DataService {
         plant.photoURLs = template.photoURLs
         plant.companionPlants = template.companionPlants
         plant.garden = garden
+        plant.bed = gardenBed
         plant.plantingDate = plantingDate
+        if let gardenBed {
+            gardenBed.plants = (gardenBed.plants ?? []) + [plant]
+        }
 
         try plants.add(plant)
         cache.invalidateAll(withPrefix: "plants:")
@@ -323,6 +349,7 @@ public final class DataService {
     public func createUserPlant(
         from detail: PerenualSpeciesDetail,
         in garden: Garden?,
+        gardenBed: GardenBed? = nil,
         plantingDate: Date = Date()
     ) throws -> Plant {
         let plant = Plant(
@@ -340,7 +367,11 @@ public final class DataService {
             plant.photoURLs = [imageURL]
         }
         plant.garden = garden
+        plant.bed = gardenBed
         plant.plantingDate = plantingDate
+        if let gardenBed {
+            gardenBed.plants = (gardenBed.plants ?? []) + [plant]
+        }
 
         try plants.add(plant)
         cache.invalidateAll(withPrefix: "plants:")
@@ -351,9 +382,15 @@ public final class DataService {
     public func createStarterPlant(
         from template: Plant,
         in garden: Garden?,
+        gardenBed: GardenBed? = nil,
         plantingDate: Date = Date()
     ) throws -> StarterPlantCreationResult {
-        let plant = try createUserPlant(from: template, in: garden, plantingDate: plantingDate)
+        let plant = try createUserPlant(
+            from: template,
+            in: garden,
+            gardenBed: gardenBed,
+            plantingDate: plantingDate
+        )
         let frequency = Self.reminderFrequency(for: plant.wateringFrequency)
         let dueDate = Calendar.current.date(
             byAdding: .day,
@@ -416,6 +453,7 @@ public final class DataService {
         plant.isUserPlant = false
         plant.notes = notes
         try plants.add(plant)
+        invalidatePlantDatabaseCache()
     }
 
     public func fetchPlants(for garden: Garden? = nil, offset: Int = 0, limit: Int = 20) -> [Plant] {
@@ -469,6 +507,10 @@ public final class DataService {
 
         cache.set(cacheKey, value: allPlants, policy: .long)
         return allPlants
+    }
+
+    func invalidatePlantDatabaseCache() {
+        cache.invalidateAll(withPrefix: "plant_database:")
     }
 
     private func fetchPlantDatabasePage(offset: Int, limit: Int) -> [Plant] {

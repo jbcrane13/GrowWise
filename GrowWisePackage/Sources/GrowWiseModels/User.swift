@@ -196,7 +196,7 @@ public enum SubscriptionTier: String, CaseIterable, Codable, Sendable {
     public var monthlyPrice: Double {
         switch self {
         case .free: 0.0
-        case .premium: 4.99
+        case .premium: 2.99
         case .pro: 9.99
         }
     }

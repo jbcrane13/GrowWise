@@ -27,4 +27,26 @@ struct DataServiceOnboardingGardenTests {
         #expect(garden.spaceAvailable == .tiny)
         #expect(garden.user?.id == user.id)
     }
+
+    @Test("createGardenBed persists a container in the selected garden")
+    func createGardenBedPersistsContainerInGarden() throws {
+        let dataService = try DataService.makeForTesting()
+        let garden = try dataService.createGarden(
+            name: "Patio Starter",
+            type: .container,
+            isIndoor: false
+        )
+
+        let bed = try dataService.createGardenBed(
+            name: "Herb Pot",
+            bedType: .pot,
+            in: garden
+        )
+
+        let gardenBeds = garden.beds ?? []
+        #expect(bed.name == "Herb Pot")
+        #expect(bed.bedType == .pot)
+        #expect(bed.garden?.id == garden.id)
+        #expect(gardenBeds.contains { $0.id == bed.id })
+    }
 }

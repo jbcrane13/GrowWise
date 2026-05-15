@@ -39,6 +39,24 @@ struct DataServiceGardenClubTests {
         #expect(activity.activityDescription == "Basil: Looking healthy!")
     }
 
+    @Test("createClubPost persists selected garden context")
+    func createClubPostWithGardenName() async throws {
+        let service = try await DataService.makeForTesting()
+        let club = try service.createClub(name: "Backyard Growers", ownerID: "u1")
+
+        let activity = try service.createClubPost(
+            caption: "First basil harvest",
+            activityType: "shared",
+            plantName: "Basil",
+            gardenName: "Backyard Garden",
+            club: club
+        )
+
+        #expect(activity.activityDescription == "Basil: First basil harvest")
+        #expect(activity.gardenName == "Backyard Garden")
+        #expect(activity.clubID == club.id)
+    }
+
     @Test("createClubPost can target an explicit club and persist a photo URL")
     func createClubPostWithExplicitClubAndPhotoURL() async throws {
         let service = try await DataService.makeForTesting()

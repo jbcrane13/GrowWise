@@ -49,6 +49,26 @@ struct DataServicePlantTemplateTests {
         #expect(result.reminder.plant?.id == result.plant.id)
     }
 
+    @Test("createStarterPlant assigns the plant to the selected container")
+    func createStarterPlantAssignsSelectedContainer() throws {
+        let dataService = try DataService.makeForTesting()
+        let garden = try dataService.createGarden(name: "Kitchen Garden", type: .container, isIndoor: false)
+        let bed = try dataService.createGardenBed(name: "Herb Pot", bedType: .pot, in: garden)
+        let template = try createTemplate(dataService: dataService)
+
+        let result = try dataService.createStarterPlant(
+            from: template,
+            in: garden,
+            gardenBed: bed,
+            plantingDate: Date(timeIntervalSince1970: 1_800_000_000)
+        )
+
+        let bedPlants = bed.plants ?? []
+        #expect(result.plant.garden?.id == garden.id)
+        #expect(result.plant.bed?.id == bed.id)
+        #expect(bedPlants.contains { $0.id == result.plant.id })
+    }
+
     private func createTemplate(dataService: DataService) throws -> Plant {
         try dataService.insertDatabasePlant(
             name: "Basil",

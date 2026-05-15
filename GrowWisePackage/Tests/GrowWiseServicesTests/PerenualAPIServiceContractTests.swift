@@ -658,7 +658,34 @@ struct PerenualNetworkContractTests {
         // Temporarily remove API key — this is tricky since it's in Keychain.
         // We test the error type exists and has a description instead.
         let error = PerenualError.noAPIKey
-        #expect(error.errorDescription?.contains("API key") == true)
+        #expect(error.errorDescription == "Online plant database is not configured for this build.")
+    }
+}
+
+@MainActor
+@Suite(.serialized)
+struct PerenualEnrichmentServiceTests {
+    @Test("loadEnrichment fetches by scientific name and makes the detail synchronously available")
+    func loadEnrichmentFetchesAndCachesDetail() async {
+        PerenualAPIService.testAPIKey = "test-key-12345"
+        defer { PerenualAPIService.testAPIKey = nil }
+
+        MockURLProtocol.requestHandler = { request in
+            if request.url?.path.contains("species/details/1") == true {
+                return (httpResponse(url: "https://perenual.com/api/v2/species/details/1"), Data(speciesDetailJSON.utf8))
+            }
+            return (httpResponse(), Data(speciesListJSON.utf8))
+        }
+
+        let api = PerenualAPIService(session: makeStubSession())
+        let enrichment = PerenualEnrichmentService(api: api)
+        let plant = Plant(name: "European Silver Fir", plantType: .tree)
+        plant.scientificName = "Abies alba"
+
+        let detail = await enrichment.loadEnrichment(for: plant)
+
+        #expect(detail?.commonName == "European Silver Fir")
+        #expect(enrichment.enrichment(for: plant)?.id == 1)
     }
 }
 

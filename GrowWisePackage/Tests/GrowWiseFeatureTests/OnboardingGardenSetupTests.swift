@@ -12,12 +12,38 @@ struct OnboardingGardenSetupTests {
         #expect(profile.firstGardenName == "My First Garden")
     }
 
+    @Test("user profile defaults to creating a starter container")
+    func userProfileDefaultsToCreatingStarterContainer() {
+        let profile = UserProfile()
+
+        #expect(profile.shouldCreateFirstContainer)
+        #expect(profile.firstContainerName == "Starter Container")
+        #expect(profile.firstContainerType == .pot)
+    }
+
     @Test("completion summary describes skipped first garden")
     func completionSummaryDescribesSkippedGarden() {
         var profile = UserProfile()
         profile.shouldCreateFirstGarden = false
 
         #expect(CompletionView.gardenSummary(for: profile) == "Skipped")
+    }
+
+    @Test("completion summary describes selected starter container")
+    func completionSummaryDescribesSelectedStarterContainer() {
+        var profile = UserProfile()
+        profile.firstContainerName = "Herb Pot"
+        profile.firstContainerType = .windowBox
+
+        #expect(CompletionView.containerSummary(for: profile) == "Herb Pot")
+    }
+
+    @Test("completion summary describes skipped starter container")
+    func completionSummaryDescribesSkippedStarterContainer() {
+        var profile = UserProfile()
+        profile.shouldCreateFirstContainer = false
+
+        #expect(CompletionView.containerSummary(for: profile) == "Skipped")
     }
 
     @Test("completion summary describes selected first plant")

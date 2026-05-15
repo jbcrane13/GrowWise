@@ -7,6 +7,9 @@ import UIKit
 #endif
 
 public struct PlantScannerView: View {
+    @Environment(DataService.self)
+    private var dataService
+
     @State private var diagnosticService = PlantDiagnosticService()
 
     @State private var selectedPhotoItem: PhotosPickerItem?
@@ -26,12 +29,6 @@ public struct PlantScannerView: View {
                     }
                     .buttonStyle(.borderedProminent)
                     .accessibilityIdentifier("scannerChoosePhotoButton")
-
-                    Button("Show Sample Guidance") {
-                        diagnosticService.setSampleDiagnosis()
-                    }
-                    .buttonStyle(.bordered)
-                    .accessibilityIdentifier("scannerRunSampleButton")
 
                     if diagnosticService.isAnalyzing {
                         ProgressView("Checking image...")
@@ -69,7 +66,7 @@ public struct PlantScannerView: View {
                 if let data = try? await newValue.loadTransferable(type: Data.self),
                    let image = UIImage(data: data)
                 {
-                    await diagnosticService.diagnose(image: image)
+                    await diagnosticService.diagnose(image: image, currentUser: dataService.getCurrentUser())
                 }
                 #endif
             }
@@ -79,4 +76,5 @@ public struct PlantScannerView: View {
 
 #Preview {
     PlantScannerView()
+        .environment(DataService.createFallback())
 }

@@ -1,6 +1,5 @@
 import GrowWiseModels
 import GrowWiseServices
-import SwiftData
 import SwiftUI
 
 /// Sheet for creating a new GardenBed in a given garden.
@@ -10,11 +9,13 @@ struct CreateBedSheet: View {
 
     @Environment(\.dismiss)
     private var dismiss
-    @Environment(\.modelContext)
-    private var modelContext
+    @Environment(DataService.self)
+    private var dataService
 
     @State private var selectedType: BedType = .raisedBed
     @State private var bedName: String = ""
+    @State private var errorMessage: String?
+    @State private var isSaving = false
 
     var body: some View {
         NavigationStack {
@@ -80,10 +81,15 @@ struct CreateBedSheet: View {
                     Button {
                         saveBed()
                     } label: {
-                        Text("Add Container")
+                        if isSaving {
+                            ProgressView()
+                                .tint(.white)
+                        } else {
+                            Text("Add Container")
+                        }
                     }
-                    .buttonStyle(GradientButtonStyle(isDisabled: bedName.trimmingCharacters(in: .whitespaces).isEmpty))
-                    .disabled(bedName.trimmingCharacters(in: .whitespaces).isEmpty)
+                    .buttonStyle(GradientButtonStyle(isDisabled: isSaveDisabled))
+                    .disabled(isSaveDisabled)
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                     .accessibilityIdentifier("createbed_button_save")
                     .padding(.bottom, 24)
@@ -98,15 +104,33 @@ struct CreateBedSheet: View {
                 }
             }
         }
+        .alert("Container Error", isPresented: Binding(
+            get: { errorMessage != nil },
+            set: { if !$0 { errorMessage = nil } }
+        )) {
+            Button("OK") { errorMessage = nil }
+        } message: {
+            Text(errorMessage ?? "")
+        }
+    }
+
+    private var isSaveDisabled: Bool {
+        isSaving || bedName.trimmingCharacters(in: .whitespaces).isEmpty
     }
 
     private func saveBed() {
         let trimmed = bedName.trimmingCharacters(in: .whitespaces)
         guard !trimmed.isEmpty else { return }
-        let bed = GardenBed(name: trimmed, bedType: selectedType, garden: garden)
-        modelContext.insert(bed)
-        onCreated(bed)
-        dismiss()
+        isSaving = true
+        do {
+            let bed = try dataService.createGardenBed(name: trimmed, bedType: selectedType, in: garden)
+            isSaving = false
+            onCreated(bed)
+            dismiss()
+        } catch {
+            isSaving = false
+            errorMessage = "Could not create container: \(error.localizedDescription)"
+        }
     }
 }
 

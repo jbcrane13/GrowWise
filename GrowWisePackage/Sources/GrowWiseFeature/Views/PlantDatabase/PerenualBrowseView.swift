@@ -69,10 +69,12 @@ public struct PerenualBrowseView: View {
 
     private var emptyState: some View {
         ContentUnavailableView {
-            Label("No Plants Found", systemImage: "leaf.fill")
+            Label(emptyStateTitle, systemImage: "leaf.fill")
         } description: {
             if !searchText.isEmpty {
                 Text("Try a different search term")
+            } else if isOnlineDatabaseUnavailable {
+                Text(PerenualError.noAPIKey.errorDescription ?? "Online plant database unavailable")
             } else if let error = api.lastError {
                 Text(error)
             } else {
@@ -84,6 +86,14 @@ public struct PerenualBrowseView: View {
             }
             .buttonStyle(.bordered)
         }
+    }
+
+    private var isOnlineDatabaseUnavailable: Bool {
+        api.lastError == PerenualError.noAPIKey.errorDescription
+    }
+
+    private var emptyStateTitle: String {
+        isOnlineDatabaseUnavailable ? "Online Database Unavailable" : "No Plants Found"
     }
 
     private var resultsList: some View {

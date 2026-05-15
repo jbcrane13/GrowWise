@@ -882,5 +882,481 @@
       "Prune after flowering on old wood varieties, or in spring for new wood types"
     ],
     "companionPlants": ["Hosta", "Fern", "Azalea"]
+  },
+  {
+    "name": "Arugula",
+    "scientificName": "Eruca vesicaria",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Fast-growing peppery green for salads and cool-season containers",
+    "careInstructions": [
+      "Sow shallowly in cool weather for best flavor",
+      "Keep soil evenly moist to prevent bitterness",
+      "Harvest outer leaves when young and tender",
+      "Provide afternoon shade as temperatures rise"
+    ],
+    "companionPlants": ["Lettuce", "Radish", "Dill"]
+  },
+  {
+    "name": "Beet",
+    "scientificName": "Beta vulgaris",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Dual-purpose root crop with edible greens and sweet earthy roots",
+    "careInstructions": [
+      "Thin seedlings so roots have space to size up",
+      "Keep soil consistently moist during root development",
+      "Harvest greens sparingly while roots mature",
+      "Loosen compacted soil before planting"
+    ],
+    "companionPlants": ["Lettuce", "Onion", "Cabbage"]
+  },
+  {
+    "name": "Swiss Chard",
+    "scientificName": "Beta vulgaris subsp. cicla",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "medium",
+    "description": "Colorful leafy green that tolerates heat better than spinach",
+    "careInstructions": [
+      "Harvest outer stalks first for continuous growth",
+      "Water deeply during hot spells",
+      "Mulch to keep roots cool",
+      "Remove damaged leaves to keep plants productive"
+    ],
+    "companionPlants": ["Beans", "Lettuce", "Radish"]
+  },
+  {
+    "name": "Eggplant",
+    "scientificName": "Solanum melongena",
+    "type": "vegetable",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "medium",
+    "description": "Warm-season fruiting vegetable for sunny beds and large containers",
+    "careInstructions": [
+      "Start after nights stay warm",
+      "Stake heavy branches as fruit develops",
+      "Water consistently to avoid bitter fruit",
+      "Harvest when skins are glossy"
+    ],
+    "companionPlants": ["Basil", "Marigold", "Pepper"]
+  },
+  {
+    "name": "Pea",
+    "scientificName": "Pisum sativum",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Cool-season climbing crop with sweet pods and nitrogen-fixing roots",
+    "careInstructions": [
+      "Provide a trellis at planting time",
+      "Sow early while soil is cool",
+      "Pick pods often to keep vines producing",
+      "Avoid heavy nitrogen fertilizer"
+    ],
+    "companionPlants": ["Carrot", "Radish", "Lettuce"]
+  },
+  {
+    "name": "Bok Choy",
+    "scientificName": "Brassica rapa subsp. chinensis",
+    "type": "vegetable",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Compact Asian green with crisp stems for cool-season gardens",
+    "careInstructions": [
+      "Grow in spring or fall to avoid bolting",
+      "Keep soil evenly moist",
+      "Harvest baby heads early or full heads when firm",
+      "Use row cover to reduce flea beetle damage"
+    ],
+    "companionPlants": ["Dill", "Mint", "Calendula"]
+  },
+  {
+    "name": "Rosemary",
+    "scientificName": "Salvia rosmarinus",
+    "type": "herb",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "biweekly",
+    "space": "medium",
+    "description": "Aromatic woody herb for dry sunny containers and Mediterranean beds",
+    "careInstructions": [
+      "Use sharply draining soil",
+      "Let soil dry between waterings",
+      "Prune lightly after flowering to keep shape",
+      "Protect from soggy winter soil"
+    ],
+    "companionPlants": ["Sage", "Thyme", "Lavender"]
+  },
+  {
+    "name": "Tarragon",
+    "scientificName": "Artemisia dracunculus",
+    "type": "herb",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Delicate culinary herb with anise flavor for sauces and vegetables",
+    "careInstructions": [
+      "Plant in well-drained soil with good airflow",
+      "Water when the top inch of soil dries",
+      "Cut stems regularly to encourage fresh growth",
+      "Divide established plants every few years"
+    ],
+    "companionPlants": ["Eggplant", "Pepper", "Tomato"]
+  },
+  {
+    "name": "Bay Laurel",
+    "scientificName": "Laurus nobilis",
+    "type": "herb",
+    "difficulty": "intermediate",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Evergreen culinary herb grown as a patio tree or clipped container plant",
+    "careInstructions": [
+      "Grow in a container where winters are cold",
+      "Water when soil is dry several inches down",
+      "Prune to maintain size and shape",
+      "Harvest mature leaves and dry before use"
+    ],
+    "companionPlants": ["Rosemary", "Thyme", "Lavender"]
+  },
+  {
+    "name": "Sorrel",
+    "scientificName": "Rumex acetosa",
+    "type": "herb",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "twiceWeekly",
+    "space": "small",
+    "description": "Perennial lemony green used as an herb or tender salad leaf",
+    "careInstructions": [
+      "Harvest young leaves for the best texture",
+      "Cut flower stalks to keep leaves tender",
+      "Grow in part shade in hot climates",
+      "Divide clumps when growth slows"
+    ],
+    "companionPlants": ["Chives", "Parsley", "Lettuce"]
+  },
+  {
+    "name": "Nasturtium",
+    "scientificName": "Tropaeolum majus",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Edible trailing flower with peppery leaves and bright blooms",
+    "careInstructions": [
+      "Sow directly after frost danger passes",
+      "Avoid rich fertilizer to encourage flowers",
+      "Let soil dry slightly between waterings",
+      "Use flowers and young leaves fresh"
+    ],
+    "companionPlants": ["Cucumber", "Radish", "Tomato"]
+  },
+  {
+    "name": "Calendula",
+    "scientificName": "Calendula officinalis",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Cool-season edible flower that attracts pollinators and beneficial insects",
+    "careInstructions": [
+      "Deadhead spent blooms for more flowers",
+      "Sow in spring or fall in mild climates",
+      "Water at soil level to reduce mildew",
+      "Allow some flowers to self-seed"
+    ],
+    "companionPlants": ["Lettuce", "Bok Choy", "Carrot"]
+  },
+  {
+    "name": "Snapdragon",
+    "scientificName": "Antirrhinum majus",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "small",
+    "description": "Upright flowering annual for cool-season color and pollinator visits",
+    "careInstructions": [
+      "Plant in cool weather for strongest blooms",
+      "Pinch young plants for bushier growth",
+      "Deadhead to extend flowering",
+      "Provide support for tall varieties"
+    ],
+    "companionPlants": ["Pansy", "Calendula", "Lettuce"]
+  },
+  {
+    "name": "Coneflower",
+    "scientificName": "Echinacea purpurea",
+    "type": "flower",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Hardy perennial daisy with long-lasting blooms and seed heads for birds",
+    "careInstructions": [
+      "Plant in full sun and average soil",
+      "Water regularly the first season",
+      "Leave some seed heads for wildlife",
+      "Divide clumps every few years if crowded"
+    ],
+    "companionPlants": ["Lavender", "Rosemary", "Zinnia"]
+  },
+  {
+    "name": "Blueberry",
+    "scientificName": "Vaccinium corymbosum",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "large",
+    "description": "Acid-loving fruiting shrub with spring flowers, berries, and fall color",
+    "careInstructions": [
+      "Plant in acidic soil with pH near 4.5 to 5.5",
+      "Mulch with pine bark or needles",
+      "Water deeply during fruit swell",
+      "Plant more than one variety for better yields"
+    ],
+    "companionPlants": ["Strawberry", "Thyme", "Azalea"]
+  },
+  {
+    "name": "Raspberry",
+    "scientificName": "Rubus idaeus",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "twiceWeekly",
+    "space": "large",
+    "description": "Cane fruit with summer or fall harvests for sunny edible gardens",
+    "careInstructions": [
+      "Provide a trellis or wire support",
+      "Mulch to keep roots cool and moist",
+      "Prune spent canes after harvest",
+      "Harvest berries when they release easily"
+    ],
+    "companionPlants": ["Chives", "Garlic", "Marigold"]
+  },
+  {
+    "name": "Fig",
+    "scientificName": "Ficus carica",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Heat-loving fruit tree that can be grown in ground or large containers",
+    "careInstructions": [
+      "Plant in the warmest sunny spot available",
+      "Water deeply while fruit develops",
+      "Prune lightly during dormancy",
+      "Protect container plants from hard freezes"
+    ],
+    "companionPlants": ["Lavender", "Rosemary", "Thyme"]
+  },
+  {
+    "name": "Grape",
+    "scientificName": "Vitis vinifera",
+    "type": "fruit",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "extraLarge",
+    "description": "Vining fruit crop for arbors, fences, and sunny trellises",
+    "careInstructions": [
+      "Train vines on a strong support",
+      "Prune hard in dormancy to manage fruiting wood",
+      "Water deeply but infrequently once established",
+      "Provide excellent airflow around foliage"
+    ],
+    "companionPlants": ["Rosemary", "Marigold", "Chives"]
+  },
+  {
+    "name": "Rubber Plant",
+    "scientificName": "Ficus elastica",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Glossy-leaved houseplant that tolerates average indoor conditions",
+    "careInstructions": [
+      "Provide bright indirect light",
+      "Water when the top inch of soil is dry",
+      "Wipe leaves to remove dust",
+      "Rotate periodically for even growth"
+    ],
+    "companionPlants": ["Pothos", "Snake Plant", "ZZ Plant"]
+  },
+  {
+    "name": "Chinese Evergreen",
+    "scientificName": "Aglaonema commutatum",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialShade",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Low-light tolerant foliage plant with patterned leaves",
+    "careInstructions": [
+      "Keep in low to medium indirect light",
+      "Let the top inch of soil dry between waterings",
+      "Avoid cold drafts",
+      "Remove yellow leaves at the base"
+    ],
+    "companionPlants": ["Peace Lily", "Pothos", "Parlor Palm"]
+  },
+  {
+    "name": "Parlor Palm",
+    "scientificName": "Chamaedorea elegans",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialShade",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Classic compact indoor palm for low to medium light rooms",
+    "careInstructions": [
+      "Grow in indirect light away from harsh sun",
+      "Keep soil lightly moist but never soggy",
+      "Mist or group plants to improve humidity",
+      "Trim brown fronds close to the stem"
+    ],
+    "companionPlants": ["Chinese Evergreen", "Peace Lily", "Spider Plant"]
+  },
+  {
+    "name": "Philodendron",
+    "scientificName": "Philodendron hederaceum",
+    "type": "houseplant",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Trailing or climbing foliage plant with heart-shaped leaves",
+    "careInstructions": [
+      "Provide bright indirect light or medium indoor light",
+      "Water when the top inch of soil dries",
+      "Pinch vines to encourage fullness",
+      "Root stem cuttings easily in water"
+    ],
+    "companionPlants": ["Pothos", "Monstera", "Rubber Plant"]
+  },
+  {
+    "name": "Sedum",
+    "scientificName": "Sedum spp.",
+    "type": "succulent",
+    "difficulty": "beginner",
+    "sunlight": "fullSun",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Drought-tolerant succulent groundcover or container plant with starry flowers",
+    "careInstructions": [
+      "Plant in gritty well-drained soil",
+      "Water sparingly once established",
+      "Trim leggy growth to keep compact",
+      "Propagate from stem or leaf cuttings"
+    ],
+    "companionPlants": ["Hen and Chicks", "Echeveria", "Thyme"]
+  },
+  {
+    "name": "Haworthia",
+    "scientificName": "Haworthia attenuata",
+    "type": "succulent",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "biweekly",
+    "space": "small",
+    "description": "Small indoor succulent with striped rosettes for bright windowsills",
+    "careInstructions": [
+      "Grow in bright indirect light",
+      "Use cactus mix and a pot with drainage",
+      "Water only after soil dries fully",
+      "Keep out of hot direct afternoon sun"
+    ],
+    "companionPlants": ["Aloe Vera", "Echeveria", "Jade Plant"]
+  },
+  {
+    "name": "Dwarf Lemon Tree",
+    "scientificName": "Citrus limon",
+    "type": "tree",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Container-friendly citrus tree with fragrant flowers and tart fruit",
+    "careInstructions": [
+      "Place in the sunniest location available",
+      "Water deeply when the top soil dries",
+      "Feed with citrus fertilizer during active growth",
+      "Bring indoors before frost in cold climates"
+    ],
+    "companionPlants": ["Rosemary", "Lavender", "Marigold"]
+  },
+  {
+    "name": "Serviceberry",
+    "scientificName": "Amelanchier alnifolia",
+    "type": "tree",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "weekly",
+    "space": "large",
+    "description": "Small edible landscape tree with spring flowers and berry-like fruit",
+    "careInstructions": [
+      "Plant in full sun to part shade",
+      "Water regularly during establishment",
+      "Mulch around the root zone",
+      "Prune lightly after flowering if needed"
+    ],
+    "companionPlants": ["Blueberry", "Coneflower", "Hydrangea"]
+  },
+  {
+    "name": "Lavender",
+    "scientificName": "Lavandula angustifolia",
+    "type": "shrub",
+    "difficulty": "intermediate",
+    "sunlight": "fullSun",
+    "watering": "biweekly",
+    "space": "medium",
+    "description": "Aromatic flowering shrub for dry sunny borders and pollinator gardens",
+    "careInstructions": [
+      "Plant in sharply drained soil",
+      "Avoid overwatering and heavy mulch",
+      "Prune lightly after flowering",
+      "Harvest stems as flowers begin opening"
+    ],
+    "companionPlants": ["Rosemary", "Thyme", "Coneflower"]
+  },
+  {
+    "name": "Boxwood",
+    "scientificName": "Buxus sempervirens",
+    "type": "shrub",
+    "difficulty": "beginner",
+    "sunlight": "partialSun",
+    "watering": "weekly",
+    "space": "medium",
+    "description": "Evergreen shrub for containers, edging, and structured garden shapes",
+    "careInstructions": [
+      "Plant in well-drained soil with morning sun",
+      "Water deeply during establishment",
+      "Prune lightly to maintain shape",
+      "Avoid piling mulch against the stems"
+    ],
+    "companionPlants": ["Hydrangea", "Lavender", "Hosta"]
   }
 ]

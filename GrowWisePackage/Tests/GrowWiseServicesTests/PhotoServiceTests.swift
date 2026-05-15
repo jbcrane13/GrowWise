@@ -1063,7 +1063,8 @@ struct PhotoServiceCleanupTests {
         // Drop an orphaned file into the plant's photo directory (no metadata entry)
         let plantDir = (photo.filePath as NSString).deletingLastPathComponent
         let orphanedFile = URL(fileURLWithPath: plantDir).appendingPathComponent("orphan_\(UUID().uuidString).jpg")
-        try try #require("fake image data".data(using: .utf8)?.write(to: orphanedFile))
+        let fakeImageData = try #require("fake image data".data(using: .utf8))
+        try fakeImageData.write(to: orphanedFile)
         #expect(FileManager.default.fileExists(atPath: orphanedFile.path))
 
         // Run cleanup
