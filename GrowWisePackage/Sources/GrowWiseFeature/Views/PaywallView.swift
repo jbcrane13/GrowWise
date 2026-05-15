@@ -22,17 +22,21 @@ public struct PaywallView: View {
     // Product IDs (Premium only — Pro is "Coming soon" and not purchasable)
     private let premiumMonthlyID = "com.growwise.premium.monthly"
     private let premiumYearlyID = "com.growwise.premium.annual"
-    internal static let freePlanName = "Free"
-    internal static let premiumPlanName = "Premium"
+    static let freePlanName = "Free"
+    static let premiumPlanName = "Premium"
+    static let premiumMonthlyPriceText = "$2.99"
+    static let premiumAnnualPriceText = "$34.99"
+    static let premiumMonthlyPurchaseLabel = "Subscribe to Premium — $2.99/mo"
+    static let premiumAnnualPurchaseLabel = "Subscribe to Premium — $34.99/yr"
     /// Source-of-truth rows for the Free vs Premium plan comparison table.
-    internal static let comparisonRows: [PaywallComparisonRow] = [
+    static let comparisonRows: [PaywallComparisonRow] = [
         PaywallComparisonRow(feature: "Plant Health Guidance", free: "3/mo", premium: true),
         PaywallComparisonRow(feature: "Plant Limit", free: "50", premium: "500"),
         PaywallComparisonRow(feature: "Smart Reminders", free: false, premium: true),
         PaywallComparisonRow(feature: "Weather Adjust", free: false, premium: true),
         PaywallComparisonRow(feature: "Priority Support", free: false, premium: true),
         PaywallComparisonRow(feature: "Garden Clubs", free: true, premium: true),
-        PaywallComparisonRow(feature: "Analytics", free: "Basic", premium: "Standard")
+        PaywallComparisonRow(feature: "Analytics", free: "Basic", premium: "Standard"),
     ]
 
     public init() {}
@@ -205,7 +209,7 @@ public struct PaywallView: View {
                 tier: .premium,
                 name: Self.premiumPlanName,
                 icon: "crown",
-                price: isYearly ? "$34.99" : "$2.99",
+                price: isYearly ? Self.premiumAnnualPriceText : Self.premiumMonthlyPriceText,
                 period: isYearly ? "/year" : "/month",
                 highlights: [
                     "Unlimited Plant Health checks",
@@ -474,8 +478,7 @@ public struct PaywallView: View {
 
     private var purchaseButtonLabel: String {
         guard selectedTier == .premium else { return "Select a Plan" }
-        let price = isYearly ? "$34.99/yr" : "$2.99/mo"
-        return "Subscribe to Premium — \(price)"
+        return isYearly ? Self.premiumAnnualPurchaseLabel : Self.premiumMonthlyPurchaseLabel
     }
 
     // MARK: - Legal Footer
@@ -533,7 +536,7 @@ public struct PaywallView: View {
 
 // MARK: - Comparison Value
 
-internal enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
+enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleByStringLiteral {
     case check
     case cross
     case text(String)
@@ -548,7 +551,7 @@ internal enum PaywallComparisonValue: ExpressibleByBooleanLiteral, ExpressibleBy
 }
 
 /// A single feature row in the Free vs Premium paywall comparison table.
-internal struct PaywallComparisonRow {
+struct PaywallComparisonRow {
     let feature: String
     let free: PaywallComparisonValue
     let premium: PaywallComparisonValue

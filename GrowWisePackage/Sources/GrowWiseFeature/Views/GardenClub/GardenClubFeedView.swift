@@ -331,7 +331,8 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             var merged: [ClubActivityViewData] = localActivities.map(Self.viewData(from:))
             do {
                 let ckRecords = try await clubCloudKitService.fetchRecentActivities(
-                    for: clubID.uuidString,
+                    for: activeClub,
+                    memberID: dataService.getCurrentUser()?.id.uuidString,
                     limit: 50
                 )
                 let ckViewData = ckRecords.map(Self.viewData(from:))
@@ -376,7 +377,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             id: id,
             authorDisplayName: author,
             caption: caption,
-            zoneTag: nil, // not yet captured on ClubActivity
+            zoneTag: activity.gardenName,
             photoURL: activity.photoURL,
             relativeTimeLabel: label,
             likeCount: 0, // future feature
@@ -392,6 +393,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
         let author = record["memberName"] as? String ?? "Member"
         let caption = record["activityDescription"] as? String
+        let gardenName = record["gardenName"] as? String
         let photoURL = (record["photo"] as? CKAsset)?.fileURL?.absoluteString
             ?? record["photoURL"] as? String
         let timestamp = record["timestamp"] as? Date
@@ -407,7 +409,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             id: id,
             authorDisplayName: author,
             caption: caption,
-            zoneTag: nil, // not yet captured in CK record
+            zoneTag: gardenName,
             photoURL: photoURL,
             relativeTimeLabel: label,
             likeCount: 0, // future feature

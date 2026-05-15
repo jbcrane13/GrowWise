@@ -54,12 +54,14 @@ public extension DataService {
     ///   - caption: The post body text (required, non-empty).
     ///   - activityType: One of "shared", "watered", "harvested", "planted", etc.
     ///   - plantName: Optional plant name prepended to the description.
+    ///   - gardenName: Optional garden context displayed as the post's location tag.
     /// - Throws: `CreateClubPostError.noClub` if the user is not in any club.
     @discardableResult
     func createClubPost(
         caption: String,
         activityType: String,
         plantName: String? = nil,
+        gardenName: String? = nil,
         club: GardenClub? = nil,
         photoURL: String? = nil
     ) throws -> ClubActivity {
@@ -81,6 +83,7 @@ public extension DataService {
             activityType: activityType,
             description: description
         )
+        activity.gardenName = gardenName
         activity.photoURL = photoURL
         let repo = ClubActivityRepository(context: mainContext)
         try repo.save(activity)

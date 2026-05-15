@@ -19,9 +19,9 @@ Food & Drink
 
 ## Description (4000 chars max)
 
-**Plan. Track. Grow.**
+**Plan. Track. Grow together.**
 
-Cultivation is your gardening companion — helping you plan, plant, and nurture your garden with confidence. Whether you're growing tomatoes on a balcony or managing a full backyard vegetable patch, Cultivation guides you every step of the way.
+Cultivation is the outdoor garden companion for people who grow together. Set up your garden, organize plants by bed or area, keep care tasks on schedule, and share progress with a private garden club.
 
 ### Plant Care Made Simple
 - **Personalized Reminders**: Water, fertilize, prune, and harvest reminders tailored to each plant's needs and your local weather
@@ -44,9 +44,9 @@ Cultivation is your gardening companion — helping you plan, plant, and nurture
 - **Seed Inventory**: Track your seed packets with details and planting schedules
 
 ### Grow Together
-- **Garden Clubs**: Create or join a club to share what's growing with nearby gardeners
-- **Community Feed**: Share your garden with the community and get inspiration from others
-- **Q&A Forum**: Ask questions and help fellow gardeners
+- **Private Garden Clubs**: Create or join a club for the people you grow with
+- **Club Feed**: Share updates, photos, and plant context with your club
+- **Invite Codes**: Keep clubs private and easy to join
 
 ### Your Data, Your Privacy
 - All data stored locally on your device — no account required
@@ -66,8 +66,7 @@ Features:
 - Garden management with beds, companion planting, and health scores
 - Photo journal for tracking plant growth
 - Seasonal planner based on your hardiness zone
-- Garden Clubs — share what's growing with nearby gardeners
-- Community Q&A forum
+- Private Garden Clubs - share what's growing with people you trust
 - Plant Health guidance with common issues and treatments
 - Compost tracker and shopping list
 - iCloud sync across your devices
@@ -94,12 +93,13 @@ https://cultivation.app
 
 Cultivation offers auto-renewing subscriptions:
 
-- **Premium**: $4.99/month or $34.99/year
-- **Pro**: $9.99/month or $79.99/year
+- **Premium**: $2.99/month or $34.99/year
+
+Pro features are not sold in Cultivation 1.0.
 
 Payment will be charged to your Apple ID account at confirmation of purchase. Subscription automatically renews unless it is canceled at least 24 hours before the end of the current period. Your account will be charged for renewal within 24 hours prior to the end of the current period. You can manage and cancel your subscriptions by going to your account settings on the App Store after purchase.
 
-Free tier includes: basic reminders, 50-plant database, community access, 3 Plant Health checks per month.
+Free tier includes: basic reminders, the starter plant database, basic club participation, and limited Plant Health checks.
 
 ---
 
@@ -110,6 +110,6 @@ Cultivation uses CloudKit to sync your garden data across your Apple devices. Th
 - Garden and plant records (names, locations, care dates)
 - Care reminders and journal entries
 - User preferences and settings
-- Club activity you post (stored in the public CloudKit database)
+- Club activity you post (stored locally and synced with CloudKit where available)
 
 No data is shared with third parties. All CloudKit data is encrypted in transit and at rest by Apple.

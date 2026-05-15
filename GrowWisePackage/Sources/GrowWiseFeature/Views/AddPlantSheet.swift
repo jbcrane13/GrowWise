@@ -622,20 +622,21 @@ public struct AddPlantSheet: View {
         }
 
         isSaving = true
+        let resolvedGarden = resolvedGardenForSave()
 
         let newPlant: Plant
         do {
             if let selectedPerenualDetail {
                 newPlant = try dataService.createUserPlant(
                     from: selectedPerenualDetail,
-                    in: selectedGarden,
+                    in: resolvedGarden,
                     gardenBed: selectedBed,
                     plantingDate: plantingDate
                 )
             } else if let selectedTemplate {
                 newPlant = try dataService.createUserPlant(
                     from: selectedTemplate,
-                    in: selectedGarden,
+                    in: resolvedGarden,
                     gardenBed: selectedBed,
                     plantingDate: plantingDate
                 )
@@ -644,7 +645,7 @@ public struct AddPlantSheet: View {
                     name: plantName,
                     type: selectedPlantType,
                     difficultyLevel: selectedDifficultyLevel,
-                    garden: selectedGarden
+                    garden: resolvedGarden
                 )
             }
         } catch {
@@ -676,8 +677,18 @@ public struct AddPlantSheet: View {
             return
         }
         savedPlant = newPlant
-        wateringSchedule = reminderService.suggestWateringSchedule(for: newPlant, in: selectedGarden)
+        wateringSchedule = reminderService.suggestWateringSchedule(for: newPlant, in: resolvedGarden)
         showWateringSchedule = true
+    }
+
+    @MainActor
+    private func resolvedGardenForSave() -> Garden? {
+        let resolvedGarden = selectedGarden ?? availableGardens.first
+        if selectedGarden == nil, let resolvedGarden {
+            selectedGarden = resolvedGarden
+            loadBeds(for: resolvedGarden)
+        }
+        return resolvedGarden
     }
 }
 

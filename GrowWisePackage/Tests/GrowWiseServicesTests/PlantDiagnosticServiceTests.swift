@@ -1,6 +1,12 @@
 @testable import GrowWiseModels
 @testable import GrowWiseServices
 import Testing
+#if canImport(UIKit)
+import UIKit
+#endif
+#if canImport(AppKit)
+import AppKit
+#endif
 
 @MainActor
 struct PlantDiagnosticServiceTests {
@@ -239,6 +245,23 @@ struct PlantDiagnosticServiceTests {
         let service = PlantDiagnosticService()
         #expect(service.canDiagnose(user: user) == false)
         #expect(service.remainingDiagnoses(user: user) == 0)
+    }
+
+    @Test("Missing current user reports setup required before image analysis")
+    func diagnoseWithMissingCurrentUserRequiresSetup() async {
+        let service = PlantDiagnosticService()
+        #if canImport(UIKit)
+        let image = UIGraphicsImageRenderer(size: CGSize(width: 1, height: 1)).image { _ in }
+        #elseif canImport(AppKit)
+        let image = PlatformImage(size: CGSize(width: 1, height: 1))
+        #endif
+
+        await service.diagnose(image: image, currentUser: nil)
+
+        #expect(service.lastDiagnosis == nil)
+        #expect(service.isAnalyzing == false)
+        #expect(service.lastError?.localizedCaseInsensitiveContains("finish setup") == true)
+        #expect(service.lastError?.localizedCaseInsensitiveContains("plant health check") == true)
     }
 
     @Test("Free tier user exceeding limit is clamped to 0 remaining")

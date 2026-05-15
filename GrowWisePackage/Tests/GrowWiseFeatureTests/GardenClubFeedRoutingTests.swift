@@ -50,4 +50,20 @@ struct GardenClubFeedRoutingTests {
 
         #expect(viewData.photoURL == "file:///tmp/tomato.jpg")
     }
+
+    @Test("ClubActivity view data carries garden context")
+    func clubActivityViewDataCarriesGardenContext() {
+        let activity = ClubActivity(
+            clubID: UUID(),
+            memberName: "Avery",
+            memberID: "user-1",
+            activityType: "shared",
+            description: "First tomato flower"
+        )
+        activity.gardenName = "Backyard Garden"
+
+        let viewData = GardenClubFeedView.viewData(from: activity)
+
+        #expect(viewData.zoneTag == "Backyard Garden")
+    }
 }

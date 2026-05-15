@@ -27,9 +27,9 @@ struct GardenBedSection: View {
                 PlantRow(
                     plant: plant,
                     isUrgent: isOverdue(plant),
-                    onComplete: { onQuickAction(plant) }
+                    onComplete: { onQuickAction(plant) },
+                    onOpen: { onPlantTap(plant) }
                 )
-                .onTapGesture { onPlantTap(plant) }
                 .contextMenu {
                     Button(role: .destructive) {
                         onDelete(plant)

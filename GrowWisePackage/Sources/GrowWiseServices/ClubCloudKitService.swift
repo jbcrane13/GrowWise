@@ -33,6 +33,32 @@ public final class ClubCloudKitService {
 
     private let logger = Logger(subsystem: "com.growwise.cloudkit", category: "ClubCloudKitService")
 
+    // MARK: - Pure mapping helpers
+
+    public static func recordFields(from activity: ClubActivity) throws -> ClubActivityCloudRecordFields {
+        guard let clubID = activity.clubID else { throw ClubCloudKitError.missingIdentifier }
+        guard let activityID = activity.id else { throw ClubCloudKitError.missingIdentifier }
+
+        return ClubActivityCloudRecordFields(
+            recordName: activityID.uuidString,
+            clubID: clubID.uuidString,
+            memberName: activity.memberName ?? "",
+            memberID: activity.memberID ?? "",
+            activityType: activity.activityType ?? "",
+            activityDescription: activity.activityDescription ?? "",
+            gardenName: activity.gardenName ?? "",
+            photoURL: activity.photoURL,
+            timestamp: activity.timestamp ?? Date()
+        )
+    }
+
+    public static func databaseScope(for club: GardenClub?, memberID: String?) -> ClubCloudDatabaseScope {
+        guard let club, let ownerID = club.ownerID, let memberID else {
+            return .ownerPrivate
+        }
+        return ownerID == memberID ? .ownerPrivate : .sharedParticipant
+    }
+
     // MARK: - Init
 
     public init() {
@@ -288,6 +314,24 @@ public final class ClubCloudKitService {
     ///   `clubID`, `memberName`, `memberID`, `activityType`,
     ///   `activityDescription`, `gardenName`, `timestamp`.
     public func fetchRecentActivities(for clubID: String, limit: Int = 50) async throws -> [CKRecord] {
+        try await fetchRecentActivities(for: clubID, scope: .ownerPrivate, limit: limit)
+    }
+
+    public func fetchRecentActivities(
+        for club: GardenClub,
+        memberID: String? = nil,
+        limit: Int = 50
+    ) async throws -> [CKRecord] {
+        guard let clubID = club.id else { throw ClubCloudKitError.missingIdentifier }
+        let scope = Self.databaseScope(for: club, memberID: memberID)
+        return try await fetchRecentActivities(for: clubID.uuidString, scope: scope, limit: limit)
+    }
+
+    private func fetchRecentActivities(
+        for clubID: String,
+        scope: ClubCloudDatabaseScope,
+        limit: Int
+    ) async throws -> [CKRecord] {
         try await requireAvailableAccount()
 
         let predicate = NSPredicate(format: "clubID == %@", clubID)
@@ -299,10 +343,12 @@ public final class ClubCloudKitService {
 
         let zoneName = CloudKitSchema.Zone.gardenClub
         let zoneID = CKRecordZone.ID(zoneName: zoneName, ownerName: CKCurrentUserDefaultName)
+        let database = database(for: scope)
+        let queryZone: CKRecordZone.ID? = scope == .ownerPrivate ? zoneID : nil
 
-        let (results, _) = try await privateDatabase.records(
+        let (results, _) = try await database.records(
             matching: query,
-            inZoneWith: zoneID,
+            inZoneWith: queryZone,
             resultsLimit: limit
         )
 
@@ -318,25 +364,30 @@ public final class ClubCloudKitService {
     // MARK: - Save a club record to shared zone
 
     /// Saves an activity record into the club's shared zone so all members can see it.
-    public func publishActivity(_ activity: ClubActivity) async throws {
+    public func publishActivity(_ activity: ClubActivity, club: GardenClub? = nil) async throws {
         try await requireAvailableAccount()
 
-        guard let clubID = activity.clubID else { throw ClubCloudKitError.missingIdentifier }
-        guard let activityID = activity.id else { throw ClubCloudKitError.missingIdentifier }
+        let fields = try Self.recordFields(from: activity)
+        let scope = Self.databaseScope(for: club, memberID: fields.memberID)
+        let database = database(for: scope)
 
         let zoneName = CloudKitSchema.Zone.gardenClub
         let zoneID = CKRecordZone.ID(zoneName: zoneName, ownerName: CKCurrentUserDefaultName)
-        let recordID = CKRecord.ID(recordName: activityID.uuidString, zoneID: zoneID)
+        let recordID = if scope == .ownerPrivate {
+            CKRecord.ID(recordName: fields.recordName, zoneID: zoneID)
+        } else {
+            CKRecord.ID(recordName: fields.recordName)
+        }
 
         let record = CKRecord(recordType: CloudKitSchema.RecordType.clubActivity, recordID: recordID)
-        record["clubID"] = clubID.uuidString
-        record["memberName"] = activity.memberName ?? ""
-        record["memberID"] = activity.memberID ?? ""
-        record["activityType"] = activity.activityType ?? ""
-        record["activityDescription"] = activity.activityDescription ?? ""
-        record["gardenName"] = activity.gardenName ?? ""
-        record["timestamp"] = activity.timestamp ?? Date()
-        if let photoURL = activity.photoURL {
+        record["clubID"] = fields.clubID
+        record["memberName"] = fields.memberName
+        record["memberID"] = fields.memberID
+        record["activityType"] = fields.activityType
+        record["activityDescription"] = fields.activityDescription
+        record["gardenName"] = fields.gardenName
+        record["timestamp"] = fields.timestamp
+        if let photoURL = fields.photoURL {
             record["photoURL"] = photoURL
             if let assetURL = Self.localFileURL(from: photoURL),
                FileManager.default.fileExists(atPath: assetURL.path)
@@ -346,11 +397,21 @@ public final class ClubCloudKitService {
         }
 
         do {
-            _ = try await privateDatabase.save(record)
-            logger.info("Published activity \(activityID.uuidString) to shared zone")
+            _ = try await database.save(record)
+            logger.info("Published activity \(fields.recordName) to CloudKit")
         } catch {
             logger.error("Failed to publish activity: \(error.localizedDescription)")
             throw ClubCloudKitError.saveFailed(error.localizedDescription)
+        }
+    }
+
+    private func database(for scope: ClubCloudDatabaseScope) -> CKDatabase {
+        switch scope {
+        case .ownerPrivate:
+            privateDatabase
+
+        case .sharedParticipant:
+            sharedDatabase
         }
     }
 
@@ -369,6 +430,23 @@ public struct ClubSyncResult: Sendable {
     public let activities: [CKRecord]
     public let messages: [CKRecord]
     public let events: [CKRecord]
+}
+
+public struct ClubActivityCloudRecordFields: Equatable, Sendable {
+    public let recordName: String
+    public let clubID: String
+    public let memberName: String
+    public let memberID: String
+    public let activityType: String
+    public let activityDescription: String
+    public let gardenName: String
+    public let photoURL: String?
+    public let timestamp: Date
+}
+
+public enum ClubCloudDatabaseScope: Equatable, Sendable {
+    case ownerPrivate
+    case sharedParticipant
 }
 
 // MARK: - Errors

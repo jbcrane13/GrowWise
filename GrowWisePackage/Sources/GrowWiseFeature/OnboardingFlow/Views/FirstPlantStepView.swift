@@ -20,10 +20,8 @@ struct FirstPlantStepView: View {
     ]
 
     var body: some View {
-        VStack(spacing: 0) {
-            Spacer()
-
-            VStack(spacing: 28) {
+        ScrollView {
+            VStack(spacing: 22) {
                 // Hero icon
                 ZStack {
                     Circle()
@@ -98,12 +96,15 @@ struct FirstPlantStepView: View {
                         .font(.system(size: 14, design: .rounded))
                         .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 10)
                 .accessibilityIdentifier("onboarding_firstplant_skip")
             }
             .padding(.horizontal, 4)
-
-            Spacer()
+            .padding(.top, 16)
+            .padding(.bottom, 28)
         }
+        .scrollIndicators(.hidden)
         .task {
             await loadPlants()
         }
@@ -140,6 +141,15 @@ private struct PlantPickerCard: View {
     let plant: Plant
     let isSelected: Bool
     let onTap: () -> Void
+
+    private var accessibilityID: String {
+        let rawName = plant.name ?? "unknown"
+        let sanitized = rawName
+            .lowercased()
+            .replacingOccurrences(of: " ", with: "_")
+            .filter { $0.isLetter || $0.isNumber || $0 == "_" }
+        return "onboarding_firstplant_card_\(sanitized)"
+    }
 
     private var plantIcon: String {
         plant.plantType?.iconName ?? "leaf.fill"
@@ -197,7 +207,7 @@ private struct PlantPickerCard: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("onboarding_firstplant_card_\(plant.name ?? "unknown")")
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 

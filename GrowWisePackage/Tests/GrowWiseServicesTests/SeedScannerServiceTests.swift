@@ -5,10 +5,6 @@ import Foundation
 import Testing
 import UIKit
 
-extension Tag {
-    @Tag static var integration: Tag
-}
-
 @MainActor
 struct SeedScannerServiceTests {
     let scanner = SeedScannerService()

@@ -268,7 +268,9 @@ private struct GardenClubTabContainer: View {
         Group {
             switch GardenClubTabRoute.resolve(clubs: clubs) {
             case .joinOrCreate:
-                GardenClubJoinOrCreatePrompt()
+                GardenClubJoinOrCreatePrompt { club in
+                    clubs = [club]
+                }
 
             case .feed(let club):
                 GardenClubFeedView(club: club)
@@ -294,6 +296,9 @@ private struct GardenClubTabContainer: View {
 private struct GardenClubJoinOrCreatePrompt: View {
     @State private var isJoining = false
     @State private var isCreating = false
+    @State private var createdClub: GardenClub?
+
+    let onCreated: (GardenClub) -> Void
 
     var body: some View {
         VStack(spacing: 16) {
@@ -316,7 +321,17 @@ private struct GardenClubJoinOrCreatePrompt: View {
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(CultivationTheme.Colors.background.ignoresSafeArea())
         .sheet(isPresented: $isJoining) { JoinClubSheet() }
-        .sheet(isPresented: $isCreating) { CreateClubSheet() }
+        .sheet(isPresented: $isCreating, onDismiss: publishCreatedClubIfNeeded) {
+            CreateClubSheet { club in
+                createdClub = club
+            }
+        }
+    }
+
+    private func publishCreatedClubIfNeeded() {
+        guard let createdClub else { return }
+        onCreated(createdClub)
+        self.createdClub = nil
     }
 }
 

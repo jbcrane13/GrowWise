@@ -52,6 +52,11 @@ public struct ClubShareComposerSheet: View { // swiftlint:disable:this type_body
         return plant?.name
     }
 
+    private var resolvedGardenName: String? {
+        guard includePlant else { return nil }
+        return plant?.garden?.name ?? plant?.bed?.garden?.name
+    }
+
     public init(
         plant: Plant? = nil,
         club: GardenClub? = nil,
@@ -183,6 +188,14 @@ public struct ClubShareComposerSheet: View { // swiftlint:disable:this type_body
                 Text(plant?.name ?? "")
                     .font(CultivationTheme.Fonts.body(13, weight: .semibold))
                     .foregroundStyle(CultivationTheme.Colors.brandSage)
+
+                if let resolvedGardenName {
+                    Text("· \(resolvedGardenName)")
+                        .font(CultivationTheme.Fonts.body(12))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        .lineLimit(1)
+                        .accessibilityIdentifier("share_composer_text_garden_context")
+                }
 
                 Spacer()
 
@@ -335,12 +348,13 @@ public struct ClubShareComposerSheet: View { // swiftlint:disable:this type_body
                 caption: trimmed,
                 activityType: "shared",
                 plantName: resolvedPlantName,
+                gardenName: resolvedGardenName,
                 club: selectedClub,
                 photoURL: photoURL
             )
             onPost()
             do {
-                try await clubCloudKitService.publishActivity(activity)
+                try await clubCloudKitService.publishActivity(activity, club: selectedClub)
                 dismiss()
             } catch {
                 offlineMessage = [

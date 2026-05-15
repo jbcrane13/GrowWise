@@ -14,6 +14,7 @@ public struct JoinClubSheet: View {
     @State private var inviteCode: String = ""
     @State private var isJoining = false
     @State private var errorMessage: String?
+    @FocusState private var isCodeFieldFocused: Bool
 
     private let maxCodeLength = 6
     private var isValid: Bool {
@@ -101,6 +102,10 @@ public struct JoinClubSheet: View {
                     .frame(maxWidth: .infinity)
                     .padding(.vertical, 20)
                     .glassCard()
+                    .contentShape(Rectangle())
+                    .onTapGesture {
+                        isCodeFieldFocused = true
+                    }
 
                     // Invisible text field over the top for input
                     TextField("", text: Binding(
@@ -114,7 +119,11 @@ public struct JoinClubSheet: View {
                         .textInputAutocapitalization(.characters)
                     #endif
                         .autocorrectionDisabled()
+                        .focused($isCodeFieldFocused)
                         .accessibilityIdentifier("join_club_code_field")
+                }
+                .task {
+                    isCodeFieldFocused = true
                 }
             }
             .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
