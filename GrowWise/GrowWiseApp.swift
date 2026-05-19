@@ -12,6 +12,7 @@ struct CultivationApp: App {
     @State private var perenualAPIService = PerenualAPIService()
     @State private var perenualEnrichmentService: PerenualEnrichmentService?
 
+    @Environment(\.scenePhase) private var scenePhase
     private let analyticsTracker = OnboardingAnalyticsTracker.shared
 
     init() {
@@ -81,9 +82,8 @@ struct CultivationApp: App {
                     if perenualEnrichmentService == nil {
                         perenualEnrichmentService = PerenualEnrichmentService(api: perenualAPIService)
                     }
-                    ScenePhaseProvider.shared.startObserving()
                 }
-                .onChange(of: ScenePhaseProvider.shared.scenePhase) { _, newPhase in
+                .onChange(of: scenePhase) { _, newPhase in
                     if newPhase == .active {
                         analyticsTracker.checkActivationMilestones()
                     }
