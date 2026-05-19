@@ -117,7 +117,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                     plant: plant,
                     onWater: { selectedPlant = nil },
                     onPrune: { selectedPlant = nil },
-                    onLog: { selectedPlant = nil },
+                    onHarvest: { selectedPlant = nil },
                     onViewDetails: {
                         let captured = plant
                         selectedPlant = nil

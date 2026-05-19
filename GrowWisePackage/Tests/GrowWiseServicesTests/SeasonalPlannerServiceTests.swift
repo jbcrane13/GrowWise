@@ -211,3 +211,92 @@ struct SeasonalActivityEnumTests {
         }
     }
 }
+
+// MARK: - Frost Prep Tasks
+
+@MainActor
+struct FrostPrepTasksTests {
+    @Test("Returns winter prep tasks for tender plants near first frost")
+    func frostPrepNearFirstFrost() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        // Zone 4 first frost ~ Oct 1; simulate late September
+        let calendar = Calendar.current
+        let lateSeptember = calendar.date(from: DateComponents(year: 2026, month: 9, day: 25))!
+
+        let tomato = Plant(name: "Tomato", plantType: .vegetable)
+        let basil = Plant(name: "Basil", plantType: .herb)
+        let apple = Plant(name: "Apple", plantType: .fruit)
+
+        let tasks = service.getFrostPrepTasks(for: [tomato, basil, apple], zone: "4a", currentDate: lateSeptember)
+
+        // Should only include tender plants (vegetable, herb), not fruit tree
+        let names = Set(tasks.map(\.plantName))
+        #expect(names.contains("Tomato"))
+        #expect(names.contains("Basil"))
+        #expect(names.contains("Apple") == false)
+        #expect(tasks.allSatisfy { $0.activityType == .winterPrep })
+    }
+
+    @Test("Returns empty when outside frost prep window")
+    func noFrostPrepOutsideWindow() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        // Zone 10 first frost ~ Dec 15; calling this in May will be outside window
+        let tomato = Plant(name: "Tomato", plantType: .vegetable)
+        let tasks = service.getFrostPrepTasks(for: [tomato], zone: "10a")
+
+        // In May, no frost prep needed
+        #expect(tasks.isEmpty)
+    }
+
+    @Test("Returns nil zone gives empty frost prep")
+    func nilZoneNoFrostPrep() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let tomato = Plant(name: "Tomato", plantType: .vegetable)
+        let tasks = service.getFrostPrepTasks(for: [tomato], zone: nil)
+        #expect(tasks.isEmpty)
+    }
+}
+
+// MARK: - Direct-Sow Tests
+
+@MainActor
+struct DirectSowTests {
+    @Test("getDirectSowSeeds returns seeds with matching directSowMonths")
+    func directSowMatchingMonth() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let tomato = Seed(varietyName: "Tomato", plantType: .vegetable)
+        tomato.directSowMonths = [4, 5]
+
+        let lettuce = Seed(varietyName: "Lettuce", plantType: .vegetable)
+        lettuce.directSowMonths = [3, 4]
+
+        let basil = Seed(varietyName: "Basil", plantType: .herb)
+        basil.directSowMonths = nil
+
+        let seeds = service.getDirectSowSeeds(for: 4, seeds: [tomato, lettuce, basil])
+        let names = Set(seeds.map(\.varietyName))
+        #expect(names.contains("Tomato"))
+        #expect(names.contains("Lettuce"))
+        #expect(names.contains("Basil") == false)
+    }
+
+    @Test("getDirectSowSeeds excludes seeds without directSowMonths")
+    func directSowExcludesMissingMonths() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let seed = Seed(varietyName: "Carrot", plantType: .vegetable)
+        seed.directSowMonths = []
+
+        let seeds = service.getDirectSowSeeds(for: 5, seeds: [seed])
+        #expect(seeds.isEmpty)
+    }
+}

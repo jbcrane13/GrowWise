@@ -736,6 +736,89 @@ public final class DataService {
         return result
     }
 
+    // MARK: - Harvest Tracking
+
+    @discardableResult
+    public func logHarvest(
+        quantity: Double,
+        unit: HarvestUnit,
+        plant: Plant,
+        notes: String = "",
+        photoURL: String? = nil
+    ) throws -> Harvest {
+        let harvest = Harvest(
+            quantity: quantity,
+            unit: unit,
+            notes: notes,
+            photoURL: photoURL,
+            plant: plant,
+            user: getCurrentUser()
+        )
+        mainContext.insert(harvest)
+        try mainContext.save()
+
+        cache.invalidateAll(withPrefix: "harvest:plant:")
+        cache.invalidateAll(withPrefix: "harvest:seasonal:")
+        return harvest
+    }
+
+    public func fetchHarvests(for plant: Plant, offset: Int = 0, limit: Int = 20) -> [Harvest] {
+        guard let plantId = plant.id else { return [] }
+        let cacheKey = "harvest:plant:\(plantId.uuidString):offset:\(offset):limit:\(limit)"
+        if let cached = cache.get(cacheKey, as: [Harvest].self) { return cached }
+
+        let result: [Harvest]
+        do {
+            var descriptor = FetchDescriptor<Harvest>(
+                predicate: #Predicate { $0.plant?.id == plantId },
+                sortBy: [.init(\.date, order: .reverse)]
+            )
+            descriptor.fetchOffset = offset
+            descriptor.fetchLimit = limit
+            result = try mainContext.fetch(descriptor)
+        } catch {
+            logger.error("[DataService] Failed to fetch harvests: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
+        cache.set(cacheKey, value: result, policy: .medium)
+        return result
+    }
+
+    public func fetchSeasonalHarvests(startDate: Date, endDate: Date) -> [Harvest] {
+        let cacheKey = "harvest:seasonal:\(startDate.timeIntervalSince1970):\(endDate.timeIntervalSince1970)"
+        if let cached = cache.get(cacheKey, as: [Harvest].self) { return cached }
+
+        let result: [Harvest]
+        do {
+            let descriptor = FetchDescriptor<Harvest>(
+                predicate: #Predicate<Harvest> { harvest in
+                    if let date = harvest.date {
+                        return date >= startDate && date <= endDate
+                    } else {
+                        return false
+                    }
+                },
+                sortBy: [.init(\.date, order: .reverse)]
+            )
+            result = try mainContext.fetch(descriptor)
+        } catch {
+            logger.error("[DataService] Failed to fetch seasonal harvests: \(error.localizedDescription, privacy: .public)")
+            result = []
+        }
+        cache.set(cacheKey, value: result, policy: .medium)
+        return result
+    }
+
+    public func deleteHarvest(_ harvest: Harvest) throws {
+        let plantId = harvest.plant?.id
+
+        mainContext.delete(harvest)
+        try mainContext.save()
+
+        cache.invalidateAll(withPrefix: "harvest:plant:")
+        cache.invalidateAll(withPrefix: "harvest:seasonal:")
+    }
+
     // MARK: - Search and Filter
 
     public func searchPlants(query: String, limit: Int = 20) -> [Plant] {

@@ -12,6 +12,9 @@ struct CultivationApp: App {
     @State private var perenualAPIService = PerenualAPIService()
     @State private var perenualEnrichmentService: PerenualEnrichmentService?
 
+    @Environment(\.scenePhase) private var scenePhase
+    private let analyticsTracker = OnboardingAnalyticsTracker.shared
+
     init() {
         FontRegistration.registerIfNeeded()
 
@@ -78,6 +81,11 @@ struct CultivationApp: App {
                 .onAppear {
                     if perenualEnrichmentService == nil {
                         perenualEnrichmentService = PerenualEnrichmentService(api: perenualAPIService)
+                    }
+                }
+                .onChange(of: scenePhase) { _, newPhase in
+                    if newPhase == .active {
+                        analyticsTracker.checkActivationMilestones()
                     }
                 }
         }

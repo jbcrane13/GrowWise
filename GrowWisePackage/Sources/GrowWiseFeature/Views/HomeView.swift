@@ -15,10 +15,13 @@ public struct HomeView: View {
     private var locationService
     @Environment(AppRouter.self)
     private var router
+    @Environment(NotificationService.self)
+    private var notificationService
 
     @State private var viewModel = HomeViewModel()
     @State private var showCareShareSheet = false
     @State private var careShareCaption = ""
+    @State private var showSeasonalPlanner = false
 
     public init() {}
 
@@ -49,9 +52,24 @@ public struct HomeView: View {
                     .accessibilityIdentifier("home_card_club")
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
 
-                    SeasonalTipCard()
-                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+                    ForEach(viewModel.weatherAlerts) { alert in
+                        WeatherAlertCard(alert: alert)
+                            .accessibilityIdentifier("home_weather_alert_\(alert.id.uuidString)")
+                    }
+
+                    if !viewModel.readyToPlantSeeds.isEmpty {
+                        SeedStartCard(seeds: viewModel.readyToPlantSeeds, zone: viewModel.hardinessZone)
+                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    }
+
+                    Button {
+                        showSeasonalPlanner = true
+                    } label: {
+                        SeasonalTipCard()
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                 }
             }
             .accessibilityIdentifier("home_screen")
@@ -63,10 +81,18 @@ public struct HomeView: View {
             }
             .toolbarBackground(.hidden)
             .task {
-                await viewModel.load(dataService: dataService)
+                await viewModel.load(
+                    dataService: dataService,
+                    locationService: locationService,
+                    notificationService: notificationService
+                )
             }
             .refreshable {
-                await viewModel.load(dataService: dataService)
+                await viewModel.load(
+                    dataService: dataService,
+                    locationService: locationService,
+                    notificationService: notificationService
+                )
             }
             .background(CultivationTheme.Colors.background)
             .alert(
@@ -84,6 +110,11 @@ public struct HomeView: View {
             .sheet(isPresented: $showCareShareSheet) {
                 ClubShareComposerSheet(initialCaption: careShareCaption)
                     .environment(dataService)
+            }
+            .sheet(isPresented: $showSeasonalPlanner) {
+                SeasonalPlannerView()
+                    .environment(dataService)
+                    .environment(locationService)
             }
             .accessibilityIdentifier("home_screen")
         }

@@ -234,6 +234,55 @@ public final class SeasonalPlannerService {
         FrostDate.forZone(zone)
     }
 
+    // MARK: - Frost Prep Tasks
+
+    /// Generate frost-preparation PlantActivity reminders for plants in the user's garden.
+    ///
+    /// When `month` is within 2 weeks before the zone's first fall frost date,
+    /// returns `.winterPrep` activities for tender plants (herbs, vegetables, flowers, houseplants).
+    public func getFrostPrepTasks(for plants: [Plant], zone: String?, currentDate: Date = Date()) -> [PlantActivity] {
+        guard let frostDate = FrostDate.forZone(zone) else { return [] }
+
+        let calendar = Calendar.current
+        let year = calendar.component(.year, from: currentDate)
+
+        // Build first frost date for this year
+        guard let firstFrostThisYear = calendar.date(from: DateComponents(
+            year: year,
+            month: frostDate.firstFallFrost,
+            day: frostDate.firstFallFrostDay
+        )) else { return [] }
+
+        // Only suggest frost prep within 2 weeks before first frost
+        guard let windowStart = calendar.date(byAdding: .weekOfYear, value: -2, to: firstFrostThisYear) else { return [] }
+        guard currentDate >= windowStart && currentDate <= firstFrostThisYear else { return [] }
+
+        let tenderTypes: [PlantType] = [.vegetable, .herb, .flower, .houseplant]
+        let tenderPlants = plants.filter {
+            guard let type = $0.plantType else { return false }
+            return tenderTypes.contains(type)
+        }
+
+        return tenderPlants.map { plant in
+            PlantActivity(
+                plantName: plant.name ?? "Unknown",
+                activityType: .winterPrep,
+                description: "Protect \(plant.name ?? "Unknown") before first frost on \(frostDate.firstFallFrostDescription) — cover, move indoors, or harvest",
+                icon: SeasonalActivity.winterPrep.icon
+            )
+        }
+    }
+
+    // MARK: - Direct-Sow Window
+
+    /// Return seeds whose `directSowMonths` includes the current month.
+    public func getDirectSowSeeds(for month: Int, seeds: [Seed]) -> [Seed] {
+        seeds.filter { seed in
+            guard let months = seed.directSowMonths, !months.isEmpty else { return false }
+            return months.contains(month)
+        }
+    }
+
     // MARK: - Private
 
     private func activitiesForPlant(

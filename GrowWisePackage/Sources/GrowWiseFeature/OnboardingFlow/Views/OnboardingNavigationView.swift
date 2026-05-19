@@ -10,6 +10,8 @@ struct OnboardingNavigationView: View {
     @Binding var userProfile: UserProfile
     @Binding var isCompleted: Bool
 
+    let analyticsTracker: OnboardingAnalyticsTracker
+
     @Environment(DataService.self)
     private var dataService
     @Environment(NotificationService.self)
@@ -29,7 +31,7 @@ struct OnboardingNavigationView: View {
 
     private var canProceed: Bool {
         switch currentStep {
-        case .welcome, .skillAssessment, .gardenSetup, .location, .notifications, .firstPlant, .completion:
+        case .welcome, .skillAssessment, .gardenSetup, .environmentSetup, .location, .notifications, .firstPlant, .completion:
             true
 
         case .goals:
@@ -191,6 +193,7 @@ struct OnboardingNavigationView: View {
                 UserDefaults.standard.set(true, forKey: "hasCompletedOnboarding")
 
                 await MainActor.run {
+                    analyticsTracker.trackOnboardingCompleted()
                     isSaving = false
                     isCompleted = true
                 }
@@ -314,7 +317,8 @@ private enum OnboardingSaveError: LocalizedError {
             OnboardingNavigationView(
                 currentStep: .constant(.goals),
                 userProfile: .constant(UserProfile()),
-                isCompleted: .constant(false)
+                isCompleted: .constant(false),
+                analyticsTracker: .shared
             )
         }
     }

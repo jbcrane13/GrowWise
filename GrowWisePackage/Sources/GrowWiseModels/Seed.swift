@@ -19,6 +19,7 @@ public final class Seed {
     public var daysToGermination: Int?
     public var daysToHarvest: Int?
     public var indoorStartWeeks: Int?
+    public var directSowMonths: [Int]?
 
     // Companion planting (fallback when no plant database link)
     public var companionPlants: [String]?

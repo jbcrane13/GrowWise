@@ -215,7 +215,13 @@ public final class PlantDatabaseService {
         return allPlants.map { plant in
             let score = calculateCompatibilityScore(plant: plant, userProfile: userProfile)
             let reasons = generateRecommendationReasons(plant: plant, userProfile: userProfile)
-            return PlantRecommendation(plant: plant, compatibilityScore: score, reasons: reasons)
+            let recommendationReasons = generateRecommendationReasonEnums(plant: plant, userProfile: userProfile)
+            return PlantRecommendation(
+                plant: plant,
+                compatibilityScore: score,
+                reasons: reasons,
+                recommendationReasons: recommendationReasons
+            )
         }
         .sorted { $0.compatibilityScore > $1.compatibilityScore }
         .prefix(limit)
@@ -336,6 +342,71 @@ public final class PlantDatabaseService {
         return nil
     }
 
+    /// Generates up to 3 RecommendationReason enums for plant recommendations.
+    private func generateRecommendationReasonEnums(plant: Plant, userProfile: UserGardenProfile) -> [RecommendationReason] {
+        var reasons: [RecommendationReason] = []
+
+        // Goal fit
+        if let goalReasonStr = goalReason(for: plant, userProfile: userProfile), !goalReasonStr.isEmpty {
+            reasons.append(.goalFit)
+        }
+
+        // Season fit (based on current month and plant type)
+        let currentMonth = Calendar.current.component(.month, from: Date())
+        if isPlantSuitableForCurrentSeason(plant: plant, month: currentMonth) {
+            reasons.append(.seasonFit)
+        }
+
+        // Climate fit (hardiness zone compatibility — simplified check)
+        if plant.plantType == .vegetable || plant.plantType == .herb {
+            reasons.append(.climateFit)
+        }
+
+        // Companion strategy (plant has companion plants in database)
+        if let companions = plant.companionPlants, !companions.isEmpty {
+            reasons.append(.companionStrategy)
+        }
+
+        // Maintenance burden (low maintenance = beginner difficulty)
+        if plant.difficultyLevel == .beginner {
+            reasons.append(.maintenanceBurden)
+        }
+
+        // Pet safety (houseplants and succulents tend to be safer)
+        if plant.plantType == .houseplant || plant.plantType == .succulent {
+            reasons.append(.petSafety)
+        }
+
+        // Human safety (edible plants)
+        if plant.plantType == .vegetable || plant.plantType == .herb || plant.plantType == .fruit {
+            reasons.append(.humanSafety)
+        }
+
+        // Space constraint (small plants for small spaces)
+        if plant.spaceRequirement == userProfile.availableSpace {
+            reasons.append(.spaceConstraint)
+        }
+
+        return Array(reasons.prefix(3))
+    }
+
+    private func isPlantSuitableForCurrentSeason(plant: Plant, month: Int) -> Bool {
+        switch plant.plantType {
+        case .vegetable:
+            return (month >= 3 && month <= 9)
+        case .herb:
+            return (month >= 4 && month <= 10)
+        case .flower:
+            return (month >= 3 && month <= 8)
+        case .houseplant, .succulent:
+            return true
+        case .fruit:
+            return (month >= 4 && month <= 9)
+        default:
+            return false
+        }
+    }
+
     private func estimateCareTime(for plant: Plant) -> UserTimeCommitment {
         if plant.plantType == .succulent || plant.plantType == .houseplant {
             .minimal
@@ -443,11 +514,19 @@ public struct PlantRecommendation: Identifiable {
     public let plant: Plant
     public let compatibilityScore: Double
     public let reasons: [String]
+    /// Up to 3 enriched recommendation reasons with icons for visual chips.
+    public let recommendationReasons: [RecommendationReason]
 
-    public init(plant: Plant, compatibilityScore: Double, reasons: [String]) {
+    public init(
+        plant: Plant,
+        compatibilityScore: Double,
+        reasons: [String],
+        recommendationReasons: [RecommendationReason] = []
+    ) {
         self.plant = plant
         self.compatibilityScore = compatibilityScore
         self.reasons = reasons
+        self.recommendationReasons = Array(recommendationReasons.prefix(3))
     }
 }
 
