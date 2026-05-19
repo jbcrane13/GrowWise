@@ -128,9 +128,9 @@ struct PlantQuickCard: View {
                     action: onPrune
                 )
                 actionChip(
-                    label: "Log",
-                    icon: "square.and.pencil",
-                    id: "quickcard_button_log",
+                    label: "Harvest",
+                    icon: "basket.fill",
+                    id: "quickcard_button_harvest",
                     action: onHarvest
                 )
             }
