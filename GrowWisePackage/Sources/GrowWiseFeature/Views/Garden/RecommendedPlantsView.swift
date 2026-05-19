@@ -241,17 +241,10 @@ private struct RecommendationCard: View {
                     }
             }
 
-            if !recommendation.reasons.isEmpty {
-                VStack(alignment: .leading, spacing: 4) {
-                    ForEach(recommendation.reasons, id: \.self) { reason in
-                        HStack(alignment: .top, spacing: 6) {
-                            Image(systemName: "checkmark.circle.fill")
-                                .font(.system(size: 12))
-                                .foregroundStyle(CultivationTheme.Colors.statusHealthy)
-                            Text(reason)
-                                .font(.system(.caption, design: .rounded))
-                                .foregroundStyle(CultivationTheme.Colors.textSecondary)
-                        }
+            if !recommendation.recommendationReasons.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(recommendation.recommendationReasons, id: \.self) { reason in
+                        ReasonChip(reason: reason)
                     }
                 }
             }
@@ -329,6 +322,29 @@ private struct CompanionSuggestionCard: View {
         }
         .padding(CultivationTheme.Spacing.cardPadding)
         .glassCard()
+    }
+}
+
+// MARK: - ReasonChip
+
+private struct ReasonChip: View {
+    let reason: RecommendationReason
+
+    var body: some View {
+        HStack(spacing: 4) {
+            Image(systemName: reason.icon)
+                .font(.system(size: 10, weight: .medium))
+            Text(reason.displayText)
+                .font(.system(.caption2, design: .rounded, weight: .medium))
+        }
+        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+        .padding(.horizontal, 8)
+        .padding(.vertical, 5)
+        .background {
+            Capsule()
+                .fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+        }
+        .accessibilityIdentifier("reason_chip_\(reason.rawValue)")
     }
 }
 
