@@ -107,13 +107,29 @@ final class OnboardingActivationMilestoneTests {
     @Test("D1 not emitted when onboarding completed today (0 days ago)")
     func testD1NotEmittedWhenOnboardingCompletedToday() {
         simulateOnboardingCompleted(daysAgo: 0)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
         #expect(OnboardingAnalyticsTracker.isD1Emitted == false)
     }
 
-    @Test("D1 not emitted when onboarding completed yesterday (1 day ago)")
-    func testD1NotEmittedWhenOnboardingCompletedYesterday() {
+    @Test("D1 emitted when onboarding completed 1 day ago")
+    func testD1EmittedWhenOnboardingCompleted1DayAgo() {
         simulateOnboardingCompleted(daysAgo: 1)
-        #expect(OnboardingAnalyticsTracker.isD1Emitted == false)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD1Emitted == true)
+    }
+
+    @Test("D1 emitted only once (idempotent)")
+    func testD1EmittedOnlyOnce() {
+        simulateOnboardingCompleted(daysAgo: 2)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD1Emitted == true)
+
+        // Call again — should remain true but not re-emit
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD1Emitted == true)
     }
 
     // MARK: D7
@@ -121,13 +137,37 @@ final class OnboardingActivationMilestoneTests {
     @Test("D7 not emitted when onboarding completed 3 days ago")
     func testD7NotEmittedWhenOnboardingCompleted3DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 3)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
         #expect(OnboardingAnalyticsTracker.isD7Emitted == false)
     }
 
     @Test("D7 not emitted when onboarding completed 6 days ago")
     func testD7NotEmittedWhenOnboardingCompleted6DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 6)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
         #expect(OnboardingAnalyticsTracker.isD7Emitted == false)
+    }
+
+    @Test("D7 emitted when onboarding completed 7 days ago")
+    func testD7EmittedWhenOnboardingCompleted7DaysAgo() {
+        simulateOnboardingCompleted(daysAgo: 7)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD7Emitted == true)
+    }
+
+    @Test("D7 emitted only once (idempotent)")
+    func testD7EmittedOnlyOnce() {
+        simulateOnboardingCompleted(daysAgo: 10)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD7Emitted == true)
+
+        // Call again — should remain true but not re-emit
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD7Emitted == true)
     }
 
     // MARK: D30
@@ -135,13 +175,37 @@ final class OnboardingActivationMilestoneTests {
     @Test("D30 not emitted when onboarding completed 14 days ago")
     func testD30NotEmittedWhenOnboardingCompleted14DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 14)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
         #expect(OnboardingAnalyticsTracker.isD30Emitted == false)
     }
 
     @Test("D30 not emitted when onboarding completed 29 days ago")
     func testD30NotEmittedWhenOnboardingCompleted29DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 29)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
         #expect(OnboardingAnalyticsTracker.isD30Emitted == false)
+    }
+
+    @Test("D30 emitted when onboarding completed 30 days ago")
+    func testD30EmittedWhenOnboardingCompleted30DaysAgo() {
+        simulateOnboardingCompleted(daysAgo: 30)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD30Emitted == true)
+    }
+
+    @Test("D30 emitted only once (idempotent)")
+    func testD30EmittedOnlyOnce() {
+        simulateOnboardingCompleted(daysAgo: 45)
+        let tracker = OnboardingAnalyticsTracker.shared
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD30Emitted == true)
+
+        // Call again — should remain true but not re-emit
+        tracker.checkActivationMilestones()
+        #expect(OnboardingAnalyticsTracker.isD30Emitted == true)
     }
 }
 

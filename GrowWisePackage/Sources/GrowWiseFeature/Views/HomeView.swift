@@ -81,10 +81,18 @@ public struct HomeView: View {
             }
             .toolbarBackground(.hidden)
             .task {
-                await viewModel.load(dataService: dataService, notificationService: notificationService)
+                await viewModel.load(
+                    dataService: dataService,
+                    locationService: locationService,
+                    notificationService: notificationService
+                )
             }
             .refreshable {
-                await viewModel.load(dataService: dataService, notificationService: notificationService)
+                await viewModel.load(
+                    dataService: dataService,
+                    locationService: locationService,
+                    notificationService: notificationService
+                )
             }
             .background(CultivationTheme.Colors.background)
             .alert(

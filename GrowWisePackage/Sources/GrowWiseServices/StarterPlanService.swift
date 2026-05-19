@@ -97,8 +97,8 @@ private enum StarterPlanSeason: String {
     case fall
     case winter
 
-    init() {
-        let month = Calendar.current.component(.month, from: Date())
+    init(date: Date = Date()) {
+        let month = Calendar.current.component(.month, from: date)
         switch month {
         case 3, 4, 5: self = .spring
         case 6, 7, 8: self = .summer
@@ -362,7 +362,7 @@ public enum StarterPlanService {
             ))
         }
         // Season-based planting task
-        let season = StarterPlanSeason()
+        let season = StarterPlanSeason(date: referenceDate)
         if season == .spring, garden.gardenType != .indoor {
             day3Tasks.append(CareTask(
                 kind: .plant,

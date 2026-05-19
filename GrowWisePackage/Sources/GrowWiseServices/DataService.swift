@@ -757,8 +757,8 @@ public final class DataService {
         mainContext.insert(harvest)
         try mainContext.save()
 
-        cache.invalidate("harvest:plant")
-        cache.invalidate("harvest:seasonal")
+        cache.invalidateAll(withPrefix: "harvest:plant:")
+        cache.invalidateAll(withPrefix: "harvest:seasonal:")
         return harvest
     }
 
@@ -815,12 +815,8 @@ public final class DataService {
         mainContext.delete(harvest)
         try mainContext.save()
 
-        if let plantId {
-            cache.invalidate("harvest:plant:\(plantId.uuidString)")
-        } else {
-            cache.invalidate("harvest:plant:")
-        }
-        cache.invalidate("harvest:seasonal")
+        cache.invalidateAll(withPrefix: "harvest:plant:")
+        cache.invalidateAll(withPrefix: "harvest:seasonal:")
     }
 
     // MARK: - Search and Filter

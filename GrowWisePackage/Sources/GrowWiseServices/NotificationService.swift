@@ -187,9 +187,19 @@ public final class NotificationService: NSObject {
 
     /// Schedule a local push notification for a weather alert (frost, heat, heavy rain).
     /// Call from `HomeViewModel.load` or a background refresh task.
+    /// De-duplicates by checking pending notifications with the same identifier.
     public func scheduleWeatherAlertNotification(_ alert: WeatherAlert) async {
         guard isAuthorized, let notificationCenter else { return }
         guard !alert.isExpired else { return }
+
+        let identifier = "weather-\(alert.id.uuidString)"
+
+        // De-dupe: check if this alert is already scheduled
+        let pendingRequests = await notificationCenter.pendingNotificationRequests()
+        if pendingRequests.contains(where: { $0.identifier == identifier }) {
+            logger.debug("Weather alert \(identifier) already scheduled, skipping")
+            return
+        }
 
         let content = UNMutableNotificationContent()
         content.title = alert.title
@@ -201,7 +211,7 @@ public final class NotificationService: NSObject {
         // Deliver immediately (or in 5 minutes if app is in foreground)
         let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 60, repeats: false)
         let request = UNNotificationRequest(
-            identifier: "weather-\(alert.id.uuidString)",
+            identifier: identifier,
             content: content,
             trigger: trigger
         )

@@ -77,7 +77,11 @@ final class HomeViewModel {
 
     // MARK: - Load
 
-    func load(dataService: DataService, notificationService: NotificationService? = nil) async {
+    func load(
+        dataService: DataService,
+        locationService: LocationService? = nil,
+        notificationService: NotificationService? = nil
+    ) async {
         isLoading = true
 
         // Resolve user display name
@@ -135,10 +139,12 @@ final class HomeViewModel {
 
         isLoading = false
 
-        // Load weather alerts
-        let locationService = LocationService()
-        locationService.requestLocation()
-        weatherAlerts = locationService.checkForWeatherAlerts()
+        // Load weather alerts from injected LocationService (if available and has data)
+        if let locationService, locationService.weatherData != nil {
+            weatherAlerts = locationService.checkForWeatherAlerts()
+        } else {
+            weatherAlerts = []
+        }
 
         // Schedule local notifications for weather alerts
         if let notificationService {
