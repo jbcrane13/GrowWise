@@ -78,7 +78,7 @@ public struct ReminderRowView: View {
 
             // Action buttons
             VStack(spacing: 8) {
-                if reminder.canBeCompleted(by: currentMemberID) {
+                if canMutateReminder {
                     Button(action: completeReminder) {
                         if isCompleting {
                             ProgressView()
@@ -98,13 +98,15 @@ public struct ReminderRowView: View {
                         .accessibilityHidden(true)
                 }
 
-                Button(action: { showingSnoozeOptions = true }, label: {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.title3)
-                        .foregroundStyle(CultivationTheme.Colors.statusWarning)
-                })
-                .disabled(isCompleting)
-                .accessibilityIdentifier("reminder_button_snooze_\(reminder.id)")
+                if canMutateReminder {
+                    Button(action: { showingSnoozeOptions = true }, label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.title3)
+                            .foregroundStyle(CultivationTheme.Colors.statusWarning)
+                    })
+                    .disabled(isCompleting)
+                    .accessibilityIdentifier("reminder_button_snooze_\(reminder.id)")
+                }
             }
         }
         .padding(CultivationTheme.Spacing.cardPadding)
@@ -210,6 +212,10 @@ public struct ReminderRowView: View {
         dataService.getCurrentUser()?.id.uuidString
     }
 
+    private var canMutateReminder: Bool {
+        reminder.canBeCompleted(by: currentMemberID)
+    }
+
     private var priorityIndicator: some View {
         HStack(spacing: 2) {
             ForEach(1 ... reminder.priority.numericValue, id: \.self) { _ in
@@ -250,10 +256,14 @@ public struct ReminderRowView: View {
     }
 
     private func snoozeReminder(for duration: SnoozeDuration) {
-        reminder.snooze(for: duration)
+        guard canMutateReminder else {
+            return
+        }
 
         Task<Void, Never> {
             do {
+                try dataService.snoozeReminder(reminder, for: duration)
+
                 // Reschedule notification with new time
                 try await reminderService.notificationService.scheduleReminderNotification(for: reminder)
 

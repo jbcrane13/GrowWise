@@ -205,15 +205,19 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
         VStack(spacing: 10) {
             HStack(spacing: 8) {
                 Button("Log care") {
+                    guard !isReadOnlySharedPlant else { return }
                     showingReminderView = true
                 }
                 .buttonStyle(GradientButtonStyle())
+                .disabled(isReadOnlySharedPlant)
                 .accessibilityIdentifier("plantdetail_button_log_care")
 
                 Button("Log harvest") {
+                    guard !isReadOnlySharedPlant else { return }
                     showingLogHarvest = true
                 }
                 .buttonStyle(CoralButtonStyle())
+                .disabled(isReadOnlySharedPlant)
                 .accessibilityIdentifier("plantdetail_button_log_harvest")
             }
 
@@ -225,6 +229,7 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
                 .accessibilityIdentifier("plantdetail_button_get_advice")
 
                 Button {
+                    guard !isReadOnlySharedPlant else { return }
                     showingShareToClub = true
                 } label: {
                     HStack(spacing: 8) {
@@ -247,6 +252,7 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
                     }
                 }
                 .buttonStyle(.plain)
+                .disabled(isReadOnlySharedPlant)
                 .accessibilityIdentifier("plantdetail_button_share_to_club")
             }
         }
@@ -389,7 +395,7 @@ extension PlantDetailView {
     @ToolbarContentBuilder var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                if let primaryClub {
+                if !isReadOnlySharedPlant, let primaryClub {
                     if plant.isSharedWithClub {
                         Button {
                             unsharePlantFromClub()
@@ -435,6 +441,9 @@ extension PlantDetailView {
     }
 
     func sharePlantWithPrimaryClub(_ club: GardenClub) {
+        guard !isReadOnlySharedPlant else {
+            return
+        }
         do {
             try dataService.sharePlant(plant, withClub: club)
         } catch {
@@ -443,6 +452,9 @@ extension PlantDetailView {
     }
 
     func unsharePlantFromClub() {
+        guard !isReadOnlySharedPlant else {
+            return
+        }
         do {
             try dataService.unsharePlant(plant)
         } catch {
