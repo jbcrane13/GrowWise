@@ -76,7 +76,7 @@ struct PlantDetailView: View {
             MovePlantSheet(plant: plant)
         }
         .sheet(isPresented: $showingDiagnostic) {
-            PlantDiagnosticSheet(plant: plant)
+            CommonPlantIssuesView(plant: plant)
         }
         .sheet(isPresented: $showingLogHarvest) {
             LogHarvestSheet(plant: plant)
@@ -244,6 +244,7 @@ struct PlantDetailView: View {
                 .accessibilityIdentifier("plantdetail_button_share_to_club")
             }
         }
+    }
 
     // MARK: - Advice Card
 
@@ -321,7 +322,9 @@ struct PlantDetailView: View {
     }
 }
 
-private extension PlantDetailView {
+// MARK: - Toolbar + Actions
+extension PlantDetailView {
+    @ToolbarContentBuilder
     var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
