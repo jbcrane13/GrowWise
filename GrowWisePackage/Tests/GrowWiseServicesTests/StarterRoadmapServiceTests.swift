@@ -180,6 +180,41 @@ struct StarterRoadmapServiceTests {
         #expect(firstTitle.contains("garden"))
     }
 
+    @Test("garden space size shapes the roadmap")
+    func gardenSpaceSizeShapesTheRoadmap() {
+        let user = makeUser(skillLevel: .beginner, goals: [.growFood])
+        let tinyGarden = makeGarden(type: .windowsill, isIndoor: true, space: .tiny)
+        let largeGarden = makeGarden(type: .outdoor, isIndoor: false, space: .large)
+        let tinyPlant = makePlant(named: "Basil", in: tinyGarden)
+        let largePlant = makePlant(named: "Basil", in: largeGarden)
+
+        let tinyRoadmap = StarterRoadmapService.build(
+            user: user,
+            gardens: [tinyGarden],
+            plants: [tinyPlant],
+            reminders: [],
+            referenceDate: Date()
+        )
+        let largeRoadmap = StarterRoadmapService.build(
+            user: user,
+            gardens: [largeGarden],
+            plants: [largePlant],
+            reminders: [],
+            referenceDate: Date()
+        )
+
+        let tinyTexts = tinyRoadmap.steps.map { ($0.title + " " + $0.detail).lowercased() }
+        let largeTexts = largeRoadmap.steps.map { ($0.title + " " + $0.detail).lowercased() }
+
+        let tinyHasSmallSpaceGuidance = tinyTexts.contains { text in
+            text.contains("small") || text.contains("compact") ||
+                text.contains("container") || text.contains("limited")
+        }
+        #expect(tinyHasSmallSpaceGuidance)
+
+        #expect(tinyTexts != largeTexts)
+    }
+
     // MARK: - Helpers
 
     private func makeUser(
@@ -195,8 +230,14 @@ struct StarterRoadmapServiceTests {
         return user
     }
 
-    private func makeGarden(type: GardenType, isIndoor: Bool) -> Garden {
-        Garden(name: "Test Garden", gardenType: type, isIndoor: isIndoor)
+    private func makeGarden(
+        type: GardenType,
+        isIndoor: Bool,
+        space: SpaceSize = .small
+    ) -> Garden {
+        let garden = Garden(name: "Test Garden", gardenType: type, isIndoor: isIndoor)
+        garden.spaceAvailable = space
+        return garden
     }
 
     private func makePlant(named name: String, in garden: Garden) -> Plant {
