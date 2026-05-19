@@ -42,6 +42,39 @@ private func makeStubSession() -> URLSession {
     return URLSession(configuration: config)
 }
 
+private final class PerenualEnrichmentMockURLProtocol: URLProtocol, @unchecked Sendable {
+    override class func canInit(with request: URLRequest) -> Bool {
+        true
+    }
+
+    override class func canonicalRequest(for request: URLRequest) -> URLRequest {
+        request
+    }
+
+    override func startLoading() {
+        let response: HTTPURLResponse
+        let data: Data
+        if request.url?.path.contains("species/details/1") == true {
+            response = httpResponse(url: "https://perenual.com/api/v2/species/details/1")
+            data = Data(speciesDetailJSON.utf8)
+        } else {
+            response = httpResponse()
+            data = Data(speciesListJSON.utf8)
+        }
+        client?.urlProtocol(self, didReceive: response, cacheStoragePolicy: .notAllowed)
+        client?.urlProtocol(self, didLoad: data)
+        client?.urlProtocolDidFinishLoading(self)
+    }
+
+    override func stopLoading() {}
+}
+
+private func makeEnrichmentStubSession() -> URLSession {
+    let config = URLSessionConfiguration.ephemeral
+    config.protocolClasses = [PerenualEnrichmentMockURLProtocol.self]
+    return URLSession(configuration: config)
+}
+
 private func httpResponse(statusCode: Int = 200, url: String = "https://perenual.com/api/v2/species-list") -> HTTPURLResponse {
     HTTPURLResponse(
         url: URL(string: url)!,
@@ -668,16 +701,8 @@ struct PerenualEnrichmentServiceTests {
     @Test("loadEnrichment fetches by scientific name and makes the detail synchronously available")
     func loadEnrichmentFetchesAndCachesDetail() async {
         PerenualAPIService.testAPIKey = "test-key-12345"
-        defer { PerenualAPIService.testAPIKey = nil }
 
-        MockURLProtocol.requestHandler = { request in
-            if request.url?.path.contains("species/details/1") == true {
-                return (httpResponse(url: "https://perenual.com/api/v2/species/details/1"), Data(speciesDetailJSON.utf8))
-            }
-            return (httpResponse(), Data(speciesListJSON.utf8))
-        }
-
-        let api = PerenualAPIService(session: makeStubSession())
+        let api = PerenualAPIService(session: makeEnrichmentStubSession())
         let enrichment = PerenualEnrichmentService(api: api)
         let plant = Plant(name: "European Silver Fir", plantType: .tree)
         plant.scientificName = "Abies alba"

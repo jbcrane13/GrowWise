@@ -52,7 +52,7 @@ public final class DataService {
     }
 
     /// Performance optimizations
-    private let cache = SwiftDataCache()
+    let cache = SwiftDataCache()
 
     /// CloudKit container for sync — nil during UI testing (CKContainer crashes on simulator)
     private let cloudContainer: CKContainer?
@@ -619,7 +619,12 @@ public final class DataService {
     }
 
     public func completeReminder(_ reminder: PlantReminder) throws {
+        try assertReminderCompletionAllowed(reminder)
+        let sharedCareActivity = sharedCareActivityPayload(for: reminder)
         try reminders.complete(reminder)
+        if let sharedCareActivity {
+            try publishSharedCareActivity(sharedCareActivity)
+        }
         invalidateReminderCaches()
     }
 
@@ -641,7 +646,13 @@ public final class DataService {
         )
     }
 
-    private func invalidateReminderCaches() {
+    public func snoozeReminder(_ reminder: PlantReminder, for duration: SnoozeDuration) throws {
+        reminder.snooze(for: duration)
+        try mainContext.save()
+        invalidateReminderCaches()
+    }
+
+    func invalidateReminderCaches() {
         cache.invalidateAll(withPrefix: "reminders:")
         cache.invalidateAll(withPrefix: "stats:count:")
         cache.invalidate("stats:gardening_summary")
@@ -743,18 +754,23 @@ public final class DataService {
         quantity: Double,
         unit: HarvestUnit,
         plant: Plant,
+        date: Date = Date(),
         notes: String = "",
         photoURL: String? = nil
     ) throws -> Harvest {
         let harvest = Harvest(
             quantity: quantity,
             unit: unit,
+            date: date,
             notes: notes,
             photoURL: photoURL,
             plant: plant,
             user: getCurrentUser()
         )
         mainContext.insert(harvest)
+        if let user = getCurrentUser() {
+            user.plantsHarvested += 1
+        }
         try mainContext.save()
 
         cache.invalidateAll(withPrefix: "harvest:plant:")

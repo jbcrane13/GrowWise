@@ -7,15 +7,17 @@ import SwiftUI
 struct EnvironmentSetupView: View {
     @Binding var userProfile: UserProfile
 
-@ViewBuilder
-    private var environmentView: some View {
+    @ViewBuilder private var environmentView: some View {
         switch userProfile.gardenType {
         case .indoor, .windowsill:
             indoorEnvironmentView
+
         case .outdoor, .raised, .balcony, .greenhouse:
             outdoorEnvironmentView
+
         case .hydroponic:
             hydroponicEnvironmentView
+
         case .container:
             // Container gardens use outdoor-style questions
             outdoorEnvironmentView
@@ -44,32 +46,35 @@ struct EnvironmentSetupView: View {
 
     private var environmentIcon: String {
         switch userProfile.gardenType {
-        case .indoor, .windowsill: return "house.fill"
-        case .outdoor, .raised, .balcony, .greenhouse: return "sun.max.fill"
-        case .hydroponic: return "drop.triangle.fill"
-        case .container: return "square.grid.2x2.fill"
+        case .indoor, .windowsill: "house.fill"
+        case .outdoor, .raised, .balcony, .greenhouse: "sun.max.fill"
+        case .hydroponic: "drop.triangle.fill"
+        case .container: "square.grid.2x2.fill"
         }
     }
 
     private var environmentTitle: String {
         switch userProfile.gardenType {
-        case .indoor, .windowsill: return "Indoor\nenvironment"
-        case .outdoor, .raised, .balcony, .greenhouse: return "Outdoor\nconditions"
-        case .hydroponic: return "Hydroponic\nsystem"
-        case .container: return "Container\nsetup"
+        case .indoor, .windowsill: "Indoor\nenvironment"
+        case .outdoor, .raised, .balcony, .greenhouse: "Outdoor\nconditions"
+        case .hydroponic: "Hydroponic\nsystem"
+        case .container: "Container\nsetup"
         }
     }
 
     private var environmentSubtitle: String {
         switch userProfile.gardenType {
         case .indoor, .windowsill:
-            return "Helps us recommend the right plants and care routine."
+            "Helps us recommend the right plants and care routine."
+
         case .outdoor, .raised, .balcony, .greenhouse:
-            return "Your climate and location help us plan seasonal activities."
+            "Your climate and location help us plan seasonal activities."
+
         case .hydroponic:
-            return "Your system setup helps us calibrate nutrient delivery."
+            "Your system setup helps us calibrate nutrient delivery."
+
         case .container:
-            return "Container placement affects light and water needs."
+            "Container placement affects light and water needs."
         }
     }
 
@@ -253,7 +258,7 @@ struct EnvironmentSetupView: View {
                         .foregroundStyle(CultivationTheme.Colors.brandLeaf)
                 }
 
-                Slider(value: $userProfile.nutrientSchedule, in: 0.1...1.0, step: 0.1)
+                Slider(value: $userProfile.nutrientSchedule, in: 0.1 ... 1.0, step: 0.1)
                     .tint(CultivationTheme.Colors.brandLeaf)
                     .accessibilityIdentifier("onboarding_slider_nutrients")
 
@@ -296,10 +301,7 @@ struct EnvironmentSetupView: View {
 
                             RoundedRectangle(cornerRadius: 4)
                                 .fill(CultivationTheme.Gradients.warmAccent)
-                                .frame(
-                                    width: geometry.size.width * (userProfile.phRange.upperBound - userProfile.phRange.lowerBound) / 5.0,
-                                    height: 8
-                                )
+                                .frame(width: phRangeWidth(in: geometry.size), height: 8)
                                 .offset(x: geometry.size.width * (userProfile.phRange.lowerBound - 5.0) / 5.0)
                         }
                     }
@@ -328,6 +330,10 @@ struct EnvironmentSetupView: View {
             .glassCard()
         }
     }
+
+    private func phRangeWidth(in size: CGSize) -> CGFloat {
+        size.width * (userProfile.phRange.upperBound - userProfile.phRange.lowerBound) / 5.0
+    }
 }
 
 // MARK: - Indoor Option Row
@@ -342,9 +348,10 @@ private struct IndoorOptionRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     Circle()
-                        .fill(isSelected
-                            ? CultivationTheme.Colors.brandLeaf.opacity(0.20)
-                            : CultivationTheme.Colors.backgroundSecondary
+                        .fill(
+                            isSelected
+                                ? CultivationTheme.Colors.brandLeaf.opacity(0.20)
+                                : CultivationTheme.Colors.backgroundSecondary
                         )
                         .frame(width: 40, height: 40)
                     if isSelected {
@@ -375,9 +382,10 @@ private struct IndoorOptionRow: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected
-                        ? CultivationTheme.Colors.brandLeaf.opacity(0.10)
-                        : CultivationTheme.Colors.cardSurface
+                    .fill(
+                        isSelected
+                            ? CultivationTheme.Colors.brandLeaf.opacity(0.10)
+                            : CultivationTheme.Colors.cardSurface
                     )
             )
             .overlay(
@@ -404,9 +412,10 @@ private struct OutdoorOptionRow: View {
             HStack(spacing: 14) {
                 ZStack {
                     RoundedRectangle(cornerRadius: 10)
-                        .fill(isSelected
-                            ? CultivationTheme.Colors.brandLeaf.opacity(0.20)
-                            : CultivationTheme.Colors.backgroundSecondary
+                        .fill(
+                            isSelected
+                                ? CultivationTheme.Colors.brandLeaf.opacity(0.20)
+                                : CultivationTheme.Colors.backgroundSecondary
                         )
                         .frame(width: 40, height: 40)
                     if isSelected {
@@ -437,9 +446,10 @@ private struct OutdoorOptionRow: View {
             .padding(.vertical, 12)
             .background(
                 RoundedRectangle(cornerRadius: 14)
-                    .fill(isSelected
-                        ? CultivationTheme.Colors.brandLeaf.opacity(0.10)
-                        : CultivationTheme.Colors.cardSurface
+                    .fill(
+                        isSelected
+                            ? CultivationTheme.Colors.brandLeaf.opacity(0.10)
+                            : CultivationTheme.Colors.cardSurface
                     )
             )
             .overlay(

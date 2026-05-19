@@ -2,8 +2,16 @@ import GrowWiseServices
 import SwiftUI
 
 struct StarterPlanCard: View {
-    let actions: [StarterPlanAction]
+    let plan: StarterPlan
     let onSelect: (StarterPlanAction) -> Void
+
+    private var actions: [StarterPlanAction] {
+        plan.actions
+    }
+
+    private var upcomingDays: [StarterPlanDay] {
+        plan.days.filter { !$0.tasks.isEmpty }.prefix(5).map(\.self)
+    }
 
     var body: some View {
         VStack(alignment: .leading, spacing: 12) {
@@ -28,10 +36,56 @@ struct StarterPlanCard: View {
                 .buttonStyle(.plain)
                 .accessibilityIdentifier("home_starter_plan_action_\(action.kind.rawValue)")
             }
+
+            if !upcomingDays.isEmpty {
+                Divider()
+                    .background(CultivationTheme.Colors.divider)
+
+                VStack(alignment: .leading, spacing: 8) {
+                    Text("Next 14 days")
+                        .font(CultivationTheme.Fonts.body(11, weight: .bold))
+                        .tracking(1.2)
+                        .textCase(.uppercase)
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+
+                    ForEach(upcomingDays) { day in
+                        StarterPlanDayRow(day: day)
+                    }
+                }
+                .accessibilityIdentifier("home_starter_plan_days")
+            }
         }
         .padding(CultivationTheme.Spacing.cardPadding)
         .paperCard()
         .accessibilityIdentifier("home_starter_plan_card")
+    }
+}
+
+private struct StarterPlanDayRow: View {
+    let day: StarterPlanDay
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 10) {
+            Text("D\(day.dayOffset + 1)")
+                .font(CultivationTheme.Fonts.body(10, weight: .bold))
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .frame(width: 32, height: 24)
+                .background(
+                    RoundedRectangle(cornerRadius: 8)
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.1))
+                )
+
+            VStack(alignment: .leading, spacing: 2) {
+                ForEach(day.tasks.prefix(2)) { task in
+                    Text(task.title)
+                        .font(CultivationTheme.Fonts.body(12, weight: .medium))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        .lineLimit(1)
+                }
+            }
+            .frame(maxWidth: .infinity, alignment: .leading)
+        }
+        .accessibilityIdentifier("home_starter_plan_day_\(day.dayOffset)")
     }
 }
 

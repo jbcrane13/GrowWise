@@ -6,7 +6,7 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable function_body_length large_tuple type_body_length
+// swiftlint:disable file_length function_body_length large_tuple type_body_length
 
 public struct HomeView: View {
     @Environment(DataService.self)
@@ -36,10 +36,15 @@ public struct HomeView: View {
                         .padding(.top, CultivationTheme.Spacing.sectionGap)
 
                     if !viewModel.starterPlan.actions.isEmpty {
-                        StarterPlanCard(actions: viewModel.starterPlan.actions) { action in
+                        StarterPlanCard(plan: viewModel.starterPlan) { action in
                             handleStarterPlanAction(action)
                         }
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    }
+
+                    if let monthlyHarvestSummary = viewModel.monthlyHarvestSummary {
+                        harvestTotalCard(monthlyHarvestSummary)
+                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                     }
 
                     Button {
@@ -183,38 +188,67 @@ public struct HomeView: View {
 
     private func careTaskRow(_ reminder: PlantReminder) -> some View {
         let isUrgent = isTopPriorityOverdue(reminder)
+        let memberID = currentMemberID
+        let canComplete = reminder.canBeCompleted(by: memberID)
+        let canClaim = reminder.plant?.isSharedWithClub == true && reminder.assignedMemberID == nil
+        let offersRainSkip = shouldOfferRainSkip(for: reminder)
 
         return HStack(spacing: 10) {
-            Button {
-                Task<Void, Never> {
-                    let succeeded = await viewModel.complete(reminder: reminder, dataService: dataService)
-                    if succeeded, dataService.fetchPrimaryClub() != nil {
-                        careShareCaption = postCareCaption(for: reminder)
-                        showCareShareSheet = true
-                    }
+            if canClaim {
+                Button {
+                    claimReminder(reminder)
+                } label: {
+                    Text("Claim")
+                        .font(CultivationTheme.Fonts.body(11, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .padding(.horizontal, 9)
+                        .padding(.vertical, 5)
+                        .background(
+                            Capsule()
+                                .fill(CultivationTheme.Colors.brandLeaf.opacity(0.1))
+                        )
                 }
-            } label: {
-                RoundedRectangle(cornerRadius: 6)
-                    .fill(isUrgent ? CultivationTheme.Colors.accentCoral : Color.clear)
-                    .frame(width: 20, height: 20)
-                    .overlay {
-                        RoundedRectangle(cornerRadius: 6)
-                            .stroke(
-                                isUrgent ? CultivationTheme.Colors.accentCoral : CultivationTheme.Colors.divider,
-                                lineWidth: 1.5
-                            )
-                    }
-                    .overlay {
-                        if isUrgent {
-                            Image(systemName: "checkmark")
-                                .font(.system(size: 10, weight: .bold))
-                                .foregroundStyle(Color.white)
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_button_claim_\(reminder.id.uuidString)")
+                .accessibilityLabel("Claim \(reminder.title)")
+            } else if canComplete {
+                Button {
+                    Task<Void, Never> {
+                        let succeeded = await viewModel.complete(reminder: reminder, dataService: dataService)
+                        if succeeded, dataService.fetchPrimaryClub() != nil {
+                            careShareCaption = postCareCaption(for: reminder)
+                            showCareShareSheet = true
                         }
                     }
+                } label: {
+                    RoundedRectangle(cornerRadius: 6)
+                        .fill(isUrgent ? CultivationTheme.Colors.accentCoral : Color.clear)
+                        .frame(width: 20, height: 20)
+                        .overlay {
+                            RoundedRectangle(cornerRadius: 6)
+                                .stroke(
+                                    isUrgent ? CultivationTheme.Colors.accentCoral : CultivationTheme.Colors.divider,
+                                    lineWidth: 1.5
+                                )
+                        }
+                        .overlay {
+                            if isUrgent {
+                                Image(systemName: "checkmark")
+                                    .font(.system(size: 10, weight: .bold))
+                                    .foregroundStyle(Color.white)
+                            }
+                        }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_button_complete_\(reminder.id.uuidString)")
+                .accessibilityLabel("Complete \(reminder.title)")
+            } else {
+                Image(systemName: "person.fill.checkmark")
+                    .font(.system(size: 14, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    .frame(width: 32, height: 28)
+                    .accessibilityHidden(true)
             }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("home_button_complete_\(reminder.id.uuidString)")
-            .accessibilityLabel("Complete \(reminder.title)")
 
             VStack(alignment: .leading, spacing: 2) {
                 Text(reminder.title.isEmpty ? reminder.reminderType.displayName : reminder.title)
@@ -227,6 +261,14 @@ public struct HomeView: View {
                     .font(CultivationTheme.Fonts.body(11))
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
                     .lineLimit(1)
+
+                if let assignedName = reminder.assignedMemberName {
+                    Text("Assigned to \(assignedName)")
+                        .font(CultivationTheme.Fonts.body(10, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .lineLimit(1)
+                        .accessibilityIdentifier("home_badge_assigned_\(reminder.id.uuidString)")
+                }
             }
             .frame(maxWidth: .infinity, alignment: .leading)
 
@@ -239,12 +281,37 @@ public struct HomeView: View {
                         .fill(CultivationTheme.Colors.backgroundSecondary)
                 )
                 .accessibilityHidden(true)
+
+            if offersRainSkip {
+                Button {
+                    skipReminderForRain(reminder)
+                } label: {
+                    Text("Skip rain")
+                        .font(CultivationTheme.Fonts.body(10, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentSky)
+                        .padding(.horizontal, 8)
+                        .padding(.vertical, 5)
+                        .background(Capsule().fill(CultivationTheme.Colors.accentSky.opacity(0.12)))
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("home_button_skip_rain_\(reminder.id.uuidString)")
+            }
         }
         .padding(.vertical, 10)
         .overlay(alignment: .bottom) {
             if reminder.id != viewModel.visibleCareReminders.last?.id {
                 Divider()
                     .background(CultivationTheme.Colors.divider)
+            }
+        }
+        .contextMenu {
+            if reminder.assignedMemberID != nil, reminder.isAssigned(to: currentMemberID) {
+                Button {
+                    releaseReminderAssignment(reminder)
+                } label: {
+                    Label("Release assignment", systemImage: "person.fill.xmark")
+                }
+                .accessibilityIdentifier("home_context_release_assignment_\(reminder.id.uuidString)")
             }
         }
         .accessibilityIdentifier("home_row_task_\(reminder.id.uuidString)")
@@ -304,6 +371,57 @@ public struct HomeView: View {
         }
     }
 
+    private var currentMemberID: String? {
+        dataService.getCurrentUser()?.id.uuidString
+    }
+
+    private var currentMemberName: String {
+        dataService.getCurrentUser()?.displayName ?? "You"
+    }
+
+    private func claimReminder(_ reminder: PlantReminder) {
+        guard let memberID = currentMemberID else {
+            viewModel.errorMessage = "Create a profile before claiming shared care."
+            return
+        }
+
+        do {
+            try dataService.claimReminder(reminder, memberID: memberID, memberName: currentMemberName)
+        } catch {
+            viewModel.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func releaseReminderAssignment(_ reminder: PlantReminder) {
+        do {
+            try dataService.releaseReminderAssignment(reminder)
+        } catch {
+            viewModel.errorMessage = error.localizedDescription
+        }
+    }
+
+    private func shouldOfferRainSkip(for reminder: PlantReminder) -> Bool {
+        guard reminder.reminderType == .watering,
+              viewModel.weatherAlerts.contains(where: { $0.type == .heavyRain })
+        else { return false }
+        return reminder.nextDueDate <= Date().addingTimeInterval(24 * 60 * 60)
+    }
+
+    private func skipReminderForRain(_ reminder: PlantReminder) {
+        do {
+            try dataService.snoozeReminder(reminder, for: .tomorrow)
+            Task<Void, Never> {
+                await viewModel.load(
+                    dataService: dataService,
+                    locationService: locationService,
+                    notificationService: notificationService
+                )
+            }
+        } catch {
+            viewModel.errorMessage = "Failed to skip watering: \(error.localizedDescription)"
+        }
+    }
+
     // MARK: - Club
 
     private var clubCard: some View {
@@ -314,6 +432,33 @@ public struct HomeView: View {
                 HomeClubPlaceholderCard()
             }
         }
+    }
+
+    private func harvestTotalCard(_ summary: String) -> some View {
+        HStack(spacing: 12) {
+            IconBubble(
+                systemName: "basket.fill",
+                color: CultivationTheme.Colors.accentCoral,
+                size: 42,
+                iconSize: 18
+            )
+
+            VStack(alignment: .leading, spacing: 2) {
+                Text("Harvest")
+                    .font(CultivationTheme.Fonts.body(11, weight: .bold))
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                Text(summary)
+                    .font(CultivationTheme.Fonts.display(15, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    .lineLimit(2)
+            }
+            Spacer()
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+        .accessibilityIdentifier("home_card_harvest_total")
     }
 
     // MARK: - Weather

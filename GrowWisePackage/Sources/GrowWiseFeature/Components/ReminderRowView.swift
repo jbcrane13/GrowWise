@@ -7,6 +7,9 @@ import UIKit
 #endif
 
 public struct ReminderRowView: View {
+    @Environment(DataService.self)
+    private var dataService
+
     let reminder: PlantReminder
     let reminderService: ReminderService
 
@@ -61,24 +64,39 @@ public struct ReminderRowView: View {
                     // Priority indicator
                     priorityIndicator
                 }
+
+                if let assignedName = reminder.assignedMemberName {
+                    Text("Assigned to \(assignedName)")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .accessibilityIdentifier("reminder_badge_assigned_\(reminder.id)")
+                }
             }
 
             Spacer()
 
             // Action buttons
             VStack(spacing: 8) {
-                Button(action: completeReminder) {
-                    if isCompleting {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                    } else {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(CultivationTheme.Colors.statusHealthy)
+                if reminder.canBeCompleted(by: currentMemberID) {
+                    Button(action: completeReminder) {
+                        if isCompleting {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(CultivationTheme.Colors.statusHealthy)
+                        }
                     }
+                    .disabled(isCompleting)
+                    .accessibilityIdentifier("reminder_button_complete_\(reminder.id)")
+                } else {
+                    Image(systemName: "person.fill.checkmark")
+                        .font(.title3)
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        .accessibilityHidden(true)
                 }
-                .disabled(isCompleting)
-                .accessibilityIdentifier("reminder_button_complete_\(reminder.id)")
 
                 Button(action: { showingSnoozeOptions = true }, label: {
                     Image(systemName: "clock.arrow.circlepath")
@@ -188,6 +206,10 @@ public struct ReminderRowView: View {
         }
     }
 
+    private var currentMemberID: String? {
+        dataService.getCurrentUser()?.id.uuidString
+    }
+
     private var priorityIndicator: some View {
         HStack(spacing: 2) {
             ForEach(1 ... reminder.priority.numericValue, id: \.self) { _ in
@@ -205,8 +227,8 @@ public struct ReminderRowView: View {
 
         Task<Void, Never> {
             do {
-                // Mark reminder as completed
-                reminder.markCompleted()
+                // Mark reminder as completed through DataService so shared-care assignment rules apply.
+                try dataService.completeReminder(reminder)
 
                 // Create completion feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)

@@ -157,7 +157,7 @@ public final class PerenualEnrichmentService {
 
     /// Calculates a confidence score (0.0-1.0) based on data completeness from Perenual.
     private func calculateConfidenceScore(for detail: PerenualSpeciesDetail, plant: Plant) -> Double {
-        var score: Double = 0.5 // Base score
+        var score = 0.5 // Base score
 
         // Higher score for complete data
         if detail.description != nil { score += 0.1 }
@@ -207,7 +207,8 @@ public actor PerenualImageCache {
 
     public init(maxCacheSizeMB: Int = 50) {
         self.maxCacheSize = Int64(maxCacheSizeMB) * 1024 * 1024
-        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first!
+        let cacheDir = FileManager.default.urls(for: .cachesDirectory, in: .userDomainMask).first
+            ?? FileManager.default.temporaryDirectory
         self.cacheDirectory = cacheDir.appendingPathComponent("PerenualImages")
 
         // Create cache directory if needed

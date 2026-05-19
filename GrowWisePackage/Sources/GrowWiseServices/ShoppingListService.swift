@@ -168,7 +168,7 @@ public final class ShoppingListService {
     // MARK: - Starter Suggestion Helpers
 
     /// Soil mix tailored to garden type and plant type (seed-starting vs potting vs raised-bed).
-    private func starterSoilItems(for garden: Garden, firstPlant: Plant) -> [ShoppingItem] {
+    private func starterSoilItems(for garden: Garden, firstPlant: Plant) -> [ShoppingItem] { // swiftlint:disable:this cyclomatic_complexity
         let plantType = firstPlant.plantType
 
         // Seedlings and very young plants need seed-starting mix
@@ -179,18 +179,22 @@ public final class ShoppingListService {
                     makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
                     makeItem(name: "Raised bed soil mix", category: .soilAmendments, quantity: "2 bags", garden: garden),
                 ]
+
             case .container, .balcony, .windowsill:
                 return [
                     makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
                     makeItem(name: "Potting soil", category: .soilAmendments, quantity: "1 bag", garden: garden),
                 ]
+
             case .indoor:
                 return [
                     makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
                     makeItem(name: "Indoor potting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
                 ]
+
             case .hydroponic:
                 return [makeItem(name: "Hydroponic nutrient solution", category: .soilAmendments, quantity: "1 bottle", garden: garden)]
+
             default:
                 return [makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden)]
             }
@@ -200,12 +204,16 @@ public final class ShoppingListService {
         switch garden.gardenType {
         case .raised:
             return [makeItem(name: "Raised bed soil mix", category: .soilAmendments, quantity: "2 bags", garden: garden)]
+
         case .container, .balcony, .windowsill:
             return [makeItem(name: "Potting soil", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+
         case .indoor:
             return [makeItem(name: "Indoor potting mix", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+
         case .hydroponic:
             return [makeItem(name: "Hydroponic nutrient solution", category: .soilAmendments, quantity: "1 bottle", garden: garden)]
+
         default:
             if garden.soilType == .clay || garden.soilType == .sand {
                 return [makeItem(name: "Compost for soil amendment", category: .soilAmendments, quantity: "1 bag", garden: garden)]
@@ -231,12 +239,15 @@ public final class ShoppingListService {
         case .small:
             containerSize = "6-8 inch pot"
             potCount = "1"
+
         case .medium:
             containerSize = "12-14 inch pot"
             potCount = "1"
+
         case .large:
             containerSize = "large planter (16+ inch)"
             potCount = "1"
+
         case .extraLarge:
             containerSize = "large raised bed or grow bag"
             potCount = "1"
@@ -249,16 +260,18 @@ public final class ShoppingListService {
     private func starterFertilizerItems(for garden: Garden, firstPlant: Plant) -> [ShoppingItem] {
         let plantType = firstPlant.plantType
 
-        let fertilizerName: String
-        switch plantType {
+        let fertilizerName = switch plantType {
         case .vegetable, .fruit:
-            fertilizerName = "Vegetable & herb fertilizer"
+            "Vegetable & herb fertilizer"
+
         case .flower:
-            fertilizerName = "Bloom fertilizer"
+            "Bloom fertilizer"
+
         case .herb:
-            fertilizerName = "Herbal fertilizer"
+            "Herbal fertilizer"
+
         default:
-            fertilizerName = "All-purpose fertilizer"
+            "All-purpose fertilizer"
         }
 
         // Indoor gardens may need different formulation

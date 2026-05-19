@@ -75,4 +75,97 @@ struct DataServiceGardenClubTests {
         #expect(activity.clubID != firstClub.id)
         #expect(activity.photoURL == photoURL)
     }
+
+    @Test("sharePlant marks plant as shared with club and unshare keeps owner plant private")
+    func sharePlantAndUnsharePlant() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        let club = try service.createClub(name: "Backyard Growers", ownerID: user.id.uuidString)
+        let plant = try service.createPlant(name: "Tomato", type: .vegetable)
+
+        try service.sharePlant(plant, withClub: club)
+
+        #expect(plant.sharedWithClubID == club.id)
+        #expect(plant.sharedOwnerID == user.id.uuidString)
+        #expect(plant.isReadOnlySharedPlant(for: user.id.uuidString) == false)
+
+        try service.unsharePlant(plant)
+
+        #expect(plant.sharedWithClubID == nil)
+        #expect(plant.sharedOwnerID == nil)
+        #expect(service.fetchPlants().contains { $0.id == plant.id })
+    }
+
+    @Test("completeReminder posts care activity for shared watering fertilizing and pruning")
+    func completeSharedCareReminderPostsClubActivity() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        let club = try service.createClub(name: "Backyard Growers", ownerID: user.id.uuidString)
+        let plant = try service.createPlant(name: "Basil", type: .herb)
+        try service.sharePlant(plant, withClub: club)
+
+        let watering = try service.createReminder(
+            title: "Water Basil",
+            message: "Water your basil",
+            type: .watering,
+            frequency: .daily,
+            dueDate: Date(),
+            plant: plant
+        )
+        let fertilizing = try service.createReminder(
+            title: "Feed Basil",
+            message: "Feed your basil",
+            type: .fertilizing,
+            frequency: .weekly,
+            dueDate: Date(),
+            plant: plant
+        )
+        let pruning = try service.createReminder(
+            title: "Prune Basil",
+            message: "Prune your basil",
+            type: .pruning,
+            frequency: .weekly,
+            dueDate: Date(),
+            plant: plant
+        )
+
+        try service.completeReminder(watering)
+        try service.completeReminder(fertilizing)
+        try service.completeReminder(pruning)
+
+        let activityTypes = try service.fetchClubActivities(for: club.id ?? UUID()).compactMap(\.activityType)
+        #expect(activityTypes.contains("watered"))
+        #expect(activityTypes.contains("fertilized"))
+        #expect(activityTypes.contains("pruned"))
+    }
+
+    @Test("claimed shared reminders can only be completed by the assignee")
+    func claimedSharedReminderCompletionRequiresAssignee() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        let club = try service.createClub(name: "Backyard Growers", ownerID: user.id.uuidString)
+        let plant = try service.createPlant(name: "Rosemary", type: .herb)
+        try service.sharePlant(plant, withClub: club)
+        let reminder = try service.createReminder(
+            title: "Water Rosemary",
+            message: "Water your rosemary",
+            type: .watering,
+            frequency: .daily,
+            dueDate: Date(),
+            plant: plant
+        )
+
+        try service.claimReminder(reminder, memberID: "member-2", memberName: "Alice")
+
+        #expect(throws: ReminderAssignmentError.notAssignedToCurrentMember) {
+            try service.completeReminder(reminder)
+        }
+
+        try service.releaseReminderAssignment(reminder)
+        try service.claimReminder(reminder, memberID: user.id.uuidString, memberName: "Owner")
+        try service.completeReminder(reminder)
+
+        #expect(reminder.assignedMemberID == nil)
+        #expect(reminder.assignedMemberName == nil)
+    }
 }

@@ -2,7 +2,10 @@ import GrowWiseModels
 import GrowWiseServices
 import SwiftUI
 
-struct PlantDetailView: View {
+// SwiftLint suppression for 1.1 plant-detail collaboration actions; splitting the view is a fast-follow refactor.
+// swiftlint:disable file_length
+
+struct PlantDetailView: View { // swiftlint:disable:this type_body_length
     let plant: Plant
 
     @Environment(\.dismiss)
@@ -43,6 +46,7 @@ struct PlantDetailView: View {
                     statRow
                     PerenualEnrichmentCard(plant: plant)
                     actionButtons
+                    harvestHistoryStrip
                     adviceCard
                     photoJournalStrip
                 }
@@ -79,7 +83,9 @@ struct PlantDetailView: View {
             CommonPlantIssuesView(plant: plant)
         }
         .sheet(isPresented: $showingLogHarvest) {
-            LogHarvestSheet(plant: plant)
+            LogHarvestSheet(plant: plant) {
+                harvests = dataService.fetchHarvests(for: plant)
+            }
         }
         .alert("Delete Plant", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -246,6 +252,57 @@ struct PlantDetailView: View {
         }
     }
 
+    // MARK: - Harvest History
+
+    @ViewBuilder private var harvestHistoryStrip: some View {
+        if !harvests.isEmpty {
+            VStack(alignment: .leading, spacing: 10) {
+                Text("Harvest history")
+                    .font(CultivationTheme.Fonts.body(11, weight: .bold))
+                    .tracking(1.4)
+                    .textCase(.uppercase)
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(harvests, id: \.id) { harvest in
+                            harvestChip(harvest)
+                        }
+                    }
+                    .padding(.vertical, 2)
+                }
+            }
+            .accessibilityIdentifier("plantdetail_harvest_history")
+        }
+    }
+
+    private func harvestChip(_ harvest: Harvest) -> some View {
+        let quantity = harvest.quantity ?? 0
+        let unit = harvest.unit ?? .pieces
+        let quantityText = quantity.formatted(.number.precision(.fractionLength(0 ... 1)))
+
+        return VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: harvest.photoURL == nil ? "basket.fill" : "photo.fill")
+                .font(.system(size: 18, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.accentCoral)
+
+            Text("\(quantityText) \(unit.displayNamePlural)")
+                .font(CultivationTheme.Fonts.display(14, weight: .medium))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+            Text((harvest.date ?? Date()).formatted(date: .abbreviated, time: .omitted))
+                .font(CultivationTheme.Fonts.body(10))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+        }
+        .frame(width: 128, alignment: .leading)
+        .padding(12)
+        .background(
+            RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                .fill(CultivationTheme.Colors.backgroundSecondary)
+        )
+        .accessibilityIdentifier("plantdetail_harvest_\(harvest.id?.uuidString ?? "unknown")")
+    }
+
     // MARK: - Advice Card
 
     private var adviceCard: some View {
@@ -323,29 +380,73 @@ struct PlantDetailView: View {
 }
 
 // MARK: - Toolbar + Actions
+
 extension PlantDetailView {
-    @ToolbarContentBuilder
-    var toolbarContent: some ToolbarContent {
+    private var isReadOnlySharedPlant: Bool {
+        plant.isReadOnlySharedPlant(for: dataService.getCurrentUser()?.id.uuidString)
+    }
+
+    @ToolbarContentBuilder var toolbarContent: some ToolbarContent {
         ToolbarItem(placement: .primaryAction) {
             Menu {
-                Button("Assign to Garden") { showingAssignGarden = true }
+                if let primaryClub {
+                    if plant.isSharedWithClub {
+                        Button {
+                            unsharePlantFromClub()
+                        } label: {
+                            Label("Stop sharing care", systemImage: "person.3.sequence.fill")
+                        }
+                        .accessibilityIdentifier("plantdetail_button_unshare_care")
+                    } else {
+                        Button {
+                            sharePlantWithPrimaryClub(primaryClub)
+                        } label: {
+                            Label("Share care with \(primaryClub.name ?? "club")", systemImage: "person.3.fill")
+                        }
+                        .accessibilityIdentifier("plantdetail_button_share_care")
+                    }
 
-                Button {
-                    showMovePlant = true
-                } label: {
-                    Label("Move to…", systemImage: "arrow.triangle.2.circlepath")
+                    Divider()
                 }
-                .accessibilityIdentifier("plantdetail_button_move")
 
-                Divider()
+                if !isReadOnlySharedPlant {
+                    Button("Assign to Garden") { showingAssignGarden = true }
 
-                Button("Delete Plant", role: .destructive) {
-                    showingDeleteConfirmation = true
+                    Button {
+                        showMovePlant = true
+                    } label: {
+                        Label("Move to…", systemImage: "arrow.triangle.2.circlepath")
+                    }
+                    .accessibilityIdentifier("plantdetail_button_move")
+
+                    Divider()
+
+                    Button("Delete Plant", role: .destructive) {
+                        showingDeleteConfirmation = true
+                    }
+                } else {
+                    Label("Shared read-only", systemImage: "lock.fill")
                 }
             } label: {
                 Image(systemName: "ellipsis")
             }
             .accessibilityIdentifier("plantdetail_button_menu")
+        }
+    }
+
+    func sharePlantWithPrimaryClub(_ club: GardenClub) {
+        do {
+            try dataService.sharePlant(plant, withClub: club)
+        } catch {
+            deleteError = error
+        }
+    }
+
+    func unsharePlantFromClub() {
+        do {
+            try dataService.unsharePlant(plant)
+        } catch {
+            deleteError = error
         }
     }
 
