@@ -44,6 +44,8 @@ public final class Plant {
     public var companionPlants: [String]?
     @Relationship(deleteRule: .cascade, inverse: \SoilLog.plant)
     public var soilLogs: [SoilLog]?
+    @Relationship(deleteRule: .cascade, inverse: \Harvest.plant)
+    public var harvests: [Harvest]?
 
     public init(
         name: String,
@@ -66,8 +68,9 @@ public final class Plant {
         photoURLs = []
         reminders = []
         journalEntries = []
-        companionPlants = [] as [String]
+        companionPlants = []
         soilLogs = []
+        harvests = []
     }
 }
 

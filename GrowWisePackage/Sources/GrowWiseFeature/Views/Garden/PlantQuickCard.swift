@@ -9,7 +9,7 @@ struct PlantQuickCard: View {
     let plant: Plant
     let onWater: () -> Void
     let onPrune: () -> Void
-    let onLog: () -> Void
+    let onHarvest: () -> Void
     let onViewDetails: () -> Void
 
     var body: some View {
@@ -131,7 +131,7 @@ struct PlantQuickCard: View {
                     label: "Log",
                     icon: "square.and.pencil",
                     id: "quickcard_button_log",
-                    action: onLog
+                    action: onHarvest
                 )
             }
         }

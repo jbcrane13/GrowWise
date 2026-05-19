@@ -24,6 +24,7 @@ struct GardenDetailView: View {
     @State private var showCreateBed = false
     @State private var showShoppingList = false
     @State private var plantToNavigate: Plant?
+    @State private var plantToHarvest: Plant?
     @State private var alertCount: Int = 0
     @State private var isLoading = true
     @State private var showRecommendedPlants = false
@@ -150,7 +151,13 @@ struct GardenDetailView: View {
                 plant: plant,
                 onWater: { selectedPlant = nil },
                 onPrune: { selectedPlant = nil },
-                onLog: { selectedPlant = nil },
+                onHarvest: {
+                    selectedPlant = nil
+                    Task { @MainActor in
+                        try? await Task.sleep(for: .milliseconds(300))
+                        plantToHarvest = plant
+                    }
+                },
                 onViewDetails: {
                     let captured = plant
                     selectedPlant = nil
@@ -160,8 +167,9 @@ struct GardenDetailView: View {
                     }
                 }
             )
-            .presentationDetents([.medium, .large])
-            .presentationDragIndicator(.hidden)
+            .sheet(item: $plantToHarvest) { plant in
+                LogHarvestSheet(plant: plant)
+            }
         }
         .sheet(isPresented: $showRecommendedPlants) {
             RecommendedPlantsView(garden: garden)
