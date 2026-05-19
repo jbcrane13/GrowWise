@@ -180,11 +180,13 @@ struct StarterRoadmapServiceTests {
         #expect(firstTitle.contains("garden"))
     }
 
-    @Test("garden space size shapes the roadmap")
+    @Test("garden space size shapes the roadmap in isolation")
     func gardenSpaceSizeShapesTheRoadmap() {
         let user = makeUser(skillLevel: .beginner, goals: [.growFood])
-        let tinyGarden = makeGarden(type: .windowsill, isIndoor: true, space: .tiny)
-        let largeGarden = makeGarden(type: .outdoor, isIndoor: false, space: .large)
+        // Hold gardenType and isIndoor constant so any roadmap difference
+        // can only be attributed to Garden.spaceAvailable.
+        let tinyGarden = makeGarden(type: .container, isIndoor: false, space: .tiny)
+        let largeGarden = makeGarden(type: .container, isIndoor: false, space: .large)
         let tinyPlant = makePlant(named: "Basil", in: tinyGarden)
         let largePlant = makePlant(named: "Basil", in: largeGarden)
 
@@ -208,7 +210,7 @@ struct StarterRoadmapServiceTests {
 
         let tinyHasSmallSpaceGuidance = tinyTexts.contains { text in
             text.contains("small") || text.contains("compact") ||
-                text.contains("container") || text.contains("limited")
+                text.contains("tight") || text.contains("limited")
         }
         #expect(tinyHasSmallSpaceGuidance)
 
