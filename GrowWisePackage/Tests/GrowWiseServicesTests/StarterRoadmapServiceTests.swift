@@ -183,26 +183,27 @@ struct StarterRoadmapServiceTests {
     @Test("garden space size shapes the roadmap in isolation")
     func gardenSpaceSizeShapesTheRoadmap() {
         let user = makeUser(skillLevel: .beginner, goals: [.growFood])
-        // Hold gardenType and isIndoor constant so any roadmap difference
-        // can only be attributed to Garden.spaceAvailable.
+        // Hold gardenType, isIndoor, and referenceDate constant so any
+        // roadmap difference can only be attributed to Garden.spaceAvailable.
         let tinyGarden = makeGarden(type: .container, isIndoor: false, space: .tiny)
         let largeGarden = makeGarden(type: .container, isIndoor: false, space: .large)
         let tinyPlant = makePlant(named: "Basil", in: tinyGarden)
         let largePlant = makePlant(named: "Basil", in: largeGarden)
+        let referenceDate = Date()
 
         let tinyRoadmap = StarterRoadmapService.build(
             user: user,
             gardens: [tinyGarden],
             plants: [tinyPlant],
             reminders: [],
-            referenceDate: Date()
+            referenceDate: referenceDate
         )
         let largeRoadmap = StarterRoadmapService.build(
             user: user,
             gardens: [largeGarden],
             plants: [largePlant],
             reminders: [],
-            referenceDate: Date()
+            referenceDate: referenceDate
         )
 
         let tinyTexts = tinyRoadmap.steps.map { ($0.title + " " + $0.detail).lowercased() }
