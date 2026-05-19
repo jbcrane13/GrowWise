@@ -94,7 +94,7 @@ struct EnvironmentSetupView: View {
                             userProfile.indoorLightAvailability = level
                         }
                     }
-                    .accessibilityIdentifier("onboarding_light_\\(level.rawValue)")
+                    .accessibilityIdentifier("onboarding_light_\(level.rawValue)")
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
