@@ -185,6 +185,34 @@ public final class NotificationService: NSObject {
         try await notificationCenter.add(request)
     }
 
+    /// Schedule a local push notification for a weather alert (frost, heat, heavy rain).
+    /// Call from `HomeViewModel.load` or a background refresh task.
+    public func scheduleWeatherAlertNotification(_ alert: WeatherAlert) async {
+        guard isAuthorized, let notificationCenter else { return }
+        guard !alert.isExpired else { return }
+
+        let content = UNMutableNotificationContent()
+        content.title = alert.title
+        content.body = alert.message
+        content.sound = .default
+        content.badge = NSNumber(value: badgeCount + 1)
+        content.userInfo = ["weatherAlertId": alert.id.uuidString, "weatherAlertType": alert.type.rawValue]
+
+        // Deliver immediately (or in 5 minutes if app is in foreground)
+        let trigger = UNTimeIntervalNotificationTrigger(timeInterval: 60, repeats: false)
+        let request = UNNotificationRequest(
+            identifier: "weather-\(alert.id.uuidString)",
+            content: content,
+            trigger: trigger
+        )
+
+        do {
+            try await notificationCenter.add(request)
+        } catch {
+            logger.error("Failed to schedule weather alert: \(error.localizedDescription)")
+        }
+    }
+
     public func getPendingNotifications() async -> [PendingNotificationInfo] {
         let requests = await notificationCenter?.pendingNotificationRequests() ?? []
         return requests.map {

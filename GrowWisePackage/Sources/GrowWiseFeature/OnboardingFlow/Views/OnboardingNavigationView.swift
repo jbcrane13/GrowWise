@@ -31,7 +31,7 @@ struct OnboardingNavigationView: View {
 
     private var canProceed: Bool {
         switch currentStep {
-        case .welcome, .skillAssessment, .gardenSetup, .location, .notifications, .firstPlant, .completion:
+        case .welcome, .skillAssessment, .gardenSetup, .environmentSetup, .location, .notifications, .firstPlant, .completion:
             true
 
         case .goals:

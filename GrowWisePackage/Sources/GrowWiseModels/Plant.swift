@@ -24,6 +24,9 @@ public final class Plant {
     public var lastPruned: Date? // CloudKit: made optional or with default value
     public var healthStatus: HealthStatus? = HealthStatus.healthy // CloudKit: made optional or with default value
 
+    /// Frost sensitivity — used for weather alert filtering. nil = unknown.
+    public var frostSensitivity: FrostSensitivity? // CloudKit: made optional or with default value
+
     // User notes and photos
     public var notes: String? = "" // CloudKit: made optional or with default value
     public var photoURLs: [String]? = [] // CloudKit: made optional or with default value
@@ -58,6 +61,7 @@ public final class Plant {
         spaceRequirement = .small
         growthStage = .seedling
         healthStatus = .healthy
+        frostSensitivity = nil
         notes = ""
         photoURLs = []
         reminders = []
@@ -257,6 +261,29 @@ public enum ContainerType: String, CaseIterable, Codable, Sendable {
         case .windowBox: "Window Box"
         case .greenhouse: "Greenhouse"
         case .indoor: "Indoor"
+        }
+    }
+}
+
+public enum FrostSensitivity: String, CaseIterable, Codable, Sendable {
+    case hardy            // Survives heavy frost (below 25°F / -4°C)
+    case semiHardy        // Survives light frost (25–32°F / -4 to 0°C)
+    case tender           // Damaged by frost above 32°F / 0°C
+
+    public var displayName: String {
+        switch self {
+        case .hardy: "Hardy"
+        case .semiHardy: "Semi-hardy"
+        case .tender: "Tender"
+        }
+    }
+
+    /// Temperature threshold in °F below which damage occurs. nil = no threshold.
+    public var damageThresholdFahrenheit: Double? {
+        switch self {
+        case .hardy: 25.0
+        case .semiHardy: 32.0
+        case .tender: 50.0
         }
     }
 }

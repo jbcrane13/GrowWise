@@ -15,6 +15,8 @@ public struct HomeView: View {
     private var locationService
     @Environment(AppRouter.self)
     private var router
+    @Environment(NotificationService.self)
+    private var notificationService
 
     @State private var viewModel = HomeViewModel()
     @State private var showCareShareSheet = false
@@ -49,6 +51,11 @@ public struct HomeView: View {
                     .accessibilityIdentifier("home_card_club")
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
 
+                    ForEach(viewModel.weatherAlerts) { alert in
+                        WeatherAlertCard(alert: alert)
+                            .accessibilityIdentifier("home_weather_alert_\(alert.id.uuidString)")
+                    }
+
                     SeasonalTipCard()
                         .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                         .padding(.bottom, CultivationTheme.Spacing.sectionGap)
@@ -63,10 +70,10 @@ public struct HomeView: View {
             }
             .toolbarBackground(.hidden)
             .task {
-                await viewModel.load(dataService: dataService)
+                await viewModel.load(dataService: dataService, notificationService: notificationService)
             }
             .refreshable {
-                await viewModel.load(dataService: dataService)
+                await viewModel.load(dataService: dataService, notificationService: notificationService)
             }
             .background(CultivationTheme.Colors.background)
             .alert(

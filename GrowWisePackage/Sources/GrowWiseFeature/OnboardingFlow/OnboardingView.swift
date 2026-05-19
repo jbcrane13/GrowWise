@@ -47,6 +47,9 @@ public struct OnboardingView: View {
                         GardenSetupView(userProfile: $userProfile)
                             .tag(OnboardingStep.gardenSetup)
 
+                        EnvironmentSetupView(userProfile: $userProfile)
+                            .tag(OnboardingStep.environmentSetup)
+
                         LocationSetupView(userProfile: $userProfile)
                             .tag(OnboardingStep.location)
 
@@ -94,6 +97,7 @@ public enum OnboardingStep: String, CaseIterable {
     case skillAssessment
     case goals
     case gardenSetup
+    case environmentSetup
     case location
     case notifications
     case firstPlant
@@ -105,6 +109,7 @@ public enum OnboardingStep: String, CaseIterable {
         case .skillAssessment: "Experience"
         case .goals: "Goals"
         case .gardenSetup: "Setup"
+        case .environmentSetup: "Environment"
         case .location: "Location"
         case .notifications: "Reminders"
         case .firstPlant: "First Plant"
@@ -137,6 +142,21 @@ public struct UserProfile {
     var preferredNotificationTime: Date = Calendar.current.date(from: DateComponents(hour: 9)) ?? Date()
     var selectedFirstPlantName: String?
     var selectedFirstPlantID: UUID?
+
+    // MARK: - Indoor Environment
+    var indoorLightAvailability: LightAvailability = .medium
+    var indoorRoomTemp: Bool = false
+    var hasPetsInHome: Bool = false
+
+    // MARK: - Outdoor Environment
+    var hardinessZone: String = ""
+    var sunExposure: SunExposure = .fullSun
+    var hasFrostProtection: Bool = false
+
+    // MARK: - Hydroponic Environment
+    var hydroponicSystemType: HydroponicSystemType = .dwc
+    var nutrientSchedule: Double = 0.5
+    var phRange: ClosedRange<Double> = 5.5...6.5
 }
 
 public enum GardeningGoal: String, CaseIterable, Identifiable {
@@ -192,6 +212,36 @@ public enum GardeningGoal: String, CaseIterable, Identifiable {
         case .relaxation: CultivationTheme.Colors.brandForest
         case .sustainability: CultivationTheme.Colors.brandLeaf
         case .healingGarden: Color(red: 0.882, green: 0.380, blue: 0.459)
+        }
+    }
+}
+
+public enum LightAvailability: String, CaseIterable, Codable, Sendable {
+    case low
+    case medium
+    case high
+    case artificial
+
+    var displayName: String {
+        switch self {
+        case .low: "Low (North-facing / dim)"
+        case .medium: "Medium (East/West-facing)"
+        case .high: "High (South-facing / bright)"
+        case .artificial: "Artificial Grow Lights"
+        }
+    }
+}
+
+public enum HydroponicSystemType: String, CaseIterable, Codable, Sendable {
+    case dwc
+    case nft
+    case drip
+
+    var displayName: String {
+        switch self {
+        case .dwc: "DWC (Deep Water Culture)"
+        case .nft: "NFT (Nutrient Film Technique)"
+        case .drip: "Drip System"
         }
     }
 }

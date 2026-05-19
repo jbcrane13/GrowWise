@@ -31,6 +31,9 @@ final class HomeViewModel {
     /// Most-recent ClubActivity across all clubs. Displayed in the Home "Your Club" card.
     var latestClubPost: ClubActivity?
 
+    /// Active weather alerts from LocationService, surfaced on Home.
+    var weatherAlerts: [WeatherAlert] = []
+
     /// IDs of reminders the user has tapped "Done" on — used to filter them
     /// from the list with a slide-away animation before the next data reload.
     var completedIDs: Set<UUID> = []
@@ -74,7 +77,7 @@ final class HomeViewModel {
 
     // MARK: - Load
 
-    func load(dataService: DataService) async {
+    func load(dataService: DataService, notificationService: NotificationService? = nil) async {
         isLoading = true
 
         // Resolve user display name
@@ -131,6 +134,18 @@ final class HomeViewModel {
         }
 
         isLoading = false
+
+        // Load weather alerts
+        let locationService = LocationService()
+        locationService.requestLocation()
+        weatherAlerts = locationService.checkForWeatherAlerts()
+
+        // Schedule local notifications for weather alerts
+        if let notificationService {
+            for alert in weatherAlerts {
+                await notificationService.scheduleWeatherAlertNotification(alert)
+            }
+        }
     }
 
     // MARK: - Complete
