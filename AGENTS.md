@@ -312,3 +312,11 @@ Before ending a session:
 ## Activity — 2026-05-11
 - 1acc15f chore(deps): bump github.com/amplitude/amplitude-swift
 - 09b3be2 chore(deps): bump github.com/getsentry/sentry-cocoa in /GrowWisePackage
+
+## Activity — 2026-05-15
+- 02eafa7 chore: bump build to 1777745189 (1777745188 already on TestFlight)
+- c2d347b chore: bump build to 1777745188 for TestFlight
+- c8ddb95 fix: address 1.0 release blockers
+
+## Activity — 2026-05-18
+- (no commits)
