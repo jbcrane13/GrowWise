@@ -791,13 +791,16 @@ public final class DataService {
         let result: [Harvest]
         do {
             let descriptor = FetchDescriptor<Harvest>(
+                predicate: #Predicate<Harvest> { harvest in
+                    if let date = harvest.date {
+                        return date >= startDate && date <= endDate
+                    } else {
+                        return false
+                    }
+                },
                 sortBy: [.init(\.date, order: .reverse)]
             )
-            let allHarvests = try mainContext.fetch(descriptor)
-            result = allHarvests.filter {
-                guard let date = $0.date else { return false }
-                return date >= startDate && date <= endDate
-            }
+            result = try mainContext.fetch(descriptor)
         } catch {
             logger.error("[DataService] Failed to fetch seasonal harvests: \(error.localizedDescription, privacy: .public)")
             result = []
