@@ -647,6 +647,7 @@ public final class DataService {
     }
 
     public func snoozeReminder(_ reminder: PlantReminder, for duration: SnoozeDuration) throws {
+        try assertReminderCompletionAllowed(reminder)
         reminder.snooze(for: duration)
         try mainContext.save()
         invalidateReminderCaches()
