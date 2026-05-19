@@ -807,12 +807,17 @@ public final class DataService {
     }
 
     public func deleteHarvest(_ harvest: Harvest) throws {
-        if let plant = harvest.plant, let plantId = plant.id {
-            mainContext.delete(harvest)
-            try mainContext.save()
+        let plantId = harvest.plant?.id
+
+        mainContext.delete(harvest)
+        try mainContext.save()
+
+        if let plantId {
             cache.invalidate("harvest:plant:\(plantId.uuidString)")
-            cache.invalidate("harvest:seasonal")
+        } else {
+            cache.invalidate("harvest:plant:")
         }
+        cache.invalidate("harvest:seasonal")
     }
 
     // MARK: - Search and Filter
