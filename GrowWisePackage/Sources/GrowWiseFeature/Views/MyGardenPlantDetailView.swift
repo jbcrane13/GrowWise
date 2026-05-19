@@ -205,7 +205,6 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
         VStack(spacing: 10) {
             HStack(spacing: 8) {
                 Button("Log care") {
-                    guard !isReadOnlySharedPlant else { return }
                     showingReminderView = true
                 }
                 .buttonStyle(GradientButtonStyle())
@@ -213,7 +212,6 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
                 .accessibilityIdentifier("plantdetail_button_log_care")
 
                 Button("Log harvest") {
-                    guard !isReadOnlySharedPlant else { return }
                     showingLogHarvest = true
                 }
                 .buttonStyle(CoralButtonStyle())
@@ -229,7 +227,6 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
                 .accessibilityIdentifier("plantdetail_button_get_advice")
 
                 Button {
-                    guard !isReadOnlySharedPlant else { return }
                     showingShareToClub = true
                 } label: {
                     HStack(spacing: 8) {
