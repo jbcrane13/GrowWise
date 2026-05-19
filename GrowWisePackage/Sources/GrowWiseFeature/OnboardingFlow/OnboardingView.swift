@@ -237,7 +237,7 @@ public enum HydroponicSystemType: String, CaseIterable, Codable, Sendable {
     case nft
     case drip
 
-    var displayName: String {
+    public var displayName: String {
         switch self {
         case .dwc: "DWC (Deep Water Culture)"
         case .nft: "NFT (Nutrient Film Technique)"

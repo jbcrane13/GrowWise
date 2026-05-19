@@ -21,6 +21,7 @@ public struct HomeView: View {
     @State private var viewModel = HomeViewModel()
     @State private var showCareShareSheet = false
     @State private var careShareCaption = ""
+    @State private var showSeasonalPlanner = false
 
     public init() {}
 
@@ -56,9 +57,19 @@ public struct HomeView: View {
                             .accessibilityIdentifier("home_weather_alert_\(alert.id.uuidString)")
                     }
 
-                    SeasonalTipCard()
-                        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
-                        .padding(.bottom, CultivationTheme.Spacing.sectionGap)
+                    if !viewModel.readyToPlantSeeds.isEmpty {
+                        SeedStartCard(seeds: viewModel.readyToPlantSeeds, zone: viewModel.hardinessZone)
+                            .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    }
+
+                    Button {
+                        showSeasonalPlanner = true
+                    } label: {
+                        SeasonalTipCard()
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                 }
             }
             .accessibilityIdentifier("home_screen")
@@ -91,6 +102,11 @@ public struct HomeView: View {
             .sheet(isPresented: $showCareShareSheet) {
                 ClubShareComposerSheet(initialCaption: careShareCaption)
                     .environment(dataService)
+            }
+            .sheet(isPresented: $showSeasonalPlanner) {
+                SeasonalPlannerView()
+                    .environment(dataService)
+                    .environment(locationService)
             }
             .accessibilityIdentifier("home_screen")
         }
