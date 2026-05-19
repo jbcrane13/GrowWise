@@ -1,0 +1,9 @@
+{
+  "tasks": {
+    "markdown:docs/PRD-issue-287.md:7": {
+      "count": 1,
+      "last": "2026-05-19T03:38:55.678Z",
+      "title": "Implement [1.1 fast follow] Ambitious onboarding and personalization scope deferred from 1.0 to pass tests"
+    }
+  }
+}
