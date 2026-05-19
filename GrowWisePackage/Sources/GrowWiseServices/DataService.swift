@@ -769,10 +769,12 @@ public final class DataService {
 
         let result: [Harvest]
         do {
-            let descriptor = FetchDescriptor<Harvest>(
+            var descriptor = FetchDescriptor<Harvest>(
                 predicate: #Predicate { $0.plant?.id == plantId },
                 sortBy: [.init(\.date, order: .reverse)]
             )
+            descriptor.fetchOffset = offset
+            descriptor.fetchLimit = limit
             result = try mainContext.fetch(descriptor)
         } catch {
             logger.error("[DataService] Failed to fetch harvests: \(error.localizedDescription, privacy: .public)")
