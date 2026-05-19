@@ -16,27 +16,27 @@ public enum RecommendationReason: String, CaseIterable, Codable, Sendable {
 
     public var displayText: String {
         switch self {
-        case .goalFit: return "Goal Fit"
-        case .seasonFit: return "Season Fit"
-        case .climateFit: return "Climate Match"
-        case .companionStrategy: return "Companion"
-        case .maintenanceBurden: return "Low Maintenance"
-        case .petSafety: return "Pet Safe"
-        case .humanSafety: return "Safe to Eat"
-        case .spaceConstraint: return "Space Fit"
+        case .goalFit: "Goal Fit"
+        case .seasonFit: "Season Fit"
+        case .climateFit: "Climate Match"
+        case .companionStrategy: "Companion"
+        case .maintenanceBurden: "Low Maintenance"
+        case .petSafety: "Pet Safe"
+        case .humanSafety: "Safe to Eat"
+        case .spaceConstraint: "Space Fit"
         }
     }
 
     public var icon: String {
         switch self {
-        case .goalFit: return "target"
-        case .seasonFit: return "calendar"
-        case .climateFit: return "thermometer.medium"
-        case .companionStrategy: return "leaf.fill"
-        case .maintenanceBurden: return "clock"
-        case .petSafety: return "pawprint.fill"
-        case .humanSafety: return "fork.knife"
-        case .spaceConstraint: return "square.resize"
+        case .goalFit: "target"
+        case .seasonFit: "calendar"
+        case .climateFit: "thermometer.medium"
+        case .companionStrategy: "leaf.fill"
+        case .maintenanceBurden: "clock"
+        case .petSafety: "pawprint.fill"
+        case .humanSafety: "fork.knife"
+        case .spaceConstraint: "square.resize"
         }
     }
 }

@@ -12,7 +12,8 @@ struct CultivationApp: App {
     @State private var perenualAPIService = PerenualAPIService()
     @State private var perenualEnrichmentService: PerenualEnrichmentService?
 
-    @Environment(\.scenePhase) private var scenePhase
+    @Environment(\.scenePhase)
+    private var scenePhase
     private let analyticsTracker = OnboardingAnalyticsTracker.shared
 
     init() {

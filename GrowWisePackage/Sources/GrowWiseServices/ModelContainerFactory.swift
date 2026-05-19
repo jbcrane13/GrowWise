@@ -204,6 +204,7 @@ public struct ModelContainerFactory {
             ClubActivity.self,
             ClubMessage.self,
             ClubEvent.self,
+            Harvest.self,
         ] as [any PersistentModel.Type])
     }
 }

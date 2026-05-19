@@ -34,6 +34,9 @@ final class HomeViewModel {
     /// Active weather alerts from LocationService, surfaced on Home.
     var weatherAlerts: [WeatherAlert] = []
 
+    /// Lightweight current-month harvest total for the Home dashboard.
+    var monthlyHarvestSummary: String?
+
     /// IDs of reminders the user has tapped "Done" on — used to filter them
     /// from the list with a slide-away animation before the next data reload.
     var completedIDs: Set<UUID> = []
@@ -116,6 +119,8 @@ final class HomeViewModel {
             errorMessage = "Failed to load starter plan: \(error.localizedDescription)"
         }
 
+        monthlyHarvestSummary = Self.currentMonthHarvestSummary(dataService: dataService)
+
         // Resolve ready-to-plant seeds
         let user = dataService.getCurrentUser()
         hardinessZone = user?.hardinessZone
@@ -152,6 +157,27 @@ final class HomeViewModel {
                 await notificationService.scheduleWeatherAlertNotification(alert)
             }
         }
+    }
+
+    private static func currentMonthHarvestSummary(dataService: DataService) -> String? {
+        let calendar = Calendar.current
+        let now = Date()
+        guard let start = calendar.date(from: calendar.dateComponents([.year, .month], from: now)),
+              let end = calendar.date(byAdding: .month, value: 1, to: start)
+        else { return nil }
+
+        let harvests = dataService.fetchSeasonalHarvests(startDate: start, endDate: end)
+        guard !harvests.isEmpty else { return nil }
+
+        let totalPieces = harvests
+            .filter { ($0.unit ?? .pieces) == .pieces }
+            .reduce(0) { $0 + ($1.quantity ?? 0) }
+        if totalPieces > 0 {
+            let formatted = totalPieces.formatted(.number.precision(.fractionLength(0 ... 1)))
+            return "\(formatted) pieces harvested this month"
+        }
+        let suffix = harvests.count == 1 ? "" : "s"
+        return "\(harvests.count) harvest\(suffix) logged this month"
     }
 
     // MARK: - Complete

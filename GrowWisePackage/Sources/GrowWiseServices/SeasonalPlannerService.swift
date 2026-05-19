@@ -8,6 +8,7 @@ import GrowWiseModels
 
 public enum SeasonalActivity: String, Sendable, CaseIterable {
     case startIndoors
+    case directSow
     case transplant
     case activeGrowing
     case harvest
@@ -18,6 +19,7 @@ public enum SeasonalActivity: String, Sendable, CaseIterable {
     public var displayName: String {
         switch self {
         case .startIndoors: "Start Seeds Indoors"
+        case .directSow: "Direct Sow"
         case .transplant: "Transplant Outdoors"
         case .activeGrowing: "Prime Growing"
         case .harvest: "Harvest Window"
@@ -30,6 +32,7 @@ public enum SeasonalActivity: String, Sendable, CaseIterable {
     public var icon: String {
         switch self {
         case .startIndoors: "light.recessed.3.fill"
+        case .directSow: "sun.max.fill"
         case .transplant: "arrow.up.right.and.arrow.down.left.rectangle.fill"
         case .activeGrowing: "leaf.fill"
         case .harvest: "basket.fill"
@@ -175,17 +178,25 @@ public final class SeasonalPlannerService {
     ) -> [PlantActivity] {
         var activities = getMonthlyActivities(for: month, plants: plants, zone: zone)
 
-        guard let frostDate = FrostDate.forZone(zone) else {
-            return activities
-        }
-
         let calendar = Calendar.current
         let year = calendar.component(.year, from: Date())
+        let frostDate = FrostDate.forZone(zone)
 
         for seed in seeds {
-            guard let indoorWeeks = seed.indoorStartWeeks, indoorWeeks > 0,
-                  let varietyName = seed.varietyName, !varietyName.isEmpty
+            guard let varietyName = seed.varietyName, !varietyName.isEmpty
             else { continue }
+
+            if let directSowMonths = seed.directSowMonths, directSowMonths.contains(month) {
+                activities.append(PlantActivity(
+                    plantName: varietyName,
+                    activityType: .directSow,
+                    description: "Direct sow \(varietyName) outdoors this month",
+                    icon: SeasonalActivity.directSow.icon
+                ))
+            }
+
+            guard let indoorWeeks = seed.indoorStartWeeks, indoorWeeks > 0 else { continue }
+            guard let frostDate else { continue }
 
             // Build a Date for the last spring frost this year
             guard let frostDateThisYear = calendar.date(from: DateComponents(
@@ -255,7 +266,7 @@ public final class SeasonalPlannerService {
 
         // Only suggest frost prep within 2 weeks before first frost
         guard let windowStart = calendar.date(byAdding: .weekOfYear, value: -2, to: firstFrostThisYear) else { return [] }
-        guard currentDate >= windowStart && currentDate <= firstFrostThisYear else { return [] }
+        guard currentDate >= windowStart, currentDate <= firstFrostThisYear else { return [] }
 
         let tenderTypes: [PlantType] = [.vegetable, .herb, .flower, .houseplant]
         let tenderPlants = plants.filter {

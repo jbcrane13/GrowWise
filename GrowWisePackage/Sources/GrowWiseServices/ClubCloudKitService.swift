@@ -4,7 +4,7 @@ import GrowWiseModels
 import os
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable cyclomatic_complexity function_body_length identifier_name line_length
+// swiftlint:disable cyclomatic_complexity file_length function_body_length identifier_name line_length type_body_length
 
 /// Handles CloudKit sharing for Garden Clubs.
 ///
@@ -49,6 +49,26 @@ public final class ClubCloudKitService {
             gardenName: activity.gardenName ?? "",
             photoURL: activity.photoURL,
             timestamp: activity.timestamp ?? Date()
+        )
+    }
+
+    public static func recordFields(
+        from plant: Plant,
+        club: GardenClub,
+        memberID: String?
+    ) throws -> SharedPlantCloudRecordFields {
+        guard let plantID = plant.id else { throw ClubCloudKitError.missingIdentifier }
+        guard let clubID = club.id ?? plant.sharedWithClubID else { throw ClubCloudKitError.missingIdentifier }
+
+        return SharedPlantCloudRecordFields(
+            recordName: plantID.uuidString,
+            clubID: clubID.uuidString,
+            ownerID: plant.sharedOwnerID ?? memberID ?? "",
+            name: plant.name ?? "",
+            plantType: plant.plantType?.rawValue ?? "",
+            gardenName: plant.garden?.name ?? "",
+            sharedDate: plant.sharedDate ?? Date(),
+            scope: databaseScope(for: club, memberID: memberID)
         )
     }
 
@@ -405,6 +425,38 @@ public final class ClubCloudKitService {
         }
     }
 
+    /// Saves shared-plant metadata into the same club zone used by activities.
+    public func publishSharedPlant(_ plant: Plant, club: GardenClub, memberID: String?) async throws {
+        try await requireAvailableAccount()
+
+        let fields = try Self.recordFields(from: plant, club: club, memberID: memberID)
+        let database = database(for: fields.scope)
+
+        let zoneName = CloudKitSchema.Zone.gardenClub
+        let zoneID = CKRecordZone.ID(zoneName: zoneName, ownerName: CKCurrentUserDefaultName)
+        let recordID = if fields.scope == .ownerPrivate {
+            CKRecord.ID(recordName: fields.recordName, zoneID: zoneID)
+        } else {
+            CKRecord.ID(recordName: fields.recordName)
+        }
+
+        let record = CKRecord(recordType: CloudKitSchema.RecordType.plant, recordID: recordID)
+        record["clubID"] = fields.clubID
+        record["ownerID"] = fields.ownerID
+        record["name"] = fields.name
+        record["plantType"] = fields.plantType
+        record["gardenName"] = fields.gardenName
+        record["sharedDate"] = fields.sharedDate
+
+        do {
+            _ = try await database.save(record)
+            logger.info("Published shared plant \(fields.recordName) to CloudKit")
+        } catch {
+            logger.error("Failed to publish shared plant: \(error.localizedDescription)")
+            throw ClubCloudKitError.saveFailed(error.localizedDescription)
+        }
+    }
+
     private func database(for scope: ClubCloudDatabaseScope) -> CKDatabase {
         switch scope {
         case .ownerPrivate:
@@ -442,6 +494,17 @@ public struct ClubActivityCloudRecordFields: Equatable, Sendable {
     public let gardenName: String
     public let photoURL: String?
     public let timestamp: Date
+}
+
+public struct SharedPlantCloudRecordFields: Equatable, Sendable {
+    public let recordName: String
+    public let clubID: String
+    public let ownerID: String
+    public let name: String
+    public let plantType: String
+    public let gardenName: String
+    public let sharedDate: Date
+    public let scope: ClubCloudDatabaseScope
 }
 
 public enum ClubCloudDatabaseScope: Equatable, Sendable {
@@ -490,4 +553,4 @@ public enum ClubCloudKitError: LocalizedError, Sendable {
     }
 }
 
-// swiftlint:enable cyclomatic_complexity function_body_length identifier_name line_length
+// swiftlint:enable cyclomatic_complexity file_length function_body_length identifier_name line_length type_body_length

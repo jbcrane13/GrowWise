@@ -37,6 +37,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
     @State private var gardenToDelete: Garden?
     @State private var showDeleteConfirmation = false
     @State private var showPlantDatabase = false
+    @State private var showSeasonalPlanner = false
 
     public init() {}
 
@@ -66,6 +67,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                                 gardenPicker
                             }
                             gardenSummaryStrip
+                            seasonalPlannerButton
                             filterChipBar
                             if viewModel.groupedPlants.isEmpty {
                                 emptyState
@@ -76,6 +78,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
                                     ForEach(filteredGroups) { group in
                                         GardenBedSection(
                                             group: group,
+                                            currentMemberID: dataService.getCurrentUser()?.id.uuidString,
                                             onPlantTap: { plant in selectedPlant = plant },
                                             onQuickAction: { _ in },
                                             onDelete: { plant in
@@ -161,6 +164,10 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
             )
             .sheet(isPresented: $showPlantDatabase) {
                 PlantDatabaseView()
+            }
+            .sheet(isPresented: $showSeasonalPlanner) {
+                SeasonalPlannerView()
+                    .environment(dataService)
             }
             .alert("Delete Garden?", isPresented: $showDeleteConfirmation) {
                 Button("Cancel", role: .cancel) {
@@ -280,6 +287,24 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
             RoundedRectangle(cornerRadius: 10)
                 .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
         )
+    }
+
+    private var seasonalPlannerButton: some View {
+        Button {
+            showSeasonalPlanner = true
+        } label: {
+            Label("Seasonal calendar", systemImage: "calendar")
+                .font(CultivationTheme.Fonts.body(13, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 11)
+                .background(
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.1))
+                )
+        }
+        .buttonStyle(.plain)
+        .accessibilityIdentifier("garden_button_seasonal_calendar")
     }
 
     // MARK: - Garden Picker (multi-garden)

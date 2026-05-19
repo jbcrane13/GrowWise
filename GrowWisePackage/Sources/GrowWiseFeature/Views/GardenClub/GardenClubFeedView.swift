@@ -23,6 +23,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     @State private var selectedSegment: FeedSegment = .club
     @State private var posts: [ClubActivityViewData] = []
     @State private var smartMatch: SmartMatchSuggestion?
+    @State private var sharedPlants: [Plant] = []
     @State private var clubName: String = "Garden Club"
     @State private var memberCount: Int = 0
     @State private var userInitial: String = "?"
@@ -73,6 +74,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
                 VStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
                     header
                     sharePrompt
+                    sharedPlantsStrip
                     segmentControl
                     feed
                 }
@@ -164,6 +166,65 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         .buttonStyle(.plain)
         .accessibilityIdentifier("club_share_prompt")
         .accessibilityLabel("Share what's growing")
+    }
+
+    // MARK: - Shared plants
+
+    @ViewBuilder private var sharedPlantsStrip: some View {
+        if !sharedPlants.isEmpty {
+            VStack(alignment: .leading, spacing: 8) {
+                Text("Shared plants")
+                    .font(CultivationTheme.Fonts.body(11, weight: .semibold))
+                    .tracking(1.2)
+                    .textCase(.uppercase)
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(spacing: 10) {
+                        ForEach(sharedPlants) { plant in
+                            sharedPlantChip(plant)
+                        }
+                    }
+                    .padding(.horizontal, 1)
+                }
+            }
+            .accessibilityIdentifier("club_shared_plants")
+        }
+    }
+
+    private func sharedPlantChip(_ plant: Plant) -> some View {
+        let isReadOnly = plant.isReadOnlySharedPlant(for: dataService.getCurrentUser()?.id.uuidString)
+
+        return HStack(spacing: 8) {
+            Image(systemName: plant.plantType?.iconName ?? "leaf.fill")
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .frame(width: 26, height: 26)
+                .background(Circle().fill(CultivationTheme.Colors.brandLeaf.opacity(0.1)))
+
+            VStack(alignment: .leading, spacing: 1) {
+                Text(plant.name ?? "Shared plant")
+                    .font(CultivationTheme.Fonts.display(13, weight: .medium))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                    .lineLimit(1)
+
+                Text(isReadOnly ? "Read-only" : "Shared care")
+                    .font(CultivationTheme.Fonts.body(10, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    .lineLimit(1)
+            }
+        }
+        .padding(.horizontal, 10)
+        .padding(.vertical, 8)
+        .background(
+            RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                .fill(CultivationTheme.Colors.backgroundSecondary)
+        )
+        .overlay(
+            RoundedRectangle(cornerRadius: CultivationTheme.Radius.card)
+                .stroke(CultivationTheme.Colors.brandLeaf.opacity(0.25), lineWidth: 1)
+        )
+        .accessibilityIdentifier("club_shared_plant_\(plant.id?.uuidString ?? "unknown")")
     }
 
     // MARK: - Segmented control
@@ -313,6 +374,12 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         if let activeClub = resolved {
             clubName = activeClub.name ?? "Garden Club"
             memberCount = activeClub.memberIDs?.count ?? 0
+            do {
+                sharedPlants = try dataService.fetchSharedPlants(for: activeClub)
+            } catch {
+                logger.error("Failed to fetch shared plants: \(error.localizedDescription, privacy: .public)")
+                sharedPlants = []
+            }
             guard let clubID = activeClub.id else {
                 posts = []
                 return
@@ -353,6 +420,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             clubName = "Garden Club"
             memberCount = 0
             posts = []
+            sharedPlants = []
         }
 
         // Smart match — populate when location/zone is available.

@@ -16,6 +16,7 @@ public struct SeasonalPlannerView: View {
     @State private var userZone: String?
     @State private var frostDate: FrostDate?
     @State private var errorMessage: String?
+    @State private var showAnnualCalendar = false
 
     private let monthNames = Calendar.current.shortMonthSymbols
 
@@ -31,6 +32,7 @@ public struct SeasonalPlannerView: View {
 
                 // Month strip
                 monthStrip
+                annualCalendarButton
 
                 // Activities for selected month
                 if activities.isEmpty {
@@ -49,6 +51,12 @@ public struct SeasonalPlannerView: View {
         }
         .onChange(of: selectedMonth) {
             refreshActivities()
+        }
+        .sheet(isPresented: $showAnnualCalendar) {
+            NavigationStack {
+                AnnualCalendarView(plants: plants, seeds: seeds, zone: userZone)
+                    .environment(dataService)
+            }
         }
         .accessibilityIdentifier("seasonalplanner_screen")
         .alert("Data Load Error", isPresented: Binding(
@@ -132,6 +140,25 @@ public struct SeasonalPlannerView: View {
     }
 
     // MARK: - Activities List
+
+    private var annualCalendarButton: some View {
+        Button {
+            showAnnualCalendar = true
+        } label: {
+            Label("Annual calendar", systemImage: "calendar")
+                .font(CultivationTheme.Fonts.body(14, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                .frame(maxWidth: .infinity)
+                .padding(.vertical, 12)
+                .background(
+                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                        .fill(CultivationTheme.Colors.brandLeaf.opacity(0.1))
+                )
+        }
+        .buttonStyle(.plain)
+        .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+        .accessibilityIdentifier("seasonalplanner_button_annual_calendar")
+    }
 
     private var activitiesList: some View {
         VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
@@ -259,6 +286,7 @@ public struct SeasonalPlannerView: View {
     private func colorForActivity(_ activity: SeasonalActivity) -> Color {
         switch activity {
         case .startIndoors: CultivationTheme.Colors.accentAmber
+        case .directSow: CultivationTheme.Colors.accentSky
         case .transplant: CultivationTheme.Colors.brandLeaf
         case .activeGrowing: CultivationTheme.Colors.statusHealthy
         case .harvest: CultivationTheme.Colors.accentCoral
@@ -302,7 +330,7 @@ public struct SeasonalPlannerView: View {
         }
         plants = allPlants.filter { $0.garden != nil }
 
-        // Load seeds that have indoor start data for the planner
+        // Load seeds that have indoor-start or direct-sow data for the planner
         let allSeeds: [Seed]
         do {
             allSeeds = try dataService.seeds.fetchAll()
@@ -312,7 +340,7 @@ public struct SeasonalPlannerView: View {
                 .error("Failed to load seeds: \(error.localizedDescription, privacy: .public)")
             errorMessage = "Failed to load seeds: \(error.localizedDescription)"
         }
-        seeds = allSeeds.filter { ($0.indoorStartWeeks ?? 0) > 0 }
+        seeds = allSeeds.filter { ($0.indoorStartWeeks ?? 0) > 0 || !($0.directSowMonths ?? []).isEmpty }
 
         refreshActivities()
     }
@@ -325,5 +353,65 @@ public struct SeasonalPlannerView: View {
             seeds: seeds,
             zone: userZone
         )
+    }
+}
+
+private struct AnnualCalendarView: View {
+    @Environment(DataService.self)
+    private var dataService
+    @Environment(\.dismiss)
+    private var dismiss
+
+    let plants: [Plant]
+    let seeds: [Seed]
+    let zone: String?
+
+    private let monthNames = Calendar.current.monthSymbols
+
+    var body: some View {
+        ScrollView {
+            LazyVStack(alignment: .leading, spacing: 12) {
+                ForEach(1 ... 12, id: \.self) { month in
+                    monthSection(month)
+                }
+            }
+            .padding(CultivationTheme.Spacing.screenPadding)
+        }
+        .background(CultivationTheme.Colors.background.ignoresSafeArea())
+        .navigationTitle("Annual Calendar")
+        .toolbar {
+            ToolbarItem(placement: .cancellationAction) {
+                Button("Done") { dismiss() }
+                    .accessibilityIdentifier("annualcalendar_button_done")
+            }
+        }
+        .accessibilityIdentifier("annualcalendar_screen")
+    }
+
+    private func monthSection(_ month: Int) -> some View {
+        let activities = SeasonalPlannerService(dataService: dataService)
+            .getMonthlyActivities(for: month, plants: plants, seeds: seeds, zone: zone)
+
+        return VStack(alignment: .leading, spacing: 8) {
+            Text(monthNames[month - 1])
+                .font(CultivationTheme.Fonts.display(18, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+            if activities.isEmpty {
+                Text("No scheduled garden tasks")
+                    .font(CultivationTheme.Fonts.body(12))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            } else {
+                ForEach(activities.prefix(4)) { activity in
+                    Label(activity.description, systemImage: activity.icon)
+                        .font(CultivationTheme.Fonts.body(12))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        .lineLimit(2)
+                }
+            }
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .glassCard()
+        .accessibilityIdentifier("annualcalendar_month_\(month)")
     }
 }

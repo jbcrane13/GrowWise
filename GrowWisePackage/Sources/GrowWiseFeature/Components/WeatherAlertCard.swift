@@ -67,14 +67,19 @@ public struct WeatherAlertCard: View {
         switch alert.type {
         case .frost:
             Image(systemName: "thermometer.snowflake")
+
         case .heat:
             Image(systemName: "thermometer.sun.fill")
+
         case .heavyRain:
             Image(systemName: "cloud.heavyrain.fill")
+
         case .drought:
             Image(systemName: "sun.max.fill")
+
         case .wind:
             Image(systemName: "wind")
+
         case .storm:
             Image(systemName: "cloud.bolt.rain.fill")
         }
@@ -84,14 +89,19 @@ public struct WeatherAlertCard: View {
         switch alert.type {
         case .frost:
             CultivationTheme.Colors.statusAlert
+
         case .heat:
             CultivationTheme.Colors.statusWarning
+
         case .heavyRain:
             CultivationTheme.Colors.accentSky
+
         case .drought:
             CultivationTheme.Colors.statusWarning
+
         case .wind:
             CultivationTheme.Colors.textTertiary
+
         case .storm:
             CultivationTheme.Colors.statusAlert
         }
@@ -101,14 +111,19 @@ public struct WeatherAlertCard: View {
         switch alert.type {
         case .frost:
             CultivationTheme.Colors.statusAlert.opacity(0.08)
+
         case .heat:
             CultivationTheme.Colors.statusWarning.opacity(0.08)
+
         case .heavyRain:
             CultivationTheme.Colors.accentSky.opacity(0.08)
+
         case .drought:
             CultivationTheme.Colors.statusWarning.opacity(0.08)
+
         case .wind:
             CultivationTheme.Colors.textTertiary.opacity(0.08)
+
         case .storm:
             CultivationTheme.Colors.statusAlert.opacity(0.08)
         }
