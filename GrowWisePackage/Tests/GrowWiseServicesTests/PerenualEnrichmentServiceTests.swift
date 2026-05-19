@@ -1,5 +1,6 @@
 import Foundation
-import GrowWiseModels
+@testable import GrowWiseModels
+@testable import GrowWiseServices
 import Testing
 
 // swiftlint:disable cyclomatic_complexity

@@ -13,6 +13,8 @@ public struct OnboardingView: View {
     /// embedded in an if/else branch (not a sheet) so dismiss() has no effect.
     var onCompleted: (() -> Void)?
 
+    private let analyticsTracker = OnboardingAnalyticsTracker.shared
+
     public init(onCompleted: (() -> Void)? = nil) {
         self.onCompleted = onCompleted
     }
@@ -64,7 +66,8 @@ public struct OnboardingView: View {
                     OnboardingNavigationView(
                         currentStep: $currentStep,
                         userProfile: $userProfile,
-                        isCompleted: $isCompleted
+                        isCompleted: $isCompleted,
+                        analyticsTracker: analyticsTracker
                     )
                     .padding(.bottom, 16)
                 }
@@ -72,6 +75,9 @@ public struct OnboardingView: View {
         }
         .accessibilityIdentifier("OnboardingView")
         .gwNavigationBarHidden(true)
+        .onChange(of: currentStep) { _, newStep in
+            analyticsTracker.trackStepViewed(newStep.rawValue)
+        }
         .onChange(of: isCompleted) { _, completed in
             if completed {
                 onCompleted?()

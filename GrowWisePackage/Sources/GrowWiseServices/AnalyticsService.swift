@@ -13,6 +13,9 @@ public enum AnalyticsEvent: Sendable {
     // MARK: Onboarding
 
     case onboardingStarted
+    case onboardingStepViewed(stepName: String)
+    case onboardingStepCompleted(stepName: String)
+    case onboardingStepSkipped(stepName: String)
     case onboardingCompleted(daysToComplete: Int)
     case onboardingSkipped(step: String)
 
@@ -45,6 +48,12 @@ public enum AnalyticsEvent: Sendable {
 
     case companionPlantingChecked(isCompatible: Bool)
 
+    // MARK: Activation
+
+    case activationD1
+    case activationD7
+    case activationD30
+
     // MARK: Subscription
 
     case subscriptionViewed
@@ -75,6 +84,9 @@ public enum AnalyticsEvent: Sendable {
     var eventType: String {
         switch self {
         case .onboardingStarted: "onboarding_started"
+        case .onboardingStepViewed: "onboarding_step_viewed"
+        case .onboardingStepCompleted: "onboarding_step_completed"
+        case .onboardingStepSkipped: "onboarding_step_skipped"
         case .onboardingCompleted: "onboarding_completed"
         case .onboardingSkipped: "onboarding_skipped"
         case .plantAdded: "plant_added"
@@ -100,20 +112,42 @@ public enum AnalyticsEvent: Sendable {
         case .settingsChanged: "settings_changed"
         case .dataExportRequested: "data_export_requested"
         case .featureFlagExposed: "feature_flag_exposed"
+        case .activationD1: "activation_d1"
+        case .activationD7: "activation_d7"
+        case .activationD30: "activation_d30"
         }
     }
 
     var properties: [String: Any] {
         switch self {
-        case .onboardingStarted, .plantDeleted, .plantViewed, .plantDiagnosisViewed,
-             .gardenCreated, .gardenViewed, .journalEntryViewed, .journalEntryDeleted,
-             .reminderCompleted, .reminderSnoozed, .reminderDeleted,
-             .subscriptionViewed, .subscriptionRestored, .plantDatabaseViewed,
-             .profileViewed, .dataExportRequested:
+        case .onboardingStarted,
+             .plantDeleted,
+             .plantViewed,
+             .plantDiagnosisViewed,
+             .gardenCreated,
+             .gardenViewed,
+             .journalEntryViewed,
+             .journalEntryDeleted,
+             .reminderCompleted,
+             .reminderSnoozed,
+             .reminderDeleted,
+             .subscriptionViewed,
+             .subscriptionRestored,
+             .plantDatabaseViewed,
+             .profileViewed,
+             .dataExportRequested,
+             .activationD1,
+             .activationD7,
+             .activationD30:
             [:]
 
         case .onboardingCompleted(let days):
             ["days_to_complete": days]
+
+        case .onboardingStepViewed(let stepName),
+             .onboardingStepCompleted(let stepName),
+             .onboardingStepSkipped(let stepName):
+            ["step_name": stepName]
 
         case .onboardingSkipped(let step):
             ["step": step]
