@@ -64,6 +64,32 @@ public final class ShoppingListService {
         context.delete(item)
     }
 
+    // MARK: - Starter Suggestions
+
+    /// Generate shopping list items for a newly started garden + first plant.
+    /// Derives soil type, container needs, fertilizer, and starter tools based on
+    /// garden type, plant type, and current season.
+    public func generateStarterSuggestions(
+        for garden: Garden,
+        firstPlant: Plant
+    ) -> [ShoppingItem] {
+        var items: [ShoppingItem] = []
+
+        // Soil based on garden type and plant type
+        items.append(contentsOf: starterSoilItems(for: garden, firstPlant: firstPlant))
+
+        // Container if applicable
+        items.append(contentsOf: starterContainerItems(for: garden, firstPlant: firstPlant))
+
+        // Fertilizer based on plant needs
+        items.append(contentsOf: starterFertilizerItems(for: garden, firstPlant: firstPlant))
+
+        // Starter tools for new gardens
+        items.append(contentsOf: starterToolItems(for: garden))
+
+        return items
+    }
+
     // MARK: - Private Generation Helpers
 
     private func makeItem(
@@ -136,6 +162,123 @@ public final class ShoppingListService {
             makeItem(name: "Garden trowel", category: .tools, quantity: "1", garden: garden),
             makeItem(name: "Watering can", category: .tools, quantity: "1", garden: garden),
             makeItem(name: "Pruning shears", category: .tools, quantity: "1", garden: garden),
+        ]
+    }
+
+    // MARK: - Starter Suggestion Helpers
+
+    /// Soil mix tailored to garden type and plant type (seed-starting vs potting vs raised-bed).
+    private func starterSoilItems(for garden: Garden, firstPlant: Plant) -> [ShoppingItem] {
+        let plantType = firstPlant.plantType
+
+        // Seedlings and very young plants need seed-starting mix
+        if firstPlant.growthStage == .seed || firstPlant.growthStage == .seedling {
+            switch garden.gardenType {
+            case .raised:
+                return [
+                    makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
+                    makeItem(name: "Raised bed soil mix", category: .soilAmendments, quantity: "2 bags", garden: garden),
+                ]
+            case .container, .balcony, .windowsill:
+                return [
+                    makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
+                    makeItem(name: "Potting soil", category: .soilAmendments, quantity: "1 bag", garden: garden),
+                ]
+            case .indoor:
+                return [
+                    makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
+                    makeItem(name: "Indoor potting mix", category: .soilAmendments, quantity: "1 bag", garden: garden),
+                ]
+            case .hydroponic:
+                return [makeItem(name: "Hydroponic nutrient solution", category: .soilAmendments, quantity: "1 bottle", garden: garden)]
+            default:
+                return [makeItem(name: "Seed-starting mix", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+            }
+        }
+
+        // Standard soil for established plants
+        switch garden.gardenType {
+        case .raised:
+            return [makeItem(name: "Raised bed soil mix", category: .soilAmendments, quantity: "2 bags", garden: garden)]
+        case .container, .balcony, .windowsill:
+            return [makeItem(name: "Potting soil", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+        case .indoor:
+            return [makeItem(name: "Indoor potting mix", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+        case .hydroponic:
+            return [makeItem(name: "Hydroponic nutrient solution", category: .soilAmendments, quantity: "1 bottle", garden: garden)]
+        default:
+            if garden.soilType == .clay || garden.soilType == .sand {
+                return [makeItem(name: "Compost for soil amendment", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+            }
+            // Vegetables/fruits benefit from enriched soil
+            if plantType == .vegetable || plantType == .fruit {
+                return [makeItem(name: "Organic compost", category: .soilAmendments, quantity: "1 bag", garden: garden)]
+            }
+            return []
+        }
+    }
+
+    /// Container recommendations for container gardens based on plant space needs.
+    private func starterContainerItems(for garden: Garden, firstPlant: Plant) -> [ShoppingItem] {
+        let containerTypes: Set<GardenType> = [.container, .balcony, .windowsill]
+        guard let gardenType = garden.gardenType, containerTypes.contains(gardenType) else { return [] }
+
+        let spaceReq = firstPlant.spaceRequirement ?? .medium
+        let containerSize: String
+        let potCount: String
+
+        switch spaceReq {
+        case .small:
+            containerSize = "6-8 inch pot"
+            potCount = "1"
+        case .medium:
+            containerSize = "12-14 inch pot"
+            potCount = "1"
+        case .large:
+            containerSize = "large planter (16+ inch)"
+            potCount = "1"
+        case .extraLarge:
+            containerSize = "large raised bed or grow bag"
+            potCount = "1"
+        }
+
+        return [makeItem(name: containerSize, category: .containers, quantity: potCount, garden: garden)]
+    }
+
+    /// Fertilizer tailored to plant type and garden type.
+    private func starterFertilizerItems(for garden: Garden, firstPlant: Plant) -> [ShoppingItem] {
+        let plantType = firstPlant.plantType
+
+        let fertilizerName: String
+        switch plantType {
+        case .vegetable, .fruit:
+            fertilizerName = "Vegetable & herb fertilizer"
+        case .flower:
+            fertilizerName = "Bloom fertilizer"
+        case .herb:
+            fertilizerName = "Herbal fertilizer"
+        default:
+            fertilizerName = "All-purpose fertilizer"
+        }
+
+        // Indoor gardens may need different formulation
+        if garden.gardenType == .indoor {
+            return [makeItem(name: "Indoor plant fertilizer", category: .fertilizer, quantity: "1 bottle", garden: garden)]
+        }
+
+        return [makeItem(name: fertilizerName, category: .fertilizer, quantity: "1 bag", garden: garden)]
+    }
+
+    /// Essential starter tools for brand-new gardens.
+    private func starterToolItems(for garden: Garden) -> [ShoppingItem] {
+        let fourteenDaysAgo = Calendar.current.date(byAdding: .day, value: -14, to: Date()) ?? Date()
+        guard let created = garden.createdDate, created > fourteenDaysAgo else { return [] }
+
+        return [
+            makeItem(name: "Garden trowel", category: .tools, quantity: "1", garden: garden),
+            makeItem(name: "Watering can", category: .tools, quantity: "1", garden: garden),
+            makeItem(name: "Pruning shears", category: .tools, quantity: "1", garden: garden),
+            makeItem(name: "Moisture meter", category: .tools, quantity: "1", garden: garden),
         ]
     }
 }

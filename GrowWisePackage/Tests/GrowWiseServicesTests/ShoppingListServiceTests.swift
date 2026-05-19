@@ -467,4 +467,184 @@ struct ShoppingListServiceTests {
         #expect(item1.isPurchased == true)
         #expect(item2.isPurchased == false)
     }
+
+    // MARK: - generateStarterSuggestions
+
+    @Test("seedling plant in container garden suggests seed-starting mix and potting soil")
+    func seedlingContainerSuggestsSeedStartingAndPotting() {
+        let service = makeService()
+        let garden = makeGarden(type: .container, createdDaysAgo: 2)
+        let plant = makePlant(growthStage: .seedling, lastFertilized: nil, containerType: nil)
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let soilItems = items.filter { $0.category == .soilAmendments }
+        let names = Set(soilItems.compactMap(\.name))
+
+        #expect(names.contains("Seed-starting mix"))
+        #expect(names.contains("Potting soil"))
+    }
+
+    @Test("vegetable plant in raised garden suggests vegetable fertilizer and raised bed soil")
+    func vegetableRaisedGardenSuggestsCorrectItems() {
+        let service = makeService()
+        let garden = makeGarden(type: .raised, createdDaysAgo: 1)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: .raisedBed)
+        plant.plantType = .vegetable
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+
+        let soilItems = items.filter { $0.category == .soilAmendments }
+        #expect(soilItems.contains { $0.name == "Raised bed soil mix" })
+
+        let fertItems = items.filter { $0.category == .fertilizer }
+        #expect(fertItems.contains { $0.name == "Vegetable & herb fertilizer" })
+    }
+
+    @Test("indoor garden suggests indoor potting mix and indoor fertilizer")
+    func indoorGardenSuggestsIndoorItems() {
+        let service = makeService()
+        let garden = makeGarden(type: .indoor, createdDaysAgo: 3)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: .indoor)
+        plant.plantType = .houseplant
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+
+        let soilItems = items.filter { $0.category == .soilAmendments }
+        #expect(soilItems.contains { $0.name == "Indoor potting mix" })
+
+        let fertItems = items.filter { $0.category == .fertilizer }
+        #expect(fertItems.contains { $0.name == "Indoor plant fertilizer" })
+    }
+
+    @Test("container garden suggests container sized by space requirement")
+    func containerGardenSuggestsSizedContainer() {
+        let service = makeService()
+        let garden = makeGarden(type: .container, createdDaysAgo: 5)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: nil)
+        plant.spaceRequirement = .large
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let containerItems = items.filter { $0.category == .containers }
+
+        #expect(containerItems.count == 1)
+        #expect(containerItems.first?.name?.contains("16+ inch") == true)
+    }
+
+    @Test("small space requirement plant gets small pot suggestion")
+    func smallPlantGetsSmallPot() {
+        let service = makeService()
+        let garden = makeGarden(type: .windowsill, createdDaysAgo: 1)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: nil)
+        plant.spaceRequirement = .small
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let containerItems = items.filter { $0.category == .containers }
+
+        #expect(containerItems.count == 1)
+        #expect(containerItems.first?.name?.contains("6-8 inch") == true)
+    }
+
+    @Test("new garden (within 14 days) includes starter tools")
+    func newGardenIncludesStarterTools() {
+        let service = makeService()
+        let garden = makeGarden(type: .outdoor, createdDaysAgo: 5)
+        let plant = makePlant(growthStage: .mature, lastFertilized: Date(), containerType: .inGround)
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let toolItems = items.filter { $0.category == .tools }
+        let toolNames = Set(toolItems.compactMap(\.name))
+
+        #expect(toolNames.contains("Garden trowel"))
+        #expect(toolNames.contains("Watering can"))
+        #expect(toolNames.contains("Pruning shears"))
+        #expect(toolNames.contains("Moisture meter"))
+    }
+
+    @Test("old garden (older than 14 days) does not include tools")
+    func oldGardenExcludesTools() {
+        let service = makeService()
+        let garden = makeGarden(type: .outdoor, createdDaysAgo: 20)
+        let plant = makePlant(growthStage: .mature, lastFertilized: Date(), containerType: .inGround)
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let toolItems = items.filter { $0.category == .tools }
+
+        #expect(toolItems.isEmpty)
+    }
+
+    @Test("herb plant gets herbal fertilizer")
+    func herbPlantGetsHerbalFertilizer() {
+        let service = makeService()
+        let garden = makeGarden(type: .container, createdDaysAgo: 3)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: .container)
+        plant.plantType = .herb
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let fertItems = items.filter { $0.category == .fertilizer }
+
+        #expect(fertItems.contains { $0.name == "Herbal fertilizer" })
+    }
+
+    @Test("flower plant gets bloom fertilizer")
+    func flowerPlantGetsBloomFertilizer() {
+        let service = makeService()
+        let garden = makeGarden(type: .container, createdDaysAgo: 2)
+        let plant = makePlant(growthStage: .flowering, lastFertilized: nil, containerType: .container)
+        plant.plantType = .flower
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let fertItems = items.filter { $0.category == .fertilizer }
+
+        #expect(fertItems.contains { $0.name == "Bloom fertilizer" })
+    }
+
+    @Test("all starter suggestion items are marked as auto-generated")
+    func starterItemsAreAutoGenerated() {
+        let service = makeService()
+        let garden = makeGarden(type: .container, createdDaysAgo: 1)
+        let plant = makePlant(growthStage: .seedling, lastFertilized: nil, containerType: nil)
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        #expect(!items.isEmpty)
+        #expect(items.allSatisfy { $0.isAutoGenerated })
+    }
+
+    @Test("starter suggestion items have garden assigned")
+    func starterItemsHaveGardenAssigned() {
+        let service = makeService()
+        let garden = makeGarden(type: .raised, createdDaysAgo: 2)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: .raisedBed)
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        #expect(!items.isEmpty)
+        #expect(items.allSatisfy { $0.garden?.id == garden.id })
+    }
+
+    @Test("hydroponic garden with seedling suggests hydroponic nutrient solution")
+    func hydroponicGardenSuggestsNutrientSolution() {
+        let service = makeService()
+        let garden = makeGarden(type: .hydroponic, createdDaysAgo: 1)
+        let plant = makePlant(growthStage: .seedling, lastFertilized: nil, containerType: nil)
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let soilItems = items.filter { $0.category == .soilAmendments }
+
+        #expect(soilItems.contains { $0.name == "Hydroponic nutrient solution" })
+    }
+
+    @Test("outdoor garden with vegetable plant and clay soil suggests organic compost")
+    func outdoorClayVegetableSuggestsOrganicCompost() {
+        let service = makeService()
+        let garden = makeGarden(type: .outdoor, soilType: .loam, createdDaysAgo: 1)
+        let plant = makePlant(growthStage: .vegetative, lastFertilized: nil, containerType: .inGround)
+        plant.plantType = .vegetable
+
+        // Override to clay to trigger the soil check
+        garden.soilType = .clay
+
+        let items = service.generateStarterSuggestions(for: garden, firstPlant: plant)
+        let soilItems = items.filter { $0.category == .soilAmendments }
+
+        #expect(soilItems.contains { $0.name == "Compost for soil amendment" })
+    }
 }
