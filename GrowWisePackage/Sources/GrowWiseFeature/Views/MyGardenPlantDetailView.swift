@@ -25,6 +25,8 @@ struct PlantDetailView: View {
     @State private var showingDiagnostic = false
     @State private var careTips: [CareTip] = []
     @State private var journalEntries: [JournalEntry] = []
+    @State private var harvests: [Harvest] = []
+    @State private var showingLogHarvest: Bool = false
     @State private var primaryClub: GardenClub?
     @State private var showingShareToClub: Bool = false
     @State private var deleteError: Error?
@@ -56,6 +58,7 @@ struct PlantDetailView: View {
             let user = dataService.getCurrentUser()
             careTips = careAdviceService.getContextualTips(for: plant, in: plant.garden, user: user)
             journalEntries = dataService.fetchJournalEntries(for: plant)
+            harvests = dataService.fetchHarvests(for: plant)
             primaryClub = dataService.fetchPrimaryClub()
         }
         .sheet(isPresented: $showingReminderView) {
@@ -73,7 +76,10 @@ struct PlantDetailView: View {
             MovePlantSheet(plant: plant)
         }
         .sheet(isPresented: $showingDiagnostic) {
-            CommonPlantIssuesView(plant: plant)
+            PlantDiagnosticSheet(plant: plant)
+        }
+        .sheet(isPresented: $showingLogHarvest) {
+            LogHarvestSheet(plant: plant)
         }
         .alert("Delete Plant", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
@@ -198,38 +204,46 @@ struct PlantDetailView: View {
                 .buttonStyle(GradientButtonStyle())
                 .accessibilityIdentifier("plantdetail_button_log_care")
 
+                Button("Log harvest") {
+                    showingLogHarvest = true
+                }
+                .buttonStyle(CoralButtonStyle())
+                .accessibilityIdentifier("plantdetail_button_log_harvest")
+            }
+
+            HStack(spacing: 8) {
                 Button("Get advice") {
                     showingDiagnostic = true
                 }
                 .buttonStyle(SecondaryButtonStyle())
                 .accessibilityIdentifier("plantdetail_button_get_advice")
+
+                Button {
+                    showingShareToClub = true
+                } label: {
+                    HStack(spacing: 8) {
+                        Text("✦")
+                            .font(CultivationTheme.Fonts.body(13, weight: .bold))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                        Text("Share to \(primaryClub?.name ?? "your club")")
+                            .font(CultivationTheme.Fonts.body(15, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.accentCoralDeep)
+                    }
+                    .frame(maxWidth: .infinity)
+                    .padding(.vertical, 12)
+                    .background {
+                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                            .fill(CultivationTheme.Colors.accentCoral.opacity(0.06))
+                    }
+                    .overlay {
+                        RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
+                            .stroke(CultivationTheme.Colors.accentCoral, lineWidth: 1.5)
+                    }
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("plantdetail_button_share_to_club")
             }
-            Button {
-                showingShareToClub = true
-            } label: {
-                HStack(spacing: 8) {
-                    Text("✦")
-                        .font(CultivationTheme.Fonts.body(13, weight: .bold))
-                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
-                    Text("Share to \(primaryClub?.name ?? "your club")")
-                        .font(CultivationTheme.Fonts.body(15, weight: .semibold))
-                        .foregroundStyle(CultivationTheme.Colors.accentCoralDeep)
-                }
-                .frame(maxWidth: .infinity)
-                .padding(.vertical, 12)
-                .background {
-                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
-                        .fill(CultivationTheme.Colors.accentCoral.opacity(0.06))
-                }
-                .overlay {
-                    RoundedRectangle(cornerRadius: CultivationTheme.Radius.button)
-                        .stroke(CultivationTheme.Colors.accentCoral, lineWidth: 1.5)
-                }
-            }
-            .buttonStyle(.plain)
-            .accessibilityIdentifier("plantdetail_button_share_to_club")
         }
-    }
 
     // MARK: - Advice Card
 
