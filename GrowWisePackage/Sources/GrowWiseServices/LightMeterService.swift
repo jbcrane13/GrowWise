@@ -2,7 +2,7 @@ import Foundation
 import Observation
 import os
 #if canImport(AVFoundation)
-import AVFoundation
+@preconcurrency import AVFoundation
 #endif
 #if canImport(UIKit)
 import UIKit
@@ -81,8 +81,8 @@ public final class LightMeterService {
     nonisolated static let smoothingWindow = 8
 
     #if canImport(AVFoundation) && os(iOS)
-    private nonisolated(unsafe) var session: AVCaptureSession?
-    private nonisolated(unsafe) var device: AVCaptureDevice?
+    private nonisolated var session: AVCaptureSession?
+    private nonisolated var device: AVCaptureDevice?
     private let sessionQueue = DispatchQueue(label: "com.growwise.lightmeter.session")
     private var sampleTask: Task<Void, Never>?
     private var samples: [Double] = []
@@ -90,18 +90,9 @@ public final class LightMeterService {
 
     public init() {}
 
-    deinit {
-        #if canImport(AVFoundation) && os(iOS)
-        sampleTask?.cancel()
-        // Tear down the capture session off the main thread; safe to capture session here
-        // because we are dropping our only reference.
-        if let session {
-            sessionQueue.async {
-                if session.isRunning { session.stopRunning() }
-            }
-        }
-        #endif
-    }
+    // Cleanup relies on callers invoking `stop()` (the view does this in `.onDisappear`).
+    // We deliberately don't define a deinit: in Swift 6 the implicit `deinit` is
+    // nonisolated and cannot access `@MainActor` properties.
 
     // MARK: - Public API
 
@@ -231,7 +222,7 @@ public final class LightMeterService {
             while !Task.isCancelled {
                 guard let self else { return }
                 if let sample = await self.readSample() {
-                    await self.publish(sample: sample)
+                    self.publish(sample: sample)
                 }
                 try? await Task.sleep(nanoseconds: 100_000_000) // ~10 Hz
             }
