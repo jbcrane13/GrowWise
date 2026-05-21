@@ -81,10 +81,15 @@ public final class LightMeterService {
     nonisolated static let smoothingWindow = 8
 
     #if canImport(AVFoundation) && os(iOS)
-    private nonisolated var session: AVCaptureSession?
-    private nonisolated var device: AVCaptureDevice?
+    @ObservationIgnored
+    private nonisolated(unsafe) var session: AVCaptureSession?
+    @ObservationIgnored
+    private nonisolated(unsafe) var device: AVCaptureDevice?
+    @ObservationIgnored
     private let sessionQueue = DispatchQueue(label: "com.growwise.lightmeter.session")
+    @ObservationIgnored
     private var sampleTask: Task<Void, Never>?
+    @ObservationIgnored
     private var samples: [Double] = []
     #endif
 
