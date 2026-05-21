@@ -26,6 +26,8 @@ public struct LightMeterView: View {
                     CameraPreview(session: session)
                         .ignoresSafeArea()
                     readoutOverlay
+                } else if let error = meter.lastError {
+                    errorView(error: error)
                 } else {
                     loadingView
                 }
@@ -123,6 +125,45 @@ public struct LightMeterView: View {
             #endif
         }
         .padding()
+    }
+
+    // MARK: - Error state
+
+    private func errorView(error: LightMeterError) -> some View {
+        VStack(spacing: 20) {
+            Image(systemName: "exclamationmark.triangle.fill")
+                .font(.system(size: 48))
+                .foregroundStyle(CultivationTheme.Colors.statusAlert)
+            Text("Couldn't Start Light Meter")
+                .font(.system(.title3, design: .rounded, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+            Text(errorMessage(for: error))
+                .font(.system(.subheadline, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                .multilineTextAlignment(.center)
+                .padding(.horizontal, 32)
+            Button("Try Again") {
+                Task { await meter.start() }
+            }
+            .buttonStyle(.borderedProminent)
+            .tint(CultivationTheme.Colors.accentCoral)
+            .accessibilityIdentifier("lightmeter_button_retry")
+        }
+        .padding()
+        .accessibilityIdentifier("lightmeter_error_view")
+    }
+
+    private func errorMessage(for error: LightMeterError) -> String {
+        switch error {
+        case .noDevice:
+            "No back camera was found on this device."
+
+        case .configurationFailed:
+            "The camera couldn't be configured. Close other camera apps and try again."
+
+        case .permissionDenied:
+            "Camera access is required to estimate light."
+        }
     }
 
     // MARK: - Loading / unsupported

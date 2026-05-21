@@ -105,6 +105,7 @@ public final class LightMeterService {
     public func start() async {
         #if canImport(AVFoundation) && os(iOS)
         guard !isRunning else { return }
+        lastError = nil
         let granted = await ensurePermission()
         guard granted else {
             permission = .denied
