@@ -399,6 +399,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrowWise/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cultivation;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Cultivation uses the camera to estimate ambient light for your plants and to capture photos of your garden.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Cultivation uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;
@@ -432,6 +433,7 @@
 				GENERATE_INFOPLIST_FILE = YES;
 				INFOPLIST_FILE = GrowWise/Info.plist;
 				INFOPLIST_KEY_CFBundleDisplayName = Cultivation;
+				INFOPLIST_KEY_NSCameraUsageDescription = "Cultivation uses the camera to estimate ambient light for your plants and to capture photos of your garden.";
 				INFOPLIST_KEY_NSLocationWhenInUseUsageDescription = "Cultivation uses your location to provide personalized gardening advice, weather updates, and determine your plant hardiness zone.";
 				INFOPLIST_KEY_UIApplicationSceneManifest_Generation = YES;
 				INFOPLIST_KEY_UIApplicationSupportsIndirectInputEvents = YES;

@@ -20,7 +20,9 @@ public struct StarterPlanDay: Equatable, Identifiable, Sendable {
     public let dayOffset: Int
     public let tasks: [CareTask]
 
-    public var id: Date { date }
+    public var id: Date {
+        date
+    }
 
     public init(date: Date, dayOffset: Int, tasks: [CareTask] = []) {
         self.date = date
@@ -48,7 +50,9 @@ public struct CareTask: Equatable, Identifiable, Sendable {
     public let systemImage: String
     public let plantName: String?
 
-    public var id: String { "\(kind.rawValue)-\(title)" }
+    public var id: String {
+        "\(kind.rawValue)-\(title)"
+    }
 
     public init(
         kind: TaskKind,
@@ -79,7 +83,9 @@ public struct StarterPlanAction: Equatable, Identifiable, Sendable {
     public let detail: String
     public let systemImage: String
 
-    public var id: Kind { kind }
+    public var id: Kind {
+        kind
+    }
 
     public init(kind: Kind, title: String, detail: String, systemImage: String) {
         self.kind = kind
@@ -201,7 +207,7 @@ public enum StarterPlanService {
         }
 
         // Fill remaining days with empty days (placeholder structure)
-        for offset in 2..<roadmapLength {
+        for offset in 2 ..< roadmapLength {
             let date = calendar.date(byAdding: .day, value: offset, to: referenceDate) ?? referenceDate
             days.append(StarterPlanDay(date: date, dayOffset: offset, tasks: []))
         }
@@ -268,7 +274,7 @@ public enum StarterPlanService {
         }
 
         // Fill remaining
-        for offset in 3..<roadmapLength {
+        for offset in 3 ..< roadmapLength {
             let date = calendar.date(byAdding: .day, value: offset, to: referenceDate) ?? referenceDate
             days.append(StarterPlanDay(date: date, dayOffset: offset, tasks: []))
         }
@@ -276,6 +282,8 @@ public enum StarterPlanService {
         return days
     }
 
+    // Refactor tracked in #360 — pre-existing length violation.
+    // swiftlint:disable:next function_body_length
     private static func buildActiveRoadmap(
         user: User?,
         garden: Garden?,
@@ -286,7 +294,7 @@ public enum StarterPlanService {
         let calendar = Calendar.current
         var days: [StarterPlanDay] = []
 
-        guard let garden = garden else {
+        guard let garden else {
             return buildEmptyGardensRoadmap(user: user, referenceDate: referenceDate)
         }
 
@@ -374,7 +382,7 @@ public enum StarterPlanService {
         days.append(StarterPlanDay(date: fertilizeDate, dayOffset: 3, tasks: day3Tasks))
 
         // Days 4-5: Recommendations / Prune
-        for offset in 4...5 {
+        for offset in 4 ... 5 {
             let date = calendar.date(byAdding: .day, value: offset, to: referenceDate) ?? referenceDate
             var tasks: [CareTask] = []
             if offset == 4, user?.gardeningGoals?.isEmpty == false {
@@ -404,7 +412,7 @@ public enum StarterPlanService {
         }
 
         // Days 6-13: Weekly maintenance
-        for offset in 6..<roadmapLength {
+        for offset in 6 ..< roadmapLength {
             let date = calendar.date(byAdding: .day, value: offset, to: referenceDate) ?? referenceDate
             var tasks: [CareTask] = []
 
@@ -422,7 +430,8 @@ public enum StarterPlanService {
             // Harvest suggestion for food-growing users
             if user?.gardeningGoals?.contains(.growFood) == true,
                let plant = firstPlant,
-               plant.plantType == .vegetable || plant.plantType == .fruit {
+               plant.plantType == .vegetable || plant.plantType == .fruit
+            {
                 if offset == 7 {
                     tasks.append(CareTask(
                         kind: .harvest,
@@ -444,28 +453,28 @@ public enum StarterPlanService {
     private static func setupTasksForGoal(_ goal: GardeningGoal, dayOffset: Int) -> [CareTask] {
         switch goal {
         case .growFood:
-            return [CareTask(
+            [CareTask(
                 kind: .learn,
                 title: "Learn about food gardening",
                 detail: "Explore the basics of growing your own vegetables and herbs.",
                 systemImage: "leaf.fill"
             )]
         case .beautifySpace:
-            return [CareTask(
+            [CareTask(
                 kind: .learn,
                 title: "Learn about decorative plants",
                 detail: "Discover flowers and ornamental plants for visual appeal.",
                 systemImage: "camera.macro"
             )]
         case .relaxation:
-            return [CareTask(
+            [CareTask(
                 kind: .learn,
                 title: "Start a mindfulness gardening routine",
                 detail: "Learn how gardening can support mental wellbeing.",
                 systemImage: "brain.head.profile"
             )]
         default:
-            return [CareTask(
+            [CareTask(
                 kind: .learn,
                 title: "Explore gardening basics",
                 detail: "Build foundational knowledge for your gardening journey.",
