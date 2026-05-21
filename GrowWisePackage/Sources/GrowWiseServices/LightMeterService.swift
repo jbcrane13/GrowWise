@@ -75,10 +75,10 @@ public final class LightMeterService {
 
     /// Calibration constant for reflected-light meter (ISO 2720, K=12.5).
     /// Lux ≈ luxCalibration × 2^EV100. 2.5 is the conventional value used by light-meter apps.
-    static let luxCalibration: Double = 2.5
+    nonisolated static let luxCalibration: Double = 2.5
 
     /// Smoothing window (samples).
-    static let smoothingWindow = 8
+    nonisolated static let smoothingWindow = 8
 
     #if canImport(AVFoundation) && os(iOS)
     private nonisolated(unsafe) var session: AVCaptureSession?
@@ -273,14 +273,14 @@ public final class LightMeterService {
 
     /// Computes EV at ISO 100 from camera exposure parameters.
     /// `EV100 = log2((N²/t) × (100/S))`
-    public static func ev100(aperture: Double, exposureSeconds: Double, iso: Double) -> Double {
+    public nonisolated static func ev100(aperture: Double, exposureSeconds: Double, iso: Double) -> Double {
         let numerator = (aperture * aperture) / exposureSeconds
         return log2(numerator * (100.0 / iso))
     }
 
     /// Approximates lux from camera exposure parameters.
     /// `lux ≈ 2.5 × 2^EV100`
-    public static func lux(aperture: Double, exposureSeconds: Double, iso: Double) -> Double {
+    public nonisolated static func lux(aperture: Double, exposureSeconds: Double, iso: Double) -> Double {
         luxCalibration * pow(2.0, ev100(aperture: aperture, exposureSeconds: exposureSeconds, iso: iso))
     }
 }
