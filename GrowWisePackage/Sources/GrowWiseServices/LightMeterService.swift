@@ -60,6 +60,11 @@ public enum LightMeterError: Error, Sendable {
 /// Uses the standard ISO 2720 exposure equation: `EV100 = log2((N²/t) × (100/S))`
 /// and approximates lux as `2.5 × 2^EV100` (reflected-light meter with K=12.5).
 /// Readings are smoothed with a fixed-size moving average to reduce jitter.
+///
+/// All AVFoundation state is owned by `CameraActor` so there is a single, deterministic
+/// executor for every read/write of `session` and `device`. The `@MainActor` service
+/// consumes only the computed lux/bucket values and, after a successful start, a copy of
+/// the session reference for the SwiftUI preview layer.
 @MainActor
 @Observable
 public final class LightMeterService {
@@ -78,14 +83,12 @@ public final class LightMeterService {
     nonisolated static let smoothingWindow = 8
 
     #if canImport(AVFoundation) && os(iOS)
-    // session and device are always read/written on @MainActor; sessionQueue is used only
-    // for blocking AVFoundation configuration calls that must not run on the main thread.
     @ObservationIgnored
-    private var session: AVCaptureSession?
+    private let camera = CameraActor()
+    // Session reference kept on main actor solely so captureSession() stays synchronous
+    // for the SwiftUI preview layer — assigned once after a successful start.
     @ObservationIgnored
-    private var device: AVCaptureDevice?
-    @ObservationIgnored
-    private let sessionQueue = DispatchQueue(label: "com.growwise.lightmeter.session")
+    private var activeSession: AVCaptureSession?
     @ObservationIgnored
     private var sampleTask: Task<Void, Never>?
     @ObservationIgnored
@@ -113,7 +116,8 @@ public final class LightMeterService {
         }
         permission = .granted
         do {
-            try await configureAndStartSession()
+            let session = try await camera.configureAndStart()
+            activeSession = session
             isRunning = true
             startSampling()
         } catch let error as LightMeterError {
@@ -132,14 +136,10 @@ public final class LightMeterService {
         sampleTask?.cancel()
         sampleTask = nil
         samples.removeAll(keepingCapacity: true)
-        let session = self.session
-        sessionQueue.async {
-            if let session, session.isRunning {
-                session.stopRunning()
-            }
-        }
-        self.session = nil
-        self.device = nil
+        let capturedCamera = camera
+        // Fire-and-forget: session teardown is async but caller doesn't need to await it.
+        Task<Void, Never> { await capturedCamera.stop() }
+        activeSession = nil
         isRunning = false
         lux = nil
         bucket = nil
@@ -149,7 +149,7 @@ public final class LightMeterService {
     // Provides a SwiftUI-bindable preview layer source. `nil` until the session is configured.
     #if canImport(AVFoundation) && os(iOS)
     public func captureSession() -> AVCaptureSession? {
-        session
+        activeSession
     }
     #endif
 
@@ -172,56 +172,6 @@ public final class LightMeterService {
         }
     }
 
-    // MARK: - Session
-
-    private func configureAndStartSession() async throws {
-        // AVCaptureSession/AVCaptureDevice are not Sendable; wrap in an @unchecked Sendable
-        // carrier so the checked continuation can transport them back to @MainActor.
-        struct SessionPair: @unchecked Sendable {
-            let session: AVCaptureSession
-            let device: AVCaptureDevice
-        }
-        let pair: SessionPair = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<SessionPair, Error>) in
-            sessionQueue.async {
-                let session = AVCaptureSession()
-                session.beginConfiguration()
-                session.sessionPreset = .medium
-                guard let device = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
-                    session.commitConfiguration()
-                    continuation.resume(throwing: LightMeterError.noDevice)
-                    return
-                }
-                do {
-                    let input = try AVCaptureDeviceInput(device: device)
-                    if session.canAddInput(input) {
-                        session.addInput(input)
-                    } else {
-                        session.commitConfiguration()
-                        continuation.resume(throwing: LightMeterError.configurationFailed)
-                        return
-                    }
-                    // Continuous auto-exposure so the device's reported ISO + duration
-                    // track the ambient scene.
-                    try device.lockForConfiguration()
-                    if device.isExposureModeSupported(.continuousAutoExposure) {
-                        device.exposureMode = .continuousAutoExposure
-                    }
-                    device.unlockForConfiguration()
-
-                    session.commitConfiguration()
-                    session.startRunning()
-                    continuation.resume(returning: SessionPair(session: session, device: device))
-                } catch {
-                    session.commitConfiguration()
-                    continuation.resume(throwing: error)
-                }
-            }
-        }
-        // Back on @MainActor — assign both properties here, not inside the sessionQueue block.
-        self.session = pair.session
-        self.device = pair.device
-    }
-
     // MARK: - Sampling
 
     private func startSampling() {
@@ -229,29 +179,10 @@ public final class LightMeterService {
         sampleTask = Task { [weak self] in
             while !Task.isCancelled {
                 guard let self else { return }
-                if let sample = await self.readSample() {
-                    self.publish(sample: sample)
+                if let sample = await camera.readSample() {
+                    publish(sample: sample)
                 }
                 try? await Task.sleep(nanoseconds: 100_000_000) // ~10 Hz
-            }
-        }
-    }
-
-    private func readSample() async -> Double? {
-        // Capture device reference on @MainActor; the block below only reads immutable
-        // exposure properties that are safe to call from any thread per AVFoundation docs.
-        guard let device = self.device else { return nil }
-        return await withCheckedContinuation { (continuation: CheckedContinuation<Double?, Never>) in
-            sessionQueue.async {
-                let aperture = Double(device.lensAperture)
-                let durationSec = CMTimeGetSeconds(device.exposureDuration)
-                let iso = Double(device.iso)
-                guard aperture > 0, durationSec > 0, iso > 0 else {
-                    continuation.resume(returning: nil)
-                    return
-                }
-                let lux = LightMeterService.lux(aperture: aperture, exposureSeconds: durationSec, iso: iso)
-                continuation.resume(returning: lux)
             }
         }
     }
@@ -282,3 +213,67 @@ public final class LightMeterService {
         luxCalibration * pow(2.0, ev100(aperture: aperture, exposureSeconds: exposureSeconds, iso: iso))
     }
 }
+
+#if canImport(AVFoundation) && os(iOS)
+/// Isolates all AVFoundation objects on a single Swift Concurrency executor,
+/// eliminating the data races that arise from crossing between a `DispatchQueue`
+/// and the `@MainActor`.
+private actor CameraActor {
+    private var session: AVCaptureSession?
+    private var device: AVCaptureDevice?
+
+    /// Configures and starts the capture session. Returns the ready `AVCaptureSession`
+    /// so the caller can store it on the main actor for preview access.
+    func configureAndStart() async throws -> AVCaptureSession {
+        let newSession = AVCaptureSession()
+        newSession.beginConfiguration()
+        newSession.sessionPreset = .medium
+        guard let newDevice = AVCaptureDevice.default(.builtInWideAngleCamera, for: .video, position: .back) else {
+            newSession.commitConfiguration()
+            throw LightMeterError.noDevice
+        }
+        do {
+            let input = try AVCaptureDeviceInput(device: newDevice)
+            guard newSession.canAddInput(input) else {
+                newSession.commitConfiguration()
+                throw LightMeterError.configurationFailed
+            }
+            newSession.addInput(input)
+            // Continuous auto-exposure so the device's reported ISO + duration
+            // track the ambient scene.
+            try newDevice.lockForConfiguration()
+            if newDevice.isExposureModeSupported(.continuousAutoExposure) {
+                newDevice.exposureMode = .continuousAutoExposure
+            }
+            newDevice.unlockForConfiguration()
+            newSession.commitConfiguration()
+            newSession.startRunning()
+            session = newSession
+            device = newDevice
+            return newSession
+        } catch {
+            newSession.commitConfiguration()
+            throw error
+        }
+    }
+
+    /// Stops the running session and releases all AVFoundation objects.
+    func stop() {
+        if let session, session.isRunning {
+            session.stopRunning()
+        }
+        session = nil
+        device = nil
+    }
+
+    /// Reads a single lux sample from the current device exposure state.
+    func readSample() -> Double? {
+        guard let device else { return nil }
+        let aperture = Double(device.lensAperture)
+        let durationSec = CMTimeGetSeconds(device.exposureDuration)
+        let iso = Double(device.iso)
+        guard aperture > 0, durationSec > 0, iso > 0 else { return nil }
+        return LightMeterService.lux(aperture: aperture, exposureSeconds: durationSec, iso: iso)
+    }
+}
+#endif
