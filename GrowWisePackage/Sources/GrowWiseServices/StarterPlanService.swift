@@ -296,6 +296,7 @@ public enum StarterPlanService {
         return days
     }
 
+    // Refactor tracked in #360 — pre-existing length violation.
     // swiftlint:disable:next cyclomatic_complexity function_body_length
     private static func buildActiveRoadmap(
         user: User?,

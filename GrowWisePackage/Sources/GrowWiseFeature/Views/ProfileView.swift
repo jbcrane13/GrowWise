@@ -22,6 +22,7 @@ public struct ProfileView: View {
     @State private var showAchievements = false
     @State private var showForum = false
     @State private var showGardenClubs = false
+    @State private var showLightMeter = false
     @State private var selectedProductID: String?
     @State private var purchaseError: String?
     @State private var showPurchaseError = false
@@ -74,6 +75,7 @@ public struct ProfileView: View {
                     userCard
                     statsRow
                     learningSection
+                    toolsSection
                     communitySection
                     settingsSection
                 }
@@ -85,6 +87,9 @@ public struct ProfileView: View {
             .navigationTitle("Me")
             .sheet(isPresented: $showTutorials) {
                 TutorialsView()
+            }
+            .sheet(isPresented: $showLightMeter) {
+                LightMeterView()
             }
             .navigationDestination(isPresented: $showSubscription) {
                 PaywallView()
@@ -222,6 +227,26 @@ public struct ProfileView: View {
                 showAchievements = true
             }
         }
+    }
+
+    // MARK: - Tools Section
+
+    private var toolsSection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            Text("Tools")
+                .sectionLabelStyle()
+                .padding(.leading, 4)
+
+            menuRow(
+                icon: "sun.max.fill",
+                color: CultivationTheme.Colors.accentAmber,
+                title: "Light Meter",
+                id: "profile_tools_row_light_meter"
+            ) {
+                showLightMeter = true
+            }
+        }
+        .accessibilityIdentifier("profile_tools_section")
     }
 
     // MARK: - Community Section
