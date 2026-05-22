@@ -1,13 +1,12 @@
 import Foundation
-import Testing
 @testable import GrowWiseFeature
+import Testing
 
 // MARK: - OnboardingAnalyticsTracker Tests
 
-@Suite("OnboardingAnalyticsTracker")
+@Suite("OnboardingAnalyticsTracker", .serialized)
 @MainActor
 final class OnboardingAnalyticsTrackerTests {
-
     init() {
         // Fresh state before each test suite
         OnboardingAnalyticsTracker.resetAllState()
@@ -39,7 +38,8 @@ final class OnboardingAnalyticsTrackerTests {
     // MARK: - Onboarding completion date storage
 
     @Test("trackOnboardingCompleted stores completion date in UserDefaults")
-    func testTrackOnboardingCompletedStoresDate() {
+    func trackOnboardingCompletedStoresDate() {
+        OnboardingAnalyticsTracker.resetAllState()
         let tracker = OnboardingAnalyticsTracker.shared
         #expect(OnboardingAnalyticsTracker.storedCompletionDate == nil)
 
@@ -51,24 +51,28 @@ final class OnboardingAnalyticsTrackerTests {
     // MARK: - Activation milestone state helpers
 
     @Test("isD1Emitted is false initially")
-    func testIsD1EmittedInitiallyFalse() {
+    func isD1EmittedInitiallyFalse() {
+        OnboardingAnalyticsTracker.resetAllState()
         #expect(OnboardingAnalyticsTracker.isD1Emitted == false)
     }
 
     @Test("isD7Emitted is false initially")
-    func testIsD7EmittedInitiallyFalse() {
+    func isD7EmittedInitiallyFalse() {
+        OnboardingAnalyticsTracker.resetAllState()
         #expect(OnboardingAnalyticsTracker.isD7Emitted == false)
     }
 
     @Test("isD30Emitted is false initially")
-    func testIsD30EmittedInitiallyFalse() {
+    func isD30EmittedInitiallyFalse() {
+        OnboardingAnalyticsTracker.resetAllState()
         #expect(OnboardingAnalyticsTracker.isD30Emitted == false)
     }
 
     // MARK: - Reset state
 
     @Test("resetAllState clears completion date")
-    func testResetAllStateClearsCompletionDate() {
+    func resetAllStateClearsCompletionDate() {
+        OnboardingAnalyticsTracker.resetAllState()
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.trackOnboardingCompleted()
         #expect(OnboardingAnalyticsTracker.storedCompletionDate != nil)
@@ -79,7 +83,7 @@ final class OnboardingAnalyticsTrackerTests {
     }
 
     @Test("resetAllState resets all emitted flags")
-    func testResetAllStateResetsEmittedFlags() {
+    func resetAllStateResetsEmittedFlags() {
         OnboardingAnalyticsTracker.resetAllState()
         #expect(OnboardingAnalyticsTracker.isD1Emitted == false)
         #expect(OnboardingAnalyticsTracker.isD7Emitted == false)
@@ -89,15 +93,15 @@ final class OnboardingAnalyticsTrackerTests {
 
 // MARK: - Activation milestone emission logic
 
-@Suite("OnboardingAnalyticsTracker activation milestone emission")
+@Suite("OnboardingAnalyticsTracker activation milestone emission", .serialized)
 @MainActor
 final class OnboardingActivationMilestoneTests {
-
     init() {
         OnboardingAnalyticsTracker.resetAllState()
     }
 
     private func simulateOnboardingCompleted(daysAgo: Int) {
+        OnboardingAnalyticsTracker.resetAllState()
         let date = Calendar.current.date(byAdding: .day, value: -daysAgo, to: Date()) ?? Date()
         UserDefaults.standard.set(date, forKey: "onboarding_completed_date")
     }
@@ -105,7 +109,7 @@ final class OnboardingActivationMilestoneTests {
     // MARK: D1
 
     @Test("D1 not emitted when onboarding completed today (0 days ago)")
-    func testD1NotEmittedWhenOnboardingCompletedToday() {
+    func d1NotEmittedWhenOnboardingCompletedToday() {
         simulateOnboardingCompleted(daysAgo: 0)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -113,7 +117,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D1 emitted when onboarding completed 1 day ago")
-    func testD1EmittedWhenOnboardingCompleted1DayAgo() {
+    func d1EmittedWhenOnboardingCompleted1DayAgo() {
         simulateOnboardingCompleted(daysAgo: 1)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -121,7 +125,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D1 emitted only once (idempotent)")
-    func testD1EmittedOnlyOnce() {
+    func d1EmittedOnlyOnce() {
         simulateOnboardingCompleted(daysAgo: 2)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -135,7 +139,7 @@ final class OnboardingActivationMilestoneTests {
     // MARK: D7
 
     @Test("D7 not emitted when onboarding completed 3 days ago")
-    func testD7NotEmittedWhenOnboardingCompleted3DaysAgo() {
+    func d7NotEmittedWhenOnboardingCompleted3DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 3)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -143,7 +147,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D7 not emitted when onboarding completed 6 days ago")
-    func testD7NotEmittedWhenOnboardingCompleted6DaysAgo() {
+    func d7NotEmittedWhenOnboardingCompleted6DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 6)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -151,7 +155,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D7 emitted when onboarding completed 7 days ago")
-    func testD7EmittedWhenOnboardingCompleted7DaysAgo() {
+    func d7EmittedWhenOnboardingCompleted7DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 7)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -159,7 +163,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D7 emitted only once (idempotent)")
-    func testD7EmittedOnlyOnce() {
+    func d7EmittedOnlyOnce() {
         simulateOnboardingCompleted(daysAgo: 10)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -173,7 +177,7 @@ final class OnboardingActivationMilestoneTests {
     // MARK: D30
 
     @Test("D30 not emitted when onboarding completed 14 days ago")
-    func testD30NotEmittedWhenOnboardingCompleted14DaysAgo() {
+    func d30NotEmittedWhenOnboardingCompleted14DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 14)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -181,7 +185,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D30 not emitted when onboarding completed 29 days ago")
-    func testD30NotEmittedWhenOnboardingCompleted29DaysAgo() {
+    func d30NotEmittedWhenOnboardingCompleted29DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 29)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -189,7 +193,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D30 emitted when onboarding completed 30 days ago")
-    func testD30EmittedWhenOnboardingCompleted30DaysAgo() {
+    func d30EmittedWhenOnboardingCompleted30DaysAgo() {
         simulateOnboardingCompleted(daysAgo: 30)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -197,7 +201,7 @@ final class OnboardingActivationMilestoneTests {
     }
 
     @Test("D30 emitted only once (idempotent)")
-    func testD30EmittedOnlyOnce() {
+    func d30EmittedOnlyOnce() {
         simulateOnboardingCompleted(daysAgo: 45)
         let tracker = OnboardingAnalyticsTracker.shared
         tracker.checkActivationMilestones()
@@ -213,9 +217,8 @@ final class OnboardingActivationMilestoneTests {
 
 @Suite("OnboardingStep.rawValue strings")
 struct OnboardingStepRawValueTests {
-
     @Test("All OnboardingStep cases have non-empty rawValue strings")
-    func testAllStepsHaveNonEmptyRawValue() {
+    func allStepsHaveNonEmptyRawValue() {
         for step in OnboardingStep.allCases {
             #expect(!step.rawValue.isEmpty, "OnboardingStep \(step) has empty rawValue")
         }
@@ -229,7 +232,7 @@ struct OnboardingStepRawValueTests {
     }
 
     @Test("totalSteps matches allCases count")
-    func testTotalStepsMatchesAllCasesCount() {
+    func totalStepsMatchesAllCasesCount() {
         #expect(OnboardingStep.welcome.totalSteps == OnboardingStep.allCases.count)
         #expect(OnboardingStep.welcome.totalSteps > 1)
     }

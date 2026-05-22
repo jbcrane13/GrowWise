@@ -4,9 +4,6 @@ import os
 #if canImport(AVFoundation)
 @preconcurrency import AVFoundation
 #endif
-#if canImport(UIKit)
-import UIKit
-#endif
 
 private let logger = Logger(subsystem: "com.growwise", category: "LightMeterService")
 
@@ -81,10 +78,12 @@ public final class LightMeterService {
     nonisolated static let smoothingWindow = 8
 
     #if canImport(AVFoundation) && os(iOS)
+    // session and device are always read/written on @MainActor; sessionQueue is used only
+    // for blocking AVFoundation configuration calls that must not run on the main thread.
     @ObservationIgnored
-    private nonisolated(unsafe) var session: AVCaptureSession?
+    private var session: AVCaptureSession?
     @ObservationIgnored
-    private nonisolated(unsafe) var device: AVCaptureDevice?
+    private var device: AVCaptureDevice?
     @ObservationIgnored
     private let sessionQueue = DispatchQueue(label: "com.growwise.lightmeter.session")
     @ObservationIgnored
@@ -176,12 +175,14 @@ public final class LightMeterService {
     // MARK: - Session
 
     private func configureAndStartSession() async throws {
-        try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<Void, Error>) in
-            sessionQueue.async { [weak self] in
-                guard let self else {
-                    continuation.resume(throwing: LightMeterError.configurationFailed)
-                    return
-                }
+        // AVCaptureSession/AVCaptureDevice are not Sendable; wrap in an @unchecked Sendable
+        // carrier so the checked continuation can transport them back to @MainActor.
+        struct SessionPair: @unchecked Sendable {
+            let session: AVCaptureSession
+            let device: AVCaptureDevice
+        }
+        let pair: SessionPair = try await withCheckedThrowingContinuation { (continuation: CheckedContinuation<SessionPair, Error>) in
+            sessionQueue.async {
                 let session = AVCaptureSession()
                 session.beginConfiguration()
                 session.sessionPreset = .medium
@@ -209,15 +210,16 @@ public final class LightMeterService {
 
                     session.commitConfiguration()
                     session.startRunning()
-                    self.session = session
-                    self.device = device
-                    continuation.resume()
+                    continuation.resume(returning: SessionPair(session: session, device: device))
                 } catch {
                     session.commitConfiguration()
                     continuation.resume(throwing: error)
                 }
             }
         }
+        // Back on @MainActor — assign both properties here, not inside the sessionQueue block.
+        self.session = pair.session
+        self.device = pair.device
     }
 
     // MARK: - Sampling
@@ -235,13 +237,12 @@ public final class LightMeterService {
         }
     }
 
-    private nonisolated func readSample() async -> Double? {
-        await withCheckedContinuation { (continuation: CheckedContinuation<Double?, Never>) in
-            sessionQueue.async { [weak self] in
-                guard let device = self?.device else {
-                    continuation.resume(returning: nil)
-                    return
-                }
+    private func readSample() async -> Double? {
+        // Capture device reference on @MainActor; the block below only reads immutable
+        // exposure properties that are safe to call from any thread per AVFoundation docs.
+        guard let device = self.device else { return nil }
+        return await withCheckedContinuation { (continuation: CheckedContinuation<Double?, Never>) in
+            sessionQueue.async {
                 let aperture = Double(device.lensAperture)
                 let durationSec = CMTimeGetSeconds(device.exposureDuration)
                 let iso = Double(device.iso)

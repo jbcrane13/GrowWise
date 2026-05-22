@@ -12,6 +12,7 @@ public struct ProfileView: View {
     @State private var plantCount: Int = 0
     @State private var journalCount: Int = 0
     @State private var streakDays: Int = 0
+    @State private var harvestCount: Int = 0
     @State private var showAppSettings = false
 
     // Navigation state
@@ -180,8 +181,8 @@ public struct ProfileView: View {
                 .accessibilityIdentifier("profile_stat_plants")
             statCard(value: streakDays, label: "Day Streak")
                 .accessibilityIdentifier("profile_stat_streak")
-            statCard(value: journalCount, label: "Entries")
-                .accessibilityIdentifier("profile_stat_entries")
+            statCard(value: harvestCount, label: "Harvests")
+                .accessibilityIdentifier("profile_stat_harvests")
         }
     }
 
@@ -546,6 +547,7 @@ public struct ProfileView: View {
         plantCount = dataService.getPlantCount()
         journalCount = dataService.getJournalEntryCount()
         streakDays = dataService.getCurrentUser()?.streakDays ?? 0
+        harvestCount = dataService.getCurrentUser()?.plantsHarvested ?? 0
     }
 }
 

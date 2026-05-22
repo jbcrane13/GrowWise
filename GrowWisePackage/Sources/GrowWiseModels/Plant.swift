@@ -27,6 +27,11 @@ public final class Plant {
     /// Frost sensitivity — used for weather alert filtering. nil = unknown.
     public var frostSensitivity: FrostSensitivity? // CloudKit: made optional or with default value
 
+    /// Club collaboration metadata. nil means the plant is private to its owner.
+    public var sharedWithClubID: UUID? // CloudKit: made optional or with default value
+    public var sharedOwnerID: String? // CloudKit: made optional or with default value
+    public var sharedDate: Date? // CloudKit: made optional or with default value
+
     // User notes and photos
     public var notes: String? = "" // CloudKit: made optional or with default value
     public var photoURLs: [String]? = [] // CloudKit: made optional or with default value
@@ -64,6 +69,9 @@ public final class Plant {
         growthStage = .seedling
         healthStatus = .healthy
         frostSensitivity = nil
+        sharedWithClubID = nil
+        sharedOwnerID = nil
+        sharedDate = nil
         notes = ""
         photoURLs = []
         reminders = []
@@ -71,6 +79,17 @@ public final class Plant {
         companionPlants = []
         soilLogs = []
         harvests = []
+    }
+
+    public var isSharedWithClub: Bool {
+        sharedWithClubID != nil
+    }
+
+    public func isReadOnlySharedPlant(for memberID: String?) -> Bool {
+        guard isSharedWithClub, let sharedOwnerID, let memberID else {
+            return false
+        }
+        return sharedOwnerID != memberID
     }
 }
 
@@ -269,9 +288,9 @@ public enum ContainerType: String, CaseIterable, Codable, Sendable {
 }
 
 public enum FrostSensitivity: String, CaseIterable, Codable, Sendable {
-    case hardy            // Survives heavy frost (below 25°F / -4°C)
-    case semiHardy        // Survives light frost (25–32°F / -4 to 0°C)
-    case tender           // Damaged by frost above 32°F / 0°C
+    case hardy // Survives heavy frost (below 25°F / -4°C)
+    case semiHardy // Survives light frost (25–32°F / -4 to 0°C)
+    case tender // Damaged by frost above 32°F / 0°C
 
     public var displayName: String {
         switch self {

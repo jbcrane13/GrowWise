@@ -9,7 +9,7 @@ import UIKit
 // swiftlint:disable attributes function_body_length identifier_name
 #endif
 
-public struct ClubChatView: View {
+public struct ClubChatView: View { // swiftlint:disable:this type_body_length
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
 
@@ -20,8 +20,8 @@ public struct ClubChatView: View {
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showPhotoPicker = false
-    @State private var selectedPhotoItem: PhotosPickerItem?
-    @State private var selectedPhotoData: Data?
+    @State private var selectedPhotoItems: [PhotosPickerItem] = []
+    @State private var pendingMessages: [PendingChatMessage] = []
 
     private var currentUserID: String {
         dataService.getCurrentUser()?.id.uuidString ?? ""
@@ -54,9 +54,14 @@ public struct ClubChatView: View {
             } message: {
                 Text(errorMessage ?? "")
             }
-            .photosPicker(isPresented: $showPhotoPicker, selection: $selectedPhotoItem, matching: .images)
-            .onChange(of: selectedPhotoItem) { _, newItem in
-                Task { await loadPhoto(from: newItem) }
+            .photosPicker(
+                isPresented: $showPhotoPicker,
+                selection: $selectedPhotoItems,
+                maxSelectionCount: 5,
+                matching: .images
+            )
+            .onChange(of: selectedPhotoItems) { _, newItems in
+                Task { await loadPhotos(from: newItems) }
             }
     }
 
@@ -70,13 +75,17 @@ public struct ClubChatView: View {
                         messageRow(message: message)
                             .id(message.id)
                     }
+                    ForEach(pendingMessages) { pending in
+                        pendingMessageRow(pending)
+                            .id(pending.id)
+                    }
                 }
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.vertical, CultivationTheme.Spacing.sectionGap)
             }
-            .onChange(of: messages.count) { _, _ in
-                if let last = messages.last {
-                    withAnimation { proxy.scrollTo(last.id, anchor: .bottom) }
+            .onChange(of: messages.count + pendingMessages.count) { _, _ in
+                if let last = pendingMessages.last?.id ?? messages.last?.id {
+                    withAnimation { proxy.scrollTo(last, anchor: .bottom) }
                 }
             }
         }
@@ -136,9 +145,14 @@ public struct ClubChatView: View {
                         .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
                 }
 
-                Text(formatTime(message.timestamp))
-                    .font(.system(size: 10, design: .rounded))
-                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                HStack(spacing: 4) {
+                    Text(formatTime(message.timestamp))
+                    if isCurrentUser {
+                        deliveryIndicator(for: message)
+                    }
+                }
+                .font(.system(size: 10, design: .rounded))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
 
             if isCurrentUser {
@@ -153,6 +167,50 @@ public struct ClubChatView: View {
             }
 
             if !isCurrentUser { Spacer() }
+        }
+    }
+
+    private func pendingMessageRow(_ pending: PendingChatMessage) -> some View {
+        HStack(alignment: .bottom, spacing: 8) {
+            Spacer()
+            VStack(alignment: .trailing, spacing: 4) {
+                if let photoData = pending.photoData {
+                    #if os(iOS)
+                    if let uiImage = UIImage(data: photoData) {
+                        Image(uiImage: uiImage)
+                            .resizable()
+                            .scaledToFill()
+                            .frame(maxWidth: 200, maxHeight: 200)
+                            .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                    }
+                    #endif
+                }
+                if !pending.text.isEmpty {
+                    Text(pending.text)
+                        .font(.system(.body, design: .rounded))
+                        .foregroundStyle(.white)
+                        .padding(.horizontal, 12)
+                        .padding(.vertical, 8)
+                        .background(CultivationTheme.Gradients.ctaVertical)
+                        .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                }
+
+                HStack(spacing: 6) {
+                    deliveryIcon(pending.state)
+                    if pending.state == .failed {
+                        Button("Retry") {
+                            Task { await retryPendingMessage(pending) }
+                        }
+                        .font(.system(size: 10, weight: .semibold, design: .rounded))
+                        .accessibilityIdentifier("club_chat_retry_\(pending.id.uuidString)")
+                    }
+                }
+                .foregroundStyle(
+                    pending.state == .failed
+                        ? CultivationTheme.Colors.statusAlert
+                        : CultivationTheme.Colors.textTertiary
+                )
+            }
         }
     }
 
@@ -225,6 +283,7 @@ public struct ClubChatView: View {
         defer { isLoading = false }
         do {
             guard let clubID = club.id else { return }
+            try dataService.markClubMessagesRead(for: clubID, memberID: currentUserID)
             messages = try dataService.fetchClubMessages(for: clubID)
         } catch {
             errorMessage = error.localizedDescription
@@ -236,40 +295,138 @@ public struct ClubChatView: View {
         guard !newMessageText.isEmpty else { return }
         guard let clubID = club.id else { return }
 
+        let draft = PendingChatMessage(text: newMessageText, photoData: nil, state: .sending)
+        pendingMessages.append(draft)
+        newMessageText = ""
+
         do {
             let message = try dataService.sendClubMessage(
                 clubID: clubID,
                 senderID: currentUserID,
                 senderName: currentUserName,
-                text: newMessageText
+                text: draft.text
             )
+            pendingMessages.removeAll { $0.id == draft.id }
             messages.append(message)
-            newMessageText = ""
         } catch {
+            markPendingMessage(draft.id, state: .failed)
             errorMessage = error.localizedDescription
         }
     }
 
     @MainActor
-    private func loadPhoto(from item: PhotosPickerItem?) async {
-        guard let item else { return }
+    private func loadPhotos(from items: [PhotosPickerItem]) async {
+        guard !items.isEmpty else { return }
+        for item in items {
+            do {
+                guard let data = try await item.loadTransferable(type: Data.self) else { continue }
+                let compressed = compressedPhotoData(from: data) ?? data
+                await sendPhotoData(compressed)
+            } catch {
+                errorMessage = "Failed to load photo: \(error.localizedDescription)"
+            }
+        }
+        selectedPhotoItems = []
+    }
+
+    @MainActor
+    private func sendPhotoData(_ data: Data, retrying pending: PendingChatMessage? = nil) async {
+        guard let clubID = club.id else { return }
+        let draft = pending ?? PendingChatMessage(text: "", photoData: data, state: .sending)
+        if pending == nil {
+            pendingMessages.append(draft)
+        } else {
+            markPendingMessage(draft.id, state: .sending)
+        }
+
         do {
-            if let data = try await item.loadTransferable(type: Data.self) {
-                selectedPhotoData = data
-                // Auto-send photo
-                guard let clubID = club.id else { return }
-                let message = try dataService.sendClubPhoto(
+            let message = try dataService.sendClubPhoto(
+                clubID: clubID,
+                senderID: currentUserID,
+                senderName: currentUserName,
+                photoData: data
+            )
+            pendingMessages.removeAll { $0.id == draft.id }
+            messages.append(message)
+        } catch {
+            markPendingMessage(draft.id, state: .failed)
+            errorMessage = "Failed to send photo: \(error.localizedDescription)"
+        }
+    }
+
+    @MainActor
+    private func retryPendingMessage(_ pending: PendingChatMessage) async {
+        guard let clubID = club.id else { return }
+        markPendingMessage(pending.id, state: .sending)
+
+        do {
+            let message: ClubMessage = if let photoData = pending.photoData {
+                try dataService.sendClubPhoto(
                     clubID: clubID,
                     senderID: currentUserID,
                     senderName: currentUserName,
-                    photoData: data
+                    photoData: photoData,
+                    caption: pending.text.isEmpty ? nil : pending.text
                 )
-                messages.append(message)
-                selectedPhotoItem = nil
+            } else {
+                try dataService.sendClubMessage(
+                    clubID: clubID,
+                    senderID: currentUserID,
+                    senderName: currentUserName,
+                    text: pending.text
+                )
             }
+            pendingMessages.removeAll { $0.id == pending.id }
+            messages.append(message)
         } catch {
-            errorMessage = "Failed to load photo: \(error.localizedDescription)"
+            markPendingMessage(pending.id, state: .failed)
+            errorMessage = error.localizedDescription
         }
+    }
+
+    private func markPendingMessage(_ id: UUID, state: ClubMessageDeliveryState) {
+        guard let index = pendingMessages.firstIndex(where: { $0.id == id }) else { return }
+        pendingMessages[index].state = state
+    }
+
+    @ViewBuilder
+    private func deliveryIndicator(for message: ClubMessage) -> some View {
+        if message.isSeenByAll(memberIDs: club.memberIDs) {
+            Text("Seen")
+                .accessibilityIdentifier("club_chat_seen_\(message.id?.uuidString ?? "unknown")")
+        } else {
+            deliveryIcon(message.deliveryState)
+        }
+    }
+
+    private func deliveryIcon(_ state: ClubMessageDeliveryState) -> some View {
+        let symbol = switch state {
+        case .sending: "clock"
+        case .sent: "checkmark"
+        case .failed: "exclamationmark.circle.fill"
+        }
+        return Image(systemName: symbol)
+            .font(.system(size: 10, weight: .semibold))
+    }
+
+    private func compressedPhotoData(from data: Data) -> Data? {
+        #if os(iOS)
+        guard let image = UIImage(data: data) else { return nil }
+        let maxDimension: CGFloat = 1600
+        let longestSide = max(image.size.width, image.size.height)
+        guard longestSide > maxDimension else {
+            return image.jpegData(compressionQuality: 0.82)
+        }
+        let scale = maxDimension / longestSide
+        let size = CGSize(width: image.size.width * scale, height: image.size.height * scale)
+        let renderer = UIGraphicsImageRenderer(size: size)
+        let resized = renderer.image { _ in
+            image.draw(in: CGRect(origin: .zero, size: size))
+        }
+        return resized.jpegData(compressionQuality: 0.82)
+        #else
+        return data
+        #endif
     }
 
     private func formatTime(_ date: Date?) -> String {
@@ -278,6 +435,20 @@ public struct ClubChatView: View {
         f.dateStyle = .none
         f.timeStyle = .short
         return f.string(from: date)
+    }
+}
+
+private struct PendingChatMessage: Identifiable, Equatable {
+    let id: UUID
+    let text: String
+    let photoData: Data?
+    var state: ClubMessageDeliveryState
+
+    init(id: UUID = UUID(), text: String, photoData: Data?, state: ClubMessageDeliveryState) {
+        self.id = id
+        self.text = text
+        self.photoData = photoData
+        self.state = state
     }
 }
 

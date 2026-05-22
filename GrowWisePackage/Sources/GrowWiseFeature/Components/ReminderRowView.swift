@@ -7,6 +7,9 @@ import UIKit
 #endif
 
 public struct ReminderRowView: View {
+    @Environment(DataService.self)
+    private var dataService
+
     let reminder: PlantReminder
     let reminderService: ReminderService
 
@@ -61,32 +64,49 @@ public struct ReminderRowView: View {
                     // Priority indicator
                     priorityIndicator
                 }
+
+                if let assignedName = reminder.assignedMemberName {
+                    Text("Assigned to \(assignedName)")
+                        .font(.caption2)
+                        .fontWeight(.semibold)
+                        .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+                        .accessibilityIdentifier("reminder_badge_assigned_\(reminder.id)")
+                }
             }
 
             Spacer()
 
             // Action buttons
             VStack(spacing: 8) {
-                Button(action: completeReminder) {
-                    if isCompleting {
-                        ProgressView()
-                            .scaleEffect(0.8)
-                    } else {
-                        Image(systemName: "checkmark.circle.fill")
-                            .font(.title3)
-                            .foregroundStyle(CultivationTheme.Colors.statusHealthy)
+                if canMutateReminder {
+                    Button(action: completeReminder) {
+                        if isCompleting {
+                            ProgressView()
+                                .scaleEffect(0.8)
+                        } else {
+                            Image(systemName: "checkmark.circle.fill")
+                                .font(.title3)
+                                .foregroundStyle(CultivationTheme.Colors.statusHealthy)
+                        }
                     }
-                }
-                .disabled(isCompleting)
-                .accessibilityIdentifier("reminder_button_complete_\(reminder.id)")
-
-                Button(action: { showingSnoozeOptions = true }, label: {
-                    Image(systemName: "clock.arrow.circlepath")
+                    .disabled(isCompleting)
+                    .accessibilityIdentifier("reminder_button_complete_\(reminder.id)")
+                } else {
+                    Image(systemName: "person.fill.checkmark")
                         .font(.title3)
-                        .foregroundStyle(CultivationTheme.Colors.statusWarning)
-                })
-                .disabled(isCompleting)
-                .accessibilityIdentifier("reminder_button_snooze_\(reminder.id)")
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                        .accessibilityHidden(true)
+                }
+
+                if canMutateReminder {
+                    Button(action: { showingSnoozeOptions = true }, label: {
+                        Image(systemName: "clock.arrow.circlepath")
+                            .font(.title3)
+                            .foregroundStyle(CultivationTheme.Colors.statusWarning)
+                    })
+                    .disabled(isCompleting)
+                    .accessibilityIdentifier("reminder_button_snooze_\(reminder.id)")
+                }
             }
         }
         .padding(CultivationTheme.Spacing.cardPadding)
@@ -188,6 +208,14 @@ public struct ReminderRowView: View {
         }
     }
 
+    private var currentMemberID: String? {
+        dataService.getCurrentUser()?.id.uuidString
+    }
+
+    private var canMutateReminder: Bool {
+        reminder.canBeCompleted(by: currentMemberID)
+    }
+
     private var priorityIndicator: some View {
         HStack(spacing: 2) {
             ForEach(1 ... reminder.priority.numericValue, id: \.self) { _ in
@@ -205,8 +233,8 @@ public struct ReminderRowView: View {
 
         Task<Void, Never> {
             do {
-                // Mark reminder as completed
-                reminder.markCompleted()
+                // Mark reminder as completed through DataService so shared-care assignment rules apply.
+                try dataService.completeReminder(reminder)
 
                 // Create completion feedback
                 let impact = UIImpactFeedbackGenerator(style: .light)
@@ -228,10 +256,14 @@ public struct ReminderRowView: View {
     }
 
     private func snoozeReminder(for duration: SnoozeDuration) {
-        reminder.snooze(for: duration)
+        guard canMutateReminder else {
+            return
+        }
 
         Task<Void, Never> {
             do {
+                try dataService.snoozeReminder(reminder, for: duration)
+
                 // Reschedule notification with new time
                 try await reminderService.notificationService.scheduleReminderNotification(for: reminder)
 

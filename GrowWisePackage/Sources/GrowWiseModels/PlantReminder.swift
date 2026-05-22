@@ -38,6 +38,11 @@ public final class PlantReminder {
     public var seasonalContext: String?
     public var isSeasonalReminder: Bool = false
 
+    // Club collaboration assignment
+    public var assignedMemberID: String?
+    public var assignedMemberName: String?
+    public var assignedDate: Date?
+
     // Metadata
     public var createdDate = Date()
     public var lastModified = Date()
@@ -101,6 +106,9 @@ public final class PlantReminder {
         customFrequencyDays = nil
         seasonalContext = nil
         isSeasonalReminder = false
+        assignedMemberID = nil
+        assignedMemberName = nil
+        assignedDate = nil
         createdDate = Date()
         lastModified = Date()
 
@@ -161,6 +169,7 @@ public final class PlantReminder {
     public func markCompleted() {
         lastCompletedDate = Date()
         snoozeCount = 0
+        releaseAssignment()
 
         if isRecurring {
             nextDueDate = calculateNextDueDate()
@@ -209,6 +218,34 @@ public final class PlantReminder {
 
     public var type: ReminderType {
         reminderType
+    }
+
+    public var isAssigned: Bool {
+        assignedMemberID != nil
+    }
+
+    public func claimAssignment(memberID: String, memberName: String) {
+        assignedMemberID = memberID
+        assignedMemberName = memberName
+        assignedDate = Date()
+        lastModified = Date()
+    }
+
+    public func releaseAssignment() {
+        assignedMemberID = nil
+        assignedMemberName = nil
+        assignedDate = nil
+        lastModified = Date()
+    }
+
+    public func isAssigned(to memberID: String?) -> Bool {
+        guard let assignedMemberID, let memberID else { return false }
+        return assignedMemberID == memberID
+    }
+
+    public func canBeCompleted(by memberID: String?) -> Bool {
+        guard let assignedMemberID else { return true }
+        return assignedMemberID == memberID
     }
 }
 

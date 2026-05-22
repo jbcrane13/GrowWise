@@ -27,7 +27,7 @@ struct PlantData: Codable {
 
 @MainActor
 @Observable
-public final class PlantDatabaseService {
+public final class PlantDatabaseService { // swiftlint:disable:this type_body_length
     private let dataService: DataService
     private let seedingWorker: PlantSeedingWorker
     private static let plantDataEntries: [PlantData] = {
@@ -393,17 +393,22 @@ public final class PlantDatabaseService {
     private func isPlantSuitableForCurrentSeason(plant: Plant, month: Int) -> Bool {
         switch plant.plantType {
         case .vegetable:
-            return (month >= 3 && month <= 9)
+            month >= 3 && month <= 9
+
         case .herb:
-            return (month >= 4 && month <= 10)
+            month >= 4 && month <= 10
+
         case .flower:
-            return (month >= 3 && month <= 8)
+            month >= 3 && month <= 8
+
         case .houseplant, .succulent:
-            return true
+            true
+
         case .fruit:
-            return (month >= 4 && month <= 9)
+            month >= 4 && month <= 9
+
         default:
-            return false
+            false
         }
     }
 

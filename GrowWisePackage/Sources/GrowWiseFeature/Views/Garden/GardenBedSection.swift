@@ -7,6 +7,7 @@ import SwiftUI
 /// Shows the bed/location header, all plant rows, companion tip, and suggested seeds.
 struct GardenBedSection: View {
     let group: PlantGroup
+    var currentMemberID: String?
     let onPlantTap: (Plant) -> Void
     let onQuickAction: (Plant) -> Void
     let onDelete: (Plant) -> Void
@@ -31,10 +32,12 @@ struct GardenBedSection: View {
                     onOpen: { onPlantTap(plant) }
                 )
                 .contextMenu {
-                    Button(role: .destructive) {
-                        onDelete(plant)
-                    } label: {
-                        Label("Delete Plant", systemImage: "trash")
+                    if !plant.isReadOnlySharedPlant(for: currentMemberID) {
+                        Button(role: .destructive) {
+                            onDelete(plant)
+                        } label: {
+                            Label("Delete Plant", systemImage: "trash")
+                        }
                     }
                 }
                 .accessibilityIdentifier("garden_row_plant_\(plant.id?.uuidString ?? plant.name ?? "unknown")")

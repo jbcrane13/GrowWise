@@ -144,19 +144,22 @@ public struct UserProfile {
     var selectedFirstPlantID: UUID?
 
     // MARK: - Indoor Environment
+
     var indoorLightAvailability: LightAvailability = .medium
     var indoorRoomTemp: Bool = false
     var hasPetsInHome: Bool = false
 
     // MARK: - Outdoor Environment
+
     var hardinessZone: String = ""
     var sunExposure: SunExposure = .fullSun
     var hasFrostProtection: Bool = false
 
     // MARK: - Hydroponic Environment
+
     var hydroponicSystemType: HydroponicSystemType = .dwc
     var nutrientSchedule: Double = 0.5
-    var phRange: ClosedRange<Double> = 5.5...6.5
+    var phRange: ClosedRange<Double> = 5.5 ... 6.5
 }
 
 public enum GardeningGoal: String, CaseIterable, Identifiable {

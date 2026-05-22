@@ -1,10 +1,9 @@
-import Testing
 import Foundation
 @testable import GrowWiseModels
+import Testing
 
 @Suite("PlantReminder Logic Tests")
 struct PlantReminderTests {
-
     private func makeReminder(
         frequency: ReminderFrequency = .weekly,
         nextDue: Date = Date()
@@ -19,7 +18,7 @@ struct PlantReminderTests {
     }
 
     @Test("PlantReminder initialization sets all expected fields")
-    func testInitialization() {
+    func initialization() {
         let due = Date().addingTimeInterval(86400)
         let reminder = makeReminder(frequency: .weekly, nextDue: due)
         #expect(reminder.title == "Water")
@@ -32,12 +31,34 @@ struct PlantReminderTests {
         #expect(reminder.snoozeCount == 0)
         #expect(reminder.maxSnoozeCount == 3)
         #expect(reminder.priority == .medium)
+        #expect(reminder.assignedMemberID == nil)
+        #expect(reminder.assignedMemberName == nil)
+    }
+
+    @Test("Shared reminder assignment can be claimed, released, and cleared on completion")
+    func sharedReminderAssignmentLifecycle() {
+        let reminder = makeReminder(frequency: .daily)
+
+        reminder.claimAssignment(memberID: "member-1", memberName: "Alice")
+        #expect(reminder.assignedMemberID == "member-1")
+        #expect(reminder.assignedMemberName == "Alice")
+        #expect(reminder.isAssigned(to: "member-1") == true)
+        #expect(reminder.isAssigned(to: "member-2") == false)
+
+        reminder.releaseAssignment()
+        #expect(reminder.assignedMemberID == nil)
+        #expect(reminder.assignedMemberName == nil)
+
+        reminder.claimAssignment(memberID: "member-1", memberName: "Alice")
+        reminder.markCompleted()
+        #expect(reminder.assignedMemberID == nil)
+        #expect(reminder.assignedMemberName == nil)
     }
 
     // MARK: - calculateNextDueDate
 
     @Test("calculateNextDueDate for daily adds 1 day")
-    func testCalculateNextDueDateDaily() {
+    func calculateNextDueDateDaily() {
         let reminder = makeReminder(frequency: .daily)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -46,7 +67,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for everyOtherDay adds 2 days")
-    func testCalculateNextDueDateEveryOtherDay() {
+    func calculateNextDueDateEveryOtherDay() {
         let reminder = makeReminder(frequency: .everyOtherDay)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -55,7 +76,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for twiceWeekly adds 3 days")
-    func testCalculateNextDueDateTwiceWeekly() {
+    func calculateNextDueDateTwiceWeekly() {
         let reminder = makeReminder(frequency: .twiceWeekly)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -64,7 +85,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for weekly adds 7 days")
-    func testCalculateNextDueDateWeekly() {
+    func calculateNextDueDateWeekly() {
         let reminder = makeReminder(frequency: .weekly)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -73,7 +94,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for biweekly adds 14 days")
-    func testCalculateNextDueDateBiweekly() {
+    func calculateNextDueDateBiweekly() {
         let reminder = makeReminder(frequency: .biweekly)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -82,7 +103,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for monthly adds 1 month")
-    func testCalculateNextDueDateMonthly() {
+    func calculateNextDueDateMonthly() {
         let reminder = makeReminder(frequency: .monthly)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -91,7 +112,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for quarterly adds 3 months")
-    func testCalculateNextDueDateQuarterly() {
+    func calculateNextDueDateQuarterly() {
         let reminder = makeReminder(frequency: .quarterly)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -100,7 +121,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for seasonally adds 6 months")
-    func testCalculateNextDueDateSeasonally() {
+    func calculateNextDueDateSeasonally() {
         let reminder = makeReminder(frequency: .seasonally)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -109,7 +130,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for yearly adds 1 year")
-    func testCalculateNextDueDateYearly() {
+    func calculateNextDueDateYearly() {
         let reminder = makeReminder(frequency: .yearly)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -118,7 +139,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for custom uses customFrequencyDays")
-    func testCalculateNextDueDateCustom() {
+    func calculateNextDueDateCustom() {
         let reminder = makeReminder(frequency: .custom)
         reminder.customFrequencyDays = 10
         let base = Date()
@@ -128,7 +149,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for custom with nil days defaults to 1")
-    func testCalculateNextDueDateCustomNilDays() {
+    func calculateNextDueDateCustomNilDays() {
         let reminder = makeReminder(frequency: .custom)
         reminder.customFrequencyDays = nil
         let base = Date()
@@ -138,7 +159,7 @@ struct PlantReminderTests {
     }
 
     @Test("calculateNextDueDate for once returns same date")
-    func testCalculateNextDueDateOnce() {
+    func calculateNextDueDateOnce() {
         let reminder = makeReminder(frequency: .once)
         let base = Date()
         let next = reminder.calculateNextDueDate(from: base)
@@ -148,16 +169,16 @@ struct PlantReminderTests {
     // MARK: - markCompleted
 
     @Test("markCompleted sets lastCompletedDate")
-    func testMarkCompletedSetsLastCompleted() {
+    func markCompletedSetsLastCompleted() throws {
         let reminder = makeReminder(frequency: .weekly)
         let before = Date()
         reminder.markCompleted()
         #expect(reminder.lastCompletedDate != nil)
-        #expect(reminder.lastCompletedDate! >= before)
+        #expect(try #require(reminder.lastCompletedDate) >= before)
     }
 
     @Test("markCompleted advances nextDueDate for recurring reminder")
-    func testMarkCompletedAdvancesNextDueDate() {
+    func markCompletedAdvancesNextDueDate() {
         let reminder = makeReminder(frequency: .weekly)
         let originalDue = reminder.nextDueDate
         reminder.markCompleted()
@@ -166,7 +187,7 @@ struct PlantReminderTests {
     }
 
     @Test("markCompleted resets snoozeCount")
-    func testMarkCompletedResetsSnoozeCount() {
+    func markCompletedResetsSnoozeCount() {
         let reminder = makeReminder(frequency: .weekly)
         reminder.snoozeCount = 2
         reminder.markCompleted()
@@ -174,7 +195,7 @@ struct PlantReminderTests {
     }
 
     @Test("markCompleted on non-recurring disables reminder")
-    func testMarkCompletedDisablesNonRecurring() {
+    func markCompletedDisablesNonRecurring() {
         let reminder = makeReminder(frequency: .once)
         reminder.isRecurring = false
         reminder.markCompleted()
@@ -185,14 +206,14 @@ struct PlantReminderTests {
     // MARK: - snooze
 
     @Test("snooze increments snoozeCount")
-    func testSnoozeIncrementsCount() {
+    func snoozeIncrementsCount() {
         let reminder = makeReminder()
         reminder.snooze(for: .oneHour)
         #expect(reminder.snoozeCount == 1)
     }
 
     @Test("snooze advances nextDueDate beyond current time")
-    func testSnoozeAdvancesNextDueDate() {
+    func snoozeAdvancesNextDueDate() {
         let now = Date()
         let reminder = makeReminder(nextDue: now)
         reminder.snooze(for: .oneHour)
@@ -200,7 +221,7 @@ struct PlantReminderTests {
     }
 
     @Test("snooze at maxSnoozeCount does not increment or move date")
-    func testSnoozeAtMaxDoesNotIncrement() {
+    func snoozeAtMaxDoesNotIncrement() {
         let reminder = makeReminder(nextDue: Date())
         reminder.snoozeCount = 3
         reminder.maxSnoozeCount = 3
@@ -211,7 +232,7 @@ struct PlantReminderTests {
     }
 
     @Test("snooze for tomorrow advances date by 1 day")
-    func testSnoozeTomorrow() {
+    func snoozeTomorrow() {
         let reminder = makeReminder(nextDue: Date())
         let before = Date()
         reminder.snooze(for: .tomorrow)
@@ -220,7 +241,7 @@ struct PlantReminderTests {
     }
 
     @Test("multiple snoozes increment count each time up to max")
-    func testMultipleSnoozes() {
+    func multipleSnoozes() {
         let reminder = makeReminder()
         reminder.maxSnoozeCount = 3
         reminder.snooze(for: .fifteenMinutes)
@@ -235,13 +256,13 @@ struct PlantReminderTests {
     // MARK: - Computed Properties
 
     @Test("plantName returns default when no plant attached")
-    func testPlantNameDefaultWhenNoPlant() {
+    func plantNameDefaultWhenNoPlant() {
         let reminder = makeReminder()
         #expect(reminder.plantName == "Your Plant")
     }
 
     @Test("type computed property equals reminderType")
-    func testTypeComputedProperty() {
+    func typeComputedProperty() {
         let reminder = makeReminder()
         #expect(reminder.type == reminder.reminderType)
     }
@@ -249,7 +270,7 @@ struct PlantReminderTests {
     // MARK: - Enum Coverage
 
     @Test("ReminderFrequency day values for all cases")
-    func testReminderFrequencyDayValues() {
+    func reminderFrequencyDayValues() {
         #expect(ReminderFrequency.daily.days == 1)
         #expect(ReminderFrequency.everyOtherDay.days == 2)
         #expect(ReminderFrequency.twiceWeekly.days == 3)
@@ -264,28 +285,28 @@ struct PlantReminderTests {
     }
 
     @Test("ReminderFrequency display names are non-empty")
-    func testReminderFrequencyDisplayNames() {
+    func reminderFrequencyDisplayNames() {
         for freq in ReminderFrequency.allCases {
             #expect(!freq.displayName.isEmpty, "displayName for \(freq.rawValue) should not be empty")
         }
     }
 
     @Test("ReminderPriority numeric values are strictly ascending")
-    func testReminderPriorityNumericOrder() {
+    func reminderPriorityNumericOrder() {
         #expect(ReminderPriority.low.numericValue < ReminderPriority.medium.numericValue)
         #expect(ReminderPriority.medium.numericValue < ReminderPriority.high.numericValue)
         #expect(ReminderPriority.high.numericValue < ReminderPriority.critical.numericValue)
     }
 
     @Test("ReminderPriority color names are non-empty")
-    func testReminderPriorityColors() {
+    func reminderPriorityColors() {
         for priority in ReminderPriority.allCases {
             #expect(!priority.color.isEmpty, "color for \(priority.rawValue) should not be empty")
         }
     }
 
     @Test("ReminderType default messages and notification messages are non-empty")
-    func testReminderTypeMessages() {
+    func reminderTypeMessages() {
         for type in ReminderType.allCases {
             #expect(!type.defaultMessage.isEmpty, "defaultMessage for \(type.rawValue) should not be empty")
             #expect(type.notificationMessage == type.defaultMessage)
@@ -293,21 +314,21 @@ struct PlantReminderTests {
     }
 
     @Test("ReminderType icon names are non-empty")
-    func testReminderTypeIconNames() {
+    func reminderTypeIconNames() {
         for type in ReminderType.allCases {
             #expect(!type.iconName.isEmpty, "iconName for \(type.rawValue) should not be empty")
         }
     }
 
     @Test("ReminderType display names are non-empty")
-    func testReminderTypeDisplayNames() {
+    func reminderTypeDisplayNames() {
         for type in ReminderType.allCases {
             #expect(!type.displayName.isEmpty, "displayName for \(type.rawValue) should not be empty")
         }
     }
 
     @Test("SnoozeDuration display names are non-empty")
-    func testSnoozeDurationDisplayNames() {
+    func snoozeDurationDisplayNames() {
         for duration in SnoozeDuration.allCases {
             #expect(!duration.displayName.isEmpty, "displayName for \(duration.rawValue) should not be empty")
         }

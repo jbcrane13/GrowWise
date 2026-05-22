@@ -10,6 +10,7 @@ public final class GardenClub {
     public var ownerID: String? // User reference
     public var memberIDs: [String]? // Array of member identifiers
     public var sharedGardenIDs: [String]? // Garden references
+    public var sharedPlantIDs: [String]? // Plant references
     public var isActive: Bool? = true
 
     public init(name: String, ownerID: String, inviteCode: String) {
@@ -19,6 +20,7 @@ public final class GardenClub {
         self.inviteCode = inviteCode
         self.memberIDs = [ownerID]
         self.sharedGardenIDs = []
+        self.sharedPlantIDs = []
         self.createdDate = Date()
         self.isActive = true
     }
