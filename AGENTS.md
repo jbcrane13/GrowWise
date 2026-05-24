@@ -320,3 +320,16 @@ Before ending a session:
 
 ## Activity — 2026-05-18
 - (no commits)
+
+## Activity — 2026-05-21
+- 628b04d fix: LightMeter shows recoverable error state instead of stuck loading
+- 99aa716 fix: mark non-observable LightMeterService internals @ObservationIgnored
+- e73faab fix: resolve iOS sim Swift 6 errors in LightMeterService
+- 05121bb fix: mark LightMeterService static math nonisolated
+- d3d7d0b feat: light meter utility (camera lux estimate) — closes #356
+
+## Activity — 2026-05-22
+- (no commits)
+
+## Activity — 2026-05-23
+- (no commits)
