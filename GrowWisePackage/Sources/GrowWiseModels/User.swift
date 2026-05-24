@@ -6,6 +6,8 @@ public final class User {
     public var id = UUID() // CloudKit: made optional or with default value
     public var email: String? // CloudKit: made optional or with default value
     public var displayName: String? // CloudKit: made optional or with default value
+    public var bio: String? // CloudKit: made optional or with default value
+    public var isProfilePublic: Bool = false // CloudKit: made optional or with default value
     public var skillLevel = GardeningSkillLevel.beginner // CloudKit: made optional or with default value
 
     // Onboarding preferences
@@ -61,6 +63,8 @@ public final class User {
         id = UUID()
         self.email = email
         self.displayName = displayName
+        bio = nil
+        isProfilePublic = false
         self.skillLevel = skillLevel
         preferredPlantTypes = []
         gardeningGoals = []
