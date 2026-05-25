@@ -228,6 +228,7 @@ struct ShoppingListView: View {
             } label: {
                 Label("Delete", systemImage: "trash")
             }
+            .accessibilityIdentifier("shopping_item_delete_\(item.id?.uuidString ?? "unknown")")
         }
     }
 

@@ -58,18 +58,23 @@ public struct ClubDetailView: View {
             .task { await loadClubData() }
             .alert("Leave Club", isPresented: $showLeaveAlert) {
                 Button("Leave", role: .destructive) { Task { await leaveClub() } }
+                    .accessibilityIdentifier("club_detail_button_leave_confirm")
                 Button("Cancel", role: .cancel) {}
+                    .accessibilityIdentifier("club_detail_button_leave_cancel")
             } message: {
                 Text("Are you sure you want to leave this club?")
             }
             .alert("Remove Member", isPresented: $showRemoveMemberAlert, presenting: memberToRemove) { id in
                 Button("Remove", role: .destructive) { Task { await removeMember(id) } }
+                    .accessibilityIdentifier("club_detail_button_remove_member_confirm")
                 Button("Cancel", role: .cancel) { memberToRemove = nil }
+                    .accessibilityIdentifier("club_detail_button_remove_member_cancel")
             } message: { _ in
                 Text("Remove this member from the club?")
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
+                    .accessibilityIdentifier("club_detail_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -374,6 +379,7 @@ public struct ClubDetailView: View {
                         ) {
                             Label("Share Invite Code", systemImage: "square.and.arrow.up")
                         }
+                        .accessibilityIdentifier("club_detail_button_share_invite")
                     }
                     if !isOwner {
                         Divider()
@@ -382,6 +388,7 @@ public struct ClubDetailView: View {
                         } label: {
                             Label("Leave Club", systemImage: "person.badge.minus")
                         }
+                        .accessibilityIdentifier("club_detail_button_leave")
                     }
                 } label: {
                     Image(systemName: "ellipsis.circle")

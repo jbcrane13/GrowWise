@@ -2,11 +2,11 @@ import Foundation
 import GrowWiseModels
 import SwiftData
 
-// SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable force_unwrapping
-
 @MainActor
 public final class GardenClubService {
+    private static let inviteCodeLength = 6
+    private static let inviteCodeCharacters = Array("ABCDEFGHJKLMNPQRSTUVWXYZ23456789") // no ambiguous I/1/O/0
+
     private let clubRepository: ClubRepository
 
     public init(context: ModelContext) {
@@ -96,8 +96,10 @@ public final class GardenClubService {
     // MARK: - Private Helpers
 
     private func generateInviteCode() -> String {
-        let chars = "ABCDEFGHJKLMNPQRSTUVWXYZ23456789" // no ambiguous I/1/O/0
-        return String((0 ..< 6).map { _ in chars.randomElement()! })
+        String((0 ..< Self.inviteCodeLength).map { _ in
+            let index = Int.random(in: Self.inviteCodeCharacters.indices)
+            return Self.inviteCodeCharacters[index]
+        })
     }
 }
 
@@ -133,5 +135,3 @@ public enum GardenClubError: Error, LocalizedError {
         }
     }
 }
-
-// swiftlint:enable force_unwrapping

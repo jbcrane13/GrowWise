@@ -54,6 +54,7 @@ public struct ReminderSettingsView: View {
                     Button("Cancel") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("remindersettings_button_cancel")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -62,6 +63,7 @@ public struct ReminderSettingsView: View {
                         dismiss()
                     }
                     .fontWeight(.semibold)
+                    .accessibilityIdentifier("remindersettings_button_save")
                 }
             }
             .task {
@@ -96,6 +98,7 @@ public struct ReminderSettingsView: View {
                     openNotificationSettings()
                 }
                 .foregroundColor(.blue)
+                .accessibilityIdentifier("remindersettings_button_enable_notifications")
             }
         } header: {
             Text("Permissions")
@@ -249,11 +252,13 @@ public struct ReminderSettingsView: View {
                 sendTestNotification()
             }
             .foregroundColor(.blue)
+            .accessibilityIdentifier("remindersettings_button_test_notification")
 
             Button("Clear All Notifications") {
                 clearAllNotifications()
             }
             .foregroundColor(.red)
+            .accessibilityIdentifier("remindersettings_button_clear_notifications")
         } header: {
             Text("Notification Management")
         } footer: {

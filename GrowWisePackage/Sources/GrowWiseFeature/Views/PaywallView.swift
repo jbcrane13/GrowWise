@@ -131,19 +131,17 @@ public struct PaywallView: View {
 
     private var billingToggle: some View {
         HStack(spacing: 0) {
-            toggleButton(label: "Monthly", isActive: !isYearly) {
+            toggleButton(label: "Monthly", isActive: !isYearly, accessibilityID: "paywall_toggle_monthly") {
                 withAnimation(CultivationTheme.Animation.selection) {
                     isYearly = false
                 }
             }
-            .accessibilityIdentifier("paywall_toggle_monthly")
 
-            toggleButton(label: "Yearly", isActive: isYearly, badge: "Best Value") {
+            toggleButton(label: "Yearly", isActive: isYearly, badge: "Best Value", accessibilityID: "paywall_toggle_yearly") {
                 withAnimation(CultivationTheme.Animation.selection) {
                     isYearly = true
                 }
             }
-            .accessibilityIdentifier("paywall_toggle_yearly")
         }
         .padding(3)
         .background {
@@ -160,6 +158,7 @@ public struct PaywallView: View {
         label: String,
         isActive: Bool,
         badge: String? = nil,
+        accessibilityID: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -187,6 +186,7 @@ public struct PaywallView: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
     }
 
     // MARK: - Tier Cards
@@ -203,7 +203,6 @@ public struct PaywallView: View {
                 color: CultivationTheme.Colors.textSecondary,
                 isCurrent: !isActiveSubscriber
             )
-            .accessibilityIdentifier("paywall_card_free")
 
             tierCard(
                 tier: .premium,
@@ -221,7 +220,6 @@ public struct PaywallView: View {
                 isCurrent: currentTierIs(.premium),
                 isPopular: true
             )
-            .accessibilityIdentifier("paywall_card_premium")
         }
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 20)
@@ -348,6 +346,7 @@ public struct PaywallView: View {
         }
         .buttonStyle(.plain)
         .disabled(tier == .free)
+        .accessibilityIdentifier("paywall_card_\(tier.rawValue)")
     }
 
     // MARK: - Feature Comparison

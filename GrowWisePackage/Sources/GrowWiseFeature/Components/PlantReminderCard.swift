@@ -269,6 +269,7 @@ public struct PlantReminderCard: View {
                         .fill(Color.blue.opacity(0.1))
                 )
             }
+            .accessibilityIdentifier("plantreminder_button_water_\(plant.id?.uuidString ?? "unknown")")
 
             Spacer()
 
@@ -290,6 +291,7 @@ public struct PlantReminderCard: View {
                         .fill(Color(.quaternarySystemFill))
                 )
             })
+            .accessibilityIdentifier("plantreminder_button_manage_\(plant.id?.uuidString ?? "unknown")")
         }
     }
 

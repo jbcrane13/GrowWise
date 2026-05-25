@@ -182,7 +182,9 @@ struct GardenDetailView: View {
             Button("Add to Shopping List") {
                 addSeedToShoppingList(seed)
             }
+            .accessibilityIdentifier("gardendetail_button_add_seed_shopping")
             Button("No Thanks", role: .cancel) {}
+                .accessibilityIdentifier("gardendetail_button_skip_seed_shopping")
         } message: { seed in
             Text("You've used your last packet of \(seed.varietyName ?? "this seed"). Add more to your shopping list?")
         }

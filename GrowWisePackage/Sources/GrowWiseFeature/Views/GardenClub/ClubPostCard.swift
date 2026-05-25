@@ -2,6 +2,9 @@ import SwiftUI
 
 struct ClubPostCard: View {
     let post: GardenClubFeedView.ClubActivityViewData
+    let isFollowingAuthor: Bool
+    let canFollowAuthor: Bool
+    let onToggleFollow: () -> Void
 
     var body: some View {
         VStack(alignment: .leading, spacing: 10) {
@@ -43,6 +46,32 @@ struct ClubPostCard: View {
                 subtitle
             }
             Spacer()
+            if canFollowAuthor {
+                Button {
+                    onToggleFollow()
+                } label: {
+                    Text(isFollowingAuthor ? "Following" : "Follow")
+                        .font(CultivationTheme.Fonts.body(11, weight: .semibold))
+                        .foregroundStyle(
+                            isFollowingAuthor
+                                ? CultivationTheme.Colors.textSecondary
+                                : CultivationTheme.Colors.accentCoral
+                        )
+                        .padding(.horizontal, 10)
+                        .padding(.vertical, 6)
+                        .background(
+                            Capsule()
+                                .fill(
+                                    isFollowingAuthor
+                                        ? CultivationTheme.Colors.backgroundSecondary
+                                        : CultivationTheme.Colors.accentCoral.opacity(0.12)
+                                )
+                        )
+                }
+                .buttonStyle(.plain)
+                .accessibilityIdentifier("club_button_follow_\(post.id.uuidString)")
+                .accessibilityLabel("\(isFollowingAuthor ? "Unfollow" : "Follow") \(post.authorDisplayName)")
+            }
         }
     }
 

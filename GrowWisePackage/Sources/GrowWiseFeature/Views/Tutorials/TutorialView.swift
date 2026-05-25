@@ -42,6 +42,7 @@ public struct TutorialView: View {
                     } label: {
                         Image(systemName: "chart.bar.fill")
                     }
+                    .accessibilityIdentifier("tutorials_button_progress")
                 }
             }
             .sheet(isPresented: $showProgressView) {
@@ -131,6 +132,7 @@ public struct TutorialView: View {
                         TutorialRowView(tutorial: tutorial, tutorialService: tutorialService)
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("tutorials_link_row_\(tutorial.id)")
                 }
             }
         }
@@ -174,6 +176,7 @@ struct CategoryChip: View {
             .foregroundColor(isSelected ? .white : .primary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
+        .accessibilityIdentifier("tutorials_button_category_\(category.rawValue)")
     }
 }
 
@@ -251,6 +254,7 @@ struct FeaturedTutorialCard: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("tutorials_link_featured_\(tutorial.id)")
     }
 }
 

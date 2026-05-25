@@ -264,33 +264,33 @@ public struct PlantReminderDetailView: View {
                     title: "Water Now",
                     icon: "drop.fill",
                     color: .blue,
+                    accessibilityID: "plantreminder_button_waternow",
                     action: { completeWateringReminder() }
                 )
-                .accessibilityIdentifier("plantreminder_button_waternow")
 
                 PlantDetailQuickActionButton(
                     title: "Add Watering",
                     icon: "plus.circle",
                     color: .green,
+                    accessibilityID: "plantreminder_button_addwatering",
                     action: { addWateringReminder() }
                 )
-                .accessibilityIdentifier("plantreminder_button_addwatering")
 
                 PlantDetailQuickActionButton(
                     title: "Fertilize",
                     icon: "leaf.fill",
                     color: .orange,
+                    accessibilityID: "plantreminder_button_fertilize",
                     action: { addFertilizingReminder() }
                 )
-                .accessibilityIdentifier("plantreminder_button_fertilize")
 
                 PlantDetailQuickActionButton(
                     title: "Health Check",
                     icon: "magnifyingglass",
                     color: .purple,
+                    accessibilityID: "plantreminder_button_healthcheck",
                     action: { addInspectionReminder() }
                 )
-                .accessibilityIdentifier("plantreminder_button_healthcheck")
             }
         }
     }
@@ -534,6 +534,7 @@ struct ReminderDetailCard: View {
                     set: { _ in onToggle() }
                 )
             )
+            .accessibilityIdentifier("plantreminder_toggle_enabled")
 
             // Reminder info
             VStack(alignment: .leading, spacing: 4) {
@@ -618,6 +619,7 @@ struct PlantDetailQuickActionButton: View {
     let title: String
     let icon: String
     let color: Color
+    let accessibilityID: String
     let action: () -> Void
 
     var body: some View {
@@ -640,6 +642,7 @@ struct PlantDetailQuickActionButton: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 

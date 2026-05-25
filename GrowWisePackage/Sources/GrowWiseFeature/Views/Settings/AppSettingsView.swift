@@ -58,19 +58,23 @@ public struct AppSettingsView: View {
         .task { loadUserPreferences() }
         .alert("Delete All Data", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("settings_button_delete_cancel")
             Button("Delete Everything", role: .destructive) {
                 resetAllData()
             }
+            .accessibilityIdentifier("settings_button_delete_confirm")
         } message: {
             Text("This will permanently delete all your gardens, plants, journal entries, and reminders. This cannot be undone.")
         }
         .alert("Export Successful", isPresented: $showExportSuccess) {
             Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("settings_button_export_success_ok")
         } message: {
             Text("Your garden data has been exported successfully.")
         }
         .alert("Export Failed", isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("settings_button_export_error_ok")
         } message: {
             Text(exportErrorMessage)
         }
@@ -108,6 +112,7 @@ public struct AppSettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(CultivationTheme.Colors.textSecondary)
+                    .accessibilityIdentifier("settings_picker_units")
                     .onChange(of: measurementSystem) { _, newValue in
                         saveUserPreference(\.measurementSystem, value: newValue)
                     }
@@ -129,6 +134,7 @@ public struct AppSettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(CultivationTheme.Colors.textSecondary)
+                    .accessibilityIdentifier("settings_picker_skill_level")
                     .onChange(of: skillLevel) { _, newValue in
                         saveUserPreference(\.skillLevel, value: newValue)
                     }
@@ -151,6 +157,7 @@ public struct AppSettingsView: View {
                     }
                     .pickerStyle(.menu)
                     .tint(CultivationTheme.Colors.textSecondary)
+                    .accessibilityIdentifier("settings_picker_zone")
                     .onChange(of: hardinessZone) { _, newValue in
                         saveUserPreference(\.hardinessZone, value: newValue.isEmpty ? nil : newValue)
                     }

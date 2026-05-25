@@ -86,19 +86,23 @@ struct DatabasePlantCustomizationSheet: View {
                 Section("Customize Your Plant") {
                     TextField("Plant Name", text: $customPlantName)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("database_customization_textfield_name")
 
                     TextField("Scientific Name", text: $customScientificName)
                         .autocorrectionDisabled()
                         .gwTextInputAutocapitalization(.none)
                         .foregroundColor(.secondary)
+                        .accessibilityIdentifier("database_customization_textfield_scientific")
 
                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
+                        .accessibilityIdentifier("database_customization_datepicker_planting")
                 }
 
                 // Notes Section
                 Section("Additional Notes") {
                     TextEditor(text: $customNotes)
                         .frame(minHeight: 100)
+                        .accessibilityIdentifier("database_customization_texteditor_notes")
                 }
 
                 // Photo Section
@@ -114,6 +118,7 @@ struct DatabasePlantCustomizationSheet: View {
                         }
                         .foregroundColor(.blue)
                     }
+                    .accessibilityIdentifier("database_customization_button_photos")
 
                     if !selectedPhotos.isEmpty {
                         Text("\(selectedPhotos.count) photo(s) selected")
@@ -140,6 +145,7 @@ struct DatabasePlantCustomizationSheet: View {
                     Button("Cancel") {
                         onCancel()
                     }
+                    .accessibilityIdentifier("database_customization_button_cancel")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -149,10 +155,12 @@ struct DatabasePlantCustomizationSheet: View {
                         }
                     }
                     .disabled(customPlantName.isEmpty)
+                    .accessibilityIdentifier("database_customization_button_add")
                 }
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") {}
+                    .accessibilityIdentifier("database_customization_button_error_ok")
             } message: {
                 Text(errorMessage)
             }

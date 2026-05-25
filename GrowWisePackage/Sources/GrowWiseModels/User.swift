@@ -8,6 +8,7 @@ public final class User {
     public var displayName: String? // CloudKit: made optional or with default value
     public var bio: String? // CloudKit: made optional or with default value
     public var isProfilePublic: Bool = false // CloudKit: made optional or with default value
+    public var followedMemberIDs: [String]? // CloudKit: made optional or with default value
     public var skillLevel = GardeningSkillLevel.beginner // CloudKit: made optional or with default value
 
     // Onboarding preferences
@@ -49,6 +50,8 @@ public final class User {
     public var reminders: [PlantReminder]?
     @Relationship(deleteRule: .nullify, inverse: \JournalEntry.user)
     public var journalEntries: [JournalEntry]?
+    @Relationship(deleteRule: .nullify, inverse: \Harvest.user)
+    public var harvests: [Harvest]?
 
     // Metadata
     public var createdDate: Date = Foundation.Date() // CloudKit: made optional or with default value
@@ -65,6 +68,7 @@ public final class User {
         self.displayName = displayName
         bio = nil
         isProfilePublic = false
+        followedMemberIDs = []
         self.skillLevel = skillLevel
         preferredPlantTypes = []
         gardeningGoals = []
@@ -83,6 +87,7 @@ public final class User {
         gardens = []
         reminders = []
         journalEntries = []
+        harvests = []
         createdDate = Date()
         lastLoginDate = Date()
         lastModified = Date()

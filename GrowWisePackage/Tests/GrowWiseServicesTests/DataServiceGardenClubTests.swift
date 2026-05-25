@@ -76,6 +76,54 @@ struct DataServiceGardenClubTests {
         #expect(activity.photoURL == photoURL)
     }
 
+    @Test("createClubPost stores current user's hardiness zone")
+    func createClubPostStoresHardinessZone() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        user.hardinessZone = "7b"
+        _ = try service.createClub(name: "Backyard Growers", ownerID: user.id.uuidString)
+
+        let activity = try service.createClubPost(caption: "Tomatoes are blooming", activityType: "shared")
+
+        #expect(activity.hardinessZone == "7b")
+    }
+
+    @Test("followClubMember persists unique followed member IDs")
+    func followClubMemberPersistsUniqueIDs() async throws {
+        let service = try await DataService.makeForTesting()
+        _ = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+
+        try service.followClubMember("member-2")
+        try service.followClubMember("member-2")
+        try service.followClubMember("member-3")
+
+        #expect(service.getCurrentUser()?.followedMemberIDs == ["member-2", "member-3"])
+        #expect(service.isFollowingClubMember("member-2") == true)
+    }
+
+    @Test("follow lookups normalize member IDs")
+    func followLookupNormalizesMemberIDs() async throws {
+        let service = try await DataService.makeForTesting()
+        _ = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+
+        try service.followClubMember(" member-2 ")
+
+        #expect(service.getCurrentUser()?.followedMemberIDs == ["member-2"])
+        #expect(service.isFollowingClubMember(" member-2 ") == true)
+    }
+
+    @Test("unfollowClubMember removes member ID")
+    func unfollowClubMemberRemovesID() async throws {
+        let service = try await DataService.makeForTesting()
+        _ = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+
+        try service.followClubMember("member-2")
+        try service.unfollowClubMember("member-2")
+
+        #expect(service.getCurrentUser()?.followedMemberIDs?.isEmpty == true)
+        #expect(service.isFollowingClubMember("member-2") == false)
+    }
+
     @Test("sharePlant marks plant as shared with club and unshare keeps owner plant private")
     func sharePlantAndUnsharePlant() async throws {
         let service = try await DataService.makeForTesting()

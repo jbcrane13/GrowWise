@@ -93,13 +93,13 @@ struct EnvironmentSetupView: View {
                 ForEach(LightAvailability.allCases, id: \.self) { level in
                     IndoorOptionRow(
                         title: level.displayName,
-                        isSelected: userProfile.indoorLightAvailability == level
+                        isSelected: userProfile.indoorLightAvailability == level,
+                        accessibilityID: "onboarding_light_\(level.rawValue)"
                     ) {
                         withAnimation(.spring(duration: 0.25)) {
                             userProfile.indoorLightAvailability = level
                         }
                     }
-                    .accessibilityIdentifier("onboarding_light_\(level.rawValue)")
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -161,6 +161,7 @@ struct EnvironmentSetupView: View {
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         .padding(12)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("onboarding_textfield_zone")
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 12)
@@ -170,7 +171,6 @@ struct EnvironmentSetupView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
                 )
-                .accessibilityIdentifier("onboarding_textfield_zone")
             }
             .padding(CultivationTheme.Spacing.cardPadding)
             .glassCard()
@@ -186,13 +186,13 @@ struct EnvironmentSetupView: View {
                 ForEach(SunExposure.allCases, id: \.self) { exposure in
                     OutdoorOptionRow(
                         title: exposure.displayName,
-                        isSelected: userProfile.sunExposure == exposure
+                        isSelected: userProfile.sunExposure == exposure,
+                        accessibilityID: "onboarding_sun_\(exposure.rawValue)"
                     ) {
                         withAnimation(.spring(duration: 0.25)) {
                             userProfile.sunExposure = exposure
                         }
                     }
-                    .accessibilityIdentifier("onboarding_sun_\\(exposure.rawValue)")
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -233,13 +233,13 @@ struct EnvironmentSetupView: View {
                 ForEach(HydroponicSystemType.allCases, id: \.self) { type in
                     IndoorOptionRow(
                         title: type.displayName,
-                        isSelected: userProfile.hydroponicSystemType == type
+                        isSelected: userProfile.hydroponicSystemType == type,
+                        accessibilityID: "onboarding_hydro_type_\(type.rawValue)"
                     ) {
                         withAnimation(.spring(duration: 0.25)) {
                             userProfile.hydroponicSystemType = type
                         }
                     }
-                    .accessibilityIdentifier("onboarding_hydro_type_\\(type.rawValue)")
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -341,6 +341,7 @@ struct EnvironmentSetupView: View {
 private struct IndoorOptionRow: View {
     let title: String
     let isSelected: Bool
+    let accessibilityID: String
     let action: () -> Void
 
     var body: some View {
@@ -397,6 +398,7 @@ private struct IndoorOptionRow: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 
@@ -405,6 +407,7 @@ private struct IndoorOptionRow: View {
 private struct OutdoorOptionRow: View {
     let title: String
     let isSelected: Bool
+    let accessibilityID: String
     let action: () -> Void
 
     var body: some View {
@@ -461,6 +464,7 @@ private struct OutdoorOptionRow: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 

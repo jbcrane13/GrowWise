@@ -529,11 +529,13 @@ private struct CompostBatchDetailSheet: View {
             }
             .alert("Mark as Complete?", isPresented: $showCompleteConfirmation) {
                 Button("Cancel", role: .cancel) {}
+                    .accessibilityIdentifier("compost_detail_button_complete_cancel")
                 Button("Complete", role: .destructive) {
                     batch.isComplete = true
                     try? modelContext.save()
                     dismiss()
                 }
+                .accessibilityIdentifier("compost_detail_button_complete_confirm")
             } message: {
                 Text("This batch will be moved to your completed list.")
             }

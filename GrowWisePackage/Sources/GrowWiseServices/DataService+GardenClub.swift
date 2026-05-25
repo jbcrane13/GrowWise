@@ -84,11 +84,56 @@ public extension DataService {
             description: description
         )
         activity.gardenName = gardenName
+        activity.hardinessZone = user?.hardinessZone
         activity.photoURL = photoURL
         let repo = ClubActivityRepository(context: mainContext)
         try repo.save(activity)
         return activity
     }
+
+    // MARK: - Follows
+
+    func followClubMember(_ memberID: String) throws {
+        guard let user = getCurrentUser() else {
+            throw ClubMemberFollowError.noCurrentUser
+        }
+
+        guard let trimmedID = normalizedClubMemberID(memberID), trimmedID != user.id.uuidString else { return }
+
+        var followedIDs = (user.followedMemberIDs ?? []).compactMap(normalizedClubMemberID)
+        guard !followedIDs.contains(trimmedID) else { return }
+
+        followedIDs.append(trimmedID)
+        user.followedMemberIDs = followedIDs
+        try users.update(user)
+    }
+
+    func unfollowClubMember(_ memberID: String) throws {
+        guard let user = getCurrentUser() else {
+            throw ClubMemberFollowError.noCurrentUser
+        }
+
+        guard let trimmedID = normalizedClubMemberID(memberID) else { return }
+
+        let followedIDs = (user.followedMemberIDs ?? [])
+            .compactMap(normalizedClubMemberID)
+            .filter { $0 != trimmedID }
+        user.followedMemberIDs = followedIDs
+        try users.update(user)
+    }
+
+    func isFollowingClubMember(_ memberID: String) -> Bool {
+        guard let user = getCurrentUser() else { return false }
+        guard let trimmedID = normalizedClubMemberID(memberID) else { return false }
+        return (user.followedMemberIDs ?? [])
+            .compactMap(normalizedClubMemberID)
+            .contains(trimmedID)
+    }
+}
+
+private func normalizedClubMemberID(_ memberID: String) -> String? {
+    let trimmedID = memberID.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmedID.isEmpty ? nil : trimmedID
 }
 
 public enum CreateClubPostError: Error, LocalizedError {
@@ -98,6 +143,17 @@ public enum CreateClubPostError: Error, LocalizedError {
         switch self {
         case .noClub:
             "You're not in a club yet. Join or create one first."
+        }
+    }
+}
+
+public enum ClubMemberFollowError: Error, LocalizedError {
+    case noCurrentUser
+
+    public var errorDescription: String? {
+        switch self {
+        case .noCurrentUser:
+            "Sign in before following club members."
         }
     }
 }

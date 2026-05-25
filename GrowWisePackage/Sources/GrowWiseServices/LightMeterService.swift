@@ -83,16 +83,12 @@ public final class LightMeterService {
     nonisolated static let smoothingWindow = 8
 
     #if canImport(AVFoundation) && os(iOS)
-    @ObservationIgnored
-    private let camera = CameraActor()
+    @ObservationIgnored private let camera = CameraActor()
     // Session reference kept on main actor solely so captureSession() stays synchronous
     // for the SwiftUI preview layer — assigned once after a successful start.
-    @ObservationIgnored
-    private var activeSession: AVCaptureSession?
-    @ObservationIgnored
-    private var sampleTask: Task<Void, Never>?
-    @ObservationIgnored
-    private var samples: [Double] = []
+    @ObservationIgnored private var activeSession: AVCaptureSession?
+    @ObservationIgnored private var sampleTask: Task<Void, Never>?
+    @ObservationIgnored private var samples: [Double] = []
     #endif
 
     public init() {}

@@ -66,6 +66,7 @@ struct LogHarvestSheet: View {
                 set: { if !$0 { errorMessage = nil } }
             )) {
                 Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("logharvest_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }

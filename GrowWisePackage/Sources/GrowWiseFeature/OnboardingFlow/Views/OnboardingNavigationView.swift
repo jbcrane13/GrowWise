@@ -141,6 +141,7 @@ struct OnboardingNavigationView: View {
         .background(Color.clear)
         .alert("Setup Error", isPresented: $showingError) {
             Button("OK") {}
+                .accessibilityIdentifier("onboarding_button_error_ok")
         } message: {
             Text(errorMessage)
         }

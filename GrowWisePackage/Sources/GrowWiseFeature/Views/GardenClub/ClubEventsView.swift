@@ -46,6 +46,7 @@ public struct ClubEventsView: View {
             .task { await loadEvents() }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
+                    .accessibilityIdentifier("club_events_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -96,6 +97,7 @@ public struct ClubEventsView: View {
                 ForEach(upcomingEvents, id: \.id) { event in
                     eventCard(event: event)
                         .onTapGesture { selectedEvent = event }
+                        .accessibilityIdentifier("club_events_card_upcoming_\(event.id?.uuidString ?? "unknown")")
                 }
             }
         }
@@ -111,6 +113,7 @@ public struct ClubEventsView: View {
             ForEach(pastEvents, id: \.id) { event in
                 eventCard(event: event)
                     .onTapGesture { selectedEvent = event }
+                    .accessibilityIdentifier("club_events_card_past_\(event.id?.uuidString ?? "unknown")")
             }
         }
     }
@@ -206,6 +209,7 @@ public struct ClubEventsView: View {
                     .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.button))
             }
             .buttonStyle(.plain)
+            .accessibilityIdentifier("club_events_button_create_empty")
         }
         .padding(.vertical, 24)
         .frame(maxWidth: .infinity)
@@ -290,16 +294,19 @@ struct CreateEventSheet: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Cancel") { dismiss() }
+                            .accessibilityIdentifier("club_event_create_button_cancel")
                     }
                     ToolbarItem(placement: .confirmationAction) {
                         Button("Create") {
                             Task { await createEvent() }
                         }
                         .disabled(title.isEmpty || isCreating)
+                        .accessibilityIdentifier("club_event_create_button_save")
                     }
                 }
                 .alert("Error", isPresented: .constant(errorMessage != nil)) {
                     Button("OK") { errorMessage = nil }
+                        .accessibilityIdentifier("club_event_create_button_error_ok")
                 } message: {
                     Text(errorMessage ?? "")
                 }
@@ -310,10 +317,12 @@ struct CreateEventSheet: View {
         Form {
             Section("Details") {
                 TextField("Event Title", text: $title)
+                    .accessibilityIdentifier("club_event_create_textfield_title")
                 #if os(iOS)
                     .textInputAutocapitalization(.words)
                 #endif
                 TextField("Description (optional)", text: $description)
+                    .accessibilityIdentifier("club_event_create_textfield_description")
                 #if os(iOS)
                     .textInputAutocapitalization(.sentences)
                 #endif
@@ -321,6 +330,7 @@ struct CreateEventSheet: View {
 
             Section("Location") {
                 TextField("Location (optional)", text: $location)
+                    .accessibilityIdentifier("club_event_create_textfield_location")
                 #if os(iOS)
                     .textInputAutocapitalization(.words)
                 #endif
@@ -328,12 +338,15 @@ struct CreateEventSheet: View {
 
             Section("Date & Time") {
                 DatePicker("Starts", selection: $startDate)
+                    .accessibilityIdentifier("club_event_create_datepicker_start")
                 Toggle("End Date", isOn: $showEndDate)
+                    .accessibilityIdentifier("club_event_create_toggle_end")
                 if showEndDate {
                     DatePicker("Ends", selection: Binding(
                         get: { endDate ?? startDate.addingTimeInterval(3600) },
                         set: { endDate = $0 }
                     ))
+                    .accessibilityIdentifier("club_event_create_datepicker_end")
                 }
             }
         }
@@ -404,10 +417,12 @@ struct EventDetailSheet: View {
                 .toolbar {
                     ToolbarItem(placement: .cancellationAction) {
                         Button("Done") { dismiss() }
+                            .accessibilityIdentifier("club_event_detail_button_done")
                     }
                 }
                 .alert("Error", isPresented: .constant(errorMessage != nil)) {
                     Button("OK") { errorMessage = nil }
+                        .accessibilityIdentifier("club_event_detail_button_error_ok")
                 } message: {
                     Text(errorMessage ?? "")
                 }

@@ -208,6 +208,7 @@ struct GardenLayoutView: View {
         .onDisappear { saveLayout() }
         .alert("Error Saving", isPresented: $showAlert) {
             Button("OK") {}
+                .accessibilityIdentifier("gardenlayout_button_error_ok")
         } message: {
             Text(alertMessage)
         }
@@ -351,7 +352,11 @@ private struct BedGridView: View {
                 ForEach(0 ..< bed.heightFeet, id: \.self) { row in
                     HStack(spacing: spacing) {
                         ForEach(0 ..< bed.widthFeet, id: \.self) { col in
-                            SlotCell(slot: bed.slotAt(row: row, col: col), size: cellSize) {
+                            SlotCell(
+                                slot: bed.slotAt(row: row, col: col),
+                                size: cellSize,
+                                accessibilityID: "gardenlayout_slot_\(row)_\(col)"
+                            ) {
                                 onSlotTap(row, col)
                             }
                         }
@@ -373,6 +378,7 @@ private struct BedGridView: View {
 private struct SlotCell: View {
     let slot: PlantSlot
     let size: CGFloat
+    let accessibilityID: String
     let onTap: () -> Void
 
     var body: some View {
@@ -400,6 +406,7 @@ private struct SlotCell: View {
         .buttonStyle(.plain)
         .accessibilityLabel(slot.isEmpty ? "Empty slot" : "Planted: \(slot.plantName ?? slot.plantType?.displayName ?? "")")
         .accessibilityHint("Tap to plant")
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 
@@ -476,6 +483,7 @@ private struct AddBedSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("gardenlayout_button_addbed_cancel")
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Add") {
@@ -524,12 +532,15 @@ private struct EditBedSheet: View {
                         TextField("Bed name", text: $name)
                             .multilineTextAlignment(.trailing)
                             .foregroundStyle(.secondary)
+                            .accessibilityIdentifier("gardenlayout_textfield_editbed_name")
                     }
                 }
 
                 Section {
                     Stepper("Width: \(widthFeet) ft", value: $widthFeet, in: 1 ... 12)
+                        .accessibilityIdentifier("gardenlayout_stepper_editbed_width")
                     Stepper("Length: \(heightFeet) ft", value: $heightFeet, in: 1 ... 20)
+                        .accessibilityIdentifier("gardenlayout_stepper_editbed_length")
                 } header: {
                     Text("Dimensions")
                 } footer: {
@@ -550,6 +561,7 @@ private struct EditBedSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel", action: onCancel)
+                        .accessibilityIdentifier("gardenlayout_button_editbed_cancel")
                 }
                 ToolbarItem(placement: .primaryAction) {
                     Button("Save") {
@@ -559,6 +571,7 @@ private struct EditBedSheet: View {
                         onSave(updated)
                     }
                     .fontWeight(.semibold)
+                    .accessibilityIdentifier("gardenlayout_button_editbed_save")
                 }
             }
         }
@@ -665,6 +678,7 @@ private struct PlantSlotPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
+                        .accessibilityIdentifier("gardenlayout_button_pickplant_cancel")
                 }
             }
         }

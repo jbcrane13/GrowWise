@@ -30,7 +30,6 @@ struct GardeningGoalsView: View {
                             }
                         }
                     }
-                    .accessibilityIdentifier("onboarding_goal_\(goal.rawValue)")
                 }
             }
             .padding(.horizontal, 20)
@@ -101,6 +100,7 @@ private struct GoalCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(goal.displayName)
+        .accessibilityIdentifier("onboarding_goal_\(goal.rawValue)")
     }
 }
 

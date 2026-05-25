@@ -40,6 +40,7 @@ public struct TutorialProgressView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("tutorial_progress_button_done")
                 }
             }
             .onAppear {
@@ -143,6 +144,7 @@ public struct TutorialProgressView: View {
                 }
                 .pickerStyle(.segmented)
                 .frame(width: 200)
+                .accessibilityIdentifier("tutorial_progress_picker_filter")
             }
 
             LazyVStack(spacing: 12) {

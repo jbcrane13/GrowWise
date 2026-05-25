@@ -389,6 +389,7 @@ public struct AddPlantSheet: View {
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("addplant_alert_button_error_ok")
             } message: {
                 Text(errorMessage)
             }
@@ -416,6 +417,7 @@ public struct AddPlantSheet: View {
                 Button("Cancel", role: .cancel) {
                     newGardenName = ""
                 }
+                .accessibilityIdentifier("addplant_alert_button_cancelgarden")
             } message: {
                 Text("Name your new garden")
             }
