@@ -388,6 +388,7 @@ private struct CompostBatchDetailSheet: View {
     let onLog: () -> Void
 
     @State private var showCompleteConfirmation = false
+    @State private var saveError: String?
 
     private var daysActive: Int {
         guard let start = batch.startDate else { return 0 }
@@ -531,11 +532,23 @@ private struct CompostBatchDetailSheet: View {
                 Button("Cancel", role: .cancel) {}
                 Button("Complete", role: .destructive) {
                     batch.isComplete = true
-                    try? modelContext.save()
-                    dismiss()
+                    do {
+                        try modelContext.save()
+                        dismiss()
+                    } catch {
+                        saveError = error.localizedDescription
+                    }
                 }
             } message: {
                 Text("This batch will be moved to your completed list.")
+            }
+            .alert("Could not save", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
             }
         }
     }
@@ -706,6 +719,7 @@ struct CompostLogEntrySheet: View {
 
     @State private var temperature: Double = 120
     @State private var moisture: Double = 50
+    @State private var saveError: String?
 
     var body: some View {
         NavigationStack {
@@ -737,11 +751,23 @@ struct CompostLogEntrySheet: View {
                         batch.temperatures.append(temperature)
                         batch.moistureLevels.append(moisture)
                         batch.logDates.append(Date())
-                        try? modelContext.save()
-                        dismiss()
+                        do {
+                            try modelContext.save()
+                            dismiss()
+                        } catch {
+                            saveError = error.localizedDescription
+                        }
                     }
                     .accessibilityIdentifier("compost_log_button_save")
                 }
+            }
+            .alert("Could not save", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+            } message: {
+                Text(saveError ?? "")
             }
         }
     }

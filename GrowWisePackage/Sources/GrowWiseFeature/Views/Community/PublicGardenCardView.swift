@@ -84,10 +84,24 @@ struct PublicGardenCardView: View {
                     .lineLimit(2)
             }
 
+            metadataRow
+
             Text(garden.publishedDate, style: .relative)
                 .font(.system(size: 11))
                 .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
+    }
+
+    private var metadataRow: some View {
+        HStack(spacing: 10) {
+            if let hardinessZone = garden.hardinessZone {
+                Label("Zone \(hardinessZone)", systemImage: "thermometer.sun.fill")
+            }
+            Label("\(garden.plantCount) plant\(garden.plantCount == 1 ? "" : "s")", systemImage: "leaf.fill")
+        }
+        .font(.system(size: 11, weight: .medium, design: .rounded))
+        .foregroundStyle(CultivationTheme.Colors.textTertiary)
+        .accessibilityIdentifier("community_garden_metadata_\(garden.id)")
     }
 
     // MARK: - Stats Bar

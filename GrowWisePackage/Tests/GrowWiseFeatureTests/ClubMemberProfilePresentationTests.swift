@@ -34,7 +34,8 @@ struct ClubMemberProfilePresentationTests {
             club: club,
             user: user,
             activities: activities,
-            currentUserID: "other-member"
+            currentUserID: "other-member",
+            followedMemberIDs: [user.id.uuidString]
         )
 
         #expect(profile.canShowPublicDetails)
@@ -45,6 +46,7 @@ struct ClubMemberProfilePresentationTests {
         #expect(profile.memberSinceDate == joinedDate)
         #expect(profile.plantCount == 1)
         #expect(profile.publicGardenCount == 1)
+        #expect(profile.isFollowed)
         #expect(profile.recentContributions.map { $0.activityDescription ?? "" } == [
             "Newest update",
             "Second update",
@@ -69,7 +71,8 @@ struct ClubMemberProfilePresentationTests {
             club: club,
             user: user,
             activities: [],
-            currentUserID: "other-member"
+            currentUserID: "other-member",
+            followedMemberIDs: []
         )
 
         #expect(!profile.canShowPublicDetails)
@@ -94,13 +97,15 @@ struct ClubMemberProfilePresentationTests {
             club: club,
             user: user,
             activities: [],
-            currentUserID: user.id.uuidString
+            currentUserID: user.id.uuidString,
+            followedMemberIDs: [user.id.uuidString]
         )
 
         #expect(profile.canShowPublicDetails)
         #expect(profile.displayName == "Sam Rivera")
         #expect(profile.hardinessZone == "6a")
         #expect(profile.isCurrentUser)
+        #expect(!profile.isFollowed)
     }
 
     private func makeActivities(

@@ -8,6 +8,7 @@ public final class User {
     public var displayName: String? // CloudKit: made optional or with default value
     public var bio: String? // CloudKit: made optional or with default value
     public var isProfilePublic: Bool = false // CloudKit: made optional or with default value
+    public var followedMemberIDs: [String] = [] // CloudKit: made optional or with default value
     public var skillLevel = GardeningSkillLevel.beginner // CloudKit: made optional or with default value
 
     // Onboarding preferences
@@ -65,6 +66,7 @@ public final class User {
         self.displayName = displayName
         bio = nil
         isProfilePublic = false
+        followedMemberIDs = []
         self.skillLevel = skillLevel
         preferredPlantTypes = []
         gardeningGoals = []

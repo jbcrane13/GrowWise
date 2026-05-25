@@ -20,6 +20,7 @@ struct MovePlantSheet: View {
     @State private var selectedBed: GardenBed?
     @State private var availableBeds: [GardenBed] = []
     @State private var step: MoveStep = .garden
+    @State private var loadError: String?
 
     private enum MoveStep { case garden, bed }
 
@@ -63,6 +64,14 @@ struct MovePlantSheet: View {
                 }
             }
             .task { loadGardens() }
+            .alert("Could not load gardens", isPresented: Binding(
+                get: { loadError != nil },
+                set: { if !$0 { loadError = nil } }
+            )) {
+                Button("OK", role: .cancel) { loadError = nil }
+            } message: {
+                Text(loadError ?? "")
+            }
         }
     }
 
@@ -184,7 +193,11 @@ struct MovePlantSheet: View {
     // MARK: - Helpers
 
     private func loadGardens() {
-        gardens = (try? dataService.gardens.fetchAll()) ?? []
+        do {
+            gardens = try dataService.gardens.fetchAll()
+        } catch {
+            loadError = error.localizedDescription
+        }
     }
 
     private func confirmMove() {

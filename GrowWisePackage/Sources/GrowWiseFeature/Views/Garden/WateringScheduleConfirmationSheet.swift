@@ -15,6 +15,7 @@ struct WateringScheduleConfirmationSheet: View {
     private var dismiss
 
     @State private var isSettingReminder = false
+    @State private var reminderError: String?
 
     var body: some View {
         NavigationStack {
@@ -115,16 +116,32 @@ struct WateringScheduleConfirmationSheet: View {
             }
             .navigationTitle("Plant Added")
             .gwNavigationBarTitleDisplayMode(.inline)
+            .alert("Could not set reminder", isPresented: Binding(
+                get: { reminderError != nil },
+                set: { if !$0 { reminderError = nil } }
+            )) {
+                Button("OK", role: .cancel) { reminderError = nil }
+            } message: {
+                Text(reminderError ?? "")
+            }
         }
     }
 
     private func setReminder() {
         isSettingReminder = true
-        Task {
-            _ = try? await reminderService.createWateringReminder(
-                for: plant,
-                frequency: schedule.frequency
-            )
+        Task<Void, Never> {
+            do {
+                _ = try await reminderService.createWateringReminder(
+                    for: plant,
+                    frequency: schedule.frequency
+                )
+            } catch {
+                await MainActor.run {
+                    reminderError = error.localizedDescription
+                    isSettingReminder = false
+                }
+                return
+            }
             dismiss()
         }
     }

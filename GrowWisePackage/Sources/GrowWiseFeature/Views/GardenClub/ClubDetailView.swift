@@ -3,7 +3,7 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable attributes type_body_length
+// swiftlint:disable attributes file_length type_body_length
 
 private struct SelectedMember: Identifiable {
     let id: String
@@ -87,7 +87,9 @@ public struct ClubDetailView: View {
                 get: { selectedMemberID.map { SelectedMember(id: $0) } },
                 set: { selectedMemberID = $0?.id }
             )) { selection in
-                ClubMemberProfileView(profile: memberProfile(for: selection.id))
+                ClubMemberProfileView(profile: memberProfile(for: selection.id)) {
+                    toggleFollow(memberID: selection.id)
+                }
             }
     }
 
@@ -410,7 +412,7 @@ public struct ClubDetailView: View {
 
     @MainActor
     private func loadMemberUsers() {
-        let memberIDs = Set(club.memberIDs)
+        let memberIDs = Set(club.memberIDs ?? [])
 
         guard !memberIDs.isEmpty else {
             memberUsers = []
@@ -461,8 +463,27 @@ public struct ClubDetailView: View {
             club: club,
             user: memberUser(for: memberID),
             activities: activities,
-            currentUserID: currentUserID
+            currentUserID: currentUserID,
+            followedMemberIDs: dataService.getCurrentUser()?.followedMemberIDs ?? []
         )
+    }
+
+    @MainActor
+    private func toggleFollow(memberID: String) -> Bool {
+        guard memberID != currentUserID else { return false }
+        let isFollowed = dataService.getCurrentUser()?.followedMemberIDs.contains(memberID) == true
+        do {
+            if isFollowed {
+                try dataService.unfollowClubMember(memberID)
+                return false
+            } else {
+                try dataService.followClubMember(memberID)
+                return true
+            }
+        } catch {
+            errorMessage = error.localizedDescription
+            return isFollowed
+        }
     }
 
     private func memberUser(for memberID: String) -> User? {
@@ -488,4 +509,4 @@ public struct ClubDetailView: View {
     }
 }
 
-// swiftlint:enable attributes type_body_length
+// swiftlint:enable attributes file_length type_body_length

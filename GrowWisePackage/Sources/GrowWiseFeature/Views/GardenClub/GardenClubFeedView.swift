@@ -7,6 +7,9 @@ import SwiftUI
 
 private let logger = Logger(subsystem: "com.growwise", category: "GardenClubFeedView")
 
+// SwiftLint suppression for the v1.1 beta Club feed surface; follow-up refactor can split view/data loading.
+// swiftlint:disable file_length function_body_length
+
 /// Tab-3 entry point for Garden Club. Top-of-screen share prompt, segmented
 /// feed (Club / Nearby / Following), and post cards. The "smart match" card
 /// surfaces when nearby growers are tracking the same plant species as the user.
@@ -26,6 +29,9 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     @State private var sharedPlants: [Plant] = []
     @State private var clubName: String = "Garden Club"
     @State private var memberCount: Int = 0
+    @State private var currentMemberID: String?
+    @State private var currentZone: String?
+    @State private var followedMemberIDs: [String] = []
     @State private var userInitial: String = "?"
     @State private var userName: String = "Gardener"
     @State private var isPresentingComposer = false
@@ -57,13 +63,55 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     /// Per the 2026-04-22 plan Phase 5 Adapter note.
     struct ClubActivityViewData: Identifiable {
         let id: UUID
+        let memberID: String
         let authorDisplayName: String
         let caption: String?
-        let zoneTag: String?
+        let gardenName: String?
+        let hardinessZone: String?
         let photoURL: String?
         let relativeTimeLabel: String?
         let likeCount: Int
         let commentCount: Int
+    }
+
+    struct ClubFeedBetaState {
+        let posts: [ClubActivityViewData]
+        let currentMemberID: String?
+        let currentZone: String?
+        let followedMemberIDs: [String]
+
+        func posts(for segment: FeedSegment) -> [ClubActivityViewData] {
+            switch segment {
+            case .club:
+                return posts
+
+            case .nearby:
+                guard let currentZone else { return [] }
+                return posts.filter { post in
+                    post.hardinessZone == currentZone && post.memberID != currentMemberID
+                }
+
+            case .following:
+                let followed = Set(followedMemberIDs)
+                guard !followed.isEmpty else { return [] }
+                return posts.filter { followed.contains($0.memberID) }
+            }
+        }
+
+        func emptyMessage(for segment: FeedSegment) -> String {
+            switch segment {
+            case .club:
+                "Be the first to share what's growing."
+
+            case .nearby:
+                currentZone == nil
+                    ? "Add your hardiness zone to discover nearby growers."
+                    : "No posts in your zone yet."
+
+            case .following:
+                "Follow someone to see their posts."
+            }
+        }
     }
 
     public var body: some View {
@@ -273,33 +321,30 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     // MARK: - Feed body
 
     @ViewBuilder private var feed: some View {
-        switch selectedSegment {
-        case .club:
-            if posts.isEmpty {
-                emptyState(message: "Be the first to share what's growing.")
-            } else {
-                clubFeed
-            }
+        let state = ClubFeedBetaState(
+            posts: posts,
+            currentMemberID: currentMemberID,
+            currentZone: currentZone,
+            followedMemberIDs: followedMemberIDs
+        )
+        let visiblePosts = state.posts(for: selectedSegment)
 
-        case .nearby:
-            // Per spec Open questions resolution: empty-state copy, not sample data.
-            emptyState(message: "No posts in your zone yet.")
-
-        case .following:
-            // Per spec Open questions resolution: empty-state copy, not sample data.
-            emptyState(message: "Follow someone to see their posts.")
+        if visiblePosts.isEmpty {
+            emptyState(message: state.emptyMessage(for: selectedSegment))
+        } else {
+            postList(visiblePosts)
         }
     }
 
-    private var clubFeed: some View {
+    private func postList(_ visiblePosts: [ClubActivityViewData]) -> some View {
         VStack(spacing: 14) {
-            ForEach(Array(posts.enumerated()), id: \.element.id) { index, post in
-                if index == 1, let match = smartMatch {
+            ForEach(Array(visiblePosts.enumerated()), id: \.element.id) { index, post in
+                if selectedSegment == .club, index == 1, let match = smartMatch {
                     smartMatchCard(match)
                 }
                 ClubPostCard(post: post)
             }
-            if posts.count < 2, let match = smartMatch {
+            if selectedSegment == .club, visiblePosts.count < 2, let match = smartMatch {
                 smartMatchCard(match)
             }
         }
@@ -357,6 +402,9 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         let user = dataService.getCurrentUser()
         userName = firstName(from: user?.displayName)
         userInitial = String(userName.prefix(1)).uppercased()
+        currentMemberID = user?.id.uuidString
+        currentZone = locationService.hardinessZone ?? user?.hardinessZone
+        followedMemberIDs = user?.followedMemberIDs ?? []
 
         // Resolve the active club: explicit > first available > none.
         let resolved: GardenClub?
@@ -416,21 +464,24 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             }
 
             posts = merged
+            smartMatch = Self.smartMatch(
+                from: merged,
+                currentMemberID: currentMemberID,
+                currentZone: currentZone,
+                sharedPlants: sharedPlants
+            )
         } else {
             clubName = "Garden Club"
             memberCount = 0
             posts = []
             sharedPlants = []
-        }
-
-        // Smart match — populate when location/zone is available.
-        if let zone = locationService.hardinessZone {
-            smartMatch = SmartMatchSuggestion(count: 3, zone: zone, plantName: "Cherokee Purple")
+            smartMatch = nil
         }
     }
 
     static func viewData(from activity: ClubActivity) -> ClubActivityViewData {
         let id = activity.id ?? UUID()
+        let memberID = activity.memberID ?? ""
         let author = activity.memberName ?? "Member"
         let caption = activity.activityDescription
         let label: String?
@@ -443,9 +494,11 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         }
         return ClubActivityViewData(
             id: id,
+            memberID: memberID,
             authorDisplayName: author,
             caption: caption,
-            zoneTag: activity.gardenName,
+            gardenName: activity.gardenName,
+            hardinessZone: activity.hardinessZone,
             photoURL: activity.photoURL,
             relativeTimeLabel: label,
             likeCount: 0, // future feature
@@ -459,9 +512,11 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     static func viewData(from record: CKRecord) -> ClubActivityViewData {
         // The record name is the activity UUID stored as a string by publishActivity.
         let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
+        let memberID = record["memberID"] as? String ?? ""
         let author = record["memberName"] as? String ?? "Member"
         let caption = record["activityDescription"] as? String
         let gardenName = record["gardenName"] as? String
+        let hardinessZone = record["hardinessZone"] as? String
         let photoURL = (record["photo"] as? CKAsset)?.fileURL?.absoluteString
             ?? record["photoURL"] as? String
         let timestamp = record["timestamp"] as? Date
@@ -475,13 +530,34 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         }
         return ClubActivityViewData(
             id: id,
+            memberID: memberID,
             authorDisplayName: author,
             caption: caption,
-            zoneTag: gardenName,
+            gardenName: gardenName,
+            hardinessZone: hardinessZone,
             photoURL: photoURL,
             relativeTimeLabel: label,
             likeCount: 0, // future feature
             commentCount: 0 // future feature
+        )
+    }
+
+    static func smartMatch(
+        from posts: [ClubActivityViewData],
+        currentMemberID: String?,
+        currentZone: String?,
+        sharedPlants: [Plant]
+    ) -> SmartMatchSuggestion? {
+        guard let currentZone else { return nil }
+        let nearbyMemberIDs = Set(posts.compactMap { post -> String? in
+            guard post.hardinessZone == currentZone, post.memberID != currentMemberID else { return nil }
+            return post.memberID
+        })
+        guard !nearbyMemberIDs.isEmpty else { return nil }
+        return SmartMatchSuggestion(
+            count: nearbyMemberIDs.count,
+            zone: currentZone,
+            plantName: sharedPlants.first?.name ?? "your plants"
         )
     }
 
@@ -494,3 +570,5 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         return String(first)
     }
 }
+
+// swiftlint:enable file_length function_body_length

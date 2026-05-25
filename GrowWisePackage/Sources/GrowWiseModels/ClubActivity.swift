@@ -10,6 +10,7 @@ public final class ClubActivity {
     public var activityType: String? // "watered", "harvested", "planted", "journaled", "diagnosed"
     public var activityDescription: String?
     public var gardenName: String?
+    public var hardinessZone: String?
     public var photoURL: String?
     public var timestamp: Date? = Date()
 

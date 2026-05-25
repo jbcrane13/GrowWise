@@ -84,20 +84,44 @@ public extension DataService {
             description: description
         )
         activity.gardenName = gardenName
+        activity.hardinessZone = user?.hardinessZone
         activity.photoURL = photoURL
         let repo = ClubActivityRepository(context: mainContext)
         try repo.save(activity)
         return activity
     }
+
+    func followClubMember(_ memberID: String) throws {
+        guard !memberID.isEmpty else { return }
+        guard let user = getCurrentUser() else { throw CreateClubPostError.noCurrentUser }
+        guard memberID != user.id.uuidString else { return }
+        var followed = user.followedMemberIDs
+        guard !followed.contains(memberID) else { return }
+        followed.append(memberID)
+        user.followedMemberIDs = followed
+        try updateUser(user)
+    }
+
+    func unfollowClubMember(_ memberID: String) throws {
+        guard let user = getCurrentUser() else { throw CreateClubPostError.noCurrentUser }
+        let followed = user.followedMemberIDs.filter { $0 != memberID }
+        guard followed.count != user.followedMemberIDs.count else { return }
+        user.followedMemberIDs = followed
+        try updateUser(user)
+    }
 }
 
 public enum CreateClubPostError: Error, LocalizedError {
     case noClub
+    case noCurrentUser
 
     public var errorDescription: String? {
         switch self {
         case .noClub:
             "You're not in a club yet. Join or create one first."
+
+        case .noCurrentUser:
+            "Create a profile before following club members."
         }
     }
 }

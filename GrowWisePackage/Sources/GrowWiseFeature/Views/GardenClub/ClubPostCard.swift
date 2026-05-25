@@ -48,13 +48,18 @@ struct ClubPostCard: View {
 
     private var subtitle: some View {
         HStack(spacing: 5) {
-            if let zone = post.zoneTag {
-                Text("Zone \(zone)")
+            if let gardenName = post.gardenName {
+                Text(gardenName)
+                    .foregroundStyle(CultivationTheme.Colors.smartTagForeground)
+                    .fontWeight(.bold)
+            }
+            if let hardinessZone = post.hardinessZone {
+                Text(post.gardenName == nil ? "Zone \(hardinessZone)" : "· Zone \(hardinessZone)")
                     .foregroundStyle(CultivationTheme.Colors.smartTagForeground)
                     .fontWeight(.bold)
             }
             if let when = post.relativeTimeLabel {
-                Text(post.zoneTag == nil ? when : "\u{00B7} \(when)")
+                Text(post.gardenName == nil && post.hardinessZone == nil ? when : "\u{00B7} \(when)")
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
         }

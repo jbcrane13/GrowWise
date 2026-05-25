@@ -3,7 +3,7 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable type_body_length
+// swiftlint:disable file_length type_body_length
 
 // MARK: - GardenDetailView
 
@@ -30,6 +30,7 @@ struct GardenDetailView: View {
     @State private var showRecommendedPlants = false
     @State private var seedPlantedForShoppingPrompt: Seed?
     @State private var showSeedShoppingPrompt = false
+    @State private var saveError: String?
 
     private var filteredGroups: [PlantGroup] {
         guard !searchText.isEmpty else { return groupedPlants }
@@ -199,6 +200,14 @@ struct GardenDetailView: View {
                 .presentationDragIndicator(.hidden)
             }
         )
+        .alert("Could not save", isPresented: Binding(
+            get: { saveError != nil },
+            set: { if !$0 { saveError = nil } }
+        )) {
+            Button("OK", role: .cancel) { saveError = nil }
+        } message: {
+            Text(saveError ?? "")
+        }
     }
 
     // MARK: - Sub-views
@@ -354,7 +363,11 @@ struct GardenDetailView: View {
         let currentQty = seed.quantity ?? 0
         let newQty = max(0, currentQty - 1)
         seed.quantity = newQty
-        try? dataService.seeds.update(seed)
+        do {
+            try dataService.seeds.update(seed)
+        } catch {
+            saveError = error.localizedDescription
+        }
 
         // Prompt to add to shopping list if now depleted
         if newQty == 0 {
@@ -375,7 +388,11 @@ struct GardenDetailView: View {
         )
         item.garden = garden
         modelContext.insert(item)
-        try? modelContext.save()
+        do {
+            try modelContext.save()
+        } catch {
+            saveError = error.localizedDescription
+        }
     }
 
     // MARK: - Data
@@ -488,4 +505,4 @@ struct OutlineButtonStyle: ButtonStyle {
     }
 }
 
-// swiftlint:enable type_body_length
+// swiftlint:enable file_length type_body_length

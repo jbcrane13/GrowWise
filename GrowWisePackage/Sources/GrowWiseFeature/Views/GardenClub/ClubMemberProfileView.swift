@@ -6,6 +6,15 @@ struct ClubMemberProfileView: View {
     private var dismiss
 
     let profile: ClubMemberProfile
+    let onToggleFollow: (() -> Bool)?
+
+    @State private var isFollowed: Bool
+
+    init(profile: ClubMemberProfile, onToggleFollow: (() -> Bool)? = nil) {
+        self.profile = profile
+        self.onToggleFollow = onToggleFollow
+        _isFollowed = State(initialValue: profile.isFollowed)
+    }
 
     var body: some View {
         NavigationStack {
@@ -65,6 +74,32 @@ struct ClubMemberProfileView: View {
                 .font(CultivationTheme.Fonts.body(13, weight: .semibold))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
                 .accessibilityIdentifier("clubprofile_label_role")
+
+                if !profile.isCurrentUser, let onToggleFollow {
+                    Button {
+                        isFollowed = onToggleFollow()
+                    } label: {
+                        Label(isFollowed ? "Following" : "Follow", systemImage: isFollowed ? "checkmark" : "plus")
+                            .font(CultivationTheme.Fonts.body(12, weight: .semibold))
+                            .foregroundStyle(
+                                isFollowed
+                                    ? CultivationTheme.Colors.brandForest
+                                    : .white
+                            )
+                            .padding(.horizontal, 14)
+                            .padding(.vertical, 7)
+                            .background(
+                                Capsule()
+                                    .fill(
+                                        isFollowed
+                                            ? CultivationTheme.Colors.brandMint.opacity(0.35)
+                                            : CultivationTheme.Colors.accentCoral
+                                    )
+                            )
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("clubprofile_button_follow")
+                }
             }
         }
         .frame(maxWidth: .infinity)

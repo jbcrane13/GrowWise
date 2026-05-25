@@ -5,6 +5,7 @@ struct ClubMemberProfile: Identifiable {
     let memberID: String
     let roleTitle: String
     let isCurrentUser: Bool
+    let isFollowed: Bool
     let canShowPublicDetails: Bool
     let displayName: String
     let avatarLetters: String
@@ -24,11 +25,13 @@ struct ClubMemberProfile: Identifiable {
         club: GardenClub,
         user: User?,
         activities: [ClubActivity],
-        currentUserID: String
+        currentUserID: String,
+        followedMemberIDs: [String] = []
     ) {
         self.memberID = memberID
         roleTitle = memberID == club.ownerID ? "Owner" : "Member"
         isCurrentUser = memberID == currentUserID
+        isFollowed = !isCurrentUser && followedMemberIDs.contains(memberID)
         canShowPublicDetails = isCurrentUser || user?.isProfilePublic == true
 
         if canShowPublicDetails, let name = user?.displayName?.trimmedNonEmpty {

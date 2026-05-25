@@ -93,6 +93,8 @@ public final class CloudSyncService {
         record["publishedDate"] = Date()
         record["likeCount"] = 0
         record["viewCount"] = 0
+        record["plantCount"] = garden.plants?.count ?? 0
+        record["hardinessZone"] = garden.hardinessZone
 
         // Save to public database
         guard let publicDatabase else { throw CloudKitError.publishFailed("CloudKit unavailable") }
@@ -289,6 +291,8 @@ public struct PublicGarden: Identifiable, Sendable {
     public let publishedDate: Date
     public let likeCount: Int
     public let viewCount: Int
+    public let plantCount: Int
+    public let hardinessZone: String?
     public let imageAsset: CKAsset?
 
     public init(
@@ -301,6 +305,8 @@ public struct PublicGarden: Identifiable, Sendable {
         publishedDate: Date = Date(),
         likeCount: Int = 0,
         viewCount: Int = 0,
+        plantCount: Int = 0,
+        hardinessZone: String? = nil,
         imageAsset: CKAsset? = nil
     ) {
         self.id = id
@@ -312,6 +318,8 @@ public struct PublicGarden: Identifiable, Sendable {
         self.publishedDate = publishedDate
         self.likeCount = likeCount
         self.viewCount = viewCount
+        self.plantCount = plantCount
+        self.hardinessZone = hardinessZone
         self.imageAsset = imageAsset
     }
 
@@ -331,6 +339,8 @@ public struct PublicGarden: Identifiable, Sendable {
         self.publishedDate = record["publishedDate"] as? Date ?? Date()
         self.likeCount = record["likeCount"] as? Int ?? 0
         self.viewCount = record["viewCount"] as? Int ?? 0
+        self.plantCount = record["plantCount"] as? Int ?? 0
+        self.hardinessZone = record["hardinessZone"] as? String
         self.imageAsset = record["image"] as? CKAsset
     }
 }

@@ -21,6 +21,8 @@ struct CloudSyncServicePublicGardenMappingTests {
         record["publishedDate"] = publishedDate
         record["likeCount"] = 42
         record["viewCount"] = 100
+        record["plantCount"] = 12
+        record["hardinessZone"] = "7b"
 
         let garden = PublicGarden(from: record)
 
@@ -32,6 +34,8 @@ struct CloudSyncServicePublicGardenMappingTests {
         #expect(garden?.publishedDate == publishedDate)
         #expect(garden?.likeCount == 42)
         #expect(garden?.viewCount == 100)
+        #expect(garden?.plantCount == 12)
+        #expect(garden?.hardinessZone == "7b")
         #expect(garden?.recordID == record.recordID)
     }
 
@@ -90,6 +94,8 @@ struct CloudSyncServicePublicGardenMappingTests {
         #expect(garden != nil)
         #expect(garden?.gardenType == nil)
         #expect(garden?.description == nil)
+        #expect(garden?.hardinessZone == nil)
+        #expect(garden?.plantCount == 0)
         #expect(garden?.imageAsset == nil)
     }
 
@@ -134,6 +140,8 @@ struct CloudSyncServicePublicGardenMappingTests {
         #expect(garden.description == nil)
         #expect(garden.likeCount == 0)
         #expect(garden.viewCount == 0)
+        #expect(garden.plantCount == 0)
+        #expect(garden.hardinessZone == nil)
         #expect(garden.recordID == nil)
         #expect(garden.imageAsset == nil)
     }

@@ -76,6 +76,34 @@ struct DataServiceGardenClubTests {
         #expect(activity.photoURL == photoURL)
     }
 
+    @Test("createClubPost persists current user hardiness zone")
+    func createClubPostPersistsCurrentUserHardinessZone() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        user.hardinessZone = "7b"
+        try service.updateUser(user)
+        _ = try service.createClub(name: "Backyard Growers", ownerID: user.id.uuidString)
+
+        let activity = try service.createClubPost(caption: "Tomatoes are coming in!", activityType: "shared")
+
+        #expect(activity.memberID == user.id.uuidString)
+        #expect(activity.hardinessZone == "7b")
+    }
+
+    @Test("followClubMember toggles followed member IDs idempotently")
+    func followClubMemberTogglesFollowedMemberIDs() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+
+        try service.followClubMember("member-2")
+        try service.followClubMember("member-2")
+        #expect(user.followedMemberIDs == ["member-2"])
+
+        try service.unfollowClubMember("member-2")
+        try service.unfollowClubMember("member-2")
+        #expect(user.followedMemberIDs.isEmpty)
+    }
+
     @Test("sharePlant marks plant as shared with club and unshare keeps owner plant private")
     func sharePlantAndUnsharePlant() async throws {
         let service = try await DataService.makeForTesting()

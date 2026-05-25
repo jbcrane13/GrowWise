@@ -282,11 +282,11 @@ public struct HomeView: View {
                 )
                 .accessibilityHidden(true)
 
-            let canSkipForRain = offersRainSkip && reminder.canBeCompleted(by: dataService.currentMember?.id)
+            let canSkipForRain = offersRainSkip && reminder.canBeCompleted(by: currentMemberID)
 
             if canSkipForRain {
                 Button {
-                    guard reminder.canBeCompleted(by: dataService.currentMember?.id) else {
+                    guard reminder.canBeCompleted(by: currentMemberID) else {
                         return
                     }
                     skipReminderForRain(reminder)
