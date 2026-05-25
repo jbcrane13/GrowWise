@@ -183,7 +183,9 @@ struct GardenDetailView: View {
             Button("Add to Shopping List") {
                 addSeedToShoppingList(seed)
             }
+            .accessibilityIdentifier("gardendetail_button_seed_shopping_add")
             Button("No Thanks", role: .cancel) {}
+                .accessibilityIdentifier("gardendetail_button_seed_shopping_cancel")
         } message: { seed in
             Text("You've used your last packet of \(seed.varietyName ?? "this seed"). Add more to your shopping list?")
         }
@@ -205,6 +207,7 @@ struct GardenDetailView: View {
             set: { if !$0 { saveError = nil } }
         )) {
             Button("OK", role: .cancel) { saveError = nil }
+                .accessibilityIdentifier("gardendetail_button_save_error_dismiss")
         } message: {
             Text(saveError ?? "")
         }
@@ -365,15 +368,14 @@ struct GardenDetailView: View {
         seed.quantity = newQty
         do {
             try dataService.seeds.update(seed)
+            // Only prompt on success — seed was actually depleted
+            if newQty == 0 {
+                seedPlantedForShoppingPrompt = seed
+                showSeedShoppingPrompt = true
+            }
         } catch {
             seed.quantity = currentQty
             saveError = error.localizedDescription
-        }
-
-        // Prompt to add to shopping list if now depleted
-        if newQty == 0 {
-            seedPlantedForShoppingPrompt = seed
-            showSeedShoppingPrompt = true
         }
 
         Task { await rebuildGroups() }
