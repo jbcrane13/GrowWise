@@ -43,7 +43,7 @@ struct ClubMemberProfile: Identifiable {
         )
         bio = canShowPublicDetails ? user?.bio?.trimmedNonEmpty : nil
         hardinessZone = canShowPublicDetails ? user?.hardinessZone?.trimmedNonEmpty : nil
-        memberSinceDate = club.createdDate
+        memberSinceDate = canShowPublicDetails ? club.createdDate : nil
         plantCount = canShowPublicDetails ? Self.plantCount(for: user) : nil
         publicGardenCount = canShowPublicDetails ? Self.publicGardenCount(for: user, club: club) : nil
         recentContributions = canShowPublicDetails ? Self.recentActivities(
