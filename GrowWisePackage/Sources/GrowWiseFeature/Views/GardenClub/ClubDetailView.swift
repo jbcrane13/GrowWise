@@ -5,6 +5,10 @@ import SwiftUI
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
 // swiftlint:disable attributes type_body_length
 
+private struct SelectedMember: Identifiable {
+    let id: String
+}
+
 public struct ClubDetailView: View {
     @Environment(DataService.self) private var dataService
     @Environment(\.dismiss) private var dismiss
@@ -18,7 +22,7 @@ public struct ClubDetailView: View {
     @State private var showLeaveAlert = false
     @State private var showRemoveMemberAlert = false
     @State private var memberToRemove: String?
-    @State private var selectedMemberProfile: ClubMemberProfile?
+    @State private var selectedMemberID: String?
     @State private var codeCopied = false
 
     private var currentUserID: String {
@@ -79,8 +83,11 @@ public struct ClubDetailView: View {
             .navigationDestination(isPresented: $navigateToEvents) {
                 ClubEventsView(club: club)
             }
-            .sheet(item: $selectedMemberProfile) { profile in
-                ClubMemberProfileView(profile: profile)
+            .sheet(item: Binding(
+                get: { selectedMemberID.map { SelectedMember(id: $0) } },
+                set: { selectedMemberID = $0?.id }
+            )) { selection in
+                ClubMemberProfileView(profile: memberProfile(for: selection.id))
             }
     }
 
@@ -203,7 +210,7 @@ public struct ClubDetailView: View {
 
         return HStack(spacing: 12) {
             Button {
-                selectedMemberProfile = profile
+                selectedMemberID = memberID
             } label: {
                 HStack(spacing: 12) {
                     ZStack {

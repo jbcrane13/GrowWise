@@ -60,9 +60,12 @@ struct ClubMemberProfilePresentationTests {
         user.bio = "Likes peppers."
         user.hardinessZone = "9a"
         user.gardens = [Garden(name: "Pepper Patch", gardenType: .raised)]
+        // Use a fixed memberID so the expected avatar letter is deterministic.
+        // First alphanumeric of "bce-member-99" is 'B'.
+        let fixedMemberID = "bce-member-99"
 
         let profile = ClubMemberProfile(
-            memberID: user.id.uuidString,
+            memberID: fixedMemberID,
             club: club,
             user: user,
             activities: [],
@@ -71,7 +74,7 @@ struct ClubMemberProfilePresentationTests {
 
         #expect(!profile.canShowPublicDetails)
         #expect(profile.displayName == "Club member")
-        #expect(profile.avatarLetters == "M")
+        #expect(profile.avatarLetters == "B")
         #expect(profile.bio == nil)
         #expect(profile.hardinessZone == nil)
         #expect(profile.plantCount == nil)

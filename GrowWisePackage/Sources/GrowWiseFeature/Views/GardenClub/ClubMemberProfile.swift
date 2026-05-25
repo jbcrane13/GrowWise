@@ -81,7 +81,7 @@ struct ClubMemberProfile: Identifiable {
         )
     }
 
-    private static func avatarLetters(displayName: String?, memberID _: String) -> String {
+    private static func avatarLetters(displayName: String?, memberID: String) -> String {
         if let displayName = displayName?.trimmedNonEmpty {
             let initials = displayName
                 .split(separator: " ")
@@ -90,6 +90,10 @@ struct ClubMemberProfile: Identifiable {
                 .map { String($0).uppercased() }
                 .joined()
             if !initials.isEmpty { return initials }
+        }
+
+        if let firstAlphanumeric = memberID.first(where: { $0.isLetter || $0.isNumber }) {
+            return String(firstAlphanumeric).uppercased()
         }
 
         return "M"
