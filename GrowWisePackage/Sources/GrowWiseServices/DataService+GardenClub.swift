@@ -92,19 +92,27 @@ public extension DataService {
     }
 
     func followClubMember(_ memberID: String) throws {
-        guard !memberID.isEmpty else { return }
+        guard let memberID = memberID.trimmedNonEmpty else { return }
         guard let user = getCurrentUser() else { throw CreateClubPostError.noCurrentUser }
         guard memberID != user.id.uuidString else { return }
-        var followed = user.followedMemberIDs
-        guard !followed.contains(memberID) else { return }
+        let originalFollowed = user.followedMemberIDs
+        var followed = originalFollowed.compactMap(\.trimmedNonEmpty)
+        if followed.contains(memberID) {
+            if followed != originalFollowed {
+                user.followedMemberIDs = followed
+                try updateUser(user)
+            }
+            return
+        }
         followed.append(memberID)
         user.followedMemberIDs = followed
         try updateUser(user)
     }
 
     func unfollowClubMember(_ memberID: String) throws {
+        guard let memberID = memberID.trimmedNonEmpty else { return }
         guard let user = getCurrentUser() else { throw CreateClubPostError.noCurrentUser }
-        let followed = user.followedMemberIDs.filter { $0 != memberID }
+        let followed = user.followedMemberIDs.compactMap(\.trimmedNonEmpty).filter { $0 != memberID }
         guard followed.count != user.followedMemberIDs.count else { return }
         user.followedMemberIDs = followed
         try updateUser(user)
@@ -123,5 +131,12 @@ public enum CreateClubPostError: Error, LocalizedError {
         case .noCurrentUser:
             "Create a profile before following club members."
         }
+    }
+}
+
+private extension String {
+    var trimmedNonEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }

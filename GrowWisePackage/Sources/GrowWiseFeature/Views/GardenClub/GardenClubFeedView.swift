@@ -86,15 +86,24 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
                 return posts
 
             case .nearby:
-                guard let currentZone else { return [] }
+                guard let currentZone = Self.normalizedZone(currentZone) else { return [] }
+                let currentMemberID = Self.normalizedMemberID(currentMemberID)
                 return posts.filter { post in
-                    post.hardinessZone == currentZone && post.memberID != currentMemberID
+                    guard let postMemberID = Self.normalizedMemberID(post.memberID),
+                          let postZone = Self.normalizedZone(post.hardinessZone)
+                    else {
+                        return false
+                    }
+                    return postZone == currentZone && postMemberID != currentMemberID
                 }
 
             case .following:
-                let followed = Set(followedMemberIDs)
+                let followed = Set(followedMemberIDs.compactMap(Self.normalizedMemberID))
                 guard !followed.isEmpty else { return [] }
-                return posts.filter { followed.contains($0.memberID) }
+                return posts.filter { post in
+                    guard let postMemberID = Self.normalizedMemberID(post.memberID) else { return false }
+                    return followed.contains(postMemberID)
+                }
             }
         }
 
@@ -104,13 +113,21 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
                 "Be the first to share what's growing."
 
             case .nearby:
-                currentZone == nil
+                Self.normalizedZone(currentZone) == nil
                     ? "Add your hardiness zone to discover nearby growers."
                     : "No posts in your zone yet."
 
             case .following:
                 "Follow someone to see their posts."
             }
+        }
+
+        private static func normalizedMemberID(_ memberID: String?) -> String? {
+            memberID?.trimmedNonEmpty
+        }
+
+        private static func normalizedZone(_ zone: String?) -> String? {
+            zone?.trimmedNonEmpty?.lowercased()
         }
     }
 
@@ -403,8 +420,8 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         userName = firstName(from: user?.displayName)
         userInitial = String(userName.prefix(1)).uppercased()
         currentMemberID = user?.id.uuidString
-        currentZone = locationService.hardinessZone ?? user?.hardinessZone
-        followedMemberIDs = user?.followedMemberIDs ?? []
+        currentZone = (locationService.hardinessZone ?? user?.hardinessZone)?.trimmedNonEmpty
+        followedMemberIDs = user?.followedMemberIDs.compactMap(\.trimmedNonEmpty) ?? []
 
         // Resolve the active club: explicit > first available > none.
         let resolved: GardenClub?
@@ -481,9 +498,9 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
 
     static func viewData(from activity: ClubActivity) -> ClubActivityViewData {
         let id = activity.id ?? UUID()
-        let memberID = activity.memberID ?? ""
-        let author = activity.memberName ?? "Member"
-        let caption = activity.activityDescription
+        let memberID = activity.memberID?.trimmedNonEmpty ?? ""
+        let author = activity.memberName?.trimmedNonEmpty ?? "Member"
+        let caption = activity.activityDescription?.trimmedNonEmpty
         let label: String?
         if let timestamp = activity.timestamp {
             let formatter = RelativeDateTimeFormatter()
@@ -497,9 +514,9 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             memberID: memberID,
             authorDisplayName: author,
             caption: caption,
-            gardenName: activity.gardenName,
-            hardinessZone: activity.hardinessZone,
-            photoURL: activity.photoURL,
+            gardenName: activity.gardenName?.trimmedNonEmpty,
+            hardinessZone: activity.hardinessZone?.trimmedNonEmpty,
+            photoURL: activity.photoURL?.trimmedNonEmpty,
             relativeTimeLabel: label,
             likeCount: 0, // future feature
             commentCount: 0 // future feature
@@ -512,13 +529,13 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     static func viewData(from record: CKRecord) -> ClubActivityViewData {
         // The record name is the activity UUID stored as a string by publishActivity.
         let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
-        let memberID = record["memberID"] as? String ?? ""
-        let author = record["memberName"] as? String ?? "Member"
-        let caption = record["activityDescription"] as? String
-        let gardenName = record["gardenName"] as? String
-        let hardinessZone = record["hardinessZone"] as? String
+        let memberID = (record["memberID"] as? String)?.trimmedNonEmpty ?? ""
+        let author = (record["memberName"] as? String)?.trimmedNonEmpty ?? "Member"
+        let caption = (record["activityDescription"] as? String)?.trimmedNonEmpty
+        let gardenName = (record["gardenName"] as? String)?.trimmedNonEmpty
+        let hardinessZone = (record["hardinessZone"] as? String)?.trimmedNonEmpty
         let photoURL = (record["photo"] as? CKAsset)?.fileURL?.absoluteString
-            ?? record["photoURL"] as? String
+            ?? (record["photoURL"] as? String)?.trimmedNonEmpty
         let timestamp = record["timestamp"] as? Date
         let label: String?
         if let timestamp {
@@ -548,10 +565,17 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         currentZone: String?,
         sharedPlants: [Plant]
     ) -> SmartMatchSuggestion? {
-        guard let currentZone else { return nil }
+        guard let currentZone = currentZone?.trimmedNonEmpty?.lowercased() else { return nil }
+        let currentMemberID = currentMemberID?.trimmedNonEmpty
         let nearbyMemberIDs = Set(posts.compactMap { post -> String? in
-            guard post.hardinessZone == currentZone, post.memberID != currentMemberID else { return nil }
-            return post.memberID
+            guard let memberID = post.memberID.trimmedNonEmpty,
+                  let postZone = post.hardinessZone?.trimmedNonEmpty?.lowercased(),
+                  postZone == currentZone,
+                  memberID != currentMemberID
+            else {
+                return nil
+            }
+            return memberID
         })
         guard !nearbyMemberIDs.isEmpty else { return nil }
         return SmartMatchSuggestion(
@@ -568,6 +592,13 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             return "Gardener"
         }
         return String(first)
+    }
+}
+
+private extension String {
+    var trimmedNonEmpty: String? {
+        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
+        return trimmed.isEmpty ? nil : trimmed
     }
 }
 

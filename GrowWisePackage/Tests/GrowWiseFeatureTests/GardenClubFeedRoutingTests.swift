@@ -4,7 +4,8 @@ import GrowWiseModels
 import SwiftData
 import Testing
 
-@Suite("Garden Club tab routing")
+@Suite("Garden Club tab routing", .serialized)
+@MainActor
 struct GardenClubFeedRoutingTests {
     @Test("Zero clubs routes to join/create prompt")
     func zeroClubsRoutesToJoinPrompt() {
@@ -89,6 +90,37 @@ struct GardenClubFeedRoutingTests {
         #expect(nearby.map(\.authorDisplayName) == ["Peer"])
     }
 
+    @Test("Nearby feed ignores unknown members and normalizes hardiness zones")
+    func nearbyFeedIgnoresUnknownMembersAndNormalizesHardinessZones() {
+        let state = GardenClubFeedView.ClubFeedBetaState(
+            posts: [
+                makePost(memberID: " current ", author: "Current", hardinessZone: "7b"),
+                makePost(memberID: " peer ", author: "Peer", hardinessZone: " 7B "),
+                makePost(memberID: "", author: "Unknown", hardinessZone: "7b"),
+                makePost(memberID: "blank-zone", author: "Blank Zone", hardinessZone: " "),
+            ],
+            currentMemberID: "current",
+            currentZone: " 7b ",
+            followedMemberIDs: []
+        )
+
+        let nearby = state.posts(for: .nearby)
+
+        #expect(nearby.map(\.authorDisplayName) == ["Peer"])
+    }
+
+    @Test("Nearby empty message treats whitespace zone as missing")
+    func nearbyEmptyMessageTreatsWhitespaceZoneAsMissing() {
+        let state = GardenClubFeedView.ClubFeedBetaState(
+            posts: [],
+            currentMemberID: "current",
+            currentZone: " ",
+            followedMemberIDs: []
+        )
+
+        #expect(state.emptyMessage(for: .nearby) == "Add your hardiness zone to discover nearby growers.")
+    }
+
     @Test("Following feed includes only followed members")
     func followingFeedIncludesOnlyFollowedMembers() {
         let state = GardenClubFeedView.ClubFeedBetaState(
@@ -105,6 +137,41 @@ struct GardenClubFeedRoutingTests {
         let following = state.posts(for: .following)
 
         #expect(following.map(\.authorDisplayName) == ["Followed"])
+    }
+
+    @Test("Following feed trims followed IDs and ignores blank post members")
+    func followingFeedTrimsFollowedIDsAndIgnoresBlankPostMembers() {
+        let state = GardenClubFeedView.ClubFeedBetaState(
+            posts: [
+                makePost(memberID: " followed ", author: "Followed", hardinessZone: "7b"),
+                makePost(memberID: "", author: "Unknown", hardinessZone: "7b"),
+            ],
+            currentMemberID: "current",
+            currentZone: "7b",
+            followedMemberIDs: [" followed ", ""]
+        )
+
+        let following = state.posts(for: .following)
+
+        #expect(following.map(\.authorDisplayName) == ["Followed"])
+    }
+
+    @Test("Smart match ignores self unknown members and normalizes zones")
+    func smartMatchIgnoresSelfUnknownMembersAndNormalizesZones() {
+        let match = GardenClubFeedView.smartMatch(
+            from: [
+                makePost(memberID: "current", author: "Current", hardinessZone: "7b"),
+                makePost(memberID: "peer-1", author: "Peer One", hardinessZone: " 7B "),
+                makePost(memberID: "peer-1", author: "Peer One Again", hardinessZone: "7b"),
+                makePost(memberID: "", author: "Unknown", hardinessZone: "7b"),
+            ],
+            currentMemberID: " current ",
+            currentZone: "7b",
+            sharedPlants: []
+        )
+
+        #expect(match?.count == 1)
+        #expect(match?.plantName == "your plants")
     }
 
     private func makePost(

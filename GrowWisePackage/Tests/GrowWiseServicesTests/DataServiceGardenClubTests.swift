@@ -104,6 +104,34 @@ struct DataServiceGardenClubTests {
         #expect(user.followedMemberIDs.isEmpty)
     }
 
+    @Test("followClubMember trims IDs and ignores blank values")
+    func followClubMemberTrimsIDsAndIgnoresBlankValues() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+
+        try service.followClubMember(" member-2 ")
+        try service.followClubMember("\n")
+        try service.followClubMember("member-2")
+
+        #expect(user.followedMemberIDs == ["member-2"])
+
+        try service.unfollowClubMember(" member-2 ")
+
+        #expect(user.followedMemberIDs.isEmpty)
+    }
+
+    @Test("followClubMember normalizes existing followed IDs")
+    func followClubMemberNormalizesExistingFollowedIDs() async throws {
+        let service = try await DataService.makeForTesting()
+        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        user.followedMemberIDs = [" member-2 ", ""]
+        try service.updateUser(user)
+
+        try service.followClubMember("member-2")
+
+        #expect(user.followedMemberIDs == ["member-2"])
+    }
+
     @Test("sharePlant marks plant as shared with club and unshare keeps owner plant private")
     func sharePlantAndUnsharePlant() async throws {
         let service = try await DataService.makeForTesting()
