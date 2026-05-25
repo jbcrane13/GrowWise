@@ -534,6 +534,7 @@ struct ReminderDetailCard: View {
                     set: { _ in onToggle() }
                 )
             )
+            .accessibilityIdentifier("plantreminder_toggle_enabled_\(reminder.id)")
 
             // Reminder info
             VStack(alignment: .leading, spacing: 4) {
@@ -640,6 +641,7 @@ struct PlantDetailQuickActionButton: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("plantdetail_quick_action_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

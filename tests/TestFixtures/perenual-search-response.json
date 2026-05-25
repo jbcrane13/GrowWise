@@ -1,0 +1,49 @@
+{
+  "data": [
+    {
+      "id": 1,
+      "common_name": "European Silver Fir",
+      "scientific_name": ["Abies alba"],
+      "other_name": ["Common Silver Fir"],
+      "family": "Pinaceae",
+      "genus": "Abies",
+      "default_image": {
+        "original_url": "https://perenual.com/storage/species_image/1/og/52492935824_fc3b6de4bb_b.jpg",
+        "regular_url": "https://perenual.com/storage/species_image/1/regular/52492935824_fc3b6de4bb_b.jpg",
+        "medium_url": "https://perenual.com/storage/species_image/1/medium/52492935824_fc3b6de4bb_b.jpg",
+        "small_url": "https://perenual.com/storage/species_image/1/small/52492935824_fc3b6de4bb_b.jpg",
+        "thumbnail": "https://perenual.com/storage/species_image/1/thumbnail/52492935824_fc3b6de4bb_b.jpg"
+      }
+    },
+    {
+      "id": 2,
+      "common_name": "Pyramidal European Silver Fir",
+      "scientific_name": ["Abies alba 'Pyramidalis'"],
+      "other_name": null,
+      "family": "Pinaceae",
+      "genus": "Abies",
+      "default_image": null
+    },
+    {
+      "id": 3,
+      "common_name": "Green Velvet Boxwood",
+      "scientific_name": ["Buxus 'Green Velvet'"],
+      "other_name": ["Velvet Boxwood"],
+      "family": "Buxaceae",
+      "genus": "Buxus",
+      "default_image": {
+        "original_url": "https://perenual.com/storage/species_image/3/og/green-velvet-boxwood.jpg",
+        "regular_url": "https://perenual.com/storage/species_image/3/regular/green-velvet-boxwood.jpg",
+        "medium_url": "https://perenual.com/storage/species_image/3/medium/green-velvet-boxwood.jpg",
+        "small_url": "https://perenual.com/storage/species_image/3/small/green-velvet-boxwood.jpg",
+        "thumbnail": "https://perenual.com/storage/species_image/3/thumbnail/green-velvet-boxwood.jpg"
+      }
+    }
+  ],
+  "to": 3,
+  "per_page": 30,
+  "current_page": 1,
+  "from": 1,
+  "last_page": 1,
+  "total": 3
+}

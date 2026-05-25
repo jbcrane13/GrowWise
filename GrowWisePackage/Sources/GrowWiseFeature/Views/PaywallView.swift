@@ -131,14 +131,14 @@ public struct PaywallView: View {
 
     private var billingToggle: some View {
         HStack(spacing: 0) {
-            toggleButton(label: "Monthly", isActive: !isYearly) {
+            toggleButton(label: "Monthly", isActive: !isYearly, accessibilityID: "paywall_toggle_monthly") {
                 withAnimation(CultivationTheme.Animation.selection) {
                     isYearly = false
                 }
             }
             .accessibilityIdentifier("paywall_toggle_monthly")
 
-            toggleButton(label: "Yearly", isActive: isYearly, badge: "Best Value") {
+            toggleButton(label: "Yearly", isActive: isYearly, badge: "Best Value", accessibilityID: "paywall_toggle_yearly") {
                 withAnimation(CultivationTheme.Animation.selection) {
                     isYearly = true
                 }
@@ -160,6 +160,7 @@ public struct PaywallView: View {
         label: String,
         isActive: Bool,
         badge: String? = nil,
+        accessibilityID: String,
         action: @escaping () -> Void
     ) -> some View {
         Button(action: action) {
@@ -187,6 +188,7 @@ public struct PaywallView: View {
             }
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier(accessibilityID)
     }
 
     // MARK: - Tier Cards
@@ -348,6 +350,7 @@ public struct PaywallView: View {
         }
         .buttonStyle(.plain)
         .disabled(tier == .free)
+        .accessibilityIdentifier("paywall_card_\(tier.rawValue)")
     }
 
     // MARK: - Feature Comparison

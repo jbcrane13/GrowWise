@@ -45,6 +45,7 @@ struct AssignGardenSheet: View {
             .onDisappear { saveTask?.cancel() }
             .alert(alertTitle, isPresented: $showAlert) {
                 Button("OK") {}
+                    .accessibilityIdentifier("assigngarden_button_error_dismiss")
             } message: {
                 Text(alertMessage)
             }

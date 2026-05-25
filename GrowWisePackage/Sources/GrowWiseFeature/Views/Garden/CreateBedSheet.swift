@@ -109,6 +109,7 @@ struct CreateBedSheet: View {
             set: { if !$0 { errorMessage = nil } }
         )) {
             Button("OK") { errorMessage = nil }
+                .accessibilityIdentifier("createbed_button_error_dismiss")
         } message: {
             Text(errorMessage ?? "")
         }

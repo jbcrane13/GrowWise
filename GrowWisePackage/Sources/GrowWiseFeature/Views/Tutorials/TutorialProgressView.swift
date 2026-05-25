@@ -40,6 +40,7 @@ public struct TutorialProgressView: View {
                     Button("Done") {
                         dismiss()
                     }
+                    .accessibilityIdentifier("tutorial_progress_button_done")
                 }
             }
             .onAppear {
@@ -142,6 +143,7 @@ public struct TutorialProgressView: View {
                     }
                 }
                 .pickerStyle(.segmented)
+                .accessibilityIdentifier("tutorial_progress_picker_filter")
                 .frame(width: 200)
             }
 

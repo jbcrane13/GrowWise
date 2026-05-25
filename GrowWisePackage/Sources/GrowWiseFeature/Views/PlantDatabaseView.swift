@@ -33,6 +33,7 @@ public struct PlantDatabaseView: View {
                     Text("Perenual (10K+)").tag(PlantDatabaseTab.perenual)
                 }
                 .pickerStyle(.segmented)
+                .accessibilityIdentifier("plant_database_picker_source")
                 .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                 .padding(.vertical, 10)
 
@@ -76,6 +77,7 @@ public struct PlantDatabaseView: View {
         }
         // Native SwiftUI search bar with built-in debouncing
         .searchable(text: $searchText, prompt: "Search plants...")
+        .accessibilityIdentifier("plant_database_search")
     }
 
     private var activeFiltersSection: some View {
@@ -169,6 +171,7 @@ public struct PlantDatabaseView: View {
     private var sortMenuButton: some View {
         Menu {
             ForEach(DatabaseSortOption.allCases, id: \.self) { option in
+                let optionID = option.displayName.lowercased().replacingOccurrences(of: " ", with: "_")
                 Button {
                     selectedSortOption = option
                 } label: {
@@ -179,6 +182,7 @@ public struct PlantDatabaseView: View {
                         }
                     }
                 }
+                .accessibilityIdentifier("plant_database_sort_option_\(optionID)")
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down")
@@ -349,6 +353,7 @@ struct DatabasePlantCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("plant_database_card_button_\(plant.id)")
     }
 
     private func sunlightShorthand(_ sunlight: SunlightLevel) -> String {
@@ -414,6 +419,10 @@ struct FilterTag: View {
     let color: Color
     let onRemove: () -> Void
 
+    private var accessibilitySuffix: String {
+        title.lowercased().replacingOccurrences(of: " ", with: "_")
+    }
+
     var body: some View {
         HStack(spacing: 4) {
             Text(title)
@@ -421,6 +430,7 @@ struct FilterTag: View {
                 Image(systemName: "xmark")
                     .font(.caption2)
             }
+            .accessibilityIdentifier("plant_database_filter_remove_\(accessibilitySuffix)")
         }
         .font(.caption)
         .fontWeight(.medium)

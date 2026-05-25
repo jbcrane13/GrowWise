@@ -63,6 +63,7 @@ struct RecommendedPlantsView: View {
             .task { await loadRecommendations() }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") {}
+                    .accessibilityIdentifier("recommended_button_error_dismiss")
             } message: {
                 Text(errorMessage)
             }

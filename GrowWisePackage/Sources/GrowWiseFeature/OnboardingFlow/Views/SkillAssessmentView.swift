@@ -122,6 +122,7 @@ private struct SkillLevelCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(level.displayName)
+        .accessibilityIdentifier("onboarding_skill_\(level.rawValue)")
     }
 }
 

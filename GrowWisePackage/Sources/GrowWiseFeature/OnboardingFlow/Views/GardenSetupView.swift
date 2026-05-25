@@ -217,6 +217,7 @@ private struct GardenTypeChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(type.displayName)
+        .accessibilityIdentifier("onboarding_gardentype_\(type.rawValue)")
     }
 }
 
@@ -264,6 +265,7 @@ private struct ContainerTypeChip: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(type.displayName)
+        .accessibilityIdentifier("onboarding_containertype_\(type.rawValue)")
     }
 }
 
@@ -336,6 +338,7 @@ private struct SpaceSizeRow: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel("\(size.displayName), \(size.subtitle)")
+        .accessibilityIdentifier("onboarding_space_\(size.rawValue)")
     }
 }
 

@@ -89,7 +89,9 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
         }
         .alert("Delete Plant", isPresented: $showingDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("plantdetail_button_delete_cancel")
             Button("Delete", role: .destructive) { deletePlant() }
+                .accessibilityIdentifier("plantdetail_button_delete_confirm")
         } message: {
             Text("Are you sure you want to delete \(plant.name ?? "this plant")? This action cannot be undone.")
         }
@@ -98,6 +100,7 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
             set: { if !$0 { deleteError = nil } }
         )) {
             Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("plantdetail_button_delete_error_dismiss")
         } message: {
             Text(deleteError?.localizedDescription ?? "")
         }
@@ -414,6 +417,7 @@ extension PlantDetailView {
 
                 if !isReadOnlySharedPlant {
                     Button("Assign to Garden") { showingAssignGarden = true }
+                        .accessibilityIdentifier("plantdetail_button_assign_garden")
 
                     Button {
                         showMovePlant = true
@@ -427,6 +431,7 @@ extension PlantDetailView {
                     Button("Delete Plant", role: .destructive) {
                         showingDeleteConfirmation = true
                     }
+                    .accessibilityIdentifier("plantdetail_button_delete")
                 } else {
                     Label("Shared read-only", systemImage: "lock.fill")
                 }

@@ -1,2 +1,6 @@
 # Ralphy Progress Log
 
+- [✓] 2026-05-25 16:24 - Implement [1.1 Could-Include] Light meter, public showcase polish, member profiles, follow/nearby beta
+- [✓] 2026-05-25 16:33 - Handle edge cases and error states
+- [✓] 2026-05-25 16:55 - Add accessibilityIdentifier to every interactive element
+- [✓] 2026-05-25 17:00 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build

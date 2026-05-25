@@ -161,6 +161,7 @@ struct EnvironmentSetupView: View {
                         .foregroundStyle(CultivationTheme.Colors.textPrimary)
                         .padding(12)
                         .autocorrectionDisabled()
+                        .accessibilityIdentifier("onboarding_textfield_zone")
                 }
                 .background(
                     RoundedRectangle(cornerRadius: 12)
@@ -170,7 +171,6 @@ struct EnvironmentSetupView: View {
                     RoundedRectangle(cornerRadius: 12)
                         .stroke(CultivationTheme.Colors.cardBorder, lineWidth: 1)
                 )
-                .accessibilityIdentifier("onboarding_textfield_zone")
             }
             .padding(CultivationTheme.Spacing.cardPadding)
             .glassCard()
@@ -192,7 +192,7 @@ struct EnvironmentSetupView: View {
                             userProfile.sunExposure = exposure
                         }
                     }
-                    .accessibilityIdentifier("onboarding_sun_\\(exposure.rawValue)")
+                    .accessibilityIdentifier("onboarding_sun_\(exposure.rawValue)")
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -239,7 +239,7 @@ struct EnvironmentSetupView: View {
                             userProfile.hydroponicSystemType = type
                         }
                     }
-                    .accessibilityIdentifier("onboarding_hydro_type_\\(type.rawValue)")
+                    .accessibilityIdentifier("onboarding_hydro_type_\(type.rawValue)")
                 }
             }
             .padding(CultivationTheme.Spacing.cardPadding)
@@ -397,6 +397,7 @@ private struct IndoorOptionRow: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("onboarding_option_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }
 
@@ -461,6 +462,7 @@ private struct OutdoorOptionRow: View {
             )
         }
         .buttonStyle(.plain)
+        .accessibilityIdentifier("onboarding_option_\(title.lowercased().replacingOccurrences(of: " ", with: "_"))")
     }
 }
 

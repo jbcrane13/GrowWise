@@ -133,6 +133,7 @@ public struct EditReminderView: View {
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
+                    .accessibilityIdentifier("editreminder_button_error_dismiss")
             } message: {
                 if let errorMessage {
                     Text(errorMessage)

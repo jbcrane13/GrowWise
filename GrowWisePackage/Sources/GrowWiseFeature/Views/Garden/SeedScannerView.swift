@@ -108,6 +108,7 @@ struct SeedScannerView: View {
             }
             .alert("Scan Failed", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
+                    .accessibilityIdentifier("seed_scanner_button_error_dismiss")
             } message: {
                 Text(errorMessage ?? "Could not read the seed packet. Please try again with a clearer image.")
             }

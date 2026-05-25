@@ -123,12 +123,15 @@ public struct ReminderRowView: View {
                 Button(duration.displayName) {
                     snoozeReminder(for: duration)
                 }
+                .accessibilityIdentifier("reminder_button_snooze_\(duration.rawValue)_\(reminder.id)")
             }
 
             Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("reminder_button_snooze_cancel_\(reminder.id)")
         }
         .alert(alertTitle, isPresented: $showAlert) {
             Button("OK") {}
+                .accessibilityIdentifier("reminder_button_alert_ok_\(reminder.id)")
         } message: {
             Text(alertMessage)
         }

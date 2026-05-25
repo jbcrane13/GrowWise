@@ -91,7 +91,9 @@ struct QuestionDetailView: View {
                         }
                     }
                 }
+                .accessibilityIdentifier("forum_button_report_confirm")
                 Button("Cancel", role: .cancel) {}
+                    .accessibilityIdentifier("forum_button_report_cancel")
             } message: {
                 Text("Are you sure you want to report this content as inappropriate?")
             }
@@ -306,6 +308,7 @@ struct QuestionDetailView: View {
                         } label: {
                             Label("Report", systemImage: "flag")
                         }
+                        .accessibilityIdentifier("forum_report_answer_\(answer.id.uuidString)")
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 12, weight: .medium))

@@ -519,6 +519,7 @@ public struct GardenView: View { // swiftlint:disable:this type_body_length
             }
             .font(CultivationTheme.Fonts.body(14, weight: .medium))
             .foregroundStyle(CultivationTheme.Colors.brandLeaf)
+            .accessibilityIdentifier("garden_button_show_all")
         }
         .frame(maxWidth: .infinity)
         .padding(.top, 32)

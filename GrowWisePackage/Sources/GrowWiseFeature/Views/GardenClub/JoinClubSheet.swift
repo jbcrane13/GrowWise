@@ -47,6 +47,7 @@ public struct JoinClubSheet: View {
             }
             .alert("Couldn't Join Club", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
+                    .accessibilityIdentifier("join_club_button_error_dismiss")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -106,6 +107,8 @@ public struct JoinClubSheet: View {
                     .onTapGesture {
                         isCodeFieldFocused = true
                     }
+                    .accessibilityAddTraits(.isButton)
+                    .accessibilityIdentifier("join_club_code_card")
 
                     // Invisible text field over the top for input
                     TextField("", text: Binding(

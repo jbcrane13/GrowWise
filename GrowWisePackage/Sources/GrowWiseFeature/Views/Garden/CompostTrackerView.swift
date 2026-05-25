@@ -530,6 +530,7 @@ private struct CompostBatchDetailSheet: View {
             }
             .alert("Mark as Complete?", isPresented: $showCompleteConfirmation) {
                 Button("Cancel", role: .cancel) {}
+                    .accessibilityIdentifier("compost_detail_button_complete_cancel")
                 Button("Complete", role: .destructive) {
                     batch.isComplete = true
                     do {
@@ -540,6 +541,7 @@ private struct CompostBatchDetailSheet: View {
                         saveError = error.localizedDescription
                     }
                 }
+                .accessibilityIdentifier("compost_detail_button_complete_confirm")
             } message: {
                 Text("This batch will be moved to your completed list.")
             }
@@ -548,6 +550,7 @@ private struct CompostBatchDetailSheet: View {
                 set: { if !$0 { saveError = nil } }
             )) {
                 Button("OK", role: .cancel) { saveError = nil }
+                    .accessibilityIdentifier("compost_detail_button_save_error_dismiss")
             } message: {
                 Text(saveError ?? "")
             }
@@ -770,6 +773,7 @@ struct CompostLogEntrySheet: View {
                 set: { if !$0 { saveError = nil } }
             )) {
                 Button("OK", role: .cancel) { saveError = nil }
+                    .accessibilityIdentifier("compost_log_button_save_error_dismiss")
             } message: {
                 Text(saveError ?? "")
             }

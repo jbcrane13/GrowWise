@@ -38,6 +38,7 @@ struct GardenBedSection: View {
                         } label: {
                             Label("Delete Plant", systemImage: "trash")
                         }
+                        .accessibilityIdentifier("garden_button_delete_plant_\(plant.id?.uuidString ?? "unknown")")
                     }
                 }
                 .accessibilityIdentifier("garden_row_plant_\(plant.id?.uuidString ?? plant.name ?? "unknown")")

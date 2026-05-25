@@ -54,14 +54,17 @@ struct SeedDetailView: View {
         .gwNavigationBarTitleDisplayMode(.inline)
         .alert("Delete Seed", isPresented: $showDeleteConfirmation) {
             Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("seed_detail_button_delete_cancel")
             Button("Delete", role: .destructive) {
                 deleteSeed()
             }
+            .accessibilityIdentifier("seed_detail_button_delete_confirm")
         } message: {
             Text("Are you sure you want to delete \(seed.varietyName ?? "this seed")? This action cannot be undone.")
         }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("seed_detail_button_error_dismiss")
         } message: {
             Text(errorMessage ?? "An unknown error occurred.")
         }

@@ -119,6 +119,7 @@ public struct AddReminderView: View {
                 Button("OK") {
                     errorMessage = nil
                 }
+                .accessibilityIdentifier("addreminder_button_error_dismiss")
             } message: {
                 if let errorMessage {
                     Text(errorMessage)

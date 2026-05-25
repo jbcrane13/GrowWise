@@ -148,6 +148,7 @@ struct AskQuestionSheet: View {
                 }
                 .alert("Error", isPresented: $showError) {
                     Button("OK", role: .cancel) {}
+                        .accessibilityIdentifier("forum_ask_button_error_dismiss")
                 } message: {
                     Text(errorMessage)
                 }

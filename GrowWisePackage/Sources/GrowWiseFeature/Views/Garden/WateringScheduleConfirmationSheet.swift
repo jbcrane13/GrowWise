@@ -121,6 +121,7 @@ struct WateringScheduleConfirmationSheet: View {
                 set: { if !$0 { reminderError = nil } }
             )) {
                 Button("OK", role: .cancel) { reminderError = nil }
+                    .accessibilityIdentifier("watering_button_error_dismiss")
             } message: {
                 Text(reminderError ?? "")
             }

@@ -69,6 +69,7 @@ struct MovePlantSheet: View {
                 set: { if !$0 { loadError = nil } }
             )) {
                 Button("OK", role: .cancel) { loadError = nil }
+                    .accessibilityIdentifier("moveplant_button_error_dismiss")
             } message: {
                 Text(loadError ?? "")
             }

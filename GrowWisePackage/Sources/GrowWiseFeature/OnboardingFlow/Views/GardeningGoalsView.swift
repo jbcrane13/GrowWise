@@ -101,6 +101,7 @@ private struct GoalCard: View {
         }
         .buttonStyle(.plain)
         .accessibilityLabel(goal.displayName)
+        .accessibilityIdentifier("onboarding_goal_\(goal.rawValue)")
     }
 }
 

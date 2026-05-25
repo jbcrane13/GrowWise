@@ -38,9 +38,11 @@ struct ARPlantPlacementView: View {
         .animation(CultivationTheme.Animation.card, value: placedPlants.count)
         .alert("Clear All Plants?", isPresented: $showConfirmClear) {
             Button("Cancel", role: .cancel) {}
+                .accessibilityIdentifier("ar_placement_button_clear_cancel")
             Button("Clear All", role: .destructive) {
                 onClearAll()
             }
+            .accessibilityIdentifier("ar_placement_button_clear_confirm")
         } message: {
             Text("This will remove all \(placedPlants.count) placed plants from the AR view.")
         }
