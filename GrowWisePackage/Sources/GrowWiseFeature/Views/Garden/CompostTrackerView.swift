@@ -536,6 +536,7 @@ private struct CompostBatchDetailSheet: View {
                         try modelContext.save()
                         dismiss()
                     } catch {
+                        batch.isComplete = false
                         saveError = error.localizedDescription
                     }
                 }
@@ -755,6 +756,9 @@ struct CompostLogEntrySheet: View {
                             try modelContext.save()
                             dismiss()
                         } catch {
+                            batch.temperatures.removeLast()
+                            batch.moistureLevels.removeLast()
+                            batch.logDates.removeLast()
                             saveError = error.localizedDescription
                         }
                     }

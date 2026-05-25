@@ -366,6 +366,7 @@ struct GardenDetailView: View {
         do {
             try dataService.seeds.update(seed)
         } catch {
+            seed.quantity = currentQty
             saveError = error.localizedDescription
         }
 
@@ -391,6 +392,7 @@ struct GardenDetailView: View {
         do {
             try modelContext.save()
         } catch {
+            modelContext.delete(item)
             saveError = error.localizedDescription
         }
     }
