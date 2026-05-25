@@ -17,6 +17,8 @@ struct UserTests {
         // Assert
         #expect(user.email == email)
         #expect(user.displayName == displayName)
+        #expect(user.bio == nil)
+        #expect(user.isProfilePublic == false)
         #expect(user.skillLevel == skillLevel)
         #expect(user.id != UUID())
         #expect(user.subscriptionTier == .free)

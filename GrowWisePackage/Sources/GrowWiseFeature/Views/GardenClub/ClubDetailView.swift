@@ -3,7 +3,11 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable attributes identifier_name type_body_length
+// swiftlint:disable attributes type_body_length
+
+private struct SelectedMember: Identifiable {
+    let id: String
+}
 
 public struct ClubDetailView: View {
     @Environment(DataService.self) private var dataService
@@ -12,11 +16,13 @@ public struct ClubDetailView: View {
     let club: GardenClub
 
     @State private var activities: [ClubActivity] = []
+    @State private var memberUsers: [User] = []
     @State private var isLoading = false
     @State private var errorMessage: String?
     @State private var showLeaveAlert = false
     @State private var showRemoveMemberAlert = false
     @State private var memberToRemove: String?
+    @State private var selectedMemberID: String?
     @State private var codeCopied = false
 
     private var currentUserID: String {
@@ -53,7 +59,7 @@ public struct ClubDetailView: View {
             .navigationBarTitleDisplayMode(.large)
         #endif
             .toolbar { toolbarContent }
-            .task { await loadActivities() }
+            .task { await loadClubData() }
             .alert("Leave Club", isPresented: $showLeaveAlert) {
                 Button("Leave", role: .destructive) { Task { await leaveClub() } }
                 Button("Cancel", role: .cancel) {}
@@ -76,6 +82,12 @@ public struct ClubDetailView: View {
             }
             .navigationDestination(isPresented: $navigateToEvents) {
                 ClubEventsView(club: club)
+            }
+            .sheet(item: Binding(
+                get: { selectedMemberID.map { SelectedMember(id: $0) } },
+                set: { selectedMemberID = $0?.id }
+            )) { selection in
+                ClubMemberProfileView(profile: memberProfile(for: selection.id))
             }
     }
 
@@ -194,31 +206,48 @@ public struct ClubDetailView: View {
     }
 
     private func memberRow(memberID: String) -> some View {
-        HStack(spacing: 12) {
-            ZStack {
-                Circle()
-                    .fill(CultivationTheme.Colors.brandMint)
-                    .frame(width: 36, height: 36)
-                Text(memberID.prefix(1).uppercased())
-                    .font(.system(.subheadline, design: .rounded, weight: .bold))
-                    .foregroundStyle(CultivationTheme.Colors.brandForest)
-            }
+        let profile = memberProfile(for: memberID)
 
-            VStack(alignment: .leading, spacing: 2) {
-                HStack(spacing: 6) {
-                    Text(memberID == club.ownerID ? "Owner" : "Member")
-                        .font(.system(.subheadline, design: .rounded, weight: .medium))
-                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                    if memberID == club.ownerID {
-                        Image(systemName: "crown.fill")
-                            .font(.system(size: 11))
-                            .foregroundStyle(CultivationTheme.Colors.accentAmber)
+        return HStack(spacing: 12) {
+            Button {
+                selectedMemberID = memberID
+            } label: {
+                HStack(spacing: 12) {
+                    ZStack {
+                        Circle()
+                            .fill(CultivationTheme.Colors.brandMint)
+                            .frame(width: 36, height: 36)
+                        Text(profile.avatarLetters)
+                            .font(.system(.subheadline, design: .rounded, weight: .bold))
+                            .foregroundStyle(CultivationTheme.Colors.brandForest)
                     }
+
+                    VStack(alignment: .leading, spacing: 2) {
+                        HStack(spacing: 6) {
+                            Text(profile.displayName)
+                                .font(.system(.subheadline, design: .rounded, weight: .medium))
+                                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                            if memberID == club.ownerID {
+                                Image(systemName: "crown.fill")
+                                    .font(.system(size: 11))
+                                    .foregroundStyle(CultivationTheme.Colors.accentAmber)
+                            }
+                        }
+                        Text(profile.isCurrentUser ? "You" : profile.roleTitle)
+                            .font(.system(size: 11, design: .rounded))
+                            .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                    }
+
+                    Spacer()
+
+                    Image(systemName: "chevron.right")
+                        .font(.system(size: 12, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
                 }
-                Text(memberID == currentUserID ? "You" : memberID.prefix(8) + "…")
-                    .font(.system(size: 11, design: .monospaced))
-                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                .contentShape(Rectangle())
             }
+            .buttonStyle(.plain)
+            .accessibilityIdentifier("clubprofile_button_member_\(accessibilitySafeMemberID(memberID))")
 
             Spacer()
 
@@ -374,6 +403,28 @@ public struct ClubDetailView: View {
     // MARK: - Actions
 
     @MainActor
+    private func loadClubData() async {
+        loadMemberUsers()
+        await loadActivities()
+    }
+
+    @MainActor
+    private func loadMemberUsers() {
+        let memberIDs = Set(club.memberIDs)
+
+        guard !memberIDs.isEmpty else {
+            memberUsers = []
+            return
+        }
+
+        do {
+            memberUsers = try dataService.users.fetchAll().filter { memberIDs.contains($0.id.uuidString) }
+        } catch {
+            errorMessage = error.localizedDescription
+        }
+    }
+
+    @MainActor
     private func loadActivities() async {
         isLoading = true
         defer { isLoading = false }
@@ -403,72 +454,30 @@ public struct ClubDetailView: View {
             errorMessage = error.localizedDescription
         }
     }
-}
 
-// MARK: - Activity Row
-
-private struct ActivityRowView: View {
-    let activity: ClubActivity
-
-    private var icon: String {
-        switch activity.activityType {
-        case "watered": "drop.fill"
-        case "harvested": "scissors"
-        case "planted": "leaf.fill"
-        case "journaled": "book.fill"
-        case "diagnosed": "stethoscope"
-        default: "star.fill"
-        }
+    private func memberProfile(for memberID: String) -> ClubMemberProfile {
+        ClubMemberProfile(
+            memberID: memberID,
+            club: club,
+            user: memberUser(for: memberID),
+            activities: activities,
+            currentUserID: currentUserID
+        )
     }
 
-    private var iconColor: Color {
-        switch activity.activityType {
-        case "watered": .blue
-        case "harvested": CultivationTheme.Colors.accentAmber
-        case "planted": CultivationTheme.Colors.brandLeaf
-        case "journaled": .purple
-        case "diagnosed": CultivationTheme.Colors.statusAlert
-        default: CultivationTheme.Colors.brandForest
+    private func memberUser(for memberID: String) -> User? {
+        if let currentUser = dataService.getCurrentUser(),
+           currentUser.id.uuidString == memberID
+        {
+            return currentUser
         }
+        return memberUsers.first { $0.id.uuidString == memberID }
     }
 
-    private var timeAgo: String {
-        guard let date = activity.timestamp else { return "" }
-        let f = RelativeDateTimeFormatter()
-        f.unitsStyle = .abbreviated
-        return f.localizedString(for: date, relativeTo: Date())
-    }
-
-    var body: some View {
-        HStack(spacing: 12) {
-            ZStack {
-                RoundedRectangle(cornerRadius: CultivationTheme.Radius.icon)
-                    .fill(iconColor.opacity(0.15))
-                    .frame(width: 36, height: 36)
-                Image(systemName: icon)
-                    .font(.system(size: 15))
-                    .foregroundStyle(iconColor)
-            }
-
-            VStack(alignment: .leading, spacing: 3) {
-                Text(activity.memberName ?? "A member")
-                    .font(.system(.subheadline, design: .rounded, weight: .medium))
-                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
-                    + Text(" \(activity.activityDescription ?? activity.activityType ?? "did something")")
-                    .font(.system(.subheadline, design: .rounded))
-                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
-
-                if !timeAgo.isEmpty {
-                    Text(timeAgo)
-                        .font(.system(size: 11, design: .rounded))
-                        .foregroundStyle(CultivationTheme.Colors.textTertiary)
-                }
-            }
-
-            Spacer()
-        }
-        .padding(CultivationTheme.Spacing.cardPadding)
-        .glassCard()
+    private func accessibilitySafeMemberID(_ memberID: String) -> String {
+        String(memberID.map { character in
+            character.isLetter || character.isNumber ? character : "_"
+        })
     }
 }
 
@@ -479,4 +488,4 @@ private struct ActivityRowView: View {
     }
 }
 
-// swiftlint:enable attributes identifier_name type_body_length
+// swiftlint:enable attributes type_body_length
