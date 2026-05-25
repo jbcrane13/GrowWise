@@ -71,10 +71,11 @@ struct AccessibilityIdentifierCoverageTests {
     private static func violations(in file: URL, relativeTo root: URL) throws -> [String] {
         let source = try String(contentsOf: file, encoding: .utf8)
         let lines = source.components(separatedBy: .newlines)
+        let scanLines = try sourceForConstructScanning(source).components(separatedBy: .newlines)
         let relativePath = file.path.replacingOccurrences(of: root.path + "/", with: "")
 
         return lines.indices.compactMap { index in
-            guard let construct = interactiveConstruct(in: lines[index]) else {
+            guard let construct = interactiveConstruct(in: scanLines[index]) else {
                 return nil
             }
 
@@ -152,6 +153,36 @@ struct AccessibilityIdentifierCoverageTests {
 
     private static func indentation(of line: String) -> Int {
         line.prefix { $0 == " " }.count
+    }
+
+    private static func sourceForConstructScanning(_ source: String) throws -> String {
+        let patterns = [
+            #"(?s)""".*?"""#,
+            #""(?:\\.|[^"\\])*""#,
+            #"(?s)/\*.*?\*/"#,
+            #"//.*"#,
+        ]
+
+        return try patterns.reduce(source) { partialResult, pattern in
+            try maskingMatches(in: partialResult, pattern: pattern)
+        }
+    }
+
+    private static func maskingMatches(in source: String, pattern: String) throws -> String {
+        let regex = try NSRegularExpression(pattern: pattern)
+        let fullRange = NSRange(location: 0, length: (source as NSString).length)
+        let matches = regex.matches(in: source, range: fullRange)
+        let mutable = NSMutableString(string: source)
+
+        for match in matches.reversed() {
+            let matchedText = mutable.substring(with: match.range)
+            let replacement = matchedText.map { character in
+                character.isNewline ? character : " "
+            }
+            mutable.replaceCharacters(in: match.range, with: String(replacement))
+        }
+
+        return mutable as String
     }
 
     private static func isIdentifierCharacter(_ character: Character) -> Bool {

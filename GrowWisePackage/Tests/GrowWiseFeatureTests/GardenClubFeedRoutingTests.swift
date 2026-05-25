@@ -65,7 +65,7 @@ struct GardenClubFeedRoutingTests {
 
         let viewData = GardenClubFeedView.viewData(from: activity)
 
-        #expect(viewData.zoneTag == "Backyard Garden")
+        #expect(viewData.gardenNameTag == "Backyard Garden")
     }
 
     @Test("Nearby feed shows same-zone posts from other growers")

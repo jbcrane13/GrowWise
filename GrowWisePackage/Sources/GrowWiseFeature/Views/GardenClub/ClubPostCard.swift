@@ -77,13 +77,13 @@ struct ClubPostCard: View {
 
     private var subtitle: some View {
         HStack(spacing: 5) {
-            if let zone = post.zoneTag {
-                Text("Zone \(zone)")
+            if let gardenName = post.gardenNameTag {
+                Text("Zone \(gardenName)")
                     .foregroundStyle(CultivationTheme.Colors.smartTagForeground)
                     .fontWeight(.bold)
             }
             if let when = post.relativeTimeLabel {
-                Text(post.zoneTag == nil ? when : "\u{00B7} \(when)")
+                Text(post.gardenNameTag == nil ? when : "\u{00B7} \(when)")
                     .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
         }

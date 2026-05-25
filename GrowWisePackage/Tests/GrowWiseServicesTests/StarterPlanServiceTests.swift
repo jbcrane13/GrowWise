@@ -49,13 +49,13 @@ struct StarterPlanServiceTests {
         return plant
     }
 
-    private func makeDate(year: Int, month: Int, day: Int) -> Date {
+    private func makeDate(year: Int, month: Int, day: Int) throws -> Date {
         var components = DateComponents()
         components.year = year
         components.month = month
         components.day = day
         components.calendar = Calendar.current
-        return components.date ?? Date(timeIntervalSince1970: 0)
+        return try #require(components.date)
     }
 
     // MARK: - roadmapLength
@@ -364,7 +364,7 @@ struct StarterPlanServiceTests {
     }
 
     @Test("outdoor spring active roadmap includes spring additions on day 3")
-    func outdoorSpringRoadmapIncludesSpringAdditions() {
+    func outdoorSpringRoadmapIncludesSpringAdditions() throws {
         let user = makeUser()
         let garden = makeGarden(type: .container, isIndoor: false)
         let plant = makePlant(garden: garden)
@@ -374,7 +374,7 @@ struct StarterPlanServiceTests {
             gardens: [garden],
             plants: [plant],
             reminders: [],
-            referenceDate: makeDate(year: 2026, month: 4, day: 15)
+            referenceDate: try makeDate(year: 2026, month: 4, day: 15)
         )
 
         let day3 = plan.days.first { $0.dayOffset == 3 }
@@ -382,7 +382,7 @@ struct StarterPlanServiceTests {
     }
 
     @Test("indoor spring active roadmap skips spring additions on day 3")
-    func indoorSpringRoadmapSkipsSpringAdditions() {
+    func indoorSpringRoadmapSkipsSpringAdditions() throws {
         let user = makeUser()
         let garden = makeGarden(type: .indoor, isIndoor: true)
         let plant = makePlant(garden: garden)
@@ -392,7 +392,7 @@ struct StarterPlanServiceTests {
             gardens: [garden],
             plants: [plant],
             reminders: [],
-            referenceDate: makeDate(year: 2026, month: 4, day: 15)
+            referenceDate: try makeDate(year: 2026, month: 4, day: 15)
         )
 
         let day3 = plan.days.first { $0.dayOffset == 3 }

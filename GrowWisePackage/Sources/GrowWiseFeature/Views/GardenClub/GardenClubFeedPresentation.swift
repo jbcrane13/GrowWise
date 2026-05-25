@@ -25,7 +25,7 @@ extension GardenClubFeedView {
         let id: UUID
         let authorDisplayName: String
         let caption: String?
-        let zoneTag: String?
+        let gardenNameTag: String?
         let photoURL: String?
         let relativeTimeLabel: String?
         let likeCount: Int
@@ -91,7 +91,7 @@ extension GardenClubFeedView {
             id: activity.id ?? UUID(),
             authorDisplayName: activity.memberName ?? "Member",
             caption: activity.activityDescription,
-            zoneTag: activity.gardenName,
+            gardenNameTag: activity.gardenName,
             photoURL: activity.photoURL,
             relativeTimeLabel: relativeTimeLabel(for: activity.timestamp),
             likeCount: 0, // future feature
@@ -112,7 +112,7 @@ extension GardenClubFeedView {
             id: UUID(uuidString: record.recordID.recordName) ?? UUID(),
             authorDisplayName: record["memberName"] as? String ?? "Member",
             caption: record["activityDescription"] as? String,
-            zoneTag: record["gardenName"] as? String,
+            gardenNameTag: record["gardenName"] as? String,
             photoURL: photoURL,
             relativeTimeLabel: relativeTimeLabel(for: record["timestamp"] as? Date),
             likeCount: 0, // future feature
