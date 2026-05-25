@@ -403,8 +403,15 @@ public struct ClubDetailView: View {
 
     @MainActor
     private func loadMemberUsers() {
+        let memberIDs = Set(club.memberIDs)
+
+        guard !memberIDs.isEmpty else {
+            memberUsers = []
+            return
+        }
+
         do {
-            memberUsers = try dataService.users.fetchAll()
+            memberUsers = try dataService.users.fetchAll().filter { memberIDs.contains($0.id.uuidString) }
         } catch {
             errorMessage = error.localizedDescription
         }
