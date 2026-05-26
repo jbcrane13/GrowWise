@@ -10,7 +10,7 @@ private let logger = Logger(subsystem: "com.growwise", category: "PlantDatabaseS
 
 // MARK: - JSON Codable Type for Plant Data
 
-struct PlantData: Codable {
+private struct PlantData: Codable {
     let name: String
     let scientificName: String
     let type: PlantType
@@ -136,6 +136,9 @@ public final class PlantDatabaseService { // swiftlint:disable:this type_body_le
 
     public func getCompanionPlants(for plant: Plant) -> [Plant] {
         let allPlants = dataService.fetchPlantDatabase()
+        let curatedCompanions = companionPlants(for: plant, in: allPlants)
+        if !curatedCompanions.isEmpty { return curatedCompanions }
+
         switch plant.plantType {
         case .vegetable: return allPlants.filter { $0.plantType == .herb || $0.plantType == .flower }
         case .herb: return allPlants.filter { $0.plantType == .vegetable }
@@ -245,6 +248,41 @@ public final class PlantDatabaseService { // swiftlint:disable:this type_body_le
         let duration = CFAbsoluteTimeGetCurrent() - startTime
         let durationStr = String(format: "%.3f", duration)
         logger.info("Seeded \(plantDataArray.count) \(category.rawValue, privacy: .public) in \(durationStr, privacy: .public)s")
+    }
+
+    private func companionPlants(for plant: Plant, in allPlants: [Plant]) -> [Plant] {
+        guard let companionNames = plant.companionPlants, !companionNames.isEmpty else { return [] }
+        let lookupKeys = Set(companionNames.flatMap(Self.companionLookupKeys))
+
+        return allPlants.filter { candidate in
+            guard candidate.id != plant.id, let name = candidate.name else { return false }
+            return Self.companionName(name, matches: lookupKeys)
+        }
+    }
+
+    private static func companionLookupKeys(for name: String) -> [String] {
+        let normalizedName = normalizedCompanionName(name)
+        guard !normalizedName.isEmpty else { return [] }
+
+        if normalizedName.hasSuffix("ies") {
+            return [normalizedName, String(normalizedName.dropLast(3)) + "y"]
+        }
+        if normalizedName.hasSuffix("oes") {
+            return [normalizedName, String(normalizedName.dropLast(2))]
+        }
+        if normalizedName.hasSuffix("s"), !normalizedName.hasSuffix("ss") {
+            return [normalizedName, String(normalizedName.dropLast())]
+        }
+        return [normalizedName]
+    }
+
+    private static func normalizedCompanionName(_ name: String) -> String {
+        name.trimmingCharacters(in: .whitespacesAndNewlines).lowercased()
+    }
+
+    private static func companionName(_ name: String, matches lookupKeys: Set<String>) -> Bool {
+        let normalizedName = normalizedCompanionName(name)
+        return lookupKeys.contains(normalizedName) || lookupKeys.contains { normalizedName.hasSuffix(" \($0)") }
     }
 
     private func calculateCompatibilityScore(plant: Plant, userProfile: UserGardenProfile) -> Double {
@@ -492,6 +530,7 @@ private actor PlantSeedingWorker {
         plant.spaceRequirement = plantData.space
         plant.isUserPlant = false
         plant.notes = plantData.description + "\n\nCare Instructions:\n" + plantData.careInstructions.joined(separator: "\n• ")
+        plant.companionPlants = plantData.companionPlants
         context.insert(plant)
         try context.save()
     }
