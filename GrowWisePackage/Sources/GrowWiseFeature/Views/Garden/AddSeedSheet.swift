@@ -71,7 +71,7 @@ struct AddSeedSheet: View {
             .toolbar { toolbarContent }
             .alert("Error", isPresented: $showError) {
                 Button("OK", role: .cancel) {}
-                    .accessibilityIdentifier("add_seed_button_error_dismiss")
+                    .accessibilityIdentifier("add_seed_button_error_ok")
             } message: {
                 Text(errorMessage ?? "An unknown error occurred.")
             }
@@ -357,13 +357,13 @@ struct AddSeedSheet: View {
                 .font(.system(.caption, design: .rounded, weight: .medium))
                 .foregroundStyle(CultivationTheme.Colors.textSecondary)
             TextField("", text: text)
+                .accessibilityIdentifier(id)
             #if canImport(UIKit)
                 .keyboardType(.decimalPad)
             #endif
                 .font(.system(.body, design: .rounded))
                 .padding(12)
                 .glassCard()
-                .accessibilityIdentifier(id)
         }
     }
 

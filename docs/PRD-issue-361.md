@@ -1,9 +1,9 @@
-# PRD: feature: Follow / nearby feed v1.1 beta
+# PRD: feature: Light meter "Check light here" entry point on Plant Detail
 
 ## Issue
-#359 in jbcrane13/growwise
+#361 in jbcrane13/growwise
 ## Tasks
-- [x] Implement feature: Follow / nearby feed v1.1 beta
+- [x] Implement feature: Light meter "Check light here" entry point on Plant Detail
 - [x] Run full test suite
 - [x] Review code quality and suggest improvements
 - [x] Add accessibilityIdentifier to every interactive element

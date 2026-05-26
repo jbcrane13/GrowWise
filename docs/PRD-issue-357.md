@@ -1,9 +1,9 @@
-# PRD: feature: Follow / nearby feed v1.1 beta
+# PRD: feature: Public garden showcase polish
 
 ## Issue
-#359 in jbcrane13/growwise
+#357 in jbcrane13/growwise
 ## Tasks
-- [x] Implement feature: Follow / nearby feed v1.1 beta
+- [x] Implement feature: Public garden showcase polish
 - [x] Run full test suite
 - [x] Review code quality and suggest improvements
 - [x] Add accessibilityIdentifier to every interactive element

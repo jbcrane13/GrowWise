@@ -28,7 +28,6 @@ struct SkillAssessmentView: View {
                         }
                     }
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
-                    .accessibilityIdentifier("onboarding_skill_\(level.rawValue)")
                 }
             }
             .padding(.horizontal, 20)

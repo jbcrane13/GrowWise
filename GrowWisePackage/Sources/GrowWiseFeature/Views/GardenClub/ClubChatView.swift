@@ -51,7 +51,7 @@ public struct ClubChatView: View { // swiftlint:disable:this type_body_length
             .task { await loadMessages() }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
-                    .accessibilityIdentifier("club_chat_button_error_dismiss")
+                    .accessibilityIdentifier("club_chat_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -236,10 +236,10 @@ public struct ClubChatView: View { // swiftlint:disable:this type_body_length
                 .padding(.vertical, 8)
                 .background(CultivationTheme.Colors.cardSurface)
                 .clipShape(RoundedRectangle(cornerRadius: CultivationTheme.Radius.card))
+                .accessibilityIdentifier("club_chat_textfield_message")
             #if os(iOS)
                 .textInputAutocapitalization(.sentences)
             #endif
-                .accessibilityIdentifier("club_chat_textfield_message")
 
             Button {
                 Task { await sendMessage() }

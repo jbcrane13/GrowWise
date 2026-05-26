@@ -296,8 +296,6 @@ public enum StarterPlanService {
         return days
     }
 
-    // Refactor tracked in #360 — pre-existing length violation.
-    // swiftlint:disable:next cyclomatic_complexity function_body_length
     private static func buildActiveRoadmap(
         user: User?,
         garden: Garden?,
@@ -305,17 +303,72 @@ public enum StarterPlanService {
         plants: [Plant],
         referenceDate: Date
     ) -> [StarterPlanDay] {
-        let calendar = Calendar.current
-        var days: [StarterPlanDay] = []
-
         guard let garden else {
             return buildEmptyGardensRoadmap(user: user, referenceDate: referenceDate)
         }
 
-        // Day 0: Check on plant
-        var day0Tasks: [CareTask] = []
-        if let plant = firstPlant {
-            day0Tasks.append(CareTask(
+        let context = ActiveRoadmapContext(
+            user: user,
+            garden: garden,
+            firstPlant: firstPlant,
+            plants: plants,
+            referenceDate: referenceDate
+        )
+
+        return (0 ..< roadmapLength).map { dayOffset in
+            StarterPlanDay(
+                date: roadmapDate(dayOffset: dayOffset, referenceDate: referenceDate),
+                dayOffset: dayOffset,
+                tasks: activeRoadmapTasks(dayOffset: dayOffset, context: context)
+            )
+        }
+    }
+
+    private struct ActiveRoadmapContext {
+        let user: User?
+        let garden: Garden
+        let firstPlant: Plant?
+        let plants: [Plant]
+        let referenceDate: Date
+    }
+
+    private static func roadmapDate(dayOffset: Int, referenceDate: Date) -> Date {
+        Calendar.current.date(byAdding: .day, value: dayOffset, to: referenceDate) ?? referenceDate
+    }
+
+    private static func activeRoadmapTasks(dayOffset: Int, context: ActiveRoadmapContext) -> [CareTask] {
+        switch dayOffset {
+        case 0:
+            activeDayZeroTasks(context: context)
+
+        case 1:
+            activeDayOneTasks(context: context)
+
+        case 2:
+            activeDayTwoTasks(context: context)
+
+        case 3:
+            activeDayThreeTasks(context: context)
+
+        case 4:
+            activeDayFourTasks(context: context)
+
+        case 5:
+            activeDayFiveTasks(context: context)
+
+        case 6 ..< roadmapLength:
+            activeWeeklyMaintenanceTasks(dayOffset: dayOffset, context: context)
+
+        default:
+            []
+        }
+    }
+
+    private static func activeDayZeroTasks(context: ActiveRoadmapContext) -> [CareTask] {
+        var tasks: [CareTask] = []
+
+        if let plant = context.firstPlant {
+            tasks.append(CareTask(
                 kind: .inspect,
                 title: "Check on \(plant.name ?? "your plant")",
                 detail: "Verify your plant's health and recent watering status.",
@@ -323,31 +376,33 @@ public enum StarterPlanService {
                 plantName: plant.name
             ))
         }
-        if user?.skillLevel == .beginner {
-            day0Tasks.append(CareTask(
+        if context.user?.skillLevel == .beginner {
+            tasks.append(CareTask(
                 kind: .learn,
                 title: "Start a beginner tutorial",
                 detail: "Learn the next best skill for your profile.",
                 systemImage: "book.circle.fill"
             ))
         }
-        days.append(StarterPlanDay(date: referenceDate, dayOffset: 0, tasks: day0Tasks))
 
-        // Day 1: Water
-        let waterDate = calendar.date(byAdding: .day, value: 1, to: referenceDate) ?? referenceDate
-        var day1Tasks: [CareTask] = []
-        if let plant = firstPlant {
-            day1Tasks.append(CareTask(
+        return tasks
+    }
+
+    private static func activeDayOneTasks(context: ActiveRoadmapContext) -> [CareTask] {
+        guard let plant = context.firstPlant else { return [] }
+
+        var tasks = [
+            CareTask(
                 kind: .water,
                 title: "Water \(plant.name ?? "your plant")",
                 detail: "Follow the watering schedule for healthy growth.",
                 systemImage: "drop.fill",
                 plantName: plant.name
-            ))
-        }
-        // Add fertilizer reminder if needed
-        if let plant = firstPlant, plant.lastFertilized == nil {
-            day1Tasks.append(CareTask(
+            ),
+        ]
+
+        if plant.lastFertilized == nil {
+            tasks.append(CareTask(
                 kind: .fertilize,
                 title: "Set up fertilizing schedule",
                 detail: "Create a fertilizing reminder for this plant.",
@@ -355,27 +410,27 @@ public enum StarterPlanService {
                 plantName: plant.name
             ))
         }
-        days.append(StarterPlanDay(date: waterDate, dayOffset: 1, tasks: day1Tasks))
 
-        // Day 2: Inspect
-        let inspectDate = calendar.date(byAdding: .day, value: 2, to: referenceDate) ?? referenceDate
-        var day2Tasks: [CareTask] = []
-        for plant in plants.prefix(3) {
-            day2Tasks.append(CareTask(
+        return tasks
+    }
+
+    private static func activeDayTwoTasks(context: ActiveRoadmapContext) -> [CareTask] {
+        context.plants.prefix(3).map { plant in
+            CareTask(
                 kind: .inspect,
                 title: "Inspect \(plant.name ?? "plant")",
                 detail: "Check for signs of stress, pests, or disease.",
                 systemImage: "magnifyingglass",
                 plantName: plant.name
-            ))
+            )
         }
-        days.append(StarterPlanDay(date: inspectDate, dayOffset: 2, tasks: day2Tasks))
+    }
 
-        // Day 3: Fertilize (if applicable)
-        let fertilizeDate = calendar.date(byAdding: .day, value: 3, to: referenceDate) ?? referenceDate
-        var day3Tasks: [CareTask] = []
-        if let plant = firstPlant {
-            day3Tasks.append(CareTask(
+    private static func activeDayThreeTasks(context: ActiveRoadmapContext) -> [CareTask] {
+        var tasks: [CareTask] = []
+
+        if let plant = context.firstPlant {
+            tasks.append(CareTask(
                 kind: .fertilize,
                 title: "Fertilize \(plant.name ?? "your plant")",
                 detail: "Apply fertilizer according to the plant's needs.",
@@ -383,83 +438,84 @@ public enum StarterPlanService {
                 plantName: plant.name
             ))
         }
-        // Season-based planting task
-        let season = StarterPlanSeason(date: referenceDate)
-        if season == .spring, garden.gardenType != .indoor {
-            day3Tasks.append(CareTask(
+        if StarterPlanSeason(date: context.referenceDate) == .spring, context.garden.gardenType != .indoor {
+            tasks.append(CareTask(
                 kind: .plant,
                 title: "Plan spring additions",
                 detail: "Browse seasonal planting recommendations for your zone.",
                 systemImage: "sparkles"
             ))
         }
-        days.append(StarterPlanDay(date: fertilizeDate, dayOffset: 3, tasks: day3Tasks))
 
-        // Days 4-5: Recommendations / Prune
-        for offset in 4 ... 5 {
-            let date = calendar.date(byAdding: .day, value: offset, to: referenceDate) ?? referenceDate
-            var tasks: [CareTask] = []
-            if offset == 4, user?.gardeningGoals?.isEmpty == false {
-                var browseDetail = "Browse plants matched to your goals."
-                if user?.gardeningGoals?.contains(.growFood) == true {
-                    browseDetail = "Find food-friendly plants that match your selected goal."
-                }
-                tasks.append(CareTask(
-                    kind: .learn,
-                    title: "Browse plant recommendations",
-                    detail: browseDetail,
-                    systemImage: "sparkles"
-                ))
-            }
-            if offset == 5, plants.count > 1 {
-                for plant in plants.prefix(2) {
-                    tasks.append(CareTask(
-                        kind: .prune,
-                        title: "Check \(plant.name ?? "plant") for pruning",
-                        detail: "Look for dead leaves or overgrown branches to trim.",
-                        systemImage: "scissors",
-                        plantName: plant.name
-                    ))
-                }
-            }
-            days.append(StarterPlanDay(date: date, dayOffset: offset, tasks: tasks))
+        return tasks
+    }
+
+    private static func activeDayFourTasks(context: ActiveRoadmapContext) -> [CareTask] {
+        guard context.user?.gardeningGoals?.isEmpty == false else { return [] }
+
+        let browseDetail = if context.user?.gardeningGoals?.contains(.growFood) == true {
+            "Find food-friendly plants that match your selected goal."
+        } else {
+            "Browse plants matched to your goals."
         }
 
-        // Days 6-13: Weekly maintenance
-        for offset in 6 ..< roadmapLength {
-            let date = calendar.date(byAdding: .day, value: offset, to: referenceDate) ?? referenceDate
-            var tasks: [CareTask] = []
+        return [
+            CareTask(
+                kind: .learn,
+                title: "Browse plant recommendations",
+                detail: browseDetail,
+                systemImage: "sparkles"
+            ),
+        ]
+    }
 
-            // Weekly water reminder
-            if offset.isMultiple(of: 7), let plant = firstPlant {
-                tasks.append(CareTask(
-                    kind: .water,
-                    title: "Weekly watering for \(plant.name ?? "your plant")",
-                    detail: "Time for your regular watering schedule.",
-                    systemImage: "drop.fill",
-                    plantName: plant.name
-                ))
-            }
+    private static func activeDayFiveTasks(context: ActiveRoadmapContext) -> [CareTask] {
+        guard context.plants.count > 1 else { return [] }
 
-            // Harvest suggestion for food-growing users
-            if user?.gardeningGoals?.contains(.growFood) == true,
-               let plant = firstPlant,
-               plant.plantType == .vegetable || plant.plantType == .fruit
-            {
-                if offset == 7 {
-                    tasks.append(CareTask(
-                        kind: .harvest,
-                        title: "Check for ready harvest",
-                        detail: "Look for vegetables or fruits ready to harvest.",
-                        systemImage: "basket.fill"
-                    ))
-                }
-            }
+        return context.plants.prefix(2).map { plant in
+            CareTask(
+                kind: .prune,
+                title: "Check \(plant.name ?? "plant") for pruning",
+                detail: "Look for dead leaves or overgrown branches to trim.",
+                systemImage: "scissors",
+                plantName: plant.name
+            )
+        }
+    }
 
-            days.append(StarterPlanDay(date: date, dayOffset: offset, tasks: tasks))
+    private static func activeWeeklyMaintenanceTasks(dayOffset: Int, context: ActiveRoadmapContext) -> [CareTask] {
+        var tasks: [CareTask] = []
+
+        if dayOffset.isMultiple(of: 7), let plant = context.firstPlant {
+            tasks.append(CareTask(
+                kind: .water,
+                title: "Weekly watering for \(plant.name ?? "your plant")",
+                detail: "Time for your regular watering schedule.",
+                systemImage: "drop.fill",
+                plantName: plant.name
+            ))
+        }
+        if shouldSuggestHarvest(dayOffset: dayOffset, context: context) {
+            tasks.append(CareTask(
+                kind: .harvest,
+                title: "Check for ready harvest",
+                detail: "Look for vegetables or fruits ready to harvest.",
+                systemImage: "basket.fill"
+            ))
         }
 
-        return days
+        return tasks
+    }
+
+    private static func shouldSuggestHarvest(dayOffset: Int, context: ActiveRoadmapContext) -> Bool {
+        guard dayOffset == 7,
+              context.user?.gardeningGoals?.contains(.growFood) == true,
+              let plant = context.firstPlant
+        else {
+            return false
+        }
+
+        return plant.plantType == .vegetable || plant.plantType == .fruit
     }
 
     // MARK: - Helper

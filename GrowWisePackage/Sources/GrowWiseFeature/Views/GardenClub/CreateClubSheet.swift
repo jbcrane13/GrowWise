@@ -50,7 +50,7 @@ public struct CreateClubSheet: View {
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
-                    .accessibilityIdentifier("create_club_button_error_dismiss")
+                    .accessibilityIdentifier("create_club_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -163,8 +163,7 @@ public struct CreateClubSheet: View {
             .onTapGesture {
                 copyCode(club.inviteCode ?? "")
             }
-            .accessibilityAddTraits(.isButton)
-            .accessibilityIdentifier("create_club_invite_code_copy")
+            .accessibilityIdentifier("create_club_invite_code_card")
             .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
 
             // Share button

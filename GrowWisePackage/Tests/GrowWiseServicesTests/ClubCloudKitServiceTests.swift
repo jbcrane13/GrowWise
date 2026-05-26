@@ -18,8 +18,8 @@ struct ClubCloudKitServiceTests {
         )
         activity.id = UUID(uuidString: "11111111-1111-1111-1111-111111111111")
         activity.gardenName = "Backyard Garden"
-        activity.photoURL = "file:///tmp/club-photo.jpg"
         activity.hardinessZone = "7b"
+        activity.photoURL = "file:///tmp/club-photo.jpg"
 
         let fields = try ClubCloudKitService.recordFields(from: activity)
 
@@ -30,8 +30,8 @@ struct ClubCloudKitServiceTests {
         #expect(fields.activityType == "shared")
         #expect(fields.activityDescription == "Basil: First harvest")
         #expect(fields.gardenName == "Backyard Garden")
-        #expect(fields.photoURL == "file:///tmp/club-photo.jpg")
         #expect(fields.hardinessZone == "7b")
+        #expect(fields.photoURL == "file:///tmp/club-photo.jpg")
     }
 
     @Test("database scope routes owners to private and invited members to shared")

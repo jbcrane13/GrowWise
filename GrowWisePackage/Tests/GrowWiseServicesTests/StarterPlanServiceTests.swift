@@ -49,6 +49,15 @@ struct StarterPlanServiceTests {
         return plant
     }
 
+    private func makeDate(year: Int, month: Int, day: Int) throws -> Date {
+        var components = DateComponents()
+        components.year = year
+        components.month = month
+        components.day = day
+        components.calendar = Calendar.current
+        return try #require(components.date)
+    }
+
     // MARK: - roadmapLength
 
     @Test("roadmap contains exactly 14 days")
@@ -352,6 +361,42 @@ struct StarterPlanServiceTests {
         // Container gardens need watering setup - day 1 should have water task
         let day1 = plan.days.first { $0.dayOffset == 1 }
         #expect((day1?.tasks.contains { $0.kind == .water }) == true)
+    }
+
+    @Test("outdoor spring active roadmap includes spring additions on day 3")
+    func outdoorSpringRoadmapIncludesSpringAdditions() throws {
+        let user = makeUser()
+        let garden = makeGarden(type: .container, isIndoor: false)
+        let plant = makePlant(garden: garden)
+
+        let plan = StarterPlanService.build(
+            user: user,
+            gardens: [garden],
+            plants: [plant],
+            reminders: [],
+            referenceDate: try makeDate(year: 2026, month: 4, day: 15)
+        )
+
+        let day3 = plan.days.first { $0.dayOffset == 3 }
+        #expect(day3?.tasks.contains { $0.kind == .plant && $0.title == "Plan spring additions" } == true)
+    }
+
+    @Test("indoor spring active roadmap skips spring additions on day 3")
+    func indoorSpringRoadmapSkipsSpringAdditions() throws {
+        let user = makeUser()
+        let garden = makeGarden(type: .indoor, isIndoor: true)
+        let plant = makePlant(garden: garden)
+
+        let plan = StarterPlanService.build(
+            user: user,
+            gardens: [garden],
+            plants: [plant],
+            reminders: [],
+            referenceDate: try makeDate(year: 2026, month: 4, day: 15)
+        )
+
+        let day3 = plan.days.first { $0.dayOffset == 3 }
+        #expect(day3?.tasks.contains { $0.title == "Plan spring additions" } == false)
     }
 
     // MARK: - CareTask structure

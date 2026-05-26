@@ -76,60 +76,52 @@ struct DataServiceGardenClubTests {
         #expect(activity.photoURL == photoURL)
     }
 
-    @Test("createClubPost persists current user hardiness zone")
-    func createClubPostPersistsCurrentUserHardinessZone() async throws {
+    @Test("createClubPost stores current user's hardiness zone")
+    func createClubPostStoresHardinessZone() async throws {
         let service = try await DataService.makeForTesting()
         let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
         user.hardinessZone = "7b"
-        try service.updateUser(user)
         _ = try service.createClub(name: "Backyard Growers", ownerID: user.id.uuidString)
 
-        let activity = try service.createClubPost(caption: "Tomatoes are coming in!", activityType: "shared")
+        let activity = try service.createClubPost(caption: "Tomatoes are blooming", activityType: "shared")
 
-        #expect(activity.memberID == user.id.uuidString)
         #expect(activity.hardinessZone == "7b")
     }
 
-    @Test("followClubMember toggles followed member IDs idempotently")
-    func followClubMemberTogglesFollowedMemberIDs() async throws {
+    @Test("followClubMember persists unique followed member IDs")
+    func followClubMemberPersistsUniqueIDs() async throws {
         let service = try await DataService.makeForTesting()
-        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        _ = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
 
         try service.followClubMember("member-2")
         try service.followClubMember("member-2")
-        #expect(user.followedMemberIDs == ["member-2"])
+        try service.followClubMember("member-3")
 
-        try service.unfollowClubMember("member-2")
-        try service.unfollowClubMember("member-2")
-        #expect(user.followedMemberIDs.isEmpty)
+        #expect(service.getCurrentUser()?.followedMemberIDs == ["member-2", "member-3"])
+        #expect(service.isFollowingClubMember("member-2") == true)
     }
 
-    @Test("followClubMember trims IDs and ignores blank values")
-    func followClubMemberTrimsIDsAndIgnoresBlankValues() async throws {
+    @Test("follow lookups normalize member IDs")
+    func followLookupNormalizesMemberIDs() async throws {
         let service = try await DataService.makeForTesting()
-        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
+        _ = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
 
         try service.followClubMember(" member-2 ")
-        try service.followClubMember("\n")
-        try service.followClubMember("member-2")
 
-        #expect(user.followedMemberIDs == ["member-2"])
-
-        try service.unfollowClubMember(" member-2 ")
-
-        #expect(user.followedMemberIDs.isEmpty)
+        #expect(service.getCurrentUser()?.followedMemberIDs == ["member-2"])
+        #expect(service.isFollowingClubMember(" member-2 ") == true)
     }
 
-    @Test("followClubMember normalizes existing followed IDs")
-    func followClubMemberNormalizesExistingFollowedIDs() async throws {
+    @Test("unfollowClubMember removes member ID")
+    func unfollowClubMemberRemovesID() async throws {
         let service = try await DataService.makeForTesting()
-        let user = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
-        user.followedMemberIDs = [" member-2 ", ""]
-        try service.updateUser(user)
+        _ = try service.createUser(email: "owner@example.com", displayName: "Owner", skillLevel: .beginner)
 
         try service.followClubMember("member-2")
+        try service.unfollowClubMember("member-2")
 
-        #expect(user.followedMemberIDs == ["member-2"])
+        #expect(service.getCurrentUser()?.followedMemberIDs?.isEmpty == true)
+        #expect(service.isFollowingClubMember("member-2") == false)
     }
 
     @Test("sharePlant marks plant as shared with club and unshare keeps owner plant private")

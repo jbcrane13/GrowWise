@@ -115,6 +115,26 @@ struct ModelContainerFactoryTests {
         #expect(results.first?.message == "Time to water your basil")
     }
 
+    @Test("Schema includes Harvest user inverse relationship")
+    @MainActor func testSchemaIncludesHarvestUserInverseRelationship() throws {
+        let container = try ModelContainerFactory.makeForTesting()
+        let context = ModelContext(container)
+
+        let user = User(email: "harvest@example.com", displayName: "Harvester")
+        let harvest = Harvest(quantity: 4, unit: .pieces, user: user)
+        user.harvests = [harvest]
+
+        context.insert(user)
+        context.insert(harvest)
+        try context.save()
+
+        let descriptor = FetchDescriptor<User>()
+        let results = try context.fetch(descriptor).filter { $0.email == "harvest@example.com" }
+        #expect(results.count == 1)
+        #expect(results.first?.harvests?.count == 1)
+        #expect(results.first?.harvests?.first?.quantity == 4)
+    }
+
     @Test("Schema includes SoilLog — insert and fetch round-trips correctly")
     @MainActor func testSchemaIncludesSoilLog() throws {
         let container = try ModelContainerFactory.makeForTesting()

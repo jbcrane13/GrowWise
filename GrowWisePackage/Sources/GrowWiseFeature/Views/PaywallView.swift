@@ -136,14 +136,12 @@ public struct PaywallView: View {
                     isYearly = false
                 }
             }
-            .accessibilityIdentifier("paywall_toggle_monthly")
 
             toggleButton(label: "Yearly", isActive: isYearly, badge: "Best Value", accessibilityID: "paywall_toggle_yearly") {
                 withAnimation(CultivationTheme.Animation.selection) {
                     isYearly = true
                 }
             }
-            .accessibilityIdentifier("paywall_toggle_yearly")
         }
         .padding(3)
         .background {
@@ -205,7 +203,6 @@ public struct PaywallView: View {
                 color: CultivationTheme.Colors.textSecondary,
                 isCurrent: !isActiveSubscriber
             )
-            .accessibilityIdentifier("paywall_card_free")
 
             tierCard(
                 tier: .premium,
@@ -223,7 +220,6 @@ public struct PaywallView: View {
                 isCurrent: currentTierIs(.premium),
                 isPopular: true
             )
-            .accessibilityIdentifier("paywall_card_premium")
         }
         .opacity(appeared ? 1 : 0)
         .offset(y: appeared ? 0 : 20)

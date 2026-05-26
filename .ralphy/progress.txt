@@ -1,11 +1,22 @@
 # Ralphy Progress Log
 
-- [✓] 2026-05-25 16:24 - Implement [1.1 Could-Include] Light meter, public showcase polish, member profiles, follow/nearby beta
-- [✓] 2026-05-25 16:33 - Handle edge cases and error states
-- [✓] 2026-05-25 16:55 - Add accessibilityIdentifier to every interactive element
-- [✓] 2026-05-25 17:00 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build
-- [✓] 2026-05-26 05:51 - Implement test: PlantDatabaseService integration tests — validate seeded plant data fields, not just count
-- [✓] 2026-05-26 05:55 - Run full test suite
-- [✓] 2026-05-26 06:02 - Review code quality and suggest improvements
-- [✓] 2026-05-26 06:07 - Add accessibilityIdentifier to every interactive element
-- [✓] 2026-05-26 06:18 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build
+- [✓] 2026-05-24 18:35 - Implement feature: Public garden showcase polish
+- [✓] 2026-05-24 18:39 - Run full test suite
+- [✓] 2026-05-24 18:46 - Review code quality and suggest improvements
+- [✓] 2026-05-24 19:03 - Add accessibilityIdentifier to every interactive element
+- [✓] 2026-05-24 19:07 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build
+- [✓] 2026-05-25 03:20 - Implement feature: Light meter "Check light here" entry point on Plant Detail
+- [✓] 2026-05-25 03:24 - Run full test suite
+- [✓] 2026-05-25 03:29 - Review code quality and suggest improvements
+- [✓] 2026-05-25 03:35 - Add accessibilityIdentifier to every interactive element
+- [✓] 2026-05-25 03:42 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build
+- [✓] 2026-05-25 06:05 - Implement chore: refactor StarterPlanService.buildActiveRoadmap (function length)
+- [✓] 2026-05-25 06:09 - Run full test suite
+- [✓] 2026-05-25 06:10 - Implement feature: Follow / nearby feed v1.1 beta
+- [✓] 2026-05-25 06:12 - Run full test suite
+- [✓] 2026-05-25 06:15 - Review code quality and suggest improvements
+- [✓] 2026-05-25 06:23 - Add accessibilityIdentifier to every interactive element
+- [✓] 2026-05-25 06:24 - Review code quality and suggest improvements
+- [✓] 2026-05-25 06:27 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build
+- [✓] 2026-05-25 06:33 - Add accessibilityIdentifier to every interactive element
+- [✓] 2026-05-25 06:36 - Build verify: xcodebuild -scheme AgentBoard -destination 'platform=macOS' build

@@ -4,7 +4,7 @@ import GrowWiseModels
 import SwiftData
 import Testing
 
-@Suite("Garden Club tab routing", .serialized)
+@Suite("Garden Club tab routing")
 @MainActor
 struct GardenClubFeedRoutingTests {
     @Test("Zero clubs routes to join/create prompt")
@@ -52,8 +52,8 @@ struct GardenClubFeedRoutingTests {
         #expect(viewData.photoURL == "file:///tmp/tomato.jpg")
     }
 
-    @Test("ClubActivity view data carries member garden and zone context")
-    func clubActivityViewDataCarriesMemberGardenAndZoneContext() {
+    @Test("ClubActivity view data carries garden context")
+    func clubActivityViewDataCarriesGardenContext() {
         let activity = ClubActivity(
             clubID: UUID(),
             memberName: "Avery",
@@ -62,134 +62,141 @@ struct GardenClubFeedRoutingTests {
             description: "First tomato flower"
         )
         activity.gardenName = "Backyard Garden"
-        activity.hardinessZone = "7b"
 
         let viewData = GardenClubFeedView.viewData(from: activity)
 
-        #expect(viewData.memberID == "user-1")
-        #expect(viewData.gardenName == "Backyard Garden")
-        #expect(viewData.hardinessZone == "7b")
+        #expect(viewData.gardenNameTag == "Backyard Garden")
     }
 
-    @Test("Nearby feed includes same-zone peers and excludes the current member")
-    func nearbyFeedIncludesSameZonePeers() {
-        let state = GardenClubFeedView.ClubFeedBetaState(
-            posts: [
-                makePost(memberID: "current", author: "Current", hardinessZone: "7b"),
-                makePost(memberID: "peer", author: "Peer", hardinessZone: "7b"),
-                makePost(memberID: "far", author: "Far", hardinessZone: "5a"),
-                makePost(memberID: "unknown", author: "Unknown", hardinessZone: nil),
-            ],
-            currentMemberID: "current",
+    @Test("Nearby feed shows same-zone posts from other growers")
+    func nearbyFeedFiltersSameZonePosts() {
+        let sameZone = clubActivity(
+            memberID: "member-2",
+            memberName: "Avery",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 300)
+        )
+        let currentUserPost = clubActivity(
+            memberID: "member-1",
+            memberName: "Blake",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 400)
+        )
+        let otherZone = clubActivity(
+            memberID: "member-3",
+            memberName: "Morgan",
+            hardinessZone: "5a",
+            timestamp: Date(timeIntervalSince1970: 500)
+        )
+
+        let posts = [sameZone, currentUserPost, otherZone].map(GardenClubFeedView.viewData(from:))
+        let nearbyPosts = GardenClubFeedView.filteredPosts(
+            posts,
+            for: .nearby,
             currentZone: "7b",
-            followedMemberIDs: []
+            followedMemberIDs: [],
+            currentMemberID: "member-1"
         )
 
-        let nearby = state.posts(for: .nearby)
-
-        #expect(nearby.map(\.authorDisplayName) == ["Peer"])
+        #expect(nearbyPosts.map(\.memberID) == ["member-2"])
     }
 
-    @Test("Nearby feed ignores unknown members and normalizes hardiness zones")
-    func nearbyFeedIgnoresUnknownMembersAndNormalizesHardinessZones() {
-        let state = GardenClubFeedView.ClubFeedBetaState(
-            posts: [
-                makePost(memberID: " current ", author: "Current", hardinessZone: "7b"),
-                makePost(memberID: " peer ", author: "Peer", hardinessZone: " 7B "),
-                makePost(memberID: "", author: "Unknown", hardinessZone: "7b"),
-                makePost(memberID: "blank-zone", author: "Blank Zone", hardinessZone: " "),
-            ],
-            currentMemberID: "current",
-            currentZone: " 7b ",
-            followedMemberIDs: []
+    @Test("Following feed shows only followed member posts")
+    func followingFeedFiltersFollowedMemberPosts() {
+        let followed = clubActivity(
+            memberID: "member-2",
+            memberName: "Avery",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 500)
+        )
+        let notFollowed = clubActivity(
+            memberID: "member-3",
+            memberName: "Morgan",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 600)
         )
 
-        let nearby = state.posts(for: .nearby)
-
-        #expect(nearby.map(\.authorDisplayName) == ["Peer"])
-    }
-
-    @Test("Nearby empty message treats whitespace zone as missing")
-    func nearbyEmptyMessageTreatsWhitespaceZoneAsMissing() {
-        let state = GardenClubFeedView.ClubFeedBetaState(
-            posts: [],
-            currentMemberID: "current",
-            currentZone: " ",
-            followedMemberIDs: []
-        )
-
-        #expect(state.emptyMessage(for: .nearby) == "Add your hardiness zone to discover nearby growers.")
-    }
-
-    @Test("Following feed includes only followed members")
-    func followingFeedIncludesOnlyFollowedMembers() {
-        let state = GardenClubFeedView.ClubFeedBetaState(
-            posts: [
-                makePost(memberID: "current", author: "Current", hardinessZone: "7b"),
-                makePost(memberID: "followed", author: "Followed", hardinessZone: "7b"),
-                makePost(memberID: "other", author: "Other", hardinessZone: "7b"),
-            ],
-            currentMemberID: "current",
+        let posts = [notFollowed, followed].map(GardenClubFeedView.viewData(from:))
+        let followingPosts = GardenClubFeedView.filteredPosts(
+            posts,
+            for: .following,
             currentZone: "7b",
-            followedMemberIDs: ["followed"]
+            followedMemberIDs: ["member-2"],
+            currentMemberID: "member-1"
         )
 
-        let following = state.posts(for: .following)
-
-        #expect(following.map(\.authorDisplayName) == ["Followed"])
+        #expect(followingPosts.map(\.memberID) == ["member-2"])
     }
 
-    @Test("Following feed trims followed IDs and ignores blank post members")
-    func followingFeedTrimsFollowedIDsAndIgnoresBlankPostMembers() {
-        let state = GardenClubFeedView.ClubFeedBetaState(
-            posts: [
-                makePost(memberID: " followed ", author: "Followed", hardinessZone: "7b"),
-                makePost(memberID: "", author: "Unknown", hardinessZone: "7b"),
-            ],
-            currentMemberID: "current",
+    @Test("Following feed hides current user's posts even when followed IDs are stale")
+    func followingFeedHidesCurrentUserPosts() {
+        let currentUserPost = clubActivity(
+            memberID: "member-1",
+            memberName: "Blake",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 500)
+        )
+        let followed = clubActivity(
+            memberID: "member-2",
+            memberName: "Avery",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 600)
+        )
+
+        let posts = [currentUserPost, followed].map(GardenClubFeedView.viewData(from:))
+        let followingPosts = GardenClubFeedView.filteredPosts(
+            posts,
+            for: .following,
             currentZone: "7b",
-            followedMemberIDs: [" followed ", ""]
+            followedMemberIDs: ["member-1", "member-2"],
+            currentMemberID: "member-1"
         )
 
-        let following = state.posts(for: .following)
-
-        #expect(following.map(\.authorDisplayName) == ["Followed"])
+        #expect(followingPosts.map(\.memberID) == ["member-2"])
     }
 
-    @Test("Smart match ignores self unknown members and normalizes zones")
-    func smartMatchIgnoresSelfUnknownMembersAndNormalizesZones() {
-        let match = GardenClubFeedView.smartMatch(
-            from: [
-                makePost(memberID: "current", author: "Current", hardinessZone: "7b"),
-                makePost(memberID: "peer-1", author: "Peer One", hardinessZone: " 7B "),
-                makePost(memberID: "peer-1", author: "Peer One Again", hardinessZone: "7b"),
-                makePost(memberID: "", author: "Unknown", hardinessZone: "7b"),
-            ],
-            currentMemberID: " current ",
+    @Test("Following feed normalizes member IDs from persisted and CloudKit sources")
+    func followingFeedNormalizesMemberIDs() {
+        let followed = clubActivity(
+            memberID: " member-2 ",
+            memberName: "Avery",
+            hardinessZone: "7b",
+            timestamp: Date(timeIntervalSince1970: 600)
+        )
+
+        let posts = [followed].map(GardenClubFeedView.viewData(from:))
+        let followingPosts = GardenClubFeedView.filteredPosts(
+            posts,
+            for: .following,
             currentZone: "7b",
-            sharedPlants: []
+            followedMemberIDs: ["member-2"],
+            currentMemberID: "member-1"
         )
 
-        #expect(match?.count == 1)
-        #expect(match?.plantName == "your plants")
+        #expect(followingPosts.count == 1)
     }
 
-    private func makePost(
+    @Test("Follow affordance normalizes current and followed member IDs")
+    func followAffordanceNormalizesMemberIDs() {
+        #expect(GardenClubFeedView.canFollowMember(" member-1 ", currentMemberID: "member-1") == false)
+        #expect(GardenClubFeedView.isFollowingMember(" member-2 ", followedMemberIDs: ["member-2"]) == true)
+    }
+
+    private func clubActivity(
         memberID: String,
-        author: String,
-        hardinessZone: String?
-    ) -> GardenClubFeedView.ClubActivityViewData {
-        GardenClubFeedView.ClubActivityViewData(
-            id: UUID(),
+        memberName: String,
+        hardinessZone: String,
+        timestamp: Date
+    ) -> ClubActivity {
+        let activity = ClubActivity(
+            clubID: UUID(),
+            memberName: memberName,
             memberID: memberID,
-            authorDisplayName: author,
-            caption: "Update",
-            gardenName: "Backyard Garden",
-            hardinessZone: hardinessZone,
-            photoURL: nil,
-            relativeTimeLabel: nil,
-            likeCount: 0,
-            commentCount: 0
+            activityType: "shared",
+            description: "\(memberName) shared a garden update"
         )
+        activity.hardinessZone = hardinessZone
+        activity.timestamp = timestamp
+        return activity
     }
 }

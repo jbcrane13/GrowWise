@@ -91,52 +91,69 @@ public extension DataService {
         return activity
     }
 
+    // MARK: - Follows
+
     func followClubMember(_ memberID: String) throws {
-        guard let memberID = memberID.trimmedNonEmpty else { return }
-        guard let user = getCurrentUser() else { throw CreateClubPostError.noCurrentUser }
-        guard memberID != user.id.uuidString else { return }
-        let originalFollowed = user.followedMemberIDs
-        var followed = originalFollowed.compactMap(\.trimmedNonEmpty)
-        if followed.contains(memberID) {
-            if followed != originalFollowed {
-                user.followedMemberIDs = followed
-                try updateUser(user)
-            }
-            return
+        guard let user = getCurrentUser() else {
+            throw ClubMemberFollowError.noCurrentUser
         }
-        followed.append(memberID)
-        user.followedMemberIDs = followed
-        try updateUser(user)
+
+        guard let trimmedID = normalizedClubMemberID(memberID), trimmedID != user.id.uuidString else { return }
+
+        var followedIDs = (user.followedMemberIDs ?? []).compactMap(normalizedClubMemberID)
+        guard !followedIDs.contains(trimmedID) else { return }
+
+        followedIDs.append(trimmedID)
+        user.followedMemberIDs = followedIDs
+        try users.update(user)
     }
 
     func unfollowClubMember(_ memberID: String) throws {
-        guard let memberID = memberID.trimmedNonEmpty else { return }
-        guard let user = getCurrentUser() else { throw CreateClubPostError.noCurrentUser }
-        let followed = user.followedMemberIDs.compactMap(\.trimmedNonEmpty).filter { $0 != memberID }
-        guard followed.count != user.followedMemberIDs.count else { return }
-        user.followedMemberIDs = followed
-        try updateUser(user)
+        guard let user = getCurrentUser() else {
+            throw ClubMemberFollowError.noCurrentUser
+        }
+
+        guard let trimmedID = normalizedClubMemberID(memberID) else { return }
+
+        let followedIDs = (user.followedMemberIDs ?? [])
+            .compactMap(normalizedClubMemberID)
+            .filter { $0 != trimmedID }
+        user.followedMemberIDs = followedIDs
+        try users.update(user)
     }
+
+    func isFollowingClubMember(_ memberID: String) -> Bool {
+        guard let user = getCurrentUser() else { return false }
+        guard let trimmedID = normalizedClubMemberID(memberID) else { return false }
+        return (user.followedMemberIDs ?? [])
+            .compactMap(normalizedClubMemberID)
+            .contains(trimmedID)
+    }
+}
+
+private func normalizedClubMemberID(_ memberID: String) -> String? {
+    let trimmedID = memberID.trimmingCharacters(in: .whitespacesAndNewlines)
+    return trimmedID.isEmpty ? nil : trimmedID
 }
 
 public enum CreateClubPostError: Error, LocalizedError {
     case noClub
-    case noCurrentUser
 
     public var errorDescription: String? {
         switch self {
         case .noClub:
             "You're not in a club yet. Join or create one first."
-
-        case .noCurrentUser:
-            "Create a profile before following club members."
         }
     }
 }
 
-private extension String {
-    var trimmedNonEmpty: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
+public enum ClubMemberFollowError: Error, LocalizedError {
+    case noCurrentUser
+
+    public var errorDescription: String? {
+        switch self {
+        case .noCurrentUser:
+            "Sign in before following club members."
+        }
     }
 }

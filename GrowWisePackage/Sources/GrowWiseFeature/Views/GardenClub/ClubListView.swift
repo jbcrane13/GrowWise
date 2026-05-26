@@ -51,7 +51,7 @@ public struct ClubListView: View {
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
-                    .accessibilityIdentifier("club_list_button_error_dismiss")
+                    .accessibilityIdentifier("club_list_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -73,7 +73,7 @@ public struct ClubListView: View {
                         ClubRowView(club: club)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityIdentifier("club_list_navlink_\(club.id?.uuidString ?? "unknown")")
+                    .accessibilityIdentifier("club_list_link_\(club.id?.uuidString ?? "unknown")")
                 }
             }
             .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
@@ -123,11 +123,11 @@ public struct ClubListView: View {
                 Button { showCreateSheet = true } label: {
                     Label("Create Club", systemImage: "plus.circle.fill")
                 }
-                .accessibilityIdentifier("club_list_menu_create")
+                .accessibilityIdentifier("club_list_button_create_menu")
                 Button { showJoinSheet = true } label: {
                     Label("Join Club", systemImage: "person.badge.plus")
                 }
-                .accessibilityIdentifier("club_list_menu_join")
+                .accessibilityIdentifier("club_list_button_join_menu")
             } label: {
                 Image(systemName: "plus.circle.fill")
                     .font(.system(size: 20))

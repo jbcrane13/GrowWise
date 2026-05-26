@@ -334,5 +334,5 @@ Before ending a session:
 ## Activity — 2026-05-23
 - (no commits)
 
-## Activity — 2026-05-26
-- (no commits)
+## Activity — 2026-05-24
+- 0c012ba feat(#358): add club member profiles

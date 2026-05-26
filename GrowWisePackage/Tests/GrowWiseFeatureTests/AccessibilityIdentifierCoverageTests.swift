@@ -11,8 +11,8 @@ struct AccessibilityIdentifierCoverageTests {
             .deletingLastPathComponent()
         let projectRoot = packageRoot.deletingLastPathComponent()
         let sourceRoots = [
-            packageRoot.appendingPathComponent("Sources/\(Self.legacyModulePrefix)Feature"),
-            projectRoot.appendingPathComponent(Self.legacyModulePrefix),
+            packageRoot.appendingPathComponent("Sources/GrowWiseFeature"),
+            projectRoot.appendingPathComponent("GrowWise"),
         ]
 
         let missingIdentifiers = try sourceRoots.flatMap { sourceRoot in
@@ -49,8 +49,6 @@ struct AccessibilityIdentifierCoverageTests {
         "Menu",
         "Link",
     ]
-
-    private static let legacyModulePrefix = "Grow" + "Wise"
 
     private static func swiftFiles(in root: URL) throws -> [URL] {
         guard let enumerator = FileManager.default.enumerator(
@@ -127,7 +125,6 @@ struct AccessibilityIdentifierCoverageTests {
             if !trimmed.isEmpty,
                lineIndent <= baseIndent,
                !trimmed.hasPrefix("."),
-               !trimmed.hasPrefix("#"),
                !trimmed.hasPrefix("}"),
                !trimmed.hasPrefix(")"),
                !trimmed.hasPrefix("label:"),

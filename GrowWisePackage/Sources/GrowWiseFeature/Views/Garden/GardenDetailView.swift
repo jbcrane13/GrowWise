@@ -3,7 +3,7 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable file_length type_body_length
+// swiftlint:disable type_body_length
 
 // MARK: - GardenDetailView
 
@@ -30,7 +30,6 @@ struct GardenDetailView: View {
     @State private var showRecommendedPlants = false
     @State private var seedPlantedForShoppingPrompt: Seed?
     @State private var showSeedShoppingPrompt = false
-    @State private var saveError: String?
 
     private var filteredGroups: [PlantGroup] {
         guard !searchText.isEmpty else { return groupedPlants }
@@ -183,9 +182,9 @@ struct GardenDetailView: View {
             Button("Add to Shopping List") {
                 addSeedToShoppingList(seed)
             }
-            .accessibilityIdentifier("gardendetail_button_seed_shopping_add")
+            .accessibilityIdentifier("gardendetail_button_add_seed_shopping")
             Button("No Thanks", role: .cancel) {}
-                .accessibilityIdentifier("gardendetail_button_seed_shopping_cancel")
+                .accessibilityIdentifier("gardendetail_button_skip_seed_shopping")
         } message: { seed in
             Text("You've used your last packet of \(seed.varietyName ?? "this seed"). Add more to your shopping list?")
         }
@@ -202,15 +201,6 @@ struct GardenDetailView: View {
                 .presentationDragIndicator(.hidden)
             }
         )
-        .alert("Could not save", isPresented: Binding(
-            get: { saveError != nil },
-            set: { if !$0 { saveError = nil } }
-        )) {
-            Button("OK", role: .cancel) { saveError = nil }
-                .accessibilityIdentifier("gardendetail_button_save_error_dismiss")
-        } message: {
-            Text(saveError ?? "")
-        }
     }
 
     // MARK: - Sub-views
@@ -366,16 +356,12 @@ struct GardenDetailView: View {
         let currentQty = seed.quantity ?? 0
         let newQty = max(0, currentQty - 1)
         seed.quantity = newQty
-        do {
-            try dataService.seeds.update(seed)
-            // Only prompt on success — seed was actually depleted
-            if newQty == 0 {
-                seedPlantedForShoppingPrompt = seed
-                showSeedShoppingPrompt = true
-            }
-        } catch {
-            seed.quantity = currentQty
-            saveError = error.localizedDescription
+        try? dataService.seeds.update(seed)
+
+        // Prompt to add to shopping list if now depleted
+        if newQty == 0 {
+            seedPlantedForShoppingPrompt = seed
+            showSeedShoppingPrompt = true
         }
 
         Task { await rebuildGroups() }
@@ -391,12 +377,7 @@ struct GardenDetailView: View {
         )
         item.garden = garden
         modelContext.insert(item)
-        do {
-            try modelContext.save()
-        } catch {
-            modelContext.delete(item)
-            saveError = error.localizedDescription
-        }
+        try? modelContext.save()
     }
 
     // MARK: - Data
@@ -509,4 +490,4 @@ struct OutlineButtonStyle: ButtonStyle {
     }
 }
 
-// swiftlint:enable file_length type_body_length
+// swiftlint:enable type_body_length

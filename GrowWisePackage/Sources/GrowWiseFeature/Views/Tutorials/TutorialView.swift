@@ -50,7 +50,6 @@ public struct TutorialView: View {
             }
         }
         .searchable(text: $searchText, prompt: "Search tutorials...")
-        .accessibilityIdentifier("tutorials_search")
     }
 
     private var categorySelector: some View {
@@ -133,7 +132,7 @@ public struct TutorialView: View {
                         TutorialRowView(tutorial: tutorial, tutorialService: tutorialService)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityIdentifier("tutorials_navlink_\(tutorial.id)")
+                    .accessibilityIdentifier("tutorials_link_row_\(tutorial.id)")
                 }
             }
         }
@@ -177,7 +176,7 @@ struct CategoryChip: View {
             .foregroundColor(isSelected ? .white : .primary)
             .clipShape(RoundedRectangle(cornerRadius: 16))
         }
-        .accessibilityIdentifier("tutorials_category_\(category.rawValue)")
+        .accessibilityIdentifier("tutorials_button_category_\(category.rawValue)")
     }
 }
 
@@ -255,7 +254,7 @@ struct FeaturedTutorialCard: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("tutorials_featured_\(tutorial.id)")
+        .accessibilityIdentifier("tutorials_link_featured_\(tutorial.id)")
     }
 }
 

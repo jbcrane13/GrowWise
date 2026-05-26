@@ -1,9 +1,9 @@
-# PRD: feature: Follow / nearby feed v1.1 beta
+# PRD: chore: refactor StarterPlanService.buildActiveRoadmap (function length)
 
 ## Issue
-#359 in jbcrane13/growwise
+#360 in jbcrane13/growwise
 ## Tasks
-- [x] Implement feature: Follow / nearby feed v1.1 beta
+- [x] Implement chore: refactor StarterPlanService.buildActiveRoadmap (function length)
 - [x] Run full test suite
 - [x] Review code quality and suggest improvements
 - [x] Add accessibilityIdentifier to every interactive element

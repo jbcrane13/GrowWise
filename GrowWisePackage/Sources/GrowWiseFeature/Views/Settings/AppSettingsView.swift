@@ -68,13 +68,13 @@ public struct AppSettingsView: View {
         }
         .alert("Export Successful", isPresented: $showExportSuccess) {
             Button("OK", role: .cancel) {}
-                .accessibilityIdentifier("settings_button_export_success_dismiss")
+                .accessibilityIdentifier("settings_button_export_success_ok")
         } message: {
             Text("Your garden data has been exported successfully.")
         }
         .alert("Export Failed", isPresented: $showExportError) {
             Button("OK", role: .cancel) {}
-                .accessibilityIdentifier("settings_button_export_error_dismiss")
+                .accessibilityIdentifier("settings_button_export_error_ok")
         } message: {
             Text(exportErrorMessage)
         }
@@ -331,7 +331,6 @@ public struct AppSettingsView: View {
             Toggle("", isOn: isOn)
                 .tint(CultivationTheme.Colors.brandLeaf)
                 .labelsHidden()
-                .accessibilityIdentifier(id)
         }
         .padding(CultivationTheme.Spacing.cardPadding)
         .accessibilityIdentifier(id)
