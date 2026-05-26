@@ -34,7 +34,6 @@ public struct PerenualBrowseView: View {
             }
         }
         .searchable(text: $searchText, prompt: "Search 10,000+ plants...")
-        .accessibilityIdentifier("perenual_search")
         .onSubmit(of: .search) {
             Task { await search() }
         }
@@ -86,7 +85,7 @@ public struct PerenualBrowseView: View {
                 Task { await searchText.isEmpty ? loadInitial() : search() }
             }
             .buttonStyle(.bordered)
-            .accessibilityIdentifier("perenual_button_retry")
+            .accessibilityIdentifier("perenual_button_try_again")
         }
     }
 
@@ -377,7 +376,7 @@ struct PerenualDetailView: View { // swiftlint:disable:this type_body_length
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Close") { dismiss() }
-                        .accessibilityIdentifier("perenual_detail_button_close")
+                        .accessibilityIdentifier("perenual_button_detail_close")
                 }
             }
             .overlay(alignment: .bottom) {
@@ -385,13 +384,13 @@ struct PerenualDetailView: View { // swiftlint:disable:this type_body_length
             }
             .alert("Added to Garden", isPresented: $showAddConfirmation) {
                 Button("OK", role: .cancel) {}
-                    .accessibilityIdentifier("perenual_detail_button_added_dismiss")
+                    .accessibilityIdentifier("perenual_button_added_ok")
             } message: {
                 Text("\(detail.commonName) has been added to your plant collection.")
             }
             .alert("Couldn't add plant", isPresented: $showingError) {
                 Button("OK", role: .cancel) {}
-                    .accessibilityIdentifier("perenual_detail_button_error_dismiss")
+                    .accessibilityIdentifier("perenual_button_error_ok")
             } message: {
                 Text(errorMessage)
             }

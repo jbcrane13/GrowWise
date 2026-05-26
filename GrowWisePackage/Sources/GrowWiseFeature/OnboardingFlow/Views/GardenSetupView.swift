@@ -39,7 +39,6 @@ struct GardenSetupView: View {
                                                 userProfile.gardenType = type
                                             }
                                         }
-                                        .accessibilityIdentifier("onboarding_gardentype_\(type.rawValue)")
                                     }
                                 }
                                 .padding(.horizontal, 20)
@@ -66,7 +65,6 @@ struct GardenSetupView: View {
                                     }
                                     .padding(.horizontal, 20)
                                     .frame(maxHeight: .infinity)
-                                    .accessibilityIdentifier("onboarding_space_\(size.rawValue)")
                                 }
                             }
                             .frame(maxHeight: .infinity)
@@ -160,7 +158,6 @@ struct GardenSetupView: View {
                                     }
                                 }
                             }
-                            .accessibilityIdentifier("onboarding_containertype_\(type.rawValue)")
                         }
                     }
                     .padding(.vertical, 2)

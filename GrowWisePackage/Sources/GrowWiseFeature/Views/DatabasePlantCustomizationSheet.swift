@@ -92,7 +92,7 @@ struct DatabasePlantCustomizationSheet: View {
                         .autocorrectionDisabled()
                         .gwTextInputAutocapitalization(.none)
                         .foregroundColor(.secondary)
-                        .accessibilityIdentifier("database_customization_textfield_scientific_name")
+                        .accessibilityIdentifier("database_customization_textfield_scientific")
 
                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
                         .accessibilityIdentifier("database_customization_datepicker_planting")
@@ -160,7 +160,7 @@ struct DatabasePlantCustomizationSheet: View {
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") {}
-                    .accessibilityIdentifier("database_customization_button_error_dismiss")
+                    .accessibilityIdentifier("database_customization_button_error_ok")
             } message: {
                 Text(errorMessage)
             }

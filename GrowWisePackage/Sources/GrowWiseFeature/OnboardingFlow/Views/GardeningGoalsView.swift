@@ -30,7 +30,6 @@ struct GardeningGoalsView: View {
                             }
                         }
                     }
-                    .accessibilityIdentifier("onboarding_goal_\(goal.rawValue)")
                 }
             }
             .padding(.horizontal, 20)

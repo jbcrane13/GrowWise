@@ -3,11 +3,7 @@ import GrowWiseServices
 import SwiftUI
 
 // SwiftLint suppressions for #284 — pre-existing structural & style violations; refactor out of scope.
-// swiftlint:disable attributes file_length type_body_length
-
-private struct SelectedMember: Identifiable {
-    let id: String
-}
+// swiftlint:disable attributes type_body_length
 
 public struct ClubDetailView: View {
     @Environment(DataService.self) private var dataService
@@ -22,7 +18,7 @@ public struct ClubDetailView: View {
     @State private var showLeaveAlert = false
     @State private var showRemoveMemberAlert = false
     @State private var memberToRemove: String?
-    @State private var selectedMemberID: String?
+    @State private var selectedMemberProfile: ClubMemberProfile?
     @State private var codeCopied = false
 
     private var currentUserID: String {
@@ -70,15 +66,15 @@ public struct ClubDetailView: View {
             }
             .alert("Remove Member", isPresented: $showRemoveMemberAlert, presenting: memberToRemove) { id in
                 Button("Remove", role: .destructive) { Task { await removeMember(id) } }
-                    .accessibilityIdentifier("club_detail_button_remove_confirm_\(id)")
+                    .accessibilityIdentifier("club_detail_button_remove_member_confirm")
                 Button("Cancel", role: .cancel) { memberToRemove = nil }
-                    .accessibilityIdentifier("club_detail_button_remove_cancel")
+                    .accessibilityIdentifier("club_detail_button_remove_member_cancel")
             } message: { _ in
                 Text("Remove this member from the club?")
             }
             .alert("Error", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
-                    .accessibilityIdentifier("club_detail_button_error_dismiss")
+                    .accessibilityIdentifier("club_detail_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -88,13 +84,8 @@ public struct ClubDetailView: View {
             .navigationDestination(isPresented: $navigateToEvents) {
                 ClubEventsView(club: club)
             }
-            .sheet(item: Binding(
-                get: { selectedMemberID.map { SelectedMember(id: $0) } },
-                set: { selectedMemberID = $0?.id }
-            )) { selection in
-                ClubMemberProfileView(profile: memberProfile(for: selection.id)) {
-                    toggleFollow(memberID: selection.id)
-                }
+            .sheet(item: $selectedMemberProfile) { profile in
+                ClubMemberProfileView(profile: profile)
             }
     }
 
@@ -217,7 +208,7 @@ public struct ClubDetailView: View {
 
         return HStack(spacing: 12) {
             Button {
-                selectedMemberID = memberID
+                selectedMemberProfile = profile
             } label: {
                 HStack(spacing: 12) {
                     ZStack {
@@ -388,7 +379,7 @@ public struct ClubDetailView: View {
                         ) {
                             Label("Share Invite Code", systemImage: "square.and.arrow.up")
                         }
-                        .accessibilityIdentifier("club_detail_share_invite")
+                        .accessibilityIdentifier("club_detail_button_share_invite")
                     }
                     if !isOwner {
                         Divider()
@@ -419,15 +410,8 @@ public struct ClubDetailView: View {
 
     @MainActor
     private func loadMemberUsers() {
-        let memberIDs = Set(club.memberIDs ?? [])
-
-        guard !memberIDs.isEmpty else {
-            memberUsers = []
-            return
-        }
-
         do {
-            memberUsers = try dataService.users.fetchAll().filter { memberIDs.contains($0.id.uuidString) }
+            memberUsers = try dataService.users.fetchAll()
         } catch {
             errorMessage = error.localizedDescription
         }
@@ -470,27 +454,8 @@ public struct ClubDetailView: View {
             club: club,
             user: memberUser(for: memberID),
             activities: activities,
-            currentUserID: currentUserID,
-            followedMemberIDs: dataService.getCurrentUser()?.followedMemberIDs ?? []
+            currentUserID: currentUserID
         )
-    }
-
-    @MainActor
-    private func toggleFollow(memberID: String) -> Bool {
-        guard memberID != currentUserID else { return false }
-        let isFollowed = dataService.getCurrentUser()?.followedMemberIDs.contains(memberID) == true
-        do {
-            if isFollowed {
-                try dataService.unfollowClubMember(memberID)
-                return false
-            } else {
-                try dataService.followClubMember(memberID)
-                return true
-            }
-        } catch {
-            errorMessage = error.localizedDescription
-            return isFollowed
-        }
     }
 
     private func memberUser(for memberID: String) -> User? {
@@ -516,4 +481,4 @@ public struct ClubDetailView: View {
     }
 }
 
-// swiftlint:enable attributes file_length type_body_length
+// swiftlint:enable attributes type_body_length

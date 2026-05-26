@@ -81,9 +81,9 @@ struct ARGardenView: View {
                         UIApplication.shared.open(url)
                     }
                 }
-                .accessibilityIdentifier("ar_button_open_settings_alert")
+                .accessibilityIdentifier("ar_button_settings_alert")
                 Button("Cancel", role: .cancel) {}
-                    .accessibilityIdentifier("ar_button_cancel_settings_alert")
+                    .accessibilityIdentifier("ar_button_settings_cancel")
             } message: {
                 Text(ARGardenView.cameraPermissionMessage)
             }
@@ -139,7 +139,7 @@ struct ARGardenView: View {
             }
             .buttonStyle(GradientButtonStyle())
             .padding(.horizontal, 48)
-            .accessibilityIdentifier("ar_button_open_settings")
+            .accessibilityIdentifier("ar_button_settings_denied")
         }
         .frame(maxWidth: .infinity, maxHeight: .infinity)
         .background(CultivationTheme.Colors.background)
@@ -406,7 +406,6 @@ private struct ARPlantPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .accessibilityIdentifier("ar_picker_button_cancel")
                 }
             }
         }

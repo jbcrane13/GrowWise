@@ -1,200 +1,191 @@
 import Foundation
 import Testing
 
+@Suite("Accessibility identifier coverage")
 struct AccessibilityIdentifierCoverageTests {
-    @Test("Interactive SwiftUI controls declare accessibility identifiers")
-    func interactiveSwiftUIControlsDeclareAccessibilityIdentifiers() throws {
-        let sourceRoot = try Self.featureSourceRoot()
-        let swiftFiles = try Self.swiftFiles(in: sourceRoot)
-        var missingIdentifiers: [String] = []
+    @Test("Interactive SwiftUI controls expose accessibility identifiers")
+    func interactiveSwiftUIControlsExposeAccessibilityIdentifiers() throws {
+        let packageRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let projectRoot = packageRoot.deletingLastPathComponent()
+        let sourceRoots = [
+            packageRoot.appendingPathComponent("Sources/GrowWiseFeature"),
+            projectRoot.appendingPathComponent("GrowWise"),
+        ]
 
-        for fileURL in swiftFiles {
-            let fileContents = try String(contentsOf: fileURL, encoding: .utf8)
-            let lines = fileContents.components(separatedBy: .newlines)
-
-            for lineIndex in lines.indices {
-                let line = lines[lineIndex]
-                guard !line.trimmingCharacters(in: .whitespaces).hasPrefix("//") else { continue }
-
-                for occurrence in Self.interactiveOccurrences(in: line) {
-                    let segment = Self.sourceSegment(
-                        lines: lines,
-                        startLine: lineIndex,
-                        startColumn: occurrence.column,
-                        kind: occurrence.kind
-                    )
-
-                    if !segment.contains(".accessibilityIdentifier(") {
-                        let relativePath = fileURL.path.replacingOccurrences(of: sourceRoot.path + "/", with: "")
-                        missingIdentifiers.append("\(relativePath):\(lineIndex + 1) \(occurrence.kind)")
-                    }
-                }
+        let missingIdentifiers = try sourceRoots.flatMap { sourceRoot in
+            try Self.swiftFiles(in: sourceRoot).flatMap { file in
+                try Self.violations(in: file, relativeTo: projectRoot)
             }
         }
 
-        #expect(
-            missingIdentifiers.isEmpty,
-            "Missing accessibility identifiers:\n\(missingIdentifiers.prefix(60).joined(separator: "\n"))"
-        )
+        let message = """
+        Missing accessibilityIdentifier on interactive controls:
+        \(missingIdentifiers.prefix(80).joined(separator: "\n"))
+        """
+        #expect(missingIdentifiers.isEmpty, "\(message)")
     }
 
-    private static func featureSourceRoot() throws -> URL {
-        let testFile = URL(fileURLWithPath: #filePath)
-        let packageRoot = testFile
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        return packageRoot.appendingPathComponent("Sources/GrowWiseFeature", isDirectory: true)
-    }
+    private static let interactiveConstructs = [
+        "PhotosPicker",
+        "ShareLink",
+        "NavigationLink",
+        "ColorPicker",
+        "PasteButton",
+        "EditButton",
+        "SecureField",
+        "TextEditor",
+        "TextField",
+        "DatePicker",
+        "DisclosureGroup",
+        "onTapGesture",
+        "Stepper",
+        "Slider",
+        "Picker",
+        "Toggle",
+        "Button",
+        "Menu",
+        "Link",
+    ]
 
     private static func swiftFiles(in root: URL) throws -> [URL] {
-        let fileManager = FileManager.default
-        guard let enumerator = fileManager.enumerator(at: root, includingPropertiesForKeys: nil) else {
+        guard let enumerator = FileManager.default.enumerator(
+            at: root,
+            includingPropertiesForKeys: [.isRegularFileKey]
+        ) else {
             return []
         }
 
-        return enumerator.compactMap { entry in
-            guard let url = entry as? URL, url.pathExtension == "swift" else { return nil }
-            return url
+        return try enumerator.compactMap { item in
+            guard let url = item as? URL, url.pathExtension == "swift" else {
+                return nil
+            }
+            let resourceValues = try url.resourceValues(forKeys: [.isRegularFileKey])
+            return resourceValues.isRegularFile == true ? url : nil
         }
         .sorted { $0.path < $1.path }
     }
 
-    private static func interactiveOccurrences(in line: String) -> [(column: Int, kind: String)] {
-        let controlNames = [
-            "Button",
-            "NavigationLink",
-            "Toggle",
-            "Picker",
-            "TextField",
-            "SecureField",
-            "TextEditor",
-            "Slider",
-            "Stepper",
-            "Menu",
-            "Link",
-            "DatePicker",
-            "ColorPicker",
-            "PhotosPicker",
-            "ShareLink",
-            "DisclosureGroup",
-            "PasteButton",
-        ]
-        let controlsPattern = #"(?<![A-Za-z0-9_])(\#(controlNames.joined(separator: "|")))\s*(?:\(|\{)"#
-        let modifierPattern = #"\.(searchable|onTapGesture)\s*(?:\(|\{)"#
+    private static func violations(in file: URL, relativeTo root: URL) throws -> [String] {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        let lines = source.components(separatedBy: .newlines)
+        let scanLines = try sourceForConstructScanning(source).components(separatedBy: .newlines)
+        let relativePath = file.path.replacingOccurrences(of: root.path + "/", with: "")
 
-        return regexMatches(pattern: controlsPattern, in: line)
-            + regexMatches(pattern: modifierPattern, in: line)
-    }
-
-    private static func regexMatches(pattern: String, in line: String) -> [(column: Int, kind: String)] {
-        guard let regex = try? NSRegularExpression(pattern: pattern) else { return [] }
-        let nsRange = NSRange(line.startIndex ..< line.endIndex, in: line)
-
-        return regex.matches(in: line, range: nsRange).compactMap { match in
-            guard
-                let range = Range(match.range(at: 1), in: line),
-                let fullRange = Range(match.range(at: 0), in: line)
-            else {
+        return lines.indices.compactMap { index in
+            guard let construct = interactiveConstruct(in: scanLines[index]) else {
                 return nil
             }
 
-            let column = line.distance(from: line.startIndex, to: fullRange.lowerBound)
-            let matchedKind = String(line[range])
-            let kind = matchedKind == "searchable" || matchedKind == "onTapGesture"
-                ? ".\(matchedKind)"
-                : matchedKind
-            return (column, kind)
+            let expression = expressionLines(startingAt: index, in: lines)
+            guard !hasAccessibilityIdentifier(in: expression, baseIndent: indentation(of: lines[index])) else {
+                return nil
+            }
+
+            return "\(relativePath):\(index + 1) \(construct)"
         }
     }
 
-    private static func sourceSegment(
-        lines: [String],
-        startLine: Int,
-        startColumn: Int,
-        kind: String
-    ) -> String {
-        if kind == ".onTapGesture" || kind == ".searchable" {
-            let endLine = min(lines.count, startLine + 50)
-            return lines[startLine ..< endLine].joined(separator: "\n")
+    private static func interactiveConstruct(in line: String) -> String? {
+        let trimmed = line.trimmingCharacters(in: .whitespaces)
+        guard !trimmed.hasPrefix("//") else {
+            return nil
         }
 
-        var segment: [String] = []
-        var balance = 0
-        var lineIndex = startLine
-        let maxInitialLine = min(lines.count, startLine + 220)
+        return interactiveConstructs.first { construct in
+            containsStandaloneConstruct(construct, in: line)
+        }
+    }
 
-        while lineIndex < maxInitialLine {
-            let line = lines[lineIndex]
-            segment.append(line)
-
-            let scannedText = lineIndex == startLine
-                ? String(line.dropFirst(startColumn))
-                : line
-            balance += delimiterDelta(in: scannedText)
-            lineIndex += 1
-
-            if balance <= 0 {
-                break
+    private static func containsStandaloneConstruct(_ construct: String, in line: String) -> Bool {
+        ["\(construct)(", "\(construct) {"].contains { marker in
+            guard let range = line.range(of: marker) else {
+                return false
             }
-        }
+            guard range.lowerBound > line.startIndex else {
+                return true
+            }
 
-        var chainedModifierBalance = 0
-        while lineIndex < lines.count, segment.count < 280 {
-            let line = lines[lineIndex]
+            let previous = line[line.index(before: range.lowerBound)]
+            return !isIdentifierCharacter(previous)
+        }
+    }
+
+    private static func expressionLines(startingAt index: Int, in lines: [String]) -> [String] {
+        let baseIndent = indentation(of: lines[index])
+        var expression = [lines[index]]
+
+        for nextIndex in lines.index(after: index) ..< min(lines.count, index + 160) {
+            let line = lines[nextIndex]
             let trimmed = line.trimmingCharacters(in: .whitespaces)
+            let lineIndent = indentation(of: line)
 
-            if chainedModifierBalance == 0 {
-                let isChainLine = trimmed.isEmpty
-                    || trimmed.hasPrefix("//")
-                    || trimmed.hasPrefix("#")
-                    || trimmed.hasPrefix(".")
-                guard isChainLine else { break }
+            if !trimmed.isEmpty,
+               lineIndent <= baseIndent,
+               !trimmed.hasPrefix("."),
+               !trimmed.hasPrefix("}"),
+               !trimmed.hasPrefix(")"),
+               !trimmed.hasPrefix("label:"),
+               !trimmed.hasPrefix("actions:"),
+               !trimmed.hasPrefix("message:")
+            {
+                break
             }
 
-            segment.append(line)
-            chainedModifierBalance += delimiterDelta(in: line)
-            lineIndex += 1
+            expression.append(line)
         }
 
-        return segment.joined(separator: "\n")
+        return expression
     }
 
-    private static func delimiterDelta(in text: String) -> Int {
-        var delta = 0
-        var isInString = false
-        var isEscaped = false
-        let characters = Array(text)
-        var index = 0
-
-        while index < characters.count {
-            let character = characters[index]
-
-            if isInString {
-                if isEscaped {
-                    isEscaped = false
-                } else if character == "\\" {
-                    isEscaped = true
-                } else if character == "\"" {
-                    isInString = false
-                }
-                index += 1
-                continue
+    private static func hasAccessibilityIdentifier(in lines: [String], baseIndent: Int) -> Bool {
+        lines.contains { line in
+            guard line.contains(".accessibilityIdentifier(") else {
+                return false
             }
 
-            if character == "\"" {
-                isInString = true
-            } else if character == "/", index + 1 < characters.count, characters[index + 1] == "/" {
-                break
-            } else if character == "(" || character == "[" || character == "{" {
-                delta += 1
-            } else if character == ")" || character == "]" || character == "}" {
-                delta -= 1
-            }
+            let trimmed = line.trimmingCharacters(in: .whitespaces)
+            return trimmed.hasPrefix(".accessibilityIdentifier") && indentation(of: line) <= baseIndent + 8
+        }
+    }
 
-            index += 1
+    private static func indentation(of line: String) -> Int {
+        line.prefix { $0 == " " }.count
+    }
+
+    private static func sourceForConstructScanning(_ source: String) throws -> String {
+        let patterns = [
+            #"(?s)""".*?"""#,
+            #""(?:\\.|[^"\\])*""#,
+            #"(?s)/\*.*?\*/"#,
+            #"//.*"#,
+        ]
+
+        return try patterns.reduce(source) { partialResult, pattern in
+            try maskingMatches(in: partialResult, pattern: pattern)
+        }
+    }
+
+    private static func maskingMatches(in source: String, pattern: String) throws -> String {
+        let regex = try NSRegularExpression(pattern: pattern)
+        let fullRange = NSRange(location: 0, length: (source as NSString).length)
+        let matches = regex.matches(in: source, range: fullRange)
+        let mutable = NSMutableString(string: source)
+
+        for match in matches.reversed() {
+            let matchedText = mutable.substring(with: match.range)
+            let replacement = matchedText.map { character in
+                character.isNewline ? character : " "
+            }
+            mutable.replaceCharacters(in: match.range, with: String(replacement))
         }
 
-        return delta
+        return mutable as String
+    }
+
+    private static func isIdentifierCharacter(_ character: Character) -> Bool {
+        character == "_" || character.isLetter || character.isNumber
     }
 }

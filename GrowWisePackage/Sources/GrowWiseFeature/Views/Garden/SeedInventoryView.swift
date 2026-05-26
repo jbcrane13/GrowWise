@@ -74,7 +74,7 @@ struct SeedInventoryView: View {
             Button("OK", role: .cancel) {
                 loadError = nil
             }
-            .accessibilityIdentifier("seed_inventory_button_error_dismiss")
+            .accessibilityIdentifier("seed_inventory_button_error_ok")
         } message: {
             Text(loadError ?? "An unknown error occurred.")
         }

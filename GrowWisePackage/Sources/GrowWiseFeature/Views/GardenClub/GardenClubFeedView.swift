@@ -1,14 +1,9 @@
-import CloudKit
 import GrowWiseModels
 import GrowWiseServices
 import os
-import SwiftData
 import SwiftUI
 
 private let logger = Logger(subsystem: "com.growwise", category: "GardenClubFeedView")
-
-// SwiftLint suppression for the v1.1 beta Club feed surface; follow-up refactor can split view/data loading.
-// swiftlint:disable file_length function_body_length
 
 /// Tab-3 entry point for Garden Club. Top-of-screen share prompt, segmented
 /// feed (Club / Nearby / Following), and post cards. The "smart match" card
@@ -35,100 +30,12 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     @State private var userInitial: String = "?"
     @State private var userName: String = "Gardener"
     @State private var isPresentingComposer = false
+    @State private var followErrorMessage: String?
 
     private let club: GardenClub?
 
     public init(club: GardenClub? = nil) {
         self.club = club
-    }
-
-    enum FeedSegment: String, CaseIterable, Identifiable {
-        case club = "Club feed"
-        case nearby = "Nearby"
-        case following = "Following"
-        var id: String {
-            rawValue
-        }
-    }
-
-    struct SmartMatchSuggestion {
-        let count: Int
-        let zone: String
-        let plantName: String
-    }
-
-    /// Presentation-only adapter for ClubActivity. Maps the SwiftData model's
-    /// fields onto the surface the post card consumes. Allowed under strict MV —
-    /// view-local presentation types are fine; a separate ViewModel class is not.
-    /// Per the 2026-04-22 plan Phase 5 Adapter note.
-    struct ClubActivityViewData: Identifiable {
-        let id: UUID
-        let memberID: String
-        let authorDisplayName: String
-        let caption: String?
-        let gardenName: String?
-        let hardinessZone: String?
-        let photoURL: String?
-        let relativeTimeLabel: String?
-        let likeCount: Int
-        let commentCount: Int
-    }
-
-    struct ClubFeedBetaState {
-        let posts: [ClubActivityViewData]
-        let currentMemberID: String?
-        let currentZone: String?
-        let followedMemberIDs: [String]
-
-        func posts(for segment: FeedSegment) -> [ClubActivityViewData] {
-            switch segment {
-            case .club:
-                return posts
-
-            case .nearby:
-                guard let currentZone = Self.normalizedZone(currentZone) else { return [] }
-                let currentMemberID = Self.normalizedMemberID(currentMemberID)
-                return posts.filter { post in
-                    guard let postMemberID = Self.normalizedMemberID(post.memberID),
-                          let postZone = Self.normalizedZone(post.hardinessZone)
-                    else {
-                        return false
-                    }
-                    return postZone == currentZone && postMemberID != currentMemberID
-                }
-
-            case .following:
-                let followed = Set(followedMemberIDs.compactMap(Self.normalizedMemberID))
-                guard !followed.isEmpty else { return [] }
-                return posts.filter { post in
-                    guard let postMemberID = Self.normalizedMemberID(post.memberID) else { return false }
-                    return followed.contains(postMemberID)
-                }
-            }
-        }
-
-        func emptyMessage(for segment: FeedSegment) -> String {
-            switch segment {
-            case .club:
-                "Be the first to share what's growing."
-
-            case .nearby:
-                Self.normalizedZone(currentZone) == nil
-                    ? "Add your hardiness zone to discover nearby growers."
-                    : "No posts in your zone yet."
-
-            case .following:
-                "Follow someone to see their posts."
-            }
-        }
-
-        private static func normalizedMemberID(_ memberID: String?) -> String? {
-            memberID?.trimmedNonEmpty
-        }
-
-        private static func normalizedZone(_ zone: String?) -> String? {
-            zone?.trimmedNonEmpty?.lowercased()
-        }
     }
 
     public var body: some View {
@@ -158,6 +65,18 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
             })
             .environment(dataService)
             .environment(clubCloudKitService)
+        }
+        .alert(
+            "Could not update follow",
+            isPresented: Binding(
+                get: { followErrorMessage != nil },
+                set: { if !$0 { followErrorMessage = nil } }
+            )
+        ) {
+            Button("OK", role: .cancel) {}
+                .accessibilityIdentifier("club_alert_follow_ok")
+        } message: {
+            Text(followErrorMessage ?? "Try again.")
         }
     }
 
@@ -324,7 +243,7 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
                         }
                 }
                 .buttonStyle(.plain)
-                .accessibilityIdentifier("club_segment_\(segment.rawValue.lowercased().replacingOccurrences(of: " ", with: "_"))")
+                .accessibilityIdentifier(Self.segmentAccessibilityIdentifier(segment))
             }
         }
         .padding(3)
@@ -338,33 +257,67 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
     // MARK: - Feed body
 
     @ViewBuilder private var feed: some View {
-        let state = ClubFeedBetaState(
-            posts: posts,
-            currentMemberID: currentMemberID,
+        let visiblePosts = Self.filteredPosts(
+            posts,
+            for: selectedSegment,
             currentZone: currentZone,
-            followedMemberIDs: followedMemberIDs
+            followedMemberIDs: followedMemberIDs,
+            currentMemberID: currentMemberID
         )
-        let visiblePosts = state.posts(for: selectedSegment)
 
-        if visiblePosts.isEmpty {
-            emptyState(message: state.emptyMessage(for: selectedSegment))
-        } else {
-            postList(visiblePosts)
+        switch selectedSegment {
+        case .club:
+            if visiblePosts.isEmpty {
+                emptyState(message: "Be the first to share what's growing.")
+            } else {
+                postList(visiblePosts, includesSmartMatch: true)
+            }
+
+        case .nearby:
+            if visiblePosts.isEmpty {
+                emptyState(message: nearbyEmptyMessage)
+            } else {
+                postList(visiblePosts, includesSmartMatch: false)
+            }
+
+        case .following:
+            if visiblePosts.isEmpty {
+                emptyState(message: followingEmptyMessage)
+            } else {
+                postList(visiblePosts, includesSmartMatch: false)
+            }
         }
     }
 
-    private func postList(_ visiblePosts: [ClubActivityViewData]) -> some View {
+    private func postList(_ posts: [ClubActivityViewData], includesSmartMatch: Bool) -> some View {
         VStack(spacing: 14) {
-            ForEach(Array(visiblePosts.enumerated()), id: \.element.id) { index, post in
-                if selectedSegment == .club, index == 1, let match = smartMatch {
+            ForEach(Array(posts.enumerated()), id: \.element.id) { index, post in
+                if includesSmartMatch, index == 1, let match = smartMatch {
                     smartMatchCard(match)
                 }
-                ClubPostCard(post: post)
+                ClubPostCard(
+                    post: post,
+                    isFollowingAuthor: Self.isFollowingMember(post.memberID, followedMemberIDs: followedMemberIDs),
+                    canFollowAuthor: canFollowAuthor(post),
+                    onToggleFollow: { toggleFollow(post.memberID) }
+                )
             }
-            if selectedSegment == .club, visiblePosts.count < 2, let match = smartMatch {
+            if includesSmartMatch, posts.count < 2, let match = smartMatch {
                 smartMatchCard(match)
             }
         }
+    }
+
+    private var nearbyEmptyMessage: String {
+        if let currentZone {
+            "No posts in Zone \(currentZone) yet."
+        } else {
+            "Add your hardiness zone to see nearby growers."
+        }
+    }
+
+    private var followingEmptyMessage: String {
+        followedMemberIDs.isEmpty ? "Follow someone to see their posts." : "No posts from followed growers yet."
     }
 
     private func emptyState(message: String) -> some View {
@@ -412,194 +365,123 @@ public struct GardenClubFeedView: View { // swiftlint:disable:this type_body_len
         .accessibilityIdentifier("club_smart_match")
     }
 
+    private func canFollowAuthor(_ post: ClubActivityViewData) -> Bool {
+        Self.canFollowMember(post.memberID, currentMemberID: currentMemberID)
+    }
+
+    private func toggleFollow(_ memberID: String) {
+        do {
+            if Self.isFollowingMember(memberID, followedMemberIDs: followedMemberIDs) {
+                try dataService.unfollowClubMember(memberID)
+            } else {
+                try dataService.followClubMember(memberID)
+            }
+            followedMemberIDs = dataService.getCurrentUser()?.followedMemberIDs ?? []
+        } catch {
+            followErrorMessage = error.localizedDescription
+        }
+    }
+
     // MARK: - Data load
 
     @MainActor
     private func load() async {
         let user = dataService.getCurrentUser()
-        userName = firstName(from: user?.displayName)
-        userInitial = String(userName.prefix(1)).uppercased()
-        currentMemberID = user?.id.uuidString
-        currentZone = (locationService.hardinessZone ?? user?.hardinessZone)?.trimmedNonEmpty
-        followedMemberIDs = user?.followedMemberIDs.compactMap(\.trimmedNonEmpty) ?? []
+        configureCurrentUser(user)
 
-        // Resolve the active club: explicit > first available > none.
-        let resolved: GardenClub?
-        if let explicit = club {
-            resolved = explicit
+        if let activeClub = resolveActiveClub() {
+            await loadActiveClub(activeClub)
         } else {
-            do {
-                resolved = try dataService.fetchClubs().first
-            } catch {
-                logger.error("Failed to fetch clubs: \(error.localizedDescription, privacy: .public)")
-                resolved = nil
-            }
+            resetClub()
         }
 
-        if let activeClub = resolved {
-            clubName = activeClub.name ?? "Garden Club"
-            memberCount = activeClub.memberIDs?.count ?? 0
-            do {
-                sharedPlants = try dataService.fetchSharedPlants(for: activeClub)
-            } catch {
-                logger.error("Failed to fetch shared plants: \(error.localizedDescription, privacy: .public)")
-                sharedPlants = []
-            }
-            guard let clubID = activeClub.id else {
-                posts = []
-                return
-            }
+        updateSmartMatch()
+    }
 
-            // Fetch from SwiftData as the baseline.
-            var localActivities: [ClubActivity] = []
-            do {
-                localActivities = try dataService.fetchClubActivities(for: clubID)
-            } catch {
-                logger.error("Failed to fetch local club activities: \(error.localizedDescription, privacy: .public)")
-            }
+    private func configureCurrentUser(_ user: User?) {
+        currentMemberID = user?.id.uuidString
+        currentZone = locationService.hardinessZone ?? user?.hardinessZone
+        followedMemberIDs = user?.followedMemberIDs ?? []
+        userName = Self.firstName(from: user?.displayName)
+        userInitial = String(userName.prefix(1)).uppercased()
+    }
 
-            // Attempt a CloudKit fetch. On any error (no iCloud account, network
-            // outage, etc.) log a warning and fall through to the SwiftData results.
-            var merged: [ClubActivityViewData] = localActivities.map(Self.viewData(from:))
-            do {
-                let ckRecords = try await clubCloudKitService.fetchRecentActivities(
-                    for: activeClub,
-                    memberID: dataService.getCurrentUser()?.id.uuidString,
-                    limit: 50
-                )
-                let ckViewData = ckRecords.map(Self.viewData(from:))
+    private func resolveActiveClub() -> GardenClub? {
+        if let explicit = club {
+            return explicit
+        }
 
-                // Merge: start with CloudKit records (source of truth), then append
-                // any local records whose IDs are not already represented in CloudKit.
-                let ckIDs = Set(ckViewData.map(\.id))
-                let localOnly = merged.filter { !ckIDs.contains($0.id) }
-                merged = ckViewData + localOnly
-            } catch {
-                logger.warning(
-                    "CloudKit fetch unavailable, using SwiftData-only feed: \(error.localizedDescription, privacy: .public)"
-                )
-            }
+        do {
+            return try dataService.fetchClubs().first
+        } catch {
+            logger.error("Failed to fetch clubs: \(error.localizedDescription, privacy: .public)")
+            return nil
+        }
+    }
 
-            posts = merged
-            smartMatch = Self.smartMatch(
-                from: merged,
-                currentMemberID: currentMemberID,
-                currentZone: currentZone,
-                sharedPlants: sharedPlants
-            )
-        } else {
-            clubName = "Garden Club"
-            memberCount = 0
+    private func loadActiveClub(_ activeClub: GardenClub) async {
+        clubName = activeClub.name ?? "Garden Club"
+        memberCount = activeClub.memberIDs?.count ?? 0
+        loadSharedPlants(for: activeClub)
+
+        guard let clubID = activeClub.id else {
             posts = []
+            return
+        }
+
+        posts = await mergedPosts(for: activeClub, clubID: clubID)
+    }
+
+    private func loadSharedPlants(for club: GardenClub) {
+        do {
+            sharedPlants = try dataService.fetchSharedPlants(for: club)
+        } catch {
+            logger.error("Failed to fetch shared plants: \(error.localizedDescription, privacy: .public)")
             sharedPlants = []
+        }
+    }
+
+    private func mergedPosts(for activeClub: GardenClub, clubID: UUID) async -> [ClubActivityViewData] {
+        var merged = fetchLocalActivities(for: clubID).map(Self.viewData(from:))
+        do {
+            let ckRecords = try await clubCloudKitService.fetchRecentActivities(
+                for: activeClub,
+                memberID: currentMemberID,
+                limit: 50
+            )
+            let ckViewData = ckRecords.map(Self.viewData(from:))
+            let ckIDs = Set(ckViewData.map(\.id))
+            let localOnly = merged.filter { !ckIDs.contains($0.id) }
+            merged = ckViewData + localOnly
+        } catch {
+            logger.warning(
+                "CloudKit fetch unavailable, using SwiftData-only feed: \(error.localizedDescription, privacy: .public)"
+            )
+        }
+        return merged
+    }
+
+    private func fetchLocalActivities(for clubID: UUID) -> [ClubActivity] {
+        do {
+            return try dataService.fetchClubActivities(for: clubID)
+        } catch {
+            logger.error("Failed to fetch local club activities: \(error.localizedDescription, privacy: .public)")
+            return []
+        }
+    }
+
+    private func resetClub() {
+        clubName = "Garden Club"
+        memberCount = 0
+        posts = []
+        sharedPlants = []
+    }
+
+    private func updateSmartMatch() {
+        if let zone = currentZone {
+            smartMatch = SmartMatchSuggestion(count: 3, zone: zone, plantName: "Cherokee Purple")
+        } else {
             smartMatch = nil
         }
     }
-
-    static func viewData(from activity: ClubActivity) -> ClubActivityViewData {
-        let id = activity.id ?? UUID()
-        let memberID = activity.memberID?.trimmedNonEmpty ?? ""
-        let author = activity.memberName?.trimmedNonEmpty ?? "Member"
-        let caption = activity.activityDescription?.trimmedNonEmpty
-        let label: String?
-        if let timestamp = activity.timestamp {
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .abbreviated
-            label = formatter.localizedString(for: timestamp, relativeTo: .now)
-        } else {
-            label = nil
-        }
-        return ClubActivityViewData(
-            id: id,
-            memberID: memberID,
-            authorDisplayName: author,
-            caption: caption,
-            gardenName: activity.gardenName?.trimmedNonEmpty,
-            hardinessZone: activity.hardinessZone?.trimmedNonEmpty,
-            photoURL: activity.photoURL?.trimmedNonEmpty,
-            relativeTimeLabel: label,
-            likeCount: 0, // future feature
-            commentCount: 0 // future feature
-        )
-    }
-
-    /// Maps a raw `CKRecord` for a `ClubActivity` CloudKit record onto the
-    /// presentation type. Field names must match those written by
-    /// `ClubCloudKitService.publishActivity(_:)`.
-    static func viewData(from record: CKRecord) -> ClubActivityViewData {
-        // The record name is the activity UUID stored as a string by publishActivity.
-        let id = UUID(uuidString: record.recordID.recordName) ?? UUID()
-        let memberID = (record["memberID"] as? String)?.trimmedNonEmpty ?? ""
-        let author = (record["memberName"] as? String)?.trimmedNonEmpty ?? "Member"
-        let caption = (record["activityDescription"] as? String)?.trimmedNonEmpty
-        let gardenName = (record["gardenName"] as? String)?.trimmedNonEmpty
-        let hardinessZone = (record["hardinessZone"] as? String)?.trimmedNonEmpty
-        let photoURL = (record["photo"] as? CKAsset)?.fileURL?.absoluteString
-            ?? (record["photoURL"] as? String)?.trimmedNonEmpty
-        let timestamp = record["timestamp"] as? Date
-        let label: String?
-        if let timestamp {
-            let formatter = RelativeDateTimeFormatter()
-            formatter.unitsStyle = .abbreviated
-            label = formatter.localizedString(for: timestamp, relativeTo: .now)
-        } else {
-            label = nil
-        }
-        return ClubActivityViewData(
-            id: id,
-            memberID: memberID,
-            authorDisplayName: author,
-            caption: caption,
-            gardenName: gardenName,
-            hardinessZone: hardinessZone,
-            photoURL: photoURL,
-            relativeTimeLabel: label,
-            likeCount: 0, // future feature
-            commentCount: 0 // future feature
-        )
-    }
-
-    static func smartMatch(
-        from posts: [ClubActivityViewData],
-        currentMemberID: String?,
-        currentZone: String?,
-        sharedPlants: [Plant]
-    ) -> SmartMatchSuggestion? {
-        guard let currentZone = currentZone?.trimmedNonEmpty?.lowercased() else { return nil }
-        let currentMemberID = currentMemberID?.trimmedNonEmpty
-        let nearbyMemberIDs = Set(posts.compactMap { post -> String? in
-            guard let memberID = post.memberID.trimmedNonEmpty,
-                  let postZone = post.hardinessZone?.trimmedNonEmpty?.lowercased(),
-                  postZone == currentZone,
-                  memberID != currentMemberID
-            else {
-                return nil
-            }
-            return memberID
-        })
-        guard !nearbyMemberIDs.isEmpty else { return nil }
-        return SmartMatchSuggestion(
-            count: nearbyMemberIDs.count,
-            zone: currentZone,
-            plantName: sharedPlants.first?.name ?? "your plants"
-        )
-    }
-
-    private func firstName(from displayName: String?) -> String {
-        guard let displayName,
-              let first = displayName.split(separator: " ").first
-        else {
-            return "Gardener"
-        }
-        return String(first)
-    }
 }
-
-private extension String {
-    var trimmedNonEmpty: String? {
-        let trimmed = trimmingCharacters(in: .whitespacesAndNewlines)
-        return trimmed.isEmpty ? nil : trimmed
-    }
-}
-
-// swiftlint:enable file_length function_body_length

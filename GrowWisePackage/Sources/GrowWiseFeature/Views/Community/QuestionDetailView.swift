@@ -308,7 +308,7 @@ struct QuestionDetailView: View {
                         } label: {
                             Label("Report", systemImage: "flag")
                         }
-                        .accessibilityIdentifier("forum_report_answer_\(answer.id.uuidString)")
+                        .accessibilityIdentifier("forum_button_report_answer_\(answer.id.uuidString)")
                     } label: {
                         Image(systemName: "ellipsis")
                             .font(.system(size: 12, weight: .medium))

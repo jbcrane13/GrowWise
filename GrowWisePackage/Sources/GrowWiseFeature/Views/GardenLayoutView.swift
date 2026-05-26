@@ -208,7 +208,7 @@ struct GardenLayoutView: View {
         .onDisappear { saveLayout() }
         .alert("Error Saving", isPresented: $showAlert) {
             Button("OK") {}
-                .accessibilityIdentifier("gardenlayout_button_save_error_dismiss")
+                .accessibilityIdentifier("gardenlayout_button_error_ok")
         } message: {
             Text(alertMessage)
         }
@@ -352,7 +352,11 @@ private struct BedGridView: View {
                 ForEach(0 ..< bed.heightFeet, id: \.self) { row in
                     HStack(spacing: spacing) {
                         ForEach(0 ..< bed.widthFeet, id: \.self) { col in
-                            SlotCell(slot: bed.slotAt(row: row, col: col), size: cellSize, row: row, col: col) {
+                            SlotCell(
+                                slot: bed.slotAt(row: row, col: col),
+                                size: cellSize,
+                                accessibilityID: "gardenlayout_slot_\(row)_\(col)"
+                            ) {
                                 onSlotTap(row, col)
                             }
                         }
@@ -374,8 +378,7 @@ private struct BedGridView: View {
 private struct SlotCell: View {
     let slot: PlantSlot
     let size: CGFloat
-    let row: Int
-    let col: Int
+    let accessibilityID: String
     let onTap: () -> Void
 
     var body: some View {
@@ -403,7 +406,7 @@ private struct SlotCell: View {
         .buttonStyle(.plain)
         .accessibilityLabel(slot.isEmpty ? "Empty slot" : "Planted: \(slot.plantName ?? slot.plantType?.displayName ?? "")")
         .accessibilityHint("Tap to plant")
-        .accessibilityIdentifier("gardenlayout_button_slot_\(row)_\(col)")
+        .accessibilityIdentifier(accessibilityID)
     }
 }
 
@@ -675,7 +678,7 @@ private struct PlantSlotPickerSheet: View {
             .toolbar {
                 ToolbarItem(placement: .cancellationAction) {
                     Button("Cancel") { dismiss() }
-                        .accessibilityIdentifier("gardenlayout_button_slotpicker_cancel")
+                        .accessibilityIdentifier("gardenlayout_button_pickplant_cancel")
                 }
             }
         }

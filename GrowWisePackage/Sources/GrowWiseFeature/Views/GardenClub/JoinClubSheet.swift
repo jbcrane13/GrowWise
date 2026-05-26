@@ -47,7 +47,7 @@ public struct JoinClubSheet: View {
             }
             .alert("Couldn't Join Club", isPresented: .constant(errorMessage != nil)) {
                 Button("OK") { errorMessage = nil }
-                    .accessibilityIdentifier("join_club_button_error_dismiss")
+                    .accessibilityIdentifier("join_club_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -107,14 +107,14 @@ public struct JoinClubSheet: View {
                     .onTapGesture {
                         isCodeFieldFocused = true
                     }
-                    .accessibilityAddTraits(.isButton)
-                    .accessibilityIdentifier("join_club_code_card")
+                    .accessibilityIdentifier("join_club_code_entry_card")
 
                     // Invisible text field over the top for input
                     TextField("", text: Binding(
                         get: { formattedCode },
                         set: { inviteCode = $0 }
                     ))
+                    .accessibilityIdentifier("join_club_code_field")
                     .frame(maxWidth: .infinity, maxHeight: .infinity)
                     .opacity(0.01) // nearly invisible but still focusable
                     #if os(iOS)
@@ -123,7 +123,6 @@ public struct JoinClubSheet: View {
                     #endif
                         .autocorrectionDisabled()
                         .focused($isCodeFieldFocused)
-                        .accessibilityIdentifier("join_club_code_field")
                 }
                 .task {
                     isCodeFieldFocused = true

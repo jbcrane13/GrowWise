@@ -26,6 +26,7 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
     @State private var showingAssignGarden = false
     @State private var showMovePlant = false
     @State private var showingDiagnostic = false
+    @State private var showingLightMeter = false
     @State private var careTips: [CareTip] = []
     @State private var journalEntries: [JournalEntry] = []
     @State private var harvests: [Harvest] = []
@@ -82,6 +83,9 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
         .sheet(isPresented: $showingDiagnostic) {
             CommonPlantIssuesView(plant: plant)
         }
+        .sheet(isPresented: $showingLightMeter) {
+            LightMeterView()
+        }
         .sheet(isPresented: $showingLogHarvest) {
             LogHarvestSheet(plant: plant) {
                 harvests = dataService.fetchHarvests(for: plant)
@@ -100,7 +104,7 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
             set: { if !$0 { deleteError = nil } }
         )) {
             Button("OK", role: .cancel) {}
-                .accessibilityIdentifier("plantdetail_button_delete_error_dismiss")
+                .accessibilityIdentifier("plantdetail_button_delete_error_ok")
         } message: {
             Text(deleteError?.localizedDescription ?? "")
         }
@@ -255,6 +259,17 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
                 .disabled(isReadOnlySharedPlant)
                 .accessibilityIdentifier("plantdetail_button_share_to_club")
             }
+
+            Button {
+                showingLightMeter = true
+            } label: {
+                HStack(spacing: 8) {
+                    Image(systemName: "sun.max.fill")
+                    Text("Check light here")
+                }
+            }
+            .buttonStyle(SecondaryButtonStyle())
+            .accessibilityIdentifier("plantdetail_button_check_light_here")
         }
     }
 

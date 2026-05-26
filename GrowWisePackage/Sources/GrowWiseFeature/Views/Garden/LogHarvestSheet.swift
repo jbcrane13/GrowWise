@@ -66,7 +66,7 @@ struct LogHarvestSheet: View {
                 set: { if !$0 { errorMessage = nil } }
             )) {
                 Button("OK", role: .cancel) {}
-                    .accessibilityIdentifier("logharvest_button_error_dismiss")
+                    .accessibilityIdentifier("logharvest_button_error_ok")
             } message: {
                 Text(errorMessage ?? "")
             }
@@ -125,8 +125,7 @@ struct LogHarvestSheet: View {
                     ForEach(HarvestUnit.allCases, id: \.self) { unit in
                         GlassPill(
                             label: unit.displayName,
-                            isSelected: selectedUnit == unit,
-                            accessibilityID: "logharvest_pill_unit_\(unit.rawValue)"
+                            isSelected: selectedUnit == unit
                         ) { selectedUnit = unit }
                     }
                 }

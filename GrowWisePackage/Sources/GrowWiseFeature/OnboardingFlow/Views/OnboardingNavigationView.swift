@@ -141,7 +141,7 @@ struct OnboardingNavigationView: View {
         .background(Color.clear)
         .alert("Setup Error", isPresented: $showingError) {
             Button("OK") {}
-                .accessibilityIdentifier("onboarding_nav_button_error_dismiss")
+                .accessibilityIdentifier("onboarding_button_error_ok")
         } message: {
             Text(errorMessage)
         }
@@ -264,14 +264,17 @@ struct OnboardingNavigationView: View {
 
     @MainActor
     private func saveUserPreferences(user: User) async throws {
-        let goalsData = try JSONEncoder().encode(userProfile.goals.map(\.rawValue))
-        UserDefaults.standard.set(goalsData, forKey: "userGardeningGoals")
-        let interestsData = try JSONEncoder().encode(userProfile.interests.map(\.rawValue))
-        UserDefaults.standard.set(interestsData, forKey: "userPlantInterests")
+        if let goalsData = try? JSONEncoder().encode(userProfile.goals.map(\.rawValue)) {
+            UserDefaults.standard.set(goalsData, forKey: "userGardeningGoals")
+        }
+        if let interestsData = try? JSONEncoder().encode(userProfile.interests.map(\.rawValue)) {
+            UserDefaults.standard.set(interestsData, forKey: "userPlantInterests")
+        }
         UserDefaults.standard.set(userProfile.gardenType.rawValue, forKey: "userGardenType")
         UserDefaults.standard.set(userProfile.spaceSize.rawValue, forKey: "userSpaceSize")
-        let timeData = try JSONEncoder().encode(userProfile.preferredNotificationTime)
-        UserDefaults.standard.set(timeData, forKey: "userPreferredNotificationTime")
+        if let timeData = try? JSONEncoder().encode(userProfile.preferredNotificationTime) {
+            UserDefaults.standard.set(timeData, forKey: "userPreferredNotificationTime")
+        }
         if userProfile.hasNotificationPermission {
             notificationService.setupNotificationCategories()
         }

@@ -77,7 +77,6 @@ public struct PlantDatabaseView: View {
         }
         // Native SwiftUI search bar with built-in debouncing
         .searchable(text: $searchText, prompt: "Search plants...")
-        .accessibilityIdentifier("plant_database_search")
     }
 
     private var activeFiltersSection: some View {
@@ -137,7 +136,6 @@ public struct PlantDatabaseView: View {
                     DatabasePlantCardView(plant: plant) {
                         showingPlantDetail = plant
                     }
-                    .accessibilityIdentifier("plant_database_card_\(plant.id)")
                 }
             }
             .padding()
@@ -171,7 +169,6 @@ public struct PlantDatabaseView: View {
     private var sortMenuButton: some View {
         Menu {
             ForEach(DatabaseSortOption.allCases, id: \.self) { option in
-                let optionID = option.displayName.lowercased().replacingOccurrences(of: " ", with: "_")
                 Button {
                     selectedSortOption = option
                 } label: {
@@ -182,7 +179,7 @@ public struct PlantDatabaseView: View {
                         }
                     }
                 }
-                .accessibilityIdentifier("plant_database_sort_option_\(optionID)")
+                .accessibilityIdentifier("plant_database_sort_\(option.accessibilitySuffix)")
             }
         } label: {
             Image(systemName: "arrow.up.arrow.down")
@@ -353,7 +350,7 @@ struct DatabasePlantCardView: View {
             .clipShape(RoundedRectangle(cornerRadius: 12))
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("plant_database_card_button_\(plant.id)")
+        .accessibilityIdentifier("plant_database_card_\(plant.id?.uuidString ?? "unknown")")
     }
 
     private func sunlightShorthand(_ sunlight: SunlightLevel) -> String {
@@ -419,10 +416,6 @@ struct FilterTag: View {
     let color: Color
     let onRemove: () -> Void
 
-    private var accessibilitySuffix: String {
-        title.lowercased().replacingOccurrences(of: " ", with: "_")
-    }
-
     var body: some View {
         HStack(spacing: 4) {
             Text(title)
@@ -439,6 +432,10 @@ struct FilterTag: View {
         .background(color.opacity(0.2))
         .foregroundColor(color)
         .clipShape(RoundedRectangle(cornerRadius: 12))
+    }
+
+    private var accessibilitySuffix: String {
+        title.lowercased().components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: "_")
     }
 }
 
@@ -791,6 +788,10 @@ enum DatabaseSortOption: CaseIterable {
         case .plantType: "Plant Type"
         case .sunlightRequirement: "Sunlight Needs"
         }
+    }
+
+    var accessibilitySuffix: String {
+        displayName.lowercased().components(separatedBy: .whitespacesAndNewlines).filter { !$0.isEmpty }.joined(separator: "_")
     }
 }
 

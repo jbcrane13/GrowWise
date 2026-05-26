@@ -389,7 +389,7 @@ public struct AddPlantSheet: View {
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK", role: .cancel) {}
-                    .accessibilityIdentifier("addplant_button_error_dismiss")
+                    .accessibilityIdentifier("addplant_alert_button_error_ok")
             } message: {
                 Text(errorMessage)
             }

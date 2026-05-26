@@ -66,7 +66,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                             }
                         }
                         .pickerStyle(.menu)
-                        .accessibilityIdentifier("plantdatabaseadd_picker_garden")
+                        .accessibilityIdentifier("plantdatabase_add_picker_garden")
                     } header: {
                         Text("Garden")
                     } footer: {
@@ -78,10 +78,10 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 Section {
                     TextField("Location in Garden", text: $location)
                         .gwTextInputAutocapitalization(.words)
-                        .accessibilityIdentifier("plantdatabaseadd_textfield_location")
+                        .accessibilityIdentifier("plantdatabase_add_textfield_location")
 
                     DatePicker("Planting Date", selection: $plantingDate, displayedComponents: .date)
-                        .accessibilityIdentifier("plantdatabaseadd_datepicker_planting")
+                        .accessibilityIdentifier("plantdatabase_add_datepicker_planting")
                 } header: {
                     Text("Planting Details")
                 }
@@ -95,7 +95,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                         }
                     }
                     .pickerStyle(.segmented)
-                    .accessibilityIdentifier("plantdatabaseadd_picker_health")
+                    .accessibilityIdentifier("plantdatabase_add_picker_health")
                 } header: {
                     Text("Health Status")
                 }
@@ -139,7 +139,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                 Section {
                     TextEditor(text: $notes)
                         .frame(minHeight: 100)
-                        .accessibilityIdentifier("plantdatabaseadd_texteditor_notes")
+                        .accessibilityIdentifier("plantdatabase_add_texteditor_notes")
                 } header: {
                     Text("Notes")
                 } footer: {
@@ -154,7 +154,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                         dismiss()
                     }
                     .disabled(isLoading)
-                    .accessibilityIdentifier("plantdatabaseadd_button_cancel")
+                    .accessibilityIdentifier("plantdatabase_add_button_cancel")
                 }
 
                 ToolbarItem(placement: .primaryAction) {
@@ -165,7 +165,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
                     }
                     .fontWeight(.semibold)
                     .disabled(isLoading)
-                    .accessibilityIdentifier("plantdatabaseadd_button_save")
+                    .accessibilityIdentifier("plantdatabase_add_button_save")
                 }
             }
             .disabled(isLoading)
@@ -182,7 +182,7 @@ struct AddPlantToGardenFromDatabaseSheet: View {
             }
             .alert("Error", isPresented: $showingError) {
                 Button("OK") {}
-                    .accessibilityIdentifier("plantdatabaseadd_button_error_dismiss")
+                    .accessibilityIdentifier("plantdatabase_add_button_error_ok")
             } message: {
                 Text(errorMessage)
             }

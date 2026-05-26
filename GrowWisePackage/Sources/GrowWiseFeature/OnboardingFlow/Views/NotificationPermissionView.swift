@@ -57,7 +57,7 @@ struct NotificationPermissionView: View {
                             .gwWheelDatePickerStyle()
                             .labelsHidden()
                             .frame(maxHeight: 120)
-                            .accessibilityIdentifier("onboarding_notifications_time_picker")
+                            .accessibilityIdentifier("onboarding_datepicker_notification_time")
                         }
                         .padding(16)
                         .paperCard()

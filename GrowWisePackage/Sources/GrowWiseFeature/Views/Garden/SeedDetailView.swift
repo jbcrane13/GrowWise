@@ -64,7 +64,7 @@ struct SeedDetailView: View {
         }
         .alert("Error", isPresented: $showError) {
             Button("OK", role: .cancel) {}
-                .accessibilityIdentifier("seed_detail_button_error_dismiss")
+                .accessibilityIdentifier("seed_detail_button_error_ok")
         } message: {
             Text(errorMessage ?? "An unknown error occurred.")
         }

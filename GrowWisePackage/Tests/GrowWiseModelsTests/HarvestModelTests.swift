@@ -17,6 +17,17 @@ struct HarvestModelTests {
         #expect(harvest.user == nil)
     }
 
+    @Test("Harvest links back to user through inverse relationship")
+    func harvestUserInverseRelationship() {
+        let user = User(email: "harvest@example.com", displayName: "Harvester")
+        let harvest = Harvest(quantity: 3, user: user)
+
+        user.harvests = [harvest]
+
+        #expect(harvest.user === user)
+        #expect(user.harvests?.first === harvest)
+    }
+
     @Test("Harvest stores custom values")
     func harvestCustomValues() {
         let harvest = Harvest(
