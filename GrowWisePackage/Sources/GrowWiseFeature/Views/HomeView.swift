@@ -73,6 +73,7 @@ public struct HomeView: View {
                         SeasonalTipCard()
                     }
                     .buttonStyle(.plain)
+                    .accessibilityIdentifier("home_button_seasonal_planner")
                     .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                     .padding(.bottom, CultivationTheme.Spacing.sectionGap)
                 }

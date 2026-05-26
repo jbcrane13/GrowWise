@@ -5,6 +5,7 @@ struct ClubMemberProfile: Identifiable {
     let memberID: String
     let roleTitle: String
     let isCurrentUser: Bool
+    let isFollowed: Bool
     let canShowPublicDetails: Bool
     let displayName: String
     let avatarLetters: String
@@ -24,11 +25,13 @@ struct ClubMemberProfile: Identifiable {
         club: GardenClub,
         user: User?,
         activities: [ClubActivity],
-        currentUserID: String
+        currentUserID: String,
+        followedMemberIDs: [String] = []
     ) {
         self.memberID = memberID
         roleTitle = memberID == club.ownerID ? "Owner" : "Member"
         isCurrentUser = memberID == currentUserID
+        isFollowed = !isCurrentUser && followedMemberIDs.contains(memberID)
         canShowPublicDetails = isCurrentUser || user?.isProfilePublic == true
 
         if canShowPublicDetails, let name = user?.displayName?.trimmedNonEmpty {
@@ -43,7 +46,7 @@ struct ClubMemberProfile: Identifiable {
         )
         bio = canShowPublicDetails ? user?.bio?.trimmedNonEmpty : nil
         hardinessZone = canShowPublicDetails ? user?.hardinessZone?.trimmedNonEmpty : nil
-        memberSinceDate = club.createdDate
+        memberSinceDate = canShowPublicDetails ? club.createdDate : nil
         plantCount = canShowPublicDetails ? Self.plantCount(for: user) : nil
         publicGardenCount = canShowPublicDetails ? Self.publicGardenCount(for: user, club: club) : nil
         recentContributions = canShowPublicDetails ? Self.recentActivities(
@@ -81,7 +84,7 @@ struct ClubMemberProfile: Identifiable {
         )
     }
 
-    private static func avatarLetters(displayName: String?, memberID _: String) -> String {
+    private static func avatarLetters(displayName: String?, memberID: String) -> String {
         if let displayName = displayName?.trimmedNonEmpty {
             let initials = displayName
                 .split(separator: " ")
@@ -90,6 +93,10 @@ struct ClubMemberProfile: Identifiable {
                 .map { String($0).uppercased() }
                 .joined()
             if !initials.isEmpty { return initials }
+        }
+
+        if let firstAlphanumeric = memberID.first(where: { $0.isLetter || $0.isNumber }) {
+            return String(firstAlphanumeric).uppercased()
         }
 
         return "M"

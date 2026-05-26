@@ -268,7 +268,19 @@ struct GlassPill: View {
         }
         .buttonStyle(.plain)
         .animation(CultivationTheme.Animation.selection, value: isSelected)
-        .accessibilityIdentifier(accessibilityID)
+        .accessibilityIdentifier(resolvedAccessibilityID)
+    }
+
+    private var resolvedAccessibilityID: String {
+        guard accessibilityID.isEmpty else { return accessibilityID }
+
+        let sanitizedLabel = label
+            .lowercased()
+            .map { character in
+                character.isLetter || character.isNumber ? character : "_"
+            }
+
+        return "glasspill_\(String(sanitizedLabel))"
     }
 }
 

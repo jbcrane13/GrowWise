@@ -1,0 +1,65 @@
+{
+  "id": 1,
+  "common_name": "European Silver Fir",
+  "scientific_name": ["Abies alba"],
+  "other_name": ["Common Silver Fir"],
+  "family": "Pinaceae",
+  "origin": ["Europe", "Turkey"],
+  "type": "tree",
+  "cycle": "Perennial",
+  "watering": "Average",
+  "watering_general_benchmark": {
+    "value": "7",
+    "unit": "days"
+  },
+  "sunlight": ["full sun", "part shade"],
+  "pruning_month": ["February", "March"],
+  "hardiness": {
+    "min": "4",
+    "max": "7"
+  },
+  "growth_rate": "Medium",
+  "care_level": "Medium",
+  "maintenance": "Low",
+  "drought_tolerant": false,
+  "salt_tolerant": false,
+  "thorny": false,
+  "invasive": false,
+  "tropical": false,
+  "indoor": false,
+  "flowers": true,
+  "flowering_season": "Spring",
+  "fruits": true,
+  "edible_fruit": false,
+  "leaf": true,
+  "edible_leaf": false,
+  "medicinal": true,
+  "poisonous_to_humans": false,
+  "poisonous_to_pets": false,
+  "description": "A large evergreen coniferous tree native to the mountains of Europe.",
+  "default_image": {
+    "original_url": "https://perenual.com/storage/species_image/1/og/52492935824_fc3b6de4bb_b.jpg",
+    "regular_url": "https://perenual.com/storage/species_image/1/regular/52492935824_fc3b6de4bb_b.jpg",
+    "medium_url": "https://perenual.com/storage/species_image/1/medium/52492935824_fc3b6de4bb_b.jpg",
+    "small_url": "https://perenual.com/storage/species_image/1/small/52492935824_fc3b6de4bb_b.jpg",
+    "thumbnail": "https://perenual.com/storage/species_image/1/thumbnail/52492935824_fc3b6de4bb_b.jpg"
+  },
+  "dimensions": [
+    {
+      "type": "Height",
+      "min_value": 30.0,
+      "max_value": 60.0,
+      "unit": "m"
+    },
+    {
+      "type": "Spread",
+      "min_value": 4.0,
+      "max_value": 6.0,
+      "unit": "m"
+    }
+  ],
+  "soil": ["Loamy", "Sandy", "Clay"],
+  "pest_susceptibility": ["Aphids", "Bark beetles", "Woolly adelgid"],
+  "attracts": ["Birds", "Pollinators"],
+  "propagation": ["Seed", "Cutting", "Grafting"]
+}

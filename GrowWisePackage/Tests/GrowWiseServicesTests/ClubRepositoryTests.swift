@@ -70,7 +70,7 @@ struct ClubRepositoryTests {
 
 @Suite("ClubActivityRepository Tests")
 @MainActor
-struct ClubActivityRepositoryTests {
+struct ClubActivityRepositoryIntegrationTests {
     
     @Test("ClubActivityRepository fetches activities by club")
     func testFetchByClub() async throws {
@@ -100,7 +100,7 @@ struct ClubActivityRepositoryTests {
 
 @Suite("ClubMessageRepository Tests")
 @MainActor
-struct ClubMessageRepositoryTests {
+struct ClubMessageRepositoryIntegrationTests {
     
     @Test("ClubMessageRepository fetches messages sorted by timestamp")
     func testFetchSorted() async throws {
@@ -152,7 +152,7 @@ struct ClubMessageRepositoryTests {
 
 @Suite("ClubEventRepository Tests")
 @MainActor
-struct ClubEventRepositoryTests {
+struct ClubEventRepositoryIntegrationTests {
     
     @Test("ClubEventRepository fetches upcoming events")
     func testFetchUpcoming() async throws {

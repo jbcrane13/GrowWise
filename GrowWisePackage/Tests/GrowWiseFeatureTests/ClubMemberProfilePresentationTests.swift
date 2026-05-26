@@ -34,7 +34,8 @@ struct ClubMemberProfilePresentationTests {
             club: club,
             user: user,
             activities: activities,
-            currentUserID: "other-member"
+            currentUserID: "other-member",
+            followedMemberIDs: [user.id.uuidString]
         )
 
         #expect(profile.canShowPublicDetails)
@@ -45,6 +46,7 @@ struct ClubMemberProfilePresentationTests {
         #expect(profile.memberSinceDate == joinedDate)
         #expect(profile.plantCount == 1)
         #expect(profile.publicGardenCount == 1)
+        #expect(profile.isFollowed)
         #expect(profile.recentContributions.map { $0.activityDescription ?? "" } == [
             "Newest update",
             "Second update",
@@ -60,18 +62,22 @@ struct ClubMemberProfilePresentationTests {
         user.bio = "Likes peppers."
         user.hardinessZone = "9a"
         user.gardens = [Garden(name: "Pepper Patch", gardenType: .raised)]
+        // Use a fixed memberID so the expected avatar letter is deterministic.
+        // First alphanumeric of "bce-member-99" is 'B'.
+        let fixedMemberID = "bce-member-99"
 
         let profile = ClubMemberProfile(
-            memberID: user.id.uuidString,
+            memberID: fixedMemberID,
             club: club,
             user: user,
             activities: [],
-            currentUserID: "other-member"
+            currentUserID: "other-member",
+            followedMemberIDs: []
         )
 
         #expect(!profile.canShowPublicDetails)
         #expect(profile.displayName == "Club member")
-        #expect(profile.avatarLetters == "M")
+        #expect(profile.avatarLetters == "B")
         #expect(profile.bio == nil)
         #expect(profile.hardinessZone == nil)
         #expect(profile.plantCount == nil)
@@ -91,13 +97,15 @@ struct ClubMemberProfilePresentationTests {
             club: club,
             user: user,
             activities: [],
-            currentUserID: user.id.uuidString
+            currentUserID: user.id.uuidString,
+            followedMemberIDs: [user.id.uuidString]
         )
 
         #expect(profile.canShowPublicDetails)
         #expect(profile.displayName == "Sam Rivera")
         #expect(profile.hardinessZone == "6a")
         #expect(profile.isCurrentUser)
+        #expect(!profile.isFollowed)
     }
 
     private func makeActivities(

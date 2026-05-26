@@ -20,6 +20,7 @@ struct ClubCloudKitServiceTests {
         activity.gardenName = "Backyard Garden"
         activity.hardinessZone = "7b"
         activity.photoURL = "file:///tmp/club-photo.jpg"
+        activity.hardinessZone = "7b"
 
         let fields = try ClubCloudKitService.recordFields(from: activity)
 
@@ -32,6 +33,7 @@ struct ClubCloudKitServiceTests {
         #expect(fields.gardenName == "Backyard Garden")
         #expect(fields.hardinessZone == "7b")
         #expect(fields.photoURL == "file:///tmp/club-photo.jpg")
+        #expect(fields.hardinessZone == "7b")
     }
 
     @Test("database scope routes owners to private and invited members to shared")

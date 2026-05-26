@@ -49,6 +49,7 @@ public final class ClubCloudKitService {
             gardenName: activity.gardenName ?? "",
             hardinessZone: activity.hardinessZone,
             photoURL: activity.photoURL,
+            hardinessZone: activity.hardinessZone,
             timestamp: activity.timestamp ?? Date()
         )
     }
@@ -498,6 +499,7 @@ public struct ClubActivityCloudRecordFields: Equatable, Sendable {
     public let gardenName: String
     public let hardinessZone: String?
     public let photoURL: String?
+    public let hardinessZone: String?
     public let timestamp: Date
 }
 

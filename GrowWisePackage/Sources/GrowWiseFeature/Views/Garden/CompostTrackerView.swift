@@ -388,6 +388,7 @@ private struct CompostBatchDetailSheet: View {
     let onLog: () -> Void
 
     @State private var showCompleteConfirmation = false
+    @State private var saveError: String?
 
     private var daysActive: Int {
         guard let start = batch.startDate else { return 0 }
@@ -532,12 +533,26 @@ private struct CompostBatchDetailSheet: View {
                     .accessibilityIdentifier("compost_detail_button_complete_cancel")
                 Button("Complete", role: .destructive) {
                     batch.isComplete = true
-                    try? modelContext.save()
-                    dismiss()
+                    do {
+                        try modelContext.save()
+                        dismiss()
+                    } catch {
+                        batch.isComplete = false
+                        saveError = error.localizedDescription
+                    }
                 }
                 .accessibilityIdentifier("compost_detail_button_complete_confirm")
             } message: {
                 Text("This batch will be moved to your completed list.")
+            }
+            .alert("Could not save", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+                    .accessibilityIdentifier("compost_detail_button_save_error_dismiss")
+            } message: {
+                Text(saveError ?? "")
             }
         }
     }
@@ -708,6 +723,7 @@ struct CompostLogEntrySheet: View {
 
     @State private var temperature: Double = 120
     @State private var moisture: Double = 50
+    @State private var saveError: String?
 
     var body: some View {
         NavigationStack {
@@ -739,11 +755,27 @@ struct CompostLogEntrySheet: View {
                         batch.temperatures.append(temperature)
                         batch.moistureLevels.append(moisture)
                         batch.logDates.append(Date())
-                        try? modelContext.save()
-                        dismiss()
+                        do {
+                            try modelContext.save()
+                            dismiss()
+                        } catch {
+                            batch.temperatures.removeLast()
+                            batch.moistureLevels.removeLast()
+                            batch.logDates.removeLast()
+                            saveError = error.localizedDescription
+                        }
                     }
                     .accessibilityIdentifier("compost_log_button_save")
                 }
+            }
+            .alert("Could not save", isPresented: Binding(
+                get: { saveError != nil },
+                set: { if !$0 { saveError = nil } }
+            )) {
+                Button("OK", role: .cancel) { saveError = nil }
+                    .accessibilityIdentifier("compost_log_button_save_error_dismiss")
+            } message: {
+                Text(saveError ?? "")
             }
         }
     }

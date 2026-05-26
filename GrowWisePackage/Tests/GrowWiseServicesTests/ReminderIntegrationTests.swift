@@ -767,6 +767,133 @@ struct ReminderIntegrationTests {
         #expect(reminder.lastCompletedDate != nil, "completeReminder should set lastCompletedDate")
     }
 
+    // MARK: - suggestWateringSchedule
+
+    @Test("suggestWateringSchedule returns schedule based on plant wateringFrequency")
+    func suggestWateringScheduleUsesPlantFrequency() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        let plant = try dataService.createPlant(name: "Basil", type: .herb)
+        plant.wateringFrequency = .twiceWeekly // 3–4 days base
+
+        let schedule = reminderService.suggestWateringSchedule(for: plant, in: nil)
+
+        #expect(schedule.frequencyDays > 0)
+        #expect(!schedule.adjustedReason.isEmpty)
+        // nextDate should be in the future
+        #expect(schedule.nextDate > Date())
+    }
+
+    @Test("suggestWateringSchedule shortens interval for container plants")
+    func suggestWateringScheduleShortersForContainers() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        let plantGround = try dataService.createPlant(name: "Ground Tomato", type: .vegetable)
+        plantGround.wateringFrequency = .weekly // 7 days base
+        plantGround.containerType = .inGround
+
+        let plantPot = try dataService.createPlant(name: "Potted Tomato", type: .vegetable)
+        plantPot.wateringFrequency = .weekly // same base
+        plantPot.containerType = .container
+
+        let groundSchedule = reminderService.suggestWateringSchedule(for: plantGround, in: nil)
+        let potSchedule = reminderService.suggestWateringSchedule(for: plantPot, in: nil)
+
+        // Containers dry out faster → shorter interval (or equal in edge cases)
+        #expect(potSchedule.frequencyDays <= groundSchedule.frequencyDays)
+        #expect(potSchedule.adjustedReason.lowercased().contains("container"))
+    }
+
+    @Test("suggestWateringSchedule lengthens interval for clay soil")
+    func suggestWateringScheduleLengthensForClaySoil() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        let garden = try dataService.createGarden(name: "Clay Garden", type: .outdoor, isIndoor: false)
+        garden.soilType = .clay
+        let plant = try dataService.createPlant(name: "Pepper", type: .vegetable, garden: garden)
+        plant.wateringFrequency = .twiceWeekly
+
+        let loamGarden = try dataService.createGarden(name: "Loam Garden", type: .outdoor, isIndoor: false)
+        loamGarden.soilType = .loam
+        let plantLoam = try dataService.createPlant(name: "Pepper 2", type: .vegetable, garden: loamGarden)
+        plantLoam.wateringFrequency = .twiceWeekly
+
+        let claySchedule = reminderService.suggestWateringSchedule(for: plant, in: garden)
+        let loamSchedule = reminderService.suggestWateringSchedule(for: plantLoam, in: loamGarden)
+
+        // Clay retains water → longer interval than loam
+        #expect(claySchedule.frequencyDays >= loamSchedule.frequencyDays)
+        #expect(claySchedule.adjustedReason.lowercased().contains("clay"))
+    }
+
+    @Test("suggestWateringSchedule shortens interval for sandy soil")
+    func suggestWateringScheduleShortersForSandySoil() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        let sandGarden = try dataService.createGarden(name: "Sand Garden", type: .outdoor, isIndoor: false)
+        sandGarden.soilType = .sand
+        let plant = try dataService.createPlant(name: "Cactus", type: .succulent, garden: sandGarden)
+        plant.wateringFrequency = .weekly
+
+        let loamGarden = try dataService.createGarden(name: "Loam Garden", type: .outdoor, isIndoor: false)
+        loamGarden.soilType = .loam
+        let plantLoam = try dataService.createPlant(name: "Cactus 2", type: .succulent, garden: loamGarden)
+        plantLoam.wateringFrequency = .weekly
+
+        let sandSchedule = reminderService.suggestWateringSchedule(for: plant, in: sandGarden)
+        let loamSchedule = reminderService.suggestWateringSchedule(for: plantLoam, in: loamGarden)
+
+        // Sand drains quickly → shorter interval
+        #expect(sandSchedule.frequencyDays <= loamSchedule.frequencyDays)
+        #expect(sandSchedule.adjustedReason.lowercased().contains("sandy"))
+    }
+
+    @Test("suggestWateringSchedule shortens interval for full-sun garden")
+    func suggestWateringScheduleShortersForFullSun() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        let sunGarden = try dataService.createGarden(name: "Sun Garden", type: .outdoor, isIndoor: false)
+        sunGarden.sunExposure = .fullSun
+        let plant = try dataService.createPlant(name: "Tomato", type: .vegetable, garden: sunGarden)
+        plant.wateringFrequency = .weekly
+
+        let shadeGarden = try dataService.createGarden(name: "Shade Garden", type: .outdoor, isIndoor: false)
+        shadeGarden.sunExposure = .fullShade
+        let plantShade = try dataService.createPlant(name: "Tomato 2", type: .vegetable, garden: shadeGarden)
+        plantShade.wateringFrequency = .weekly
+
+        let sunSchedule = reminderService.suggestWateringSchedule(for: plant, in: sunGarden)
+        let shadeSchedule = reminderService.suggestWateringSchedule(for: plantShade, in: shadeGarden)
+
+        // Full sun evaporates faster → shorter interval than full shade
+        #expect(sunSchedule.frequencyDays < shadeSchedule.frequencyDays)
+        #expect(sunSchedule.adjustedReason.lowercased().contains("sun"))
+        #expect(shadeSchedule.adjustedReason.lowercased().contains("shade"))
+    }
+
+    @Test("suggestWateringSchedule never returns a frequencyDays below 1")
+    func suggestWateringScheduleMinimumIsOneDay() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        // Use the most aggressive combination: daily base + container + full sun + sandy soil
+        let garden = try dataService.createGarden(name: "Extreme Garden", type: .outdoor, isIndoor: false)
+        garden.sunExposure = .fullSun
+        garden.soilType = .sand
+        let plant = try dataService.createPlant(name: "Tiny Herb", type: .herb, garden: garden)
+        plant.wateringFrequency = .daily
+        plant.containerType = .hangingBasket
+
+        let schedule = reminderService.suggestWateringSchedule(for: plant, in: garden)
+        #expect(schedule.frequencyDays >= 1)
+    }
+
+    @Test("suggestWateringSchedule with nil garden uses plant defaults only")
+    func suggestWateringScheduleWithNilGarden() throws {
+        let (dataService, reminderService, _) = try makeServices()
+        let plant = try dataService.createPlant(name: "Orchid", type: .houseplant)
+        plant.wateringFrequency = .weekly
+
+        let schedule = reminderService.suggestWateringSchedule(for: plant, in: nil)
+        #expect(schedule.frequencyDays > 0)
+        // Without garden modifiers, the only adjustment is seasonal
+        // The reason should reflect that or be the default message
+        #expect(!schedule.adjustedReason.isEmpty)
+    }
+
     // INTEGRATION GAP: The following scenarios cannot be tested in the Swift package runner:
     // - UNUserNotificationCenter.add() actual scheduling
     // - Real notification permission flow (requestAuthorization)
