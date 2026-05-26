@@ -145,7 +145,6 @@ public struct TutorialProgressView: View {
                 .pickerStyle(.segmented)
                 .accessibilityIdentifier("tutorial_progress_picker_filter")
                 .frame(width: 200)
-                .accessibilityIdentifier("tutorial_progress_picker_filter")
             }
 
             LazyVStack(spacing: 12) {
