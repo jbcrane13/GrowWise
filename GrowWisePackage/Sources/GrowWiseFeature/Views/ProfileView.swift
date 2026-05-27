@@ -212,7 +212,7 @@ public struct ProfileView: View {
             menuRow(
                 icon: "book.fill",
                 color: .blue,
-                title: "Tutorials",
+                title: "Guides & Tutorials",
                 id: "profile_row_tutorials"
             ) {
                 showTutorials = true

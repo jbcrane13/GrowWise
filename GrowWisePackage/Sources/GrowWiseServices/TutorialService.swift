@@ -7,6 +7,16 @@ import SwiftData
 public final class TutorialService {
     private let dataService: DataService
 
+    public static let beginnerLearningPathIDs = [
+        "first-outdoor-garden",
+        "what-to-plant-this-month",
+        "seed-starting-indoors",
+        "direct-sowing-basics",
+        "transplanting-hardening-off",
+        "succession-planting",
+        "harvesting-basics",
+    ]
+
     public init(dataService: DataService) {
         self.dataService = dataService
     }
@@ -19,6 +29,21 @@ public final class TutorialService {
 
     public func getTutorial(by id: String) -> TutorialTopic? {
         TutorialContent.allTutorials.first { $0.id == id }
+    }
+
+    public func getBeginnerLearningPath() -> [TutorialTopic] {
+        Self.beginnerLearningPathIDs.compactMap { getTutorial(by: $0) }
+    }
+
+    public func getPlantingGuide(for date: Date = Date(), zone: String? = nil) -> [PlantingGuideItem] {
+        let month = Calendar.current.component(.month, from: date)
+        return getPlantingGuide(for: month, zone: zone)
+    }
+
+    public func getPlantingGuide(for month: Int, zone: String? = nil) -> [PlantingGuideItem] {
+        let resolvedZone = zone ?? dataService.getCurrentUser()?.hardinessZone
+        let seasonalPlannerService = SeasonalPlannerService(dataService: dataService)
+        return seasonalPlannerService.getPlantingGuide(for: month, zone: resolvedZone)
     }
 
     public func getTutorialsForSkillLevel(_ skillLevel: GardeningSkillLevel) -> [TutorialTopic] {
