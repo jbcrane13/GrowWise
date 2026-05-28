@@ -3,6 +3,9 @@ import GrowWiseServices
 import SwiftUI
 
 public struct TutorialView: View {
+    public nonisolated static let learningHubTitle = "Learn & Grow"
+    public nonisolated static let homeLearningCardTitle = "Learn what to plant now"
+
     @Environment(TutorialService.self)
     private var tutorialService
     @State private var selectedCategory: TutorialCategory = .planning
@@ -13,28 +16,19 @@ public struct TutorialView: View {
 
     public var body: some View {
         NavigationStack {
-            VStack(spacing: 0) {
-                // Category Selector
-                categorySelector
-
-                // Tutorials Content
-                ScrollView {
-                    LazyVStack(spacing: 20) {
-                        // Featured Tutorial Section
-                        if selectedCategory == .planning {
-                            featuredTutorialSection
-                        }
-
-                        // Quick Progress Summary
-                        progressSummaryCard
-
-                        // Tutorial List
-                        tutorialListSection
-                    }
-                    .padding()
+            ScrollView {
+                LazyVStack(alignment: .leading, spacing: CultivationTheme.Spacing.sectionGap) {
+                    heroSection
+                    plantingGuideSection
+                    beginnerPathSection
+                    categorySelector
+                    tutorialListSection
                 }
+                .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                .padding(.vertical, CultivationTheme.Spacing.sectionGap)
             }
-            .navigationTitle("Learn & Grow")
+            .background(CultivationTheme.Colors.background)
+            .navigationTitle(Self.learningHubTitle)
             .toolbar {
                 ToolbarItem(placement: .primaryAction) {
                     Button {
@@ -42,97 +36,243 @@ public struct TutorialView: View {
                     } label: {
                         Image(systemName: "chart.bar.fill")
                     }
+                    .accessibilityLabel("Learning progress")
                     .accessibilityIdentifier("tutorials_button_progress")
                 }
+            }
+            .navigationDestination(for: TutorialTopic.self) { tutorial in
+                TutorialDetailView(tutorial: tutorial, tutorialService: tutorialService)
             }
             .sheet(isPresented: $showProgressView) {
                 TutorialProgressView(tutorialService: tutorialService)
             }
-        }
-        .searchable(text: $searchText, prompt: "Search tutorials...")
-    }
-
-    private var categorySelector: some View {
-        ScrollView(.horizontal, showsIndicators: false) {
-            LazyHStack(spacing: 12) {
-                ForEach(TutorialCategory.allCases, id: \.self) { category in
-                    CategoryChip(
-                        category: category,
-                        isSelected: selectedCategory == category
-                    ) {
-                        selectedCategory = category
-                    }
-                }
-            }
-            .padding(.horizontal)
-        }
-        .padding(.vertical, 8)
-        .background(Color(.systemGray6))
-    }
-
-    private var featuredTutorialSection: some View {
-        VStack(alignment: .leading, spacing: 12) {
-            Text("Start Here")
-                .font(.headline)
-                .foregroundColor(.primary)
-
-            let featuredTutorial = tutorialService.getAllTutorials().first(where: { $0.id == "getting-started-indoor-plants" })
-
-            if let tutorial = featuredTutorial {
-                FeaturedTutorialCard(tutorial: tutorial, tutorialService: tutorialService)
-            }
+            .searchable(text: $searchText, prompt: "Search tutorials")
+            .accessibilityIdentifier("tutorials_screen")
         }
     }
 
-    private var progressSummaryCard: some View {
+    private var heroSection: some View {
         let analytics = tutorialService.getTutorialAnalytics()
 
-        return HStack {
-            VStack(alignment: .leading, spacing: 4) {
-                Text("Your Progress")
-                    .font(.headline)
-                    .foregroundColor(.primary)
+        return VStack(alignment: .leading, spacing: 14) {
+            HStack(alignment: .top, spacing: 12) {
+                IconBubble(
+                    systemName: "graduationcap.fill",
+                    color: CultivationTheme.Colors.brandLeaf,
+                    size: 46,
+                    iconSize: 20
+                )
 
-                Text("\(analytics.completedTutorials) of \(analytics.totalTutorials) tutorials completed")
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                VStack(alignment: .leading, spacing: 5) {
+                    Text(Self.learningHubTitle)
+                        .font(CultivationTheme.Fonts.display(26, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                    Text("Seasonal guidance, beginner lessons, and practical next steps for your garden.")
+                        .font(CultivationTheme.Fonts.body(14))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
             }
 
-            Spacer()
-
-            CircularProgressView(
-                progress: analytics.totalTutorials > 0
-                    ? Double(analytics.completedTutorials) / Double(analytics.totalTutorials)
-                    : 0
-            )
-            .frame(width: 50, height: 50)
+            HStack(spacing: 10) {
+                learningStat(
+                    value: "\(analytics.completedTutorials)",
+                    label: "Done",
+                    icon: "checkmark.circle.fill"
+                )
+                learningStat(
+                    value: "\(analytics.totalTutorials - analytics.completedTutorials)",
+                    label: "To Learn",
+                    icon: "book.closed.fill"
+                )
+                learningStat(
+                    value: "\(Int(analytics.completionRate * 100))%",
+                    label: "Progress",
+                    icon: "chart.line.uptrend.xyaxis"
+                )
+            }
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+        .accessibilityIdentifier("tutorials_card_hero")
     }
 
-    private var tutorialListSection: some View {
-        VStack(alignment: .leading, spacing: 16) {
+    private func learningStat(value: String, label: String, icon: String) -> some View {
+        VStack(alignment: .leading, spacing: 6) {
+            Image(systemName: icon)
+                .font(.system(size: 13, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.accentCoral)
+            Text(value)
+                .font(CultivationTheme.Fonts.display(18, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.textPrimary)
+            Text(label)
+                .font(CultivationTheme.Fonts.body(11))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+        }
+        .frame(maxWidth: .infinity, alignment: .leading)
+        .padding(10)
+        .background(
+            RoundedRectangle(cornerRadius: CultivationTheme.Radius.icon)
+                .fill(CultivationTheme.Colors.backgroundSecondary)
+        )
+    }
+
+    private var plantingGuideSection: some View {
+        let guide = tutorialService.getPlantingGuide().prefix(6)
+
+        return VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
             HStack {
-                Text(selectedCategory.displayName)
-                    .font(.headline)
-                    .foregroundColor(.primary)
+                Text("WHAT TO PLANT NOW")
+                    .sectionLabelStyle()
+                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
 
                 Spacer()
 
-                Text("\(filteredTutorials.count) tutorials")
-                    .font(.caption)
-                    .foregroundColor(.secondary)
+                Text(currentMonthName)
+                    .font(CultivationTheme.Fonts.body(12, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
             }
 
-            LazyVStack(spacing: 12) {
+            if guide.isEmpty {
+                emptyPlantingGuideCard
+            } else {
+                ScrollView(.horizontal, showsIndicators: false) {
+                    HStack(alignment: .top, spacing: 12) {
+                        ForEach(Array(guide), id: \.id) { item in
+                            plantingGuideCard(item)
+                        }
+                    }
+                    .scrollTargetLayout()
+                }
+                .scrollTargetBehavior(.viewAligned)
+            }
+        }
+    }
+
+    private var emptyPlantingGuideCard: some View {
+        HStack(spacing: 12) {
+            IconBubble(
+                systemName: "calendar.badge.clock",
+                color: CultivationTheme.Colors.textTertiary,
+                size: 40,
+                iconSize: 17
+            )
+
+            Text("No planting windows are highlighted for this month. Browse the beginner path for prep work.")
+                .font(CultivationTheme.Fonts.body(13))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+        .accessibilityIdentifier("tutorials_card_planting_empty")
+    }
+
+    private func plantingGuideCard(_ item: PlantingGuideItem) -> some View {
+        VStack(alignment: .leading, spacing: 10) {
+            HStack(spacing: 8) {
+                IconBubble(
+                    systemName: item.action.icon,
+                    color: item.beginnerFriendly
+                        ? CultivationTheme.Colors.brandLeaf
+                        : CultivationTheme.Colors.accentAmber,
+                    size: 34,
+                    iconSize: 15
+                )
+
+                VStack(alignment: .leading, spacing: 2) {
+                    Text(item.plantName)
+                        .font(CultivationTheme.Fonts.display(17, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        .lineLimit(1)
+
+                    Text(item.action.displayName)
+                        .font(CultivationTheme.Fonts.body(12, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.accentCoral)
+                }
+            }
+
+            Text(item.whyNow)
+                .font(CultivationTheme.Fonts.body(12))
+                .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+
+            Text(item.nextStep)
+                .font(CultivationTheme.Fonts.body(11))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
+                .lineLimit(3)
+                .fixedSize(horizontal: false, vertical: true)
+        }
+        .frame(width: 230, alignment: .leading)
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+        .accessibilityIdentifier("tutorials_card_planting_\(item.id)")
+    }
+
+    private var beginnerPathSection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            Text("BEGINNER PATH")
+                .sectionLabelStyle()
+                .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+
+            LazyVStack(spacing: 10) {
+                ForEach(Array(tutorialService.getBeginnerLearningPath().enumerated()), id: \.element.id) { index, tutorial in
+                    NavigationLink(value: tutorial) {
+                        BeginnerPathRow(index: index + 1, tutorial: tutorial, tutorialService: tutorialService)
+                    }
+                    .buttonStyle(.plain)
+                    .accessibilityIdentifier("tutorials_row_beginner_\(tutorial.id)")
+                }
+            }
+        }
+    }
+
+    private var categorySelector: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            Text("BROWSE BY TOPIC")
+                .sectionLabelStyle()
+                .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+
+            ScrollView(.horizontal, showsIndicators: false) {
+                HStack(spacing: 8) {
+                    ForEach(TutorialCategory.allCases, id: \.self) { category in
+                        CategoryChip(
+                            category: category,
+                            isSelected: selectedCategory == category
+                        ) {
+                            withAnimation(CultivationTheme.Animation.selection) {
+                                selectedCategory = category
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    }
+
+    private var tutorialListSection: some View {
+        VStack(alignment: .leading, spacing: CultivationTheme.Spacing.rowGap) {
+            HStack {
+                Text(selectedCategory.displayName.uppercased())
+                    .sectionLabelStyle()
+                    .foregroundStyle(CultivationTheme.Colors.sectionLabel)
+
+                Spacer()
+
+                Text("\(filteredTutorials.count)")
+                    .font(CultivationTheme.Fonts.body(12, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            }
+
+            LazyVStack(spacing: 10) {
                 ForEach(filteredTutorials, id: \.id) { tutorial in
                     NavigationLink(value: tutorial) {
                         TutorialRowView(tutorial: tutorial, tutorialService: tutorialService)
                     }
                     .buttonStyle(.plain)
-                    .accessibilityIdentifier("tutorials_link_row_\(tutorial.id)")
+                    .accessibilityIdentifier("tutorials_row_\(tutorial.id)")
                 }
             }
         }
@@ -140,10 +280,7 @@ public struct TutorialView: View {
 
     private var filteredTutorials: [TutorialTopic] {
         let categoryTutorials = tutorialService.getAllTutorials().filter { $0.category == selectedCategory }
-
-        if searchText.isEmpty {
-            return categoryTutorials
-        }
+        guard !searchText.isEmpty else { return categoryTutorials }
 
         let lowercasedSearch = searchText.lowercased()
         return categoryTutorials.filter { tutorial in
@@ -152,141 +289,60 @@ public struct TutorialView: View {
                 tutorial.subtitle.lowercased().contains(lowercasedSearch)
         }
     }
+
+    private var currentMonthName: String {
+        let month = Calendar.current.component(.month, from: Date())
+        return Calendar.current.monthSymbols[month - 1]
+    }
 }
 
-// MARK: - Supporting Views
-
-struct CategoryChip: View {
+private struct CategoryChip: View {
     let category: TutorialCategory
     let isSelected: Bool
     let action: () -> Void
 
     var body: some View {
         Button(action: action) {
-            HStack(spacing: 4) {
+            HStack(spacing: 5) {
                 Image(systemName: category.iconName)
-                    .font(.caption)
+                    .font(.system(size: 12, weight: .semibold))
                 Text(category.displayName)
-                    .font(.caption)
-                    .fontWeight(.medium)
+                    .font(CultivationTheme.Fonts.body(12, weight: .semibold))
             }
             .padding(.horizontal, 12)
             .padding(.vertical, 8)
-            .background(isSelected ? Color.blue : Color(.systemGray5))
-            .foregroundColor(isSelected ? .white : .primary)
-            .clipShape(RoundedRectangle(cornerRadius: 16))
+            .foregroundStyle(isSelected ? Color.white : CultivationTheme.Colors.textSecondary)
+            .background {
+                Capsule()
+                    .fill(isSelected ? CultivationTheme.Colors.brandForest : CultivationTheme.Colors.backgroundSecondary)
+            }
         }
+        .buttonStyle(.plain)
         .accessibilityIdentifier("tutorials_button_category_\(category.rawValue)")
     }
 }
 
-/// Add extension for TutorialCategory iconName
-extension TutorialCategory {
-    var iconName: String {
-        switch self {
-        case .planning: "map"
-        case .preparation: "wrench"
-        case .care: "heart.fill"
-        case .environment: "sun.max.fill"
-        case .problemSolving: "stethoscope"
-        }
-    }
-}
-
-struct FeaturedTutorialCard: View {
-    let tutorial: TutorialTopic
-    let tutorialService: TutorialService
-
-    var body: some View {
-        NavigationLink(value: tutorial) {
-            VStack(alignment: .leading, spacing: 12) {
-                HStack {
-                    VStack(alignment: .leading, spacing: 4) {
-                        Text(tutorial.title)
-                            .font(.title3)
-                            .fontWeight(.semibold)
-                            .foregroundColor(.primary)
-
-                        Text(tutorial.subtitle)
-                            .font(.subheadline)
-                            .foregroundColor(.secondary)
-                            .lineLimit(2)
-                    }
-
-                    Spacer()
-
-                    Image(systemName: "arrow.right.circle.fill")
-                        .foregroundColor(.blue)
-                        .font(.title2)
-                }
-
-                HStack {
-                    TutorialMetadata(
-                        difficulty: tutorial.difficultyLevel,
-                        duration: tutorial.estimatedDuration,
-                        progress: tutorialService.getTutorialProgress(tutorialId: tutorial.id)
-                    )
-
-                    Spacer()
-
-                    Text("RECOMMENDED")
-                        .font(.caption)
-                        .fontWeight(.bold)
-                        .padding(.horizontal, 8)
-                        .padding(.vertical, 4)
-                        .background(Color.green.opacity(0.2))
-                        .foregroundColor(.green)
-                        .clipShape(RoundedRectangle(cornerRadius: 8))
-                }
-            }
-            .padding()
-            .background(
-                LinearGradient(
-                    colors: [Color.green.opacity(0.1), Color.mint.opacity(0.1)],
-                    startPoint: .topLeading,
-                    endPoint: .bottomTrailing
-                )
-            )
-            .clipShape(RoundedRectangle(cornerRadius: 12))
-            .overlay(
-                RoundedRectangle(cornerRadius: 12)
-                    .stroke(Color.green.opacity(0.3), lineWidth: 1)
-            )
-        }
-        .buttonStyle(.plain)
-        .accessibilityIdentifier("tutorials_link_featured_\(tutorial.id)")
-    }
-}
-
-struct TutorialRowView: View {
+private struct BeginnerPathRow: View {
+    let index: Int
     let tutorial: TutorialTopic
     let tutorialService: TutorialService
 
     var body: some View {
         HStack(alignment: .top, spacing: 12) {
-            // Difficulty indicator
-            RoundedRectangle(cornerRadius: 4)
-                .fill(difficultyColor)
-                .frame(width: 4, height: 60)
+            Text("\(index)")
+                .font(CultivationTheme.Fonts.display(16, weight: .semibold))
+                .foregroundStyle(Color.white)
+                .frame(width: 32, height: 32)
+                .background(Circle().fill(CultivationTheme.Colors.brandForest))
 
-            VStack(alignment: .leading, spacing: 8) {
-                HStack {
-                    Text(tutorial.title)
-                        .font(.headline)
-                        .foregroundColor(.primary)
+            VStack(alignment: .leading, spacing: 5) {
+                Text(tutorial.title)
+                    .font(CultivationTheme.Fonts.display(16, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textPrimary)
 
-                    Spacer()
-
-                    if tutorialService.getTutorialProgress(tutorialId: tutorial.id).isCompleted {
-                        Image(systemName: "checkmark.circle.fill")
-                            .foregroundColor(.green)
-                            .font(.title3)
-                    }
-                }
-
-                Text(tutorial.description)
-                    .font(.subheadline)
-                    .foregroundColor(.secondary)
+                Text(tutorial.subtitle)
+                    .font(CultivationTheme.Fonts.body(12))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
                     .lineLimit(2)
 
                 TutorialMetadata(
@@ -294,25 +350,69 @@ struct TutorialRowView: View {
                     duration: tutorial.estimatedDuration,
                     progress: tutorialService.getTutorialProgress(tutorialId: tutorial.id)
                 )
-
-                // Progress bar
-                let progress = tutorialService.getTutorialProgress(tutorialId: tutorial.id)
-                if progress.totalSteps > 0 {
-                    ProgressView(value: Double(progress.completedSteps), total: Double(progress.totalSteps))
-                        .tint(.blue)
-                }
             }
+
+            Spacer()
+
+            Image(systemName: "chevron.right")
+                .font(.system(size: 12, weight: .semibold))
+                .foregroundStyle(CultivationTheme.Colors.textTertiary)
         }
-        .padding()
-        .background(Color(.systemGray6))
-        .clipShape(RoundedRectangle(cornerRadius: 12))
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+    }
+}
+
+private struct TutorialRowView: View {
+    let tutorial: TutorialTopic
+    let tutorialService: TutorialService
+
+    var body: some View {
+        HStack(alignment: .top, spacing: 12) {
+            IconBubble(
+                systemName: tutorial.category.iconName,
+                color: difficultyColor,
+                size: 38,
+                iconSize: 16
+            )
+
+            VStack(alignment: .leading, spacing: 6) {
+                HStack(spacing: 8) {
+                    Text(tutorial.title)
+                        .font(CultivationTheme.Fonts.display(16, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+                        .lineLimit(2)
+
+                    if tutorialService.getTutorialProgress(tutorialId: tutorial.id).isCompleted {
+                        Image(systemName: "checkmark.circle.fill")
+                            .foregroundStyle(CultivationTheme.Colors.statusHealthy)
+                            .font(.system(size: 16, weight: .semibold))
+                    }
+                }
+
+                Text(tutorial.description)
+                    .font(CultivationTheme.Fonts.body(12))
+                    .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                    .lineLimit(2)
+
+                TutorialMetadata(
+                    difficulty: tutorial.difficultyLevel,
+                    duration: tutorial.estimatedDuration,
+                    progress: tutorialService.getTutorialProgress(tutorialId: tutorial.id)
+                )
+            }
+
+            Spacer()
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
     }
 
     private var difficultyColor: Color {
         switch tutorial.difficultyLevel {
-        case .beginner: .green
-        case .intermediate: .orange
-        case .advanced: .red
+        case .beginner: CultivationTheme.Colors.brandLeaf
+        case .intermediate: CultivationTheme.Colors.accentAmber
+        case .advanced: CultivationTheme.Colors.accentCoral
         }
     }
 }
@@ -323,72 +423,49 @@ struct TutorialMetadata: View {
     let progress: TutorialProgress
 
     var body: some View {
-        HStack(spacing: 12) {
-            HStack(spacing: 4) {
-                Image(systemName: "graduationcap.fill")
-                    .font(.caption2)
-                Text(difficulty.displayName)
-                    .font(.caption2)
-            }
-            .foregroundColor(difficultyColor)
-
-            HStack(spacing: 4) {
-                Image(systemName: "clock.fill")
-                    .font(.caption2)
-                Text("\(duration) min")
-                    .font(.caption2)
-            }
-            .foregroundColor(.secondary)
+        HStack(spacing: 10) {
+            metadataPill(icon: "graduationcap.fill", text: difficulty.displayName, color: difficultyColor)
+            metadataPill(icon: "clock.fill", text: "\(duration) min", color: CultivationTheme.Colors.textTertiary)
 
             if progress.isCompleted {
-                HStack(spacing: 4) {
-                    Image(systemName: "checkmark.circle.fill")
-                        .font(.caption2)
-                    Text("Completed")
-                        .font(.caption2)
-                }
-                .foregroundColor(.green)
+                metadataPill(icon: "checkmark.circle.fill", text: "Complete", color: CultivationTheme.Colors.statusHealthy)
             } else if progress.completedSteps > 0 {
-                HStack(spacing: 4) {
-                    Image(systemName: "clock.arrow.circlepath")
-                        .font(.caption2)
-                    Text("\(progress.completedSteps)/\(progress.totalSteps)")
-                        .font(.caption2)
-                }
-                .foregroundColor(.blue)
+                metadataPill(
+                    icon: "clock.arrow.circlepath",
+                    text: "\(progress.completedSteps)/\(progress.totalSteps)",
+                    color: CultivationTheme.Colors.brandLeaf
+                )
             }
         }
+    }
+
+    private func metadataPill(icon: String, text: String, color: Color) -> some View {
+        HStack(spacing: 4) {
+            Image(systemName: icon)
+                .font(.system(size: 10, weight: .semibold))
+            Text(text)
+                .font(CultivationTheme.Fonts.body(11, weight: .medium))
+        }
+        .foregroundStyle(color)
     }
 
     private var difficultyColor: Color {
         switch difficulty {
-        case .beginner: .green
-        case .intermediate: .orange
-        case .advanced: .red
+        case .beginner: CultivationTheme.Colors.brandLeaf
+        case .intermediate: CultivationTheme.Colors.accentAmber
+        case .advanced: CultivationTheme.Colors.accentCoral
         }
     }
 }
 
-struct CircularProgressView: View {
-    let progress: Double
-
-    var body: some View {
-        ZStack {
-            Circle()
-                .stroke(lineWidth: 4)
-                .opacity(0.3)
-                .foregroundColor(.blue)
-
-            Circle()
-                .trim(from: 0.0, to: CGFloat(min(progress, 1.0)))
-                .stroke(style: StrokeStyle(lineWidth: 4, lineCap: .round, lineJoin: .round))
-                .foregroundColor(.blue)
-                .rotationEffect(Angle(degrees: 270.0))
-                .animation(.linear, value: progress)
-
-            Text(String(format: "%.0f%%", min(progress, 1.0) * 100.0))
-                .font(.caption2)
-                .fontWeight(.bold)
+extension TutorialCategory {
+    var iconName: String {
+        switch self {
+        case .planning: "map.fill"
+        case .preparation: "trowel.fill"
+        case .care: "heart.fill"
+        case .environment: "sun.max.fill"
+        case .problemSolving: "stethoscope"
         }
     }
 }

@@ -134,6 +134,58 @@ struct SeasonalPlannerServiceTests {
         let zone7Types = Set(zone7.map(\.activityType))
         #expect(nilTypes == zone7Types)
     }
+
+    @Test("Planting guide returns beginner direct-sow crops for spring in zone 7")
+    func plantingGuideSpringDirectSowZone7() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let guide = service.getPlantingGuide(for: 4, zone: "7a")
+        let directSowNames = Set(
+            guide
+                .filter { $0.action == .directSow && $0.beginnerFriendly }
+                .map(\.plantName)
+        )
+
+        #expect(directSowNames.contains("Lettuce"))
+        #expect(directSowNames.contains("Carrot"))
+        #expect(guide.allSatisfy { !$0.timingSummary.isEmpty && !$0.nextStep.isEmpty })
+    }
+
+    @Test("Planting guide shifts spring direct-sow guidance earlier in warmer zones")
+    func plantingGuideShiftsEarlierForWarmZones() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let warmZoneGuide = service.getPlantingGuide(for: 2, zone: "9b")
+        let coldZoneGuide = service.getPlantingGuide(for: 2, zone: "4a")
+
+        #expect(warmZoneGuide.contains { $0.plantName == "Lettuce" && $0.action == .directSow })
+        #expect(!coldZoneGuide.contains { $0.plantName == "Lettuce" && $0.action == .directSow })
+    }
+
+    @Test("Planting guide indoor starts link to seed-starting tutorial")
+    func plantingGuideIndoorStartsLinkToSeedStartingTutorial() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let guide = service.getPlantingGuide(for: 3, zone: "7a")
+        let indoorStarts = guide.filter { $0.action == .startIndoors }
+
+        #expect(!indoorStarts.isEmpty)
+        #expect(indoorStarts.allSatisfy { $0.tutorialID == "seed-starting-indoors" })
+    }
+
+    @Test("Planting guide item IDs are unique")
+    func plantingGuideItemIDsAreUnique() async throws {
+        let dataService = try await DataService.makeForTesting()
+        let service = SeasonalPlannerService(dataService: dataService)
+
+        let guide = service.getPlantingGuide(for: 5, zone: "7a")
+        let ids = guide.map(\.id)
+
+        #expect(Set(ids).count == ids.count)
+    }
 }
 
 // MARK: - FrostDate Tests
@@ -223,7 +275,7 @@ struct FrostPrepTasksTests {
 
         // Zone 4 first frost ~ Oct 1; simulate late September
         let calendar = Calendar.current
-        let lateSeptember = calendar.date(from: DateComponents(year: 2026, month: 9, day: 25))!
+        let lateSeptember = try #require(calendar.date(from: DateComponents(year: 2026, month: 9, day: 25)))
 
         let tomato = Plant(name: "Tomato", plantType: .vegetable)
         let basil = Plant(name: "Basil", plantType: .herb)

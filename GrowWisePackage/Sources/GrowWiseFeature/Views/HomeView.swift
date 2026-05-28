@@ -17,11 +17,14 @@ public struct HomeView: View {
     private var router
     @Environment(NotificationService.self)
     private var notificationService
+    @Environment(TutorialService.self)
+    private var tutorialService
 
     @State private var viewModel = HomeViewModel()
     @State private var showCareShareSheet = false
     @State private var careShareCaption = ""
     @State private var showSeasonalPlanner = false
+    @State private var showTutorials = false
 
     public init() {}
 
@@ -66,6 +69,15 @@ public struct HomeView: View {
                         SeedStartCard(seeds: viewModel.readyToPlantSeeds, zone: viewModel.hardinessZone)
                             .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
                     }
+
+                    Button {
+                        showTutorials = true
+                    } label: {
+                        learningCard
+                    }
+                    .buttonStyle(.plain)
+                    .padding(.horizontal, CultivationTheme.Spacing.screenPadding)
+                    .accessibilityIdentifier("home_button_learning_hub")
 
                     Button {
                         showSeasonalPlanner = true
@@ -121,6 +133,9 @@ public struct HomeView: View {
                 SeasonalPlannerView()
                     .environment(dataService)
                     .environment(locationService)
+            }
+            .sheet(isPresented: $showTutorials) {
+                TutorialsView()
             }
             .accessibilityIdentifier("home_screen")
         }
@@ -183,8 +198,66 @@ public struct HomeView: View {
             router.selectedTab = .garden
 
         case .startTutorial:
-            router.selectedTab = .profile
+            showTutorials = true
         }
+    }
+
+    private var learningCard: some View {
+        let guide = Array(tutorialService.getPlantingGuide().prefix(3))
+
+        return VStack(alignment: .leading, spacing: 12) {
+            HStack(spacing: 10) {
+                IconBubble(
+                    systemName: "book.pages.fill",
+                    color: CultivationTheme.Colors.brandLeaf,
+                    size: 40,
+                    iconSize: 17
+                )
+
+                VStack(alignment: .leading, spacing: 3) {
+                    Text(TutorialView.homeLearningCardTitle)
+                        .font(CultivationTheme.Fonts.display(16, weight: .semibold))
+                        .foregroundStyle(CultivationTheme.Colors.textPrimary)
+
+                    Text(learningCardSubtitle(for: guide))
+                        .font(CultivationTheme.Fonts.body(12))
+                        .foregroundStyle(CultivationTheme.Colors.textSecondary)
+                        .fixedSize(horizontal: false, vertical: true)
+                }
+
+                Spacer()
+
+                Image(systemName: "chevron.right")
+                    .font(.system(size: 12, weight: .semibold))
+                    .foregroundStyle(CultivationTheme.Colors.textTertiary)
+            }
+
+            if !guide.isEmpty {
+                HStack(spacing: 6) {
+                    ForEach(guide, id: \.id) { item in
+                        Text(item.plantName)
+                            .font(CultivationTheme.Fonts.body(11, weight: .semibold))
+                            .foregroundStyle(CultivationTheme.Colors.brandForest)
+                            .padding(.horizontal, 9)
+                            .padding(.vertical, 5)
+                            .background(
+                                Capsule()
+                                    .fill(CultivationTheme.Colors.brandLeaf.opacity(0.12))
+                            )
+                    }
+                }
+            }
+        }
+        .padding(CultivationTheme.Spacing.cardPadding)
+        .paperCard()
+        .accessibilityIdentifier("home_card_learning_hub")
+    }
+
+    private func learningCardSubtitle(for guide: [PlantingGuideItem]) -> String {
+        guard !guide.isEmpty else {
+            return "Open the beginner path for seasonal lessons and garden basics."
+        }
+        return "Start with \(guide[0].action.displayName.lowercased()) guidance and beginner lessons."
     }
 
     private func careTaskRow(_ reminder: PlantReminder) -> some View {
@@ -611,6 +684,9 @@ private struct HomeClubPlaceholderCard: View {
     let dataService = try! DataService()
     HomeView()
         .environment(dataService)
+        .environment(LocationService())
+        .environment(NotificationService())
+        .environment(TutorialService(dataService: dataService))
         .environment(AppRouter())
 }
 

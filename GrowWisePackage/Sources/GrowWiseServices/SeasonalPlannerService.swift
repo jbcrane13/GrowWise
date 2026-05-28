@@ -294,6 +294,12 @@ public final class SeasonalPlannerService {
         }
     }
 
+    // MARK: - Planting Guide
+
+    public func getPlantingGuide(for month: Int, zone: String?) -> [PlantingGuideItem] {
+        PlantingGuideCatalog.items(for: month, zone: zone)
+    }
+
     // MARK: - Private
 
     private func activitiesForPlant(

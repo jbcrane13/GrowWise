@@ -363,5 +363,411 @@
         ]
       }
     ]
+  },
+  {
+    "id": "first-outdoor-garden",
+    "title": "Start Your First Outdoor Garden",
+    "subtitle": "Pick a small space, a few reliable crops, and a realistic first week",
+    "description": "Build a first outdoor garden that is easy to keep alive. Learn how to choose a site, start small, prepare soil, and avoid taking on too much at once.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 24,
+    "category": "planning",
+    "relevantGardenTypes": ["all", "in_ground", "raised_bed", "container"],
+    "imageURL": "tutorial-first-outdoor-garden",
+    "steps": [
+      {
+        "title": "Choose One Manageable Spot",
+        "content": "Start with a bed, a few containers, or one sunny corner you can visit every day. A small garden that gets regular attention teaches more than a large garden that becomes hard to manage.",
+        "imageURL": "step-choose-garden-spot",
+        "duration": 7,
+        "tips": [
+          "Look for 6 or more hours of sun for vegetables and herbs",
+          "Keep the garden close to water",
+          "Leave walking space so you can reach every plant"
+        ],
+        "commonMistakes": [
+          "Starting with too much space",
+          "Choosing a spot that is hard to water"
+        ]
+      },
+      {
+        "title": "Pick Forgiving First Plants",
+        "content": "Choose fast, beginner-friendly plants that match the season. Lettuce, radishes, basil, kale, marigolds, cucumbers, and zucchini are strong first choices in the right window.",
+        "imageURL": "step-pick-first-plants",
+        "duration": 8,
+        "tips": [
+          "Grow two or three plant types your household will actually use",
+          "Mix one quick crop with one longer-season crop",
+          "Check the What to Plant This Month guide before buying seeds"
+        ],
+        "commonMistakes": [
+          "Buying every interesting seed packet",
+          "Starting with fussy crops before learning the basics"
+        ]
+      },
+      {
+        "title": "Prepare for the First Week",
+        "content": "Before planting, gather labels, compost, mulch, and a watering plan. The first week is about steady moisture, observation, and simple notes.",
+        "imageURL": "step-first-week-plan",
+        "duration": 9,
+        "tips": [
+          "Label everything on planting day",
+          "Water gently and deeply after sowing or transplanting",
+          "Take one photo so you can compare growth later"
+        ],
+        "commonMistakes": [
+          "Planting before supplies are ready",
+          "Forgetting what was planted where"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "what-to-plant-this-month",
+    "title": "What to Plant This Month",
+    "subtitle": "Use your zone and season to choose a confident next crop",
+    "description": "Learn how Cultivation's monthly planting guidance works and how to choose between starting indoors, direct sowing, and transplanting.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 18,
+    "category": "planning",
+    "relevantGardenTypes": ["all"],
+    "imageURL": "tutorial-what-to-plant",
+    "steps": [
+      {
+        "title": "Read the Action First",
+        "content": "Planting advice usually falls into three actions: start indoors, direct sow, or transplant. The action matters more than the plant name because each one changes the supplies and timing.",
+        "imageURL": "step-read-planting-action",
+        "duration": 5,
+        "tips": [
+          "Start indoors means trays, light, and labels",
+          "Direct sow means seeds go straight into prepared soil",
+          "Transplant means a seedling moves into its final growing spot"
+        ],
+        "commonMistakes": [
+          "Direct sowing crops that prefer an indoor head start",
+          "Transplanting before seedlings are hardened off"
+        ]
+      },
+      {
+        "title": "Match the Crop to Your Space",
+        "content": "A good monthly recommendation still needs to fit your garden. Lettuce can tuck into a small bed, while zucchini needs room to sprawl or a large container.",
+        "imageURL": "step-match-crop-space",
+        "duration": 6,
+        "tips": [
+          "Use compact crops for balconies and small beds",
+          "Give vines a trellis or plenty of room",
+          "Choose herbs when you want a low-risk first win"
+        ],
+        "commonMistakes": [
+          "Planting large crops too close together",
+          "Ignoring the plant's mature size"
+        ]
+      },
+      {
+        "title": "Plant One Step, Then Observe",
+        "content": "Beginners learn faster by planting one clear recommendation and watching it closely. After a week, note germination, moisture, and any pest pressure before adding more.",
+        "imageURL": "step-plant-observe",
+        "duration": 7,
+        "tips": [
+          "Check the bed daily until seeds sprout",
+          "Record the planting date",
+          "Add a reminder for watering or thinning"
+        ],
+        "commonMistakes": [
+          "Planting too many new crops in the same weekend",
+          "Skipping notes because the planting felt obvious"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "seed-starting-indoors",
+    "title": "Seed Starting Indoors",
+    "subtitle": "Grow sturdy seedlings before outdoor conditions are ready",
+    "description": "Learn when to start seeds indoors, how to set up trays and light, and how to keep seedlings strong until transplant time.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 28,
+    "category": "preparation",
+    "relevantGardenTypes": ["all"],
+    "imageURL": "tutorial-seed-starting",
+    "steps": [
+      {
+        "title": "Choose Seeds Worth Starting Early",
+        "content": "Tomatoes, peppers, basil, kale, and many flowers benefit from an indoor head start. Root crops like carrots usually do better when direct sown outside.",
+        "imageURL": "step-choose-indoor-seeds",
+        "duration": 7,
+        "tips": [
+          "Read seed packets for weeks before last frost",
+          "Start with one tray if this is your first season",
+          "Label varieties before watering"
+        ],
+        "commonMistakes": [
+          "Starting every seed indoors",
+          "Starting too early without enough light"
+        ]
+      },
+      {
+        "title": "Set Up Light and Moisture",
+        "content": "Seedlings need bright light close to the leaves and evenly moist mix. A sunny window can work for a few herbs, but a simple grow light is more reliable.",
+        "imageURL": "step-seed-light-moisture",
+        "duration": 11,
+        "tips": [
+          "Use seed-starting mix instead of heavy garden soil",
+          "Keep lights close enough to prevent leggy stems",
+          "Bottom-water trays when possible"
+        ],
+        "commonMistakes": [
+          "Letting seedlings stretch toward weak light",
+          "Keeping mix soggy instead of evenly moist"
+        ]
+      },
+      {
+        "title": "Thin and Feed Gently",
+        "content": "Once seedlings have true leaves, keep the strongest plant in each cell and begin gentle airflow. If growth slows, use a diluted seedling fertilizer.",
+        "imageURL": "step-thin-seedlings",
+        "duration": 10,
+        "tips": [
+          "Snip extra seedlings instead of pulling roots",
+          "Use a small fan for stronger stems",
+          "Wait for true leaves before light feeding"
+        ],
+        "commonMistakes": [
+          "Keeping crowded seedlings together too long",
+          "Feeding seedlings at full fertilizer strength"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "direct-sowing-basics",
+    "title": "Direct Sowing Basics",
+    "subtitle": "Plant seeds straight into the garden with confidence",
+    "description": "Learn how to prepare soil, sow at the right depth, and keep outdoor seeds moist through germination.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 22,
+    "category": "preparation",
+    "relevantGardenTypes": ["all", "in_ground", "raised_bed", "container"],
+    "imageURL": "tutorial-direct-sowing",
+    "steps": [
+      {
+        "title": "Prepare a Fine Seedbed",
+        "content": "Seeds sprout best when soil is loose, level, and free of large clumps. Water the bed before sowing so tiny seeds are not washed away afterward.",
+        "imageURL": "step-prepare-seedbed",
+        "duration": 7,
+        "tips": [
+          "Remove weeds before planting",
+          "Mix in compost if soil is compacted",
+          "Smooth the surface with your hand or rake"
+        ],
+        "commonMistakes": [
+          "Sowing into dry, crusted soil",
+          "Planting before removing weeds"
+        ]
+      },
+      {
+        "title": "Use the Right Depth",
+        "content": "A simple rule is to plant seeds about two times as deep as the seed is wide. Tiny lettuce seeds need shallow cover; larger beans and peas go deeper.",
+        "imageURL": "step-seed-depth",
+        "duration": 7,
+        "tips": [
+          "Check the packet depth when available",
+          "Press soil gently for good seed contact",
+          "Label the row before moving on"
+        ],
+        "commonMistakes": [
+          "Burying tiny seeds too deeply",
+          "Leaving seeds uncovered where birds can find them"
+        ]
+      },
+      {
+        "title": "Keep Moist Until Sprouting",
+        "content": "Outdoor seeds fail most often when the soil dries out during germination. Check daily and water gently until seedlings are established.",
+        "imageURL": "step-keep-seeds-moist",
+        "duration": 8,
+        "tips": [
+          "Use a gentle spray or watering rose",
+          "Mulch lightly after seedlings are visible",
+          "Thin crowded seedlings once true leaves appear"
+        ],
+        "commonMistakes": [
+          "Letting the top layer dry out",
+          "Blasting seeds out of place with a strong hose"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "transplanting-hardening-off",
+    "title": "Transplanting and Hardening Off",
+    "subtitle": "Move seedlings outdoors without shocking them",
+    "description": "Learn how to harden seedlings off, choose a good transplant day, and help young plants recover quickly.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 24,
+    "category": "care",
+    "relevantGardenTypes": ["all"],
+    "imageURL": "tutorial-transplanting",
+    "steps": [
+      {
+        "title": "Harden Off for One Week",
+        "content": "Seedlings raised indoors need gradual exposure to sun, wind, and cooler nights. Start with a sheltered hour or two outside and increase time each day.",
+        "imageURL": "step-harden-off",
+        "duration": 8,
+        "tips": [
+          "Begin in bright shade or morning light",
+          "Bring seedlings in during harsh wind or cold nights",
+          "Increase outdoor time gradually"
+        ],
+        "commonMistakes": [
+          "Moving seedlings from indoors to full sun in one day",
+          "Leaving tender seedlings out during a cold snap"
+        ]
+      },
+      {
+        "title": "Transplant at the Right Time",
+        "content": "A cloudy day, calm evening, or mild morning gives seedlings the least stress. Water seedlings before planting and handle roots gently.",
+        "imageURL": "step-transplant-time",
+        "duration": 8,
+        "tips": [
+          "Dig the hole before removing the seedling from its pot",
+          "Plant at the same depth unless the crop benefits from deeper planting",
+          "Firm soil gently around roots"
+        ],
+        "commonMistakes": [
+          "Transplanting in hot midday sun",
+          "Letting root balls dry out"
+        ]
+      },
+      {
+        "title": "Protect the First Few Days",
+        "content": "New transplants need steady moisture and protection while roots settle. Check daily for wilting, pests, and soil gaps around the stem.",
+        "imageURL": "step-transplant-aftercare",
+        "duration": 8,
+        "tips": [
+          "Water deeply right after planting",
+          "Use shade cloth or a cover during sudden heat",
+          "Mulch after the plant has settled"
+        ],
+        "commonMistakes": [
+          "Fertilizing heavily on transplant day",
+          "Ignoring wilting after the first watering"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "succession-planting",
+    "title": "Succession Planting",
+    "subtitle": "Keep harvests coming by planting small rounds over time",
+    "description": "Learn how to avoid one giant harvest and keep easy crops producing across the season.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 20,
+    "category": "planning",
+    "relevantGardenTypes": ["all"],
+    "imageURL": "tutorial-succession-planting",
+    "steps": [
+      {
+        "title": "Choose Crops That Repeat Well",
+        "content": "Lettuce, radishes, carrots, bush beans, cilantro, and baby greens are good succession crops. Plant a small amount, then repeat after a short interval.",
+        "imageURL": "step-repeat-crops",
+        "duration": 6,
+        "tips": [
+          "Start with one crop and one repeat date",
+          "Use quick crops for the easiest first attempt",
+          "Leave a little open space for the next sowing"
+        ],
+        "commonMistakes": [
+          "Filling every inch on the first planting day",
+          "Trying to succession plant slow crops first"
+        ]
+      },
+      {
+        "title": "Set a Simple Interval",
+        "content": "A 2-week interval works well for many fast crops. In hot weather, switch from cool-season greens to heat-tolerant crops or wait for a fall round.",
+        "imageURL": "step-simple-interval",
+        "duration": 7,
+        "tips": [
+          "Add a reminder for the next sowing",
+          "Write the sowing date on a label",
+          "Pause cool-season crops during intense heat"
+        ],
+        "commonMistakes": [
+          "Planting repeated rounds too close together",
+          "Ignoring seasonal heat limits"
+        ]
+      },
+      {
+        "title": "Clear and Replant Promptly",
+        "content": "When a short crop finishes, clear the row, add compost if needed, and replant. Succession planting works because space keeps moving.",
+        "imageURL": "step-clear-replant",
+        "duration": 7,
+        "tips": [
+          "Cut spent plants at soil level when roots are not diseased",
+          "Top-dress with compost between rounds",
+          "Rotate crop families when possible"
+        ],
+        "commonMistakes": [
+          "Leaving finished crops in place for weeks",
+          "Replanting into exhausted dry soil"
+        ]
+      }
+    ]
+  },
+  {
+    "id": "harvesting-basics",
+    "title": "Harvesting Basics",
+    "subtitle": "Pick at the right time and keep plants productive",
+    "description": "Learn when to harvest beginner crops, how to pick without damaging plants, and how harvesting can encourage more growth.",
+    "difficultyLevel": "beginner",
+    "estimatedDuration": 18,
+    "category": "care",
+    "relevantGardenTypes": ["all"],
+    "imageURL": "tutorial-harvesting",
+    "steps": [
+      {
+        "title": "Harvest Early and Often",
+        "content": "Many beginner crops taste best when harvested young. Regular picking can also encourage herbs, greens, beans, cucumbers, and zucchini to keep producing.",
+        "imageURL": "step-harvest-often",
+        "duration": 6,
+        "tips": [
+          "Pick leafy greens from the outside first",
+          "Harvest zucchini before they get oversized",
+          "Pinch basil above a leaf pair"
+        ],
+        "commonMistakes": [
+          "Waiting for every crop to become huge",
+          "Letting herbs flower before regular harvests"
+        ]
+      },
+      {
+        "title": "Use Clean Cuts",
+        "content": "Use clean scissors or pruners for herbs, flowers, and tender stems. Pulling can damage roots or break stems that would keep producing.",
+        "imageURL": "step-clean-cuts",
+        "duration": 6,
+        "tips": [
+          "Clean blades before harvesting diseased plants",
+          "Support the stem while cutting",
+          "Harvest in the morning when possible"
+        ],
+        "commonMistakes": [
+          "Ripping stems by hand",
+          "Using dirty tools on healthy plants"
+        ]
+      },
+      {
+        "title": "Log What You Pick",
+        "content": "A harvest note helps you learn what worked. Record the crop, date, amount, and one observation for next season.",
+        "imageURL": "step-log-harvest",
+        "duration": 6,
+        "tips": [
+          "Take a quick photo before storing produce",
+          "Note flavor, pest pressure, or timing",
+          "Share harvest wins with your garden club"
+        ],
+        "commonMistakes": [
+          "Trusting memory until next season",
+          "Only logging problems and not wins"
+        ]
+      }
+    ]
   }
 ]

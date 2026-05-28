@@ -20,4 +20,22 @@ struct TutorialServicePersonalizationTests {
 
         #expect(tutorials.first?.category == .planning)
     }
+
+    @Test("beginner learning path returns outdoor curriculum in order")
+    func beginnerLearningPathReturnsOutdoorCurriculumInOrder() throws {
+        let dataService = try DataService.makeForTesting()
+        let tutorialService = TutorialService(dataService: dataService)
+
+        let path = tutorialService.getBeginnerLearningPath()
+
+        #expect(path.map(\.id) == [
+            "first-outdoor-garden",
+            "what-to-plant-this-month",
+            "seed-starting-indoors",
+            "direct-sowing-basics",
+            "transplanting-hardening-off",
+            "succession-planting",
+            "harvesting-basics",
+        ])
+    }
 }
