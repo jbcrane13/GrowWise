@@ -336,3 +336,6 @@ Before ending a session:
 
 ## Activity — 2026-05-24
 - 0c012ba feat(#358): add club member profiles
+
+## Activity — 2026-05-27
+- chore: bump build to 1777746192 for TestFlight
