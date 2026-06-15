@@ -92,7 +92,7 @@ public struct PlantReminderCard: View {
             )
         }
         .buttonStyle(.plain)
-        .accessibilityIdentifier("plantReminderCard_button_\(plantIdentifier)")
+        .accessibilityIdentifier("plant_reminder_card_button_\(plantIdentifier)")
         .task {
             loadWateringReminders()
         }

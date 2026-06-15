@@ -44,7 +44,7 @@ final class CultivationUITests: XCTestCase {
 
     private func skipOnboardingIfNeeded() {
         // Skip onboarding if it appears
-        let onboardingView = app.otherElements["OnboardingView"]
+        let onboardingView = app.otherElements["onboarding_view"]
 
         if onboardingView.waitForExistence(timeout: 2.0) {
             // Look for skip button
@@ -56,7 +56,7 @@ final class CultivationUITests: XCTestCase {
         }
 
         // Wait for main app to load
-        let mainView = app.otherElements["MainAppView"]
+        let mainView = app.otherElements["main_app_view"]
         XCTAssertTrue(mainView.waitForExistence(timeout: 5.0))
     }
 }

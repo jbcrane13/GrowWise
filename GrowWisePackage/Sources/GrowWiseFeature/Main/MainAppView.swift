@@ -110,7 +110,7 @@ public struct MainAppView: View {
                 .frame(maxWidth: .infinity, maxHeight: .infinity)
             }
         }
-        .accessibilityIdentifier("MainAppView")
+        .accessibilityIdentifier("main_app_view")
     }
 
     private var mainTabView: some View {

@@ -76,7 +76,7 @@ public struct OnboardingView: View {
                 }
             }
         }
-        .accessibilityIdentifier("OnboardingView")
+        .accessibilityIdentifier("onboarding_view")
         .gwNavigationBarHidden(true)
         .onChange(of: currentStep) { _, newStep in
             analyticsTracker.trackStepViewed(newStep.rawValue)

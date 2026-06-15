@@ -5,19 +5,11 @@ import Testing
 struct AccessibilityIdentifierCoverageTests {
     @Test("Interactive SwiftUI controls expose accessibility identifiers")
     func interactiveSwiftUIControlsExposeAccessibilityIdentifiers() throws {
-        let packageRoot = URL(fileURLWithPath: #filePath)
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-            .deletingLastPathComponent()
-        let projectRoot = packageRoot.deletingLastPathComponent()
-        let sourceRoots = [
-            packageRoot.appendingPathComponent("Sources/GrowWiseFeature"),
-            projectRoot.appendingPathComponent("GrowWise"),
-        ]
+        let roots = Self.sourceRoots()
 
-        let missingIdentifiers = try sourceRoots.flatMap { sourceRoot in
+        let missingIdentifiers = try roots.paths.flatMap { sourceRoot in
             try Self.swiftFiles(in: sourceRoot).flatMap { file in
-                try Self.violations(in: file, relativeTo: projectRoot)
+                try Self.violations(in: file, relativeTo: roots.projectRoot)
             }
         }
 
@@ -26,6 +18,23 @@ struct AccessibilityIdentifierCoverageTests {
         \(missingIdentifiers.prefix(80).joined(separator: "\n"))
         """
         #expect(missingIdentifiers.isEmpty, "\(message)")
+    }
+
+    @Test("Accessibility identifiers use snake case")
+    func accessibilityIdentifiersUseSnakeCase() throws {
+        let roots = Self.sourceRoots()
+
+        let invalidIdentifiers = try roots.paths.flatMap { sourceRoot in
+            try Self.swiftFiles(in: sourceRoot).flatMap { file in
+                try Self.identifierConventionViolations(in: file, relativeTo: roots.projectRoot)
+            }
+        }
+
+        let message = """
+        accessibilityIdentifier values must use lowercase snake_case fixed text:
+        \(invalidIdentifiers.prefix(80).joined(separator: "\n"))
+        """
+        #expect(invalidIdentifiers.isEmpty, "\(message)")
     }
 
     private static let interactiveConstructs = [
@@ -49,6 +58,28 @@ struct AccessibilityIdentifierCoverageTests {
         "Menu",
         "Link",
     ]
+
+    private static func sourceRoots() -> (projectRoot: URL, paths: [URL]) {
+        let packageRoot = URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+        let projectRoot = packageRoot.deletingLastPathComponent()
+        let featurePath = ["Sources", ["Grow", "Wise", "Feature"].joined()].joined(separator: "/")
+        let appPath = ["Grow", "Wise"].joined()
+
+        return (
+            projectRoot,
+            [
+                packageRoot.appendingPathComponent(featurePath),
+                projectRoot.appendingPathComponent(appPath),
+            ]
+        )
+    }
+
+    private static func accessibilityIdentifierLiteralRegex() throws -> NSRegularExpression {
+        try NSRegularExpression(pattern: #"\.accessibilityIdentifier\("((?:\\.|[^"\\])*)"\)"#)
+    }
 
     private static func swiftFiles(in root: URL) throws -> [URL] {
         guard let enumerator = FileManager.default.enumerator(
@@ -85,6 +116,32 @@ struct AccessibilityIdentifierCoverageTests {
             }
 
             return "\(relativePath):\(index + 1) \(construct)"
+        }
+    }
+
+    private static func identifierConventionViolations(in file: URL, relativeTo root: URL) throws -> [String] {
+        let source = try String(contentsOf: file, encoding: .utf8)
+        let lines = source.components(separatedBy: .newlines)
+        let relativePath = file.path.replacingOccurrences(of: root.path + "/", with: "")
+        let regex = try accessibilityIdentifierLiteralRegex()
+
+        return lines.enumerated().flatMap { lineNumber, line in
+            let nsLine = line as NSString
+            let range = NSRange(location: 0, length: nsLine.length)
+            let matches = regex.matches(in: line, range: range)
+
+            return matches.compactMap { match -> String? in
+                guard let identifierRange = Range(match.range(at: 1), in: line) else {
+                    return nil
+                }
+
+                let identifier = String(line[identifierRange])
+                guard !isSnakeCaseAccessibilityIdentifier(identifier) else {
+                    return nil
+                }
+
+                return "\(relativePath):\(lineNumber + 1) \(identifier)"
+            }
         }
     }
 
@@ -187,5 +244,52 @@ struct AccessibilityIdentifierCoverageTests {
 
     private static func isIdentifierCharacter(_ character: Character) -> Bool {
         character == "_" || character.isLetter || character.isNumber
+    }
+
+    private static func isSnakeCaseAccessibilityIdentifier(_ identifier: String) -> Bool {
+        let fixedText = identifierRemovingInterpolations(identifier)
+        guard !fixedText.isEmpty else {
+            return false
+        }
+
+        return fixedText.unicodeScalars.allSatisfy { scalar in
+            switch scalar.value {
+            case 48 ... 57, 95, 97 ... 122:
+                true
+
+            default:
+                false
+            }
+        }
+    }
+
+    private static func identifierRemovingInterpolations(_ identifier: String) -> String {
+        var result = ""
+        var index = identifier.startIndex
+
+        while index < identifier.endIndex {
+            let nextIndex = identifier.index(after: index)
+            if identifier[index] == "\\",
+               nextIndex < identifier.endIndex,
+               identifier[nextIndex] == "("
+            {
+                index = identifier.index(nextIndex, offsetBy: 1)
+                var depth = 1
+
+                while index < identifier.endIndex, depth > 0 {
+                    if identifier[index] == "(" {
+                        depth += 1
+                    } else if identifier[index] == ")" {
+                        depth -= 1
+                    }
+                    index = identifier.index(after: index)
+                }
+            } else {
+                result.append(identifier[index])
+                index = nextIndex
+            }
+        }
+
+        return result
     }
 }
