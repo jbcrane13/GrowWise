@@ -123,9 +123,11 @@ final class GardenClubUITests: XCTestCase {
         nameField.tap()
         nameField.typeText(name)
 
+        let gardenPicker = app.descendants(matching: .any)
+            .matching(identifier: "addplant_picker_garden")
+            .firstMatch
         XCTAssertTrue(
-            app.descendants(matching: .any).matching(identifier: "addplant_picker_garden").firstMatch
-                .waitForExistence(timeout: 5.0),
+            gardenPicker.waitForExistence(timeout: 5.0),
             "Garden picker did not load before saving the plant",
             file: file,
             line: line
@@ -145,7 +147,7 @@ final class GardenClubUITests: XCTestCase {
         skipWateringButton.tap()
 
         XCTAssertTrue(
-            element("addPlantSheet").waitForNonExistence(timeout: 5.0),
+            element("addplant_sheet").waitForNonExistence(timeout: 5.0),
             "AddPlantSheet did not dismiss after skipping watering setup",
             file: file,
             line: line

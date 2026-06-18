@@ -434,7 +434,7 @@ public struct AddPlantSheet: View {
             .task {
                 loadGardens()
             }
-            .accessibilityIdentifier("addPlantSheet")
+            .accessibilityIdentifier("addplant_sheet")
             .onDisappear {
                 saveTask?.cancel()
                 searchTask?.cancel()

@@ -229,7 +229,7 @@ struct GardenLayoutView: View {
             .tint(.green)
             .controlSize(.small)
             .accessibilityLabel("Add garden bed")
-            .accessibilityIdentifier("addBedButton")
+            .accessibilityIdentifier("gardenlayout_button_addbed")
         }
     }
 
@@ -258,7 +258,7 @@ struct GardenLayoutView: View {
             }
             .buttonStyle(.borderedProminent)
             .tint(.green)
-            .accessibilityIdentifier("addFirstBedButton")
+            .accessibilityIdentifier("gardenlayout_button_addfirstbed")
         }
         .frame(maxWidth: .infinity)
         .padding(.vertical, 80)
@@ -306,7 +306,7 @@ private struct BedCard: View {
                             .background(CultivationTheme.Colors.backgroundSecondary, in: Circle())
                     }
                     .accessibilityLabel("Edit \(bed.name)")
-                    .accessibilityIdentifier("editBed_\(bed.name)")
+                    .accessibilityIdentifier("gardenlayout_button_editbed_\(bed.id.uuidString)")
 
                     Button(role: .destructive, action: onDelete) {
                         Image(systemName: "trash")
@@ -315,7 +315,7 @@ private struct BedCard: View {
                             .background(Color(.systemRed).opacity(0.12), in: Circle())
                     }
                     .accessibilityLabel("Delete \(bed.name)")
-                    .accessibilityIdentifier("deleteBed_\(bed.name)")
+                    .accessibilityIdentifier("gardenlayout_button_deletebed_\(bed.id.uuidString)")
                 }
             }
             .padding(.horizontal, 16)
@@ -454,15 +454,15 @@ private struct AddBedSheet: View {
                         TextField("Bed \(bedNumber)", text: $name)
                             .multilineTextAlignment(.trailing)
                             .foregroundStyle(.secondary)
-                            .accessibilityIdentifier("bedNameField")
+                            .accessibilityIdentifier("gardenlayout_textfield_addbed_name")
                     }
                 }
 
                 Section {
                     Stepper("Width: \(widthFeet) ft", value: $widthFeet, in: 1 ... 12)
-                        .accessibilityIdentifier("bedWidthStepper")
+                        .accessibilityIdentifier("gardenlayout_stepper_addbed_width")
                     Stepper("Length: \(heightFeet) ft", value: $heightFeet, in: 1 ... 20)
-                        .accessibilityIdentifier("bedLengthStepper")
+                        .accessibilityIdentifier("gardenlayout_stepper_addbed_length")
                 } header: {
                     Text("Dimensions")
                 } footer: {
@@ -494,7 +494,7 @@ private struct AddBedSheet: View {
                         dismiss()
                     }
                     .fontWeight(.semibold)
-                    .accessibilityIdentifier("addBedConfirmButton")
+                    .accessibilityIdentifier("gardenlayout_button_addbed_confirm")
                 }
             }
         }
@@ -636,7 +636,7 @@ private struct PlantSlotPickerSheet: View {
                         } label: {
                             Label("Clear slot", systemImage: "xmark.circle")
                         }
-                        .accessibilityIdentifier("clearSlotButton")
+                        .accessibilityIdentifier("gardenlayout_button_clearslot")
                     }
                 }
 
@@ -669,7 +669,7 @@ private struct PlantSlotPickerSheet: View {
                                 }
                             }
                         }
-                        .accessibilityIdentifier("plantType_\(type.rawValue)")
+                        .accessibilityIdentifier("gardenlayout_button_planttype_\(type.rawValue)")
                     }
                 }
             }

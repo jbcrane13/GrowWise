@@ -108,7 +108,7 @@ struct PlantDetailView: View { // swiftlint:disable:this type_body_length
         } message: {
             Text(deleteError?.localizedDescription ?? "")
         }
-        .accessibilityIdentifier("screen_plantDetail")
+        .accessibilityIdentifier("plantdetail_screen")
     }
 
     // MARK: - Hero Photo

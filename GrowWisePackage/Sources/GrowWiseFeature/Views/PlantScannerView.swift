@@ -28,7 +28,7 @@ public struct PlantScannerView: View {
                             .frame(maxWidth: .infinity)
                     }
                     .buttonStyle(.borderedProminent)
-                    .accessibilityIdentifier("scannerChoosePhotoButton")
+                    .accessibilityIdentifier("plantscanner_button_choose_photo")
 
                     if diagnosticService.isAnalyzing {
                         ProgressView("Checking image...")
@@ -38,7 +38,7 @@ public struct PlantScannerView: View {
                         VStack(alignment: .leading, spacing: 8) {
                             Text("Primary Finding: \(guidance.primaryLabel)")
                                 .font(.headline)
-                                .accessibilityIdentifier("scannerPrimaryFinding")
+                                .accessibilityIdentifier("plantscanner_text_primary_finding")
                             Text("Severity: \(guidance.severity.rawValue.capitalized)")
                             Text(guidance.recommendation)
                                 .font(.subheadline)
