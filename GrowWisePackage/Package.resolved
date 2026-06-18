@@ -6,8 +6,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/Amplitude-Swift",
       "state" : {
-        "revision" : "1c2bf3a45697ae33c4f13c7845cc3a3272fe3368",
-        "version" : "1.18.3"
+        "revision" : "50189dc0f00e22b12435b1679150a4d48e165495",
+        "version" : "1.18.5"
       }
     },
     {
@@ -15,8 +15,8 @@
       "kind" : "remoteSourceControl",
       "location" : "https://github.com/amplitude/AmplitudeCore-Swift.git",
       "state" : {
-        "revision" : "1be727864d2e7ead7198f975ffc30cf5a7ba6fd3",
-        "version" : "1.4.3"
+        "revision" : "9b951efa8f1f83a5a3c3a981537d3ff752d9d1fb",
+        "version" : "1.4.6"
       }
     },
     {
