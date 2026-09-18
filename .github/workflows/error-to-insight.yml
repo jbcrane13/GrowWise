@@ -52,7 +52,7 @@ jobs:
               '- [ ] Reproduce locally',
               '- [ ] Identify root cause',
               '- [ ] Check `docs/runbooks/` for relevant playbook',
-              '- [ ] File fix in beads: `bd add "Fix: [description]" --label "bug,P1: High"`',
+              '- [ ] Track the fix in this GitHub issue or create a linked follow-up issue',
               '',
               '## References',
               '',

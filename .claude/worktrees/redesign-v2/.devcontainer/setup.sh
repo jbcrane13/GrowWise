@@ -26,12 +26,6 @@ if ! command -v jscpd &>/dev/null; then
   npm install -g jscpd --silent
 fi
 
-# Install bd (beads) for issue tracking
-if ! command -v bd &>/dev/null; then
-  echo "Note: Install beads manually: https://github.com/nicholasgasior/beads"
-  echo "  brew install beads  (on macOS)"
-fi
-
 # Install git hooks
 chmod +x scripts/install-hooks.sh scripts/hooks/pre-commit-quality
 echo "Run './scripts/install-hooks.sh' to activate quality pre-commit hooks."
@@ -41,4 +35,4 @@ echo "Environment ready. Available commands:"
 echo "  cd GrowWisePackage && swift test        # Run tests"
 echo "  swiftlint lint --config .swiftlint.yml  # Lint"
 echo "  ./scripts/check-unused-deps.sh          # Check unused SPM deps"
-echo "  bd show                                 # View open issues"
+echo "  gh issue list                           # View open GitHub issues"

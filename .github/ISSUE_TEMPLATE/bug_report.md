@@ -37,7 +37,6 @@ assignees: ""
 <!-- Paste relevant logs or crash reports -->
 ```
 
-## Related Beads Issue
+## Related GitHub Issue
 
-<!-- If linked to an existing tracked issue: GW-XXX -->
-<!-- To file a new trackable issue: bd add "bug description" -->
+<!-- Link an existing issue, e.g. #123. -->

@@ -21,6 +21,6 @@ assignees: ""
 - [ ] `cd GrowWisePackage && swift test` passes
 - [ ] SwiftLint passes
 
-## Related Beads Issue
+## Related GitHub Issue
 
-<!-- GW-XXX — or create one: bd add "task description" -->
+<!-- Link an existing issue, e.g. #123. -->

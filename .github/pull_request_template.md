@@ -1,8 +1,8 @@
 ## Summary
 
-<!-- What does this PR do? Link to the beads issue: `bd show GW-XXX` -->
+<!-- What does this PR do? Link the GitHub issue. -->
 
-Closes: <!-- GW-XXX -->
+Closes #<!-- issue number -->
 
 ## Changes
 
@@ -37,7 +37,7 @@ Closes: <!-- GW-XXX -->
 - [ ] All `@Model` properties are optional or have defaults (CloudKit compatibility)
 - [ ] New UI elements have `.accessibilityIdentifier()`
 - [ ] No print statements (use Logger/OSLog)
-- [ ] TODO/FIXME comments include beads issue reference (e.g., `TODO(GW-123): ...`)
+- [ ] TODO/FIXME comments include a GitHub issue reference (e.g., `TODO(#123): ...`)
 
 ## Screenshots / Recording
 

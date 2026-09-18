@@ -28,6 +28,6 @@ assignees: ""
 
 <!-- Any considerations for SwiftData models, services, or CloudKit sync? -->
 
-## Related Beads Issue
+## Related GitHub Issue
 
-<!-- GW-XXX — or create one: bd add "feature description" -->
+<!-- Link an existing issue, e.g. #123. -->
