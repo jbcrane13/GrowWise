@@ -13,8 +13,8 @@ Before writing any code, verify the current state:
 # Check which branch you're on
 git rev-parse --abbrev-ref HEAD
 
-# See current beads issues
-bd show
+# See current GitHub issues
+gh issue list --state open --json number,title,labels,assignees
 
 # Run existing tests to ensure a clean baseline
 cd GrowWisePackage && swift test
@@ -69,7 +69,7 @@ do {
 }
 
 // CORRECT — linked tech debt
-// TODO(GW-123): refactor this after migration completes
+// TODO(#123): refactor this after migration completes
 ```
 
 **Accessibility (mandatory):**
@@ -138,10 +138,9 @@ cd GrowWisePackage && swift test
 
 ## Completing Work
 
-1. File any follow-up issues: `bd add "description"`
-2. Mark resolved issues: `bd close GW-XXX`
-3. Sync beads state: `bd sync`
-4. Push: `git push`
+1. File follow-up work with `gh issue create --title "Title" --body "Scope and acceptance criteria"`.
+2. Close verified work with `gh issue close <number> --comment "Done: <verified result>"` or a merged PR containing `Closes #<number>`.
+3. Push: `git push`.
 
 ---
 
