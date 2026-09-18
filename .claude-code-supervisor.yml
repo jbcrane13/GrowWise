@@ -16,4 +16,4 @@ idle:
 environment_hints:
   - "This is a macOS Apple Silicon development environment"
   - "Use xcodebuild for builds and tests"
-  - "Use 'bd' CLI for issue tracking (beads)"
+  - "Use the 'gh' CLI for issue tracking (GitHub Issues)"

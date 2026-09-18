@@ -6,7 +6,6 @@
 ## Issue Tracking
 
 GitHub Issues: https://github.com/jbcrane13/GrowWise/issues — use `gh issue create/list/view`.
-BD (beads) is decommissioned. Do NOT use `bd` commands.
 
 ## Agent Readiness
 
